@@ -1,7 +1,0 @@
-{
-  "database": "dolt",
-  "backend": "dolt",
-  "dolt_mode": "embedded",
-  "dolt_database": "resistance_ai",
-  "project_id": "437aa5de-c57c-413c-b764-6ad2b4733ab0"
-}
