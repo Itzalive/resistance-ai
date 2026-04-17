@@ -1,0 +1,27 @@
+{
+  "name": "resistance-engine",
+  "displayName": "Resistance Engine",
+  "description": "Metadata-only VS Code packaging for the resistance-engine skills library",
+  "version": "0.1.0",
+  "publisher": "Itzalive",
+  "license": "MIT",
+  "homepage": "https://github.com/Itzalive/resistance-ai",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Itzalive/resistance-ai"
+  },
+  "engines": {
+    "vscode": "^1.95.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "copilot",
+    "skills",
+    "tdd",
+    "debugging",
+    "workflow"
+  ],
+  "private": true
+}

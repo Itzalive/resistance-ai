@@ -1,0 +1,20 @@
+{
+  "name": "resistance-dev",
+  "description": "Development marketplace for Resistance Engine core skills library",
+  "owner": {
+    "name": "Pete Forrest",
+    "email": "petemforrest@gmail.com"
+  },
+  "plugins": [
+    {
+      "name": "resistance-engine",
+      "description": "Core skills library for Claude Code: TDD, debugging, collaboration patterns, and proven techniques",
+      "version": "0.1.0",
+      "source": "./",
+      "author": {
+        "name": "Pete Forrest",
+        "email": "petemforrest@gmail.com"
+      }
+    }
+  ]
+}
