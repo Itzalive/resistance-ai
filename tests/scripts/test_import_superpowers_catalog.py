@@ -259,6 +259,40 @@ def test_import_superpowers_catalog_rejects_output_escape(tmp_path: Path) -> Non
         _safe_output_path(tmp_path / "resistance-engine", Path("../escape.txt"))
 
 
+def test_import_superpowers_catalog_preserves_non_generated_repo_surfaces(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import import_superpowers_catalog as module
+
+    source_root = _fixture_vendor(tmp_path / "source")
+    output_root = tmp_path / "canonical-repo"
+    monkeypatch.setattr(module, "REPO_ROOT", output_root)
+    _write(output_root / "README.md", "# canonical\n")
+    _write(output_root / ".gitmodules", "[submodule \"vendor/obra-superpowers\"]\n")
+    _write(output_root / "package.json", '{"name":"resistance-engine"}\n')
+    _write(output_root / "tests" / "keep.txt", "keep\n")
+    _write(output_root / "scripts" / "helper.py", "print('keep')\n")
+    _write(output_root / "vendor" / "obra-superpowers" / "README.md", "# vendor\n")
+
+    module.import_superpowers_catalog(
+        source_root=source_root,
+        output_root=output_root,
+        source_repo="vendor/obra-superpowers",
+        source_revision="fixture-rev",
+        imported_at="2026-04-15T00:00:00Z",
+    )
+
+    assert (output_root / "README.md").read_text() == "# canonical\n"
+    assert (output_root / ".gitmodules").read_text() == '[submodule "vendor/obra-superpowers"]\n'
+    assert (output_root / "package.json").read_text() == '{"name":"resistance-engine"}\n'
+    assert (output_root / "tests" / "keep.txt").read_text() == "keep\n"
+    assert (output_root / "scripts" / "helper.py").read_text() == "print('keep')\n"
+    assert (output_root / "vendor" / "obra-superpowers" / "README.md").read_text() == "# vendor\n"
+    assert (output_root / "skills" / "brainstorming" / "SKILL.md").read_text() == (
+        "---\nname: brainstorming\n---\n"
+    )
+
+
 def test_main_writes_catalog_and_provenance_manifest(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

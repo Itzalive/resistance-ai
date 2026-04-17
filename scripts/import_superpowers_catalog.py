@@ -21,6 +21,13 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_SOURCE_ROOT = REPO_ROOT / "vendor" / "obra-superpowers"
 DEFAULT_OUTPUT_ROOT = REPO_ROOT
 SOURCE_REPO = "vendor/obra-superpowers"
+_MANAGED_OUTPUT_PATHS = {
+    "agents",
+    "catalog",
+    "consolidation",
+    "provenance",
+    "skills",
+}
 
 # Local authoring files that overlay the vendored skill content when importing
 # from the real vendor tree.  Keys are normalised skill names; values are
@@ -104,8 +111,11 @@ def _copy_file(source_file: Path, destination_file: Path) -> list[str]:
 
 def _reset_output_root(output_root: Path, *, preserved_override_text: str | None = None) -> None:
     if output_root.exists():
+        output_root_is_repo_root = output_root.resolve() == REPO_ROOT.resolve()
         for child in output_root.iterdir():
-            if child.name == "README.md":
+            if output_root_is_repo_root and child.name not in _MANAGED_OUTPUT_PATHS:
+                continue
+            if child.name == "README.md" and not output_root_is_repo_root:
                 continue
             if child.is_dir():
                 shutil.rmtree(child)

@@ -35,6 +35,6 @@ def test_canonical_repo_contains_release_surfaces() -> None:
         check=True,
         capture_output=True,
         text=True,
-    ).stdout.strip()
+    ).stdout.rstrip()
     assert " vendor/obra-superpowers" in submodule_status
-    assert not submodule_status.startswith("-")
+    assert submodule_status[0] not in "-+U"
