@@ -78,7 +78,7 @@ def _safe_output_path(output_root: Path, relative_path: Path) -> Path:
     candidate = (output_root / relative_path).resolve()
     root = output_root.resolve()
     if candidate != root and root not in candidate.parents:
-        raise ValueError("resolved output path escapes resistance-engine root")
+        raise ValueError("resolved output path escapes repo root")
     return candidate
 
 
