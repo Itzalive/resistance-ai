@@ -3,6 +3,15 @@
 Canonical local workspace for Superpowers-derived skills and agents imported from
 `vendor/obra-superpowers/`.
 
+## Bootstrap
+
+Clone the repo, then initialize the nested vendor submodule before running importer
+or validation tooling:
+
+```bash
+git submodule update --init --recursive vendor/obra-superpowers
+```
+
 ## Layout
 
 - `skills/` - imported skill directories with support files preserved
@@ -12,6 +21,14 @@ Canonical local workspace for Superpowers-derived skills and agents imported fro
 - `catalog/catalog_index.json` - minimal unified index for imported skills and agents
 - `catalog/non_skill_inventory.json` - classification output for vendor repo surfaces
   outside `skills/` and `agents/`
+
+## Packaging and consumption
+
+- `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` are the canonical
+  Copilot CLI plugin metadata for this repository
+- `package.json` is metadata-only packaging for VS Code discovery/publishing workflows
+- parent repositories should consume this project via a `resistance-engine/` git
+  submodule and update the gitlink when adopting canonical changes
 
 ## Refresh
 
