@@ -255,7 +255,7 @@ def test_import_superpowers_catalog_rejects_name_collision(tmp_path: Path) -> No
 def test_import_superpowers_catalog_rejects_output_escape(tmp_path: Path) -> None:
     from import_superpowers_catalog import _safe_output_path
 
-    with pytest.raises(ValueError, match="resolved output path escapes resistance-engine root"):
+    with pytest.raises(ValueError, match="resolved output path escapes repo root"):
         _safe_output_path(tmp_path / "resistance-engine", Path("../escape.txt"))
 
 

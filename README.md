@@ -1,6 +1,6 @@
 # resistance-ai
 
-Canonical local workspace for Superpowers-derived skills and agents imported from
+Canonical repository for Superpowers-derived skills and agents imported from
 `vendor/obra-superpowers/`.
 
 ## Bootstrap
