@@ -720,7 +720,7 @@ def test_validate_provenance_accepts_recorded_mixed_local_states_on_rerun(
     skill_record = next(
         file_record
         for file_record in brainstorming["files"]
-        if file_record["source_file"] == "resistance-engine/skills/brainstorming/SKILL.md"
+        if file_record["source_file"] == "skills/brainstorming/SKILL.md"
     )
     helper_record = next(
         file_record
