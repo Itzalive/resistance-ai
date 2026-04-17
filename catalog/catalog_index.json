@@ -1,0 +1,217 @@
+[
+  {
+    "entry_type": "skill",
+    "name": "brainstorming",
+    "source_repo": "vendor/obra-superpowers",
+    "source_path": "skills/brainstorming",
+    "local_path": "skills/brainstorming",
+    "imported_files": [
+      "SKILL.md",
+      "SPEC_REVIEW_MANIFEST.md",
+      "SPEC_RUBRIC.md",
+      "SPEC_STANDARDS.md",
+      "scripts/frame-template.html",
+      "scripts/helper.js",
+      "scripts/server.cjs",
+      "scripts/start-server.sh",
+      "scripts/stop-server.sh",
+      "spec-document-reviewer-prompt.md",
+      "visual-companion.md"
+    ],
+    "source_revision": "a569527b89c152ac697d6c3ffec335d26769afdc",
+    "imported_at": "2026-04-17T06:54:18+00:00"
+  },
+  {
+    "entry_type": "skill",
+    "name": "dispatching-parallel-agents",
+    "source_repo": "vendor/obra-superpowers",
+    "source_path": "skills/dispatching-parallel-agents",
+    "local_path": "skills/dispatching-parallel-agents",
+    "imported_files": [
+      "SKILL.md"
+    ],
+    "source_revision": "a569527b89c152ac697d6c3ffec335d26769afdc",
+    "imported_at": "2026-04-17T06:54:18+00:00"
+  },
+  {
+    "entry_type": "skill",
+    "name": "executing-plans",
+    "source_repo": "vendor/obra-superpowers",
+    "source_path": "skills/executing-plans",
+    "local_path": "skills/executing-plans",
+    "imported_files": [
+      "SKILL.md"
+    ],
+    "source_revision": "a569527b89c152ac697d6c3ffec335d26769afdc",
+    "imported_at": "2026-04-17T06:54:18+00:00"
+  },
+  {
+    "entry_type": "skill",
+    "name": "finishing-a-development-branch",
+    "source_repo": "vendor/obra-superpowers",
+    "source_path": "skills/finishing-a-development-branch",
+    "local_path": "skills/finishing-a-development-branch",
+    "imported_files": [
+      "SKILL.md"
+    ],
+    "source_revision": "a569527b89c152ac697d6c3ffec335d26769afdc",
+    "imported_at": "2026-04-17T06:54:18+00:00"
+  },
+  {
+    "entry_type": "skill",
+    "name": "receiving-code-review",
+    "source_repo": "vendor/obra-superpowers",
+    "source_path": "skills/receiving-code-review",
+    "local_path": "skills/receiving-code-review",
+    "imported_files": [
+      "SKILL.md"
+    ],
+    "source_revision": "a569527b89c152ac697d6c3ffec335d26769afdc",
+    "imported_at": "2026-04-17T06:54:18+00:00"
+  },
+  {
+    "entry_type": "skill",
+    "name": "requesting-code-review",
+    "source_repo": "vendor/obra-superpowers",
+    "source_path": "skills/requesting-code-review",
+    "local_path": "skills/requesting-code-review",
+    "imported_files": [
+      "SKILL.md",
+      "code-reviewer.md"
+    ],
+    "source_revision": "a569527b89c152ac697d6c3ffec335d26769afdc",
+    "imported_at": "2026-04-17T06:54:18+00:00"
+  },
+  {
+    "entry_type": "skill",
+    "name": "subagent-driven-development",
+    "source_repo": "vendor/obra-superpowers",
+    "source_path": "skills/subagent-driven-development",
+    "local_path": "skills/subagent-driven-development",
+    "imported_files": [
+      "SKILL.md",
+      "code-quality-reviewer-prompt.md",
+      "implementer-prompt.md",
+      "spec-reviewer-prompt.md"
+    ],
+    "source_revision": "a569527b89c152ac697d6c3ffec335d26769afdc",
+    "imported_at": "2026-04-17T06:54:18+00:00"
+  },
+  {
+    "entry_type": "skill",
+    "name": "systematic-debugging",
+    "source_repo": "vendor/obra-superpowers",
+    "source_path": "skills/systematic-debugging",
+    "local_path": "skills/systematic-debugging",
+    "imported_files": [
+      "CREATION-LOG.md",
+      "SKILL.md",
+      "condition-based-waiting-example.ts",
+      "condition-based-waiting.md",
+      "defense-in-depth.md",
+      "find-polluter.sh",
+      "root-cause-tracing.md",
+      "test-academic.md",
+      "test-pressure-1.md",
+      "test-pressure-2.md",
+      "test-pressure-3.md"
+    ],
+    "source_revision": "a569527b89c152ac697d6c3ffec335d26769afdc",
+    "imported_at": "2026-04-17T06:54:18+00:00"
+  },
+  {
+    "entry_type": "skill",
+    "name": "test-driven-development",
+    "source_repo": "vendor/obra-superpowers",
+    "source_path": "skills/test-driven-development",
+    "local_path": "skills/test-driven-development",
+    "imported_files": [
+      "SKILL.md",
+      "testing-anti-patterns.md"
+    ],
+    "source_revision": "a569527b89c152ac697d6c3ffec335d26769afdc",
+    "imported_at": "2026-04-17T06:54:18+00:00"
+  },
+  {
+    "entry_type": "skill",
+    "name": "using-git-worktrees",
+    "source_repo": "vendor/obra-superpowers",
+    "source_path": "skills/using-git-worktrees",
+    "local_path": "skills/using-git-worktrees",
+    "imported_files": [
+      "SKILL.md"
+    ],
+    "source_revision": "a569527b89c152ac697d6c3ffec335d26769afdc",
+    "imported_at": "2026-04-17T06:54:18+00:00"
+  },
+  {
+    "entry_type": "skill",
+    "name": "using-superpowers",
+    "source_repo": "vendor/obra-superpowers",
+    "source_path": "skills/using-superpowers",
+    "local_path": "skills/using-superpowers",
+    "imported_files": [
+      "SKILL.md",
+      "references/codex-tools.md",
+      "references/copilot-tools.md",
+      "references/gemini-tools.md"
+    ],
+    "source_revision": "a569527b89c152ac697d6c3ffec335d26769afdc",
+    "imported_at": "2026-04-17T06:54:18+00:00"
+  },
+  {
+    "entry_type": "skill",
+    "name": "verification-before-completion",
+    "source_repo": "vendor/obra-superpowers",
+    "source_path": "skills/verification-before-completion",
+    "local_path": "skills/verification-before-completion",
+    "imported_files": [
+      "SKILL.md"
+    ],
+    "source_revision": "a569527b89c152ac697d6c3ffec335d26769afdc",
+    "imported_at": "2026-04-17T06:54:18+00:00"
+  },
+  {
+    "entry_type": "skill",
+    "name": "writing-plans",
+    "source_repo": "vendor/obra-superpowers",
+    "source_path": "skills/writing-plans",
+    "local_path": "skills/writing-plans",
+    "imported_files": [
+      "SKILL.md",
+      "plan-document-reviewer-prompt.md"
+    ],
+    "source_revision": "a569527b89c152ac697d6c3ffec335d26769afdc",
+    "imported_at": "2026-04-17T06:54:18+00:00"
+  },
+  {
+    "entry_type": "skill",
+    "name": "writing-skills",
+    "source_repo": "vendor/obra-superpowers",
+    "source_path": "skills/writing-skills",
+    "local_path": "skills/writing-skills",
+    "imported_files": [
+      "SKILL.md",
+      "anthropic-best-practices.md",
+      "examples/CLAUDE_MD_TESTING.md",
+      "graphviz-conventions.dot",
+      "persuasion-principles.md",
+      "render-graphs.js",
+      "testing-skills-with-subagents.md"
+    ],
+    "source_revision": "a569527b89c152ac697d6c3ffec335d26769afdc",
+    "imported_at": "2026-04-17T06:54:18+00:00"
+  },
+  {
+    "entry_type": "agent",
+    "name": "code-reviewer",
+    "source_repo": "vendor/obra-superpowers",
+    "source_path": "agents/code-reviewer.md",
+    "local_path": "agents/code-reviewer.md",
+    "imported_files": [
+      "code-reviewer.md"
+    ],
+    "source_revision": "a569527b89c152ac697d6c3ffec335d26769afdc",
+    "imported_at": "2026-04-17T06:54:18+00:00"
+  }
+]

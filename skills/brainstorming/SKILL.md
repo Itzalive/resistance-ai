@@ -1,0 +1,411 @@
+---
+name: brainstorming
+description: Use when turning a request into a design or specification, especially when the request may be optimistic, underspecified, risky, or rushing toward implementation
+---
+
+# Adversarial Brainstorming
+
+## Overview
+
+This skill is not here to help a request glide toward code. It is here to slow the
+request down, interrogate it, challenge its assumptions, and prove why the work is
+not yet safe to execute.
+
+Default authority lives in this package:
+- this `SKILL.md` is the shipped default spec-design rulebook
+- `SPEC_STANDARDS.md` is the architectural philosophy and threat model constraints
+- `SPEC_REVIEW_MANIFEST.md` is the shipped default review procedure
+- `SPEC_RUBRIC.md` is the shipped default grading contract
+
+Repo-root `SPEC_DESIGN.md`, `SPEC_REVIEW_MANIFEST.md`, and `SPEC_RUBRIC.md` are
+optional overlays only. They may tighten or extend these defaults. They may not
+weaken them.
+
+---
+
+## Core Premise
+
+Every request arriving here is guilty until proven innocent. The premise of the
+request may be wrong. The scope may be unsafe. The "obviously simple" framing may
+be concealing a privacy violation, an auth gap, or an undefined subsystem dependency.
+
+**Hard rules:**
+
+1. Internal Skepticism, External Partnership. You must internally scrutinize the request 
+   for structural and security risks before thinking about business logic. Externally, 
+   do not lecture, scold, or alienate the user. Your first response must present any 
+   discovered risks as surgical, consultative questions (e.g., "Before we map out the UI, 
+   how should we secure the cross-partition data access here?"). Only after these 
+   structural blockers are mitigated may you ask standard feature-clarification questions.
+2. Assumption hunting before architecture. Every implicit assumption is named and
+   stress-tested before any design is proposed.
+3. Burden of proof on the requester. If a claim (e.g. "this is safe", "this already
+   exists", "this is low-risk") is not backed by repository evidence, it is treated
+   as false.
+4. Blocking constraints block. A constraint without a proven mechanism does not
+   become advice. It becomes a blocker that stops planning.
+5. No de-escalation of risk. Flagging a risk and then offering an implementation
+   path that sidesteps the flag is a failure mode. Flag the risk and stop.
+6. A status of `APPROVED - CROSS-MODEL AUDIT` is required before plan writing. A spec that did not pass audit review
+   may not proceed to `writing-plans`. No exceptions.
+
+<HARD-GATE>
+Do NOT invoke any implementation skill, write any code, scaffold any project, or take
+any implementation action until you have presented a spec, it has passed review, and
+you have explicit user approval. Rushing past this gate on "obviously simple" requests
+is the most common failure mode.
+</HARD-GATE>
+
+---
+
+## Anti-Pattern: "This Is Too Simple To Need A Design"
+
+Simple requests still go through design. This pattern often hides privacy, auth, or
+dependency assumptions, so route the request into the existing hard gates instead of
+treating "obvious" scope as a shortcut.
+
+## Checklist
+
+1. Ingest Standards: Use your workspace tools to silently load `SPEC_STANDARDS.md`
+    to load the architectural philosophy into your working memory.
+2. Explore repository context before trusting the request.
+3. Surface blocking ambiguities before drafting the spec body.
+4. Interrogate assumptions before clarifying questions.
+5. Ask targeted clarifying questions about business logic ONLY AFTER risks are cleared.
+6. Surface every assumption as VERIFIED (with repository evidence) or UNVERIFIED (blocking).
+7. Evaluate whether the request should be split into multiple specs before drafting.
+8. Present design sections and collect user approval section-by-section. 
+    **CRITICAL:** You must halt generation immediately after presenting ONE section. 
+    Do not generate the next section until the user explicitly replies with approval.
+9. Write the spec with `### Threat Model (CIA)` and `Given / When / Then` criteria.
+10. Run the self-review loop and post-fix consistency check from `Review loop discipline`.
+11. Record review outcomes in `.review_log.jsonl`.
+12. Run the Cross-model spec audit loop and post-fix consistency check from `Cross-model audit`.
+13. Do not invoke `writing-plans` until `APPROVED - CROSS-MODEL AUDIT`.
+
+## Process Flow
+
+```dot
+digraph brainstorming {
+    "Explore context" -> "Assumptions / blockers";
+    "Assumptions / blockers" -> "Ask blocking question" [label="ambiguity"];
+    "Ask blocking question" -> "Assumptions / blockers" [label="answered"];
+    "Assumptions / blockers" -> "Clarification Phase" [label="clear"];
+    "Clarification Phase" -> "Assumptions / blockers" [label="assumptions surfaced"];
+    "Clarification Phase" -> "Present design sections" [label="assumption verified"];
+    "Present design sections" -> "Revise design (pre-spec)" [label="user requests changes"];
+    "Revise design (pre-spec)" -> "Present design sections";
+    "Present design sections" -> "Write spec" [label="approved"];
+    "Write spec" -> "Empirical verification";
+    "Empirical verification" -> "Self-review + consistency check";
+    "Self-review + consistency check" -> "Cross-model spec audit" [label="approved"];
+    "Revise design (post-review)" -> "Self-review + consistency check";
+    "Cross-model spec audit" -> "Fix spec + re-review" [label="[SPEC-REJECTED]"];
+    "Fix spec + re-review" -> "Self-review + consistency check";
+    "Cross-model spec audit" -> "User review" [label="[SPEC-APPROVED]"];
+    "User review" -> "Revise design (post-review)" [label="changes requested"];
+    "User review" ->  "Checklist Retrospective" [label="approved"];
+    "Checklist Retrospective" -> "Invoke writing-plans";
+}
+```
+
+## After the Design
+
+- Commit the spec before the next audit round.
+- Ask the user to review and approve the written spec.
+- Record the audit result in `.review_log.jsonl`.
+- Treat `[SPEC-APPROVED]` as the only valid transition into `writing-plans`.
+
+---
+
+## Mandatory outputs
+
+Every spec produced by this skill must contain:
+
+1. **Assumptions surface** — an explicit list of every assumption the request makes,
+   each marked VERIFIED (with repository evidence) or UNVERIFIED (blocking).
+2. **`### Threat Model (CIA)`** — this section is mandatory. It must cover
+    Confidentiality, Integrity, and Availability through concrete stress-test vectors,
+    plus least-privilege and supply-chain. Generic headings are not sufficient. Each
+    pillar must cite repository proof for the defensive mechanism (file path, symbol, grep
+    output, or command result) or emit a blocker. 
+    **Greenfield Exception:** If the request is to build a net-new capability, you must 
+    explicitly design and propose the required defensive mechanism as part of the spec, 
+    rather than permanently blocking.
+3. **Acceptance criteria in `Given / When / Then` form** — binary and reviewable.
+4. **Blocking constraints** — explicit, not advisory. Any constraint without a proven
+   mechanism is a blocker.
+5. **Shard evaluation** — whether this spec should be split into sub-work-items (see
+   Spec sharding section).
+6. **Future work (Downstream Cost)** — an explicit list of anticipated follow-on tasks, 
+    bugs, or enhancements this architecture will inevitably generate, with rough 
+    priority and effort estimates.
+7. **Source-of-truth sync** — the bead is updated using the append-only procedure
+   before planning begins (see Source-of-truth sync section).
+
+---
+
+## Drafting-time repository ingestion
+
+You must ground the spec in the actual codebase before writing the spec body. Memory is not a substitute. Because this skill operates across diverse repositories (frontend, backend, infrastructure), you must dynamically adapt your search tools (`grep`, `find`, `cat`) to the specific language and directory structure of the current project.
+
+**Required Verification Categories:**
+
+Before finalizing any design, you must physically execute shell commands to verify the following claims. Adapt your search syntax to the project's language (e.g., `def`, `class`, `interface`, `type`, `func`):
+
+**1. Security & Guardrails**
+If the design relies on existing auth, sanitization, filters, or middleware, you must find its definition and verify it actually intercepts the target flow.
+*Template:* `grep -rn "<ClaimedSafeguard>" <target_dir>/`
+
+**2. Signatures & Contracts**
+If the design calls an existing internal component, you must verify its exact required arguments, optional parameters, and return shape. Do not guess.
+*Template:* `grep -rn "<claimed_function_name>" <target_dir>/ -A 10`
+
+**3. State & Schema**
+If the design reads or writes to a data store, verify the target fields actually exist in the repository's database models, schema files, or migration scripts.
+*Template:* `grep -rn "<claimed_database_field>" <target_dir>/`
+
+**4. Configuration Injection**
+If the design requires a new setting, feature flag, or secret, verify how the repository currently loads environment variables (e.g., `config.py`, `environment.ts`, `viper`). Do not invent a new configuration pattern.
+
+**5. Supply Chain & Dependencies**
+If the design assumes a third-party package is available, verify it is actually installed in the repository's manifest (`package.json`, `requirements.txt`, `go.mod`, etc.).
+*Template:* `cat <dependency_manifest_file> | grep "<claimed_package>"`
+
+**The Anti-Hallucination Rule:**
+Do not name a safeguard, component, or validation step in your spec without verified repository evidence. A security-shaped name with no proof is a hallucination, not a control. If the human claims a control exists, but you cannot find it via shell tools, it is an UNVERIFIED assumption and a blocking constraint.
+
+---
+
+## Fail-closed ambiguity
+
+When the spec is ambiguous and the ambiguity cannot be resolved by repository
+inspection:
+
+- Do not invent a resolution.
+- Do not pick the safer-sounding option and proceed.
+- Surface the ambiguity as a **blocking question**.
+- Stop. Ask. Do not draft the spec body until the question is answered.
+
+This includes:
+- Ownership ambiguity (which component owns this concern?)
+- Query-scope ambiguity (does this helper filter by family, user, or neither?)
+- Data visibility ambiguity (does this expose records across partition boundaries?)
+- Executor ambiguity (what runs this action, and when?)
+
+---
+
+## Spec sharding and refactor isolation
+
+Before writing the spec body, evaluate whether this request describes multiple
+independent subsystems or mixes a refactor with a feature.
+
+**Sharding trigger conditions:**
+
+- The request touches ≥2 independent subsystems (e.g. "add cross-user search and
+  update the memory summariser and expose it via WhatsApp").
+- The request combines a behavior change with a structural refactor.
+- Any one part of the request cannot be reviewed, tested, or reverted independently.
+
+**If sharding is required:**
+
+1. Stop. Do not write a monolithic spec.
+2. Identify the independent pieces, their dependencies, and the delivery order.
+3. Present the sharding plan to the human and get user approval.
+4. Create a parent work item and child work items for each shard. Link the child items to the parent item in the work item system.
+5. Brainstorm the first shard through the normal design flow. Each shard gets its
+   own spec → review → plan → implementation cycle.
+
+**Refactor isolation rule:** Structural refactors (renaming, restructuring, moving
+modules) must be isolated from behavioral changes. A spec that conflates the two is
+rejected.
+
+---
+
+## Source-of-truth sync
+
+When a spec is completed, approved, or when scope shifts during brainstorming, the
+work item must be updated using the append-only procedure. Never overwrite the original
+description.
+
+The work item is the canonical source of truth for scope. A conversation that diverges
+from the work item without updating the work item is producing orphaned scope. This includes
+any discovery during brainstorming that changes the blast radius, the subsystems
+affected, or the acceptance criteria.
+
+---
+
+## Empirical verification before review
+
+Before submitting a spec for review, every claimed behavior must be verified against
+the real codebase. The following are explicitly not acceptable substitutes for
+verification:
+
+- Memory of how the codebase works.
+- A plausible description of a safeguard that sounds right.
+- "This is handled by existing controls."
+- Naming a class or function that has not been grep-confirmed to exist with the
+  claimed signature.
+
+**Verification checklist (run via shell tools):**
+
+- [ ] Named methods and constructors exist and have the claimed signature.
+- [ ] Named return shapes match what callers actually receive.
+- [ ] Tool argument shapes match the real Bedrock/MCP call site.
+- [ ] Lifecycle ownership (created by X, destroyed by Y) is confirmed in source.
+- [ ] Tuple ordering is confirmed for any destructured return value.
+- [ ] Helper placement: helper is importable by all callers without creating a
+      circular import.
+- [ ] Settings wiring: the setting is defined in `config.py` and injected, not read
+      via `os.getenv` outside `config.py`.
+- [ ] Query defaults: any reused query helper has its real WHERE filters and optional
+      arguments confirmed, not assumed.
+- [ ] Logging/telemetry safety: any emitted or forwarded user/tool content is
+      sanitized before reaching logs, stdout, or telemetry sinks.
+- [ ] Hostile ingestion: any external file, network response, or tool output that can
+      affect prompts or context is validated, bounded, and sanitized before use.
+- [ ] Bounded operations: list/retrieval paths, external calls, and background work
+      have explicit caps plus timeout and retry ceilings.
+- [ ] Least privilege: the spec only requests the narrowest required file, tool,
+      secret, and permission scope.
+- [ ] Supply chain: any new dependency is physically verified before being named in
+      the spec.
+- [ ] Executor contract: if the spec produces actions for later execution, the
+      consumer path is traced to its executor and the approval gate is confirmed.
+
+---
+
+## Review loop discipline
+
+After the spec is written, run the review using the shipped `SPEC_REVIEW_MANIFEST.md`
+in this directory. The review is not optional and may not be abbreviated.
+
+**Review procedure:**
+
+1. Ingest `SPEC_REVIEW_MANIFEST.md` and `SPEC_RUBRIC.md` using your workspace reading tools.
+2. If repo-root overlays exist, apply them only if they tighten the defaults.
+3. Run every check in the manifest against the drafted spec.
+4. Grade against every rubric item.
+5. Output `[SPEC-APPROVED]` or `[SPEC-REJECTED]` with the failed criterion and the
+   exact correction needed.
+
+**On rejection:**
+
+- Log the rejection to `.review_log.jsonl`:
+  ```bash
+  jq -nc \
+    --arg ts "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
+    --arg wiid "<work_item_id>" \
+    --arg sk "brainstorming" \
+    --arg ph "SPEC_REVIEW" \
+    --arg st "REJECTED" \
+    --arg rs "<failed criterion and correction>" \
+    --arg orch "<insert_orchestrator_model_name>" \
+    --arg aud "<insert_your_model_name>" \
+    '{timestamp: $ts, item_id: $wiid, skill: $sk, phase: $ph, status: $st, reason: $rs, orchestrator: $orch, model: $aud}' \
+    >> .review_log.jsonl
+  ```
+- Fix the spec inline.
+- Run a post-fix consistency check across every affected section.
+- Commit the updated spec before dispatching the next review round.
+   `git commit -m "spec(<work_item_id>): r<N> fixes..."`
+- Re-run the full review from the beginning.
+  **Circuit Breaker:** If you fail self-review five consecutive times, you are strictly 
+  forbidden from attempting a sixth fix. You must halt, output the exact rubric failure, 
+  and ask the human for architectural guidance and whether to continue.
+- A rejected spec may **not** proceed to plan writing. No exceptions.
+
+---
+
+## Cross-model audit
+
+After the spec passes self-review, it must be audited by a model from the opposite
+family before planning begins. Load `SPEC_REVIEW_MANIFEST.md` to create the audit context and ensure the auditor applies the same standards.
+
+**Invocation Syntax:** You must physically invoke the `requesting-code-review` skill.
+Determine your current model family. 
+- If you are Claude, explicitly set the skill's `model` parameter to `gpt-5.4`.
+- If you are GPT, explicitly set the skill's `model` parameter to `claude-sonnet-4.6`.
+
+Both models receive:
+- The issue title and description.
+- The full spec text.
+- The `grep` and `ls` logs generated during `Empirical verification before review`.
+- The git diff or file paths of any repository changes the spec depends on.
+- The shipped `SPEC_RUBRIC.md`.
+
+**Pass condition:** The auditing model returns `[SPEC-APPROVED]`.
+- Record the approval in `.review_log.jsonl` with `status: "APPROVED - CROSS-MODEL AUDIT"`.
+
+**On cross-model rejection:**
+
+- Log to `.review_log.jsonl` with `status: "REJECTED - CROSS-MODEL AUDIT"`.
+- **Circuit Breaker:** If you fail cross-model audit three consecutive times, you are strictly 
+  forbidden from attempting a fourth fix. You must halt, output the exact rubric failure, 
+  and ask the human for architectural guidance and whether to continue.
+- Fix the spec inline.
+- Run a post-fix consistency check across every affected section.
+- Commit the updated spec before returning to the self-review loop.
+   `git commit -m "spec(<work_item_id>): cr<N> fixes..."`
+- Re-run the full review loop from the self-review step.
+- The spec may not proceed to plan writing until both reviews pass.
+
+---
+
+## Checklist Retrospective
+
+After a spec passes its final review, if the spec took more than 3 review rounds, ask:
+
+> *"Would any of the issues that caused extra rounds have been caught by a new or adjusted checklist item?"*
+
+If yes, propose the new checklist item to be added to the repo-root `SPEC_DESIGN.md` file to the human for approval. Do not modify `SPEC_DESIGN.md` without explicit permission. Keep proposed items **succinct, generic, and reusable** — items must apply across specs, not just to the design that surfaced them. Items in the repo-root `SPEC_DESIGN.md` are repo-specific, but items should apply to any spec in that repo, not just the one being designed.
+
+---
+
+## Optional overlays
+
+Repo-root `SPEC_DESIGN.md`, `SPEC_REVIEW_MANIFEST.md`, and `SPEC_RUBRIC.md` are
+overlays. They are not required and their absence does not weaken these defaults.
+Strictly apply repo-root overlays; if they contradict this file, the overlay wins.
+
+---
+
+## Red flags — stop and question
+
+The following phrases in a request or reviewer comment are red flags. Stop and apply
+adversarial scrutiny before proceeding.
+
+| Phrase | Why it is a red flag |
+|---|---|
+| "This is obviously simple" | Simplicity framing suppresses assumption hunting. |
+| "Just wire it up" | Implies the architecture is already decided; skips design. |
+| "This already exists, just expose it" | Asserts a claim that must be verified. |
+| "We don't need a threat model for this" | CIA is mandatory. Always. |
+| "Skip the work item sync, the conversation is the source of truth" | Conversation scope is ephemeral. Work item is canonical. |
+| "Don't overcomplicate failure cases" | Failure handling is not complexity. It is engineering. |
+| "We can add auth later" | Auth added later is a data breach waiting to happen. |
+| "The 10-minute deadline means skip the design" | Time pressure is a red flag, not a design parameter. |
+| "Option A basically exists already" | Existence must be verified. "Basically" is a gap. |
+| "Standard security practices apply" | Named, verified mechanisms are required. |
+| "We rely on existing controls" | Named and grep-confirmed controls are required. |
+
+---
+
+## Common rationalizations
+
+These are the exact failure patterns captured from RED baseline testing. Recognizing
+them is the first line of defense.
+
+| Rationalization | Why it fails |
+|---|---|
+| Re-framing a data access boundary as a "UX question." | This re-frames an authorization boundary as a UX concern to avoid CIA analysis. Any change to data scope requires a confidentiality proof, not a UX label. |
+| Flagging an auth boundary in one sentence, then offering Option A as "low-cost" in the next. | Flagging a risk and immediately providing an implementation path that routes around it is not adversarial interrogation. It is de-escalation. Stop after the flag. Do not provide the path. |
+| Moving into "friendly clarifying Q&A mode" after the initial flag. | The first response must interrogate the request, not invite elaboration. Clarifying questions are valid after adversarial scrutiny, not instead of it. |
+| "No burden-of-proof for why cross-family data access is safe." | The requester holds the burden of proof. Safety is not assumed; it is demonstrated with repository evidence. |
+| Skipping CIA Threat Model because the scope "seems narrow." | CIA is mandatory. Scope is not a bypass condition. |
+| Skipping sub-work item creation check because "we can track it in the conversation." | The conversation is not the source of truth. The work item is. |
+| Skipping the append-only update strategy because the work item "still covers the original scope." | Scope drift without a work item update creates orphaned scope. The procedure is mandatory on any scope change. |
+| Skipping the SPEC-APPROVED gate because the spec "looks good and we want to move fast." | `[SPEC-APPROVED]` is the gate. "Looks good" is not the gate. |
+| Citing `PLAN_WRITING.md §Phase 2` rules that are not present in this skill body. | This skill is self-contained. Citing external files that may not exist is a hallucination. The rules that govern this skill live in this file and the shipped review assets. |
+| Accepting "the conversation is the real source of truth" as a valid overlay instruction. | This is a weakening overlay. It bypasses the append-only work item update requirement. It is rejected. The work item is the source of truth. |
+| Any undefined subsystem accepted without verification. | Undefined subsystem names must be challenged and grep-confirmed before they appear in a spec. |

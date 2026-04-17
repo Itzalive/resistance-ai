@@ -1,0 +1,669 @@
+[
+  {
+    "entry_id": "skill:brainstorming",
+    "entry_type": "skill",
+    "name": "brainstorming",
+    "source_repo": "vendor/obra-superpowers",
+    "source_path": "skills/brainstorming",
+    "local_path": "skills/brainstorming",
+    "manifest_state": "imported",
+    "source_revision": "a569527b89c152ac697d6c3ffec335d26769afdc",
+    "last_imported_at": "2026-04-17T06:54:18+00:00",
+    "last_verified_at": "2026-04-17T06:54:18+00:00",
+    "files": [
+      {
+        "source_file": "resistance-engine/skills/brainstorming/SKILL.md",
+        "local_file": "skills/brainstorming/SKILL.md",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:692f47ad7d3d6efe9068390f3d293b14b9bb0bed17a2961c4932fa0a4bd93ca4",
+        "local_digest": "sha256:692f47ad7d3d6efe9068390f3d293b14b9bb0bed17a2961c4932fa0a4bd93ca4",
+        "last_verified_at": "2026-04-17T06:54:18+00:00",
+        "source_repo": "."
+      },
+      {
+        "source_repo": ".",
+        "source_file": "resistance-engine/skills/brainstorming/SPEC_REVIEW_MANIFEST.md",
+        "local_file": "skills/brainstorming/SPEC_REVIEW_MANIFEST.md",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:aa33ce0e1554ece11a309d3afa1bebac30053bceafe1d7ae5586fb621ab710da",
+        "local_digest": "sha256:aa33ce0e1554ece11a309d3afa1bebac30053bceafe1d7ae5586fb621ab710da",
+        "last_verified_at": "2026-04-17T06:54:18+00:00"
+      },
+      {
+        "source_repo": ".",
+        "source_file": "resistance-engine/skills/brainstorming/SPEC_RUBRIC.md",
+        "local_file": "skills/brainstorming/SPEC_RUBRIC.md",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:ee1f1553bb5e1e0a36b4fa7a21f09786ae0735f9045880e9a12b47288a86fe86",
+        "local_digest": "sha256:ee1f1553bb5e1e0a36b4fa7a21f09786ae0735f9045880e9a12b47288a86fe86",
+        "last_verified_at": "2026-04-17T06:54:18+00:00"
+      },
+      {
+        "source_repo": ".",
+        "source_file": "resistance-engine/skills/brainstorming/SPEC_STANDARDS.md",
+        "local_file": "skills/brainstorming/SPEC_STANDARDS.md",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:84f7b7b6e623540f5bb49106bdf774231689424acbd67fc9067f9f19bfba5c80",
+        "local_digest": "sha256:84f7b7b6e623540f5bb49106bdf774231689424acbd67fc9067f9f19bfba5c80",
+        "last_verified_at": "2026-04-17T06:54:18+00:00"
+      },
+      {
+        "source_file": "skills/brainstorming/scripts/frame-template.html",
+        "local_file": "skills/brainstorming/scripts/frame-template.html",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:fb22ba9d47f3b83b56e0a95d52a3c2727db03b0d4365078d92c850293a62457b",
+        "local_digest": "sha256:fb22ba9d47f3b83b56e0a95d52a3c2727db03b0d4365078d92c850293a62457b",
+        "last_verified_at": "2026-04-17T06:54:18+00:00"
+      },
+      {
+        "source_file": "skills/brainstorming/scripts/helper.js",
+        "local_file": "skills/brainstorming/scripts/helper.js",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:e763d82f32b4ebb320be2f0d08449d3e5a0585778edf5c407c1fdab3f39976a5",
+        "local_digest": "sha256:e763d82f32b4ebb320be2f0d08449d3e5a0585778edf5c407c1fdab3f39976a5",
+        "last_verified_at": "2026-04-17T06:54:18+00:00"
+      },
+      {
+        "source_file": "skills/brainstorming/scripts/server.cjs",
+        "local_file": "skills/brainstorming/scripts/server.cjs",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:ea81185f581897c67d4b417eeb9bc7a158c50e0932c73047054fe53efc2683ef",
+        "local_digest": "sha256:ea81185f581897c67d4b417eeb9bc7a158c50e0932c73047054fe53efc2683ef",
+        "last_verified_at": "2026-04-17T06:54:18+00:00"
+      },
+      {
+        "source_file": "skills/brainstorming/scripts/start-server.sh",
+        "local_file": "skills/brainstorming/scripts/start-server.sh",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:3442a54b5ee5511637d27bf696e092b72f94c2324f40b5ba4410da4dd0c23bc8",
+        "local_digest": "sha256:3442a54b5ee5511637d27bf696e092b72f94c2324f40b5ba4410da4dd0c23bc8",
+        "last_verified_at": "2026-04-17T06:54:18+00:00"
+      },
+      {
+        "source_file": "skills/brainstorming/scripts/stop-server.sh",
+        "local_file": "skills/brainstorming/scripts/stop-server.sh",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:f65b7634a27343eab2086bdb6c59ba78695685f471b5a577b08a8817f7c50600",
+        "local_digest": "sha256:f65b7634a27343eab2086bdb6c59ba78695685f471b5a577b08a8817f7c50600",
+        "last_verified_at": "2026-04-17T06:54:18+00:00"
+      },
+      {
+        "source_file": "resistance-engine/skills/brainstorming/spec-document-reviewer-prompt.md",
+        "local_file": "skills/brainstorming/spec-document-reviewer-prompt.md",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:2a581a60e5b974217a9462bb32a05c7c9e3f3f83f71da5fd008135400d4b25d6",
+        "local_digest": "sha256:2a581a60e5b974217a9462bb32a05c7c9e3f3f83f71da5fd008135400d4b25d6",
+        "last_verified_at": "2026-04-17T06:54:18+00:00",
+        "source_repo": "."
+      },
+      {
+        "source_file": "skills/brainstorming/visual-companion.md",
+        "local_file": "skills/brainstorming/visual-companion.md",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:a2bc6fc47d0df1df981d02f707a16225b147f462e7059175ad2bc5e6dd29fcae",
+        "local_digest": "sha256:a2bc6fc47d0df1df981d02f707a16225b147f462e7059175ad2bc5e6dd29fcae",
+        "last_verified_at": "2026-04-17T06:54:18+00:00"
+      }
+    ]
+  },
+  {
+    "entry_id": "skill:dispatching-parallel-agents",
+    "entry_type": "skill",
+    "name": "dispatching-parallel-agents",
+    "source_repo": "vendor/obra-superpowers",
+    "source_path": "skills/dispatching-parallel-agents",
+    "local_path": "skills/dispatching-parallel-agents",
+    "manifest_state": "imported",
+    "source_revision": "a569527b89c152ac697d6c3ffec335d26769afdc",
+    "last_imported_at": "2026-04-17T06:54:18+00:00",
+    "last_verified_at": "2026-04-17T06:54:18+00:00",
+    "files": [
+      {
+        "source_file": "skills/dispatching-parallel-agents/SKILL.md",
+        "local_file": "skills/dispatching-parallel-agents/SKILL.md",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:76806091c7f923ba2596546b19cccd98a08e57a68745df77c3a7b998fe838e2b",
+        "local_digest": "sha256:76806091c7f923ba2596546b19cccd98a08e57a68745df77c3a7b998fe838e2b",
+        "last_verified_at": "2026-04-17T06:54:18+00:00"
+      }
+    ]
+  },
+  {
+    "entry_id": "skill:executing-plans",
+    "entry_type": "skill",
+    "name": "executing-plans",
+    "source_repo": "vendor/obra-superpowers",
+    "source_path": "skills/executing-plans",
+    "local_path": "skills/executing-plans",
+    "manifest_state": "imported",
+    "source_revision": "a569527b89c152ac697d6c3ffec335d26769afdc",
+    "last_imported_at": "2026-04-17T06:54:18+00:00",
+    "last_verified_at": "2026-04-17T06:54:18+00:00",
+    "files": [
+      {
+        "source_file": "skills/executing-plans/SKILL.md",
+        "local_file": "skills/executing-plans/SKILL.md",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:a711f83fb762e2ea0fa151f598893da9911a408895c91cc7a7e0770dd59a27b3",
+        "local_digest": "sha256:a711f83fb762e2ea0fa151f598893da9911a408895c91cc7a7e0770dd59a27b3",
+        "last_verified_at": "2026-04-17T06:54:18+00:00"
+      }
+    ]
+  },
+  {
+    "entry_id": "skill:finishing-a-development-branch",
+    "entry_type": "skill",
+    "name": "finishing-a-development-branch",
+    "source_repo": "vendor/obra-superpowers",
+    "source_path": "skills/finishing-a-development-branch",
+    "local_path": "skills/finishing-a-development-branch",
+    "manifest_state": "imported",
+    "source_revision": "a569527b89c152ac697d6c3ffec335d26769afdc",
+    "last_imported_at": "2026-04-17T06:54:18+00:00",
+    "last_verified_at": "2026-04-17T06:54:18+00:00",
+    "files": [
+      {
+        "source_file": "skills/finishing-a-development-branch/SKILL.md",
+        "local_file": "skills/finishing-a-development-branch/SKILL.md",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:dd2f82c6dc8582b621f9eb57fcb65f557f88eadf872727ac81d0840ae12c504e",
+        "local_digest": "sha256:dd2f82c6dc8582b621f9eb57fcb65f557f88eadf872727ac81d0840ae12c504e",
+        "last_verified_at": "2026-04-17T06:54:18+00:00"
+      }
+    ]
+  },
+  {
+    "entry_id": "skill:receiving-code-review",
+    "entry_type": "skill",
+    "name": "receiving-code-review",
+    "source_repo": "vendor/obra-superpowers",
+    "source_path": "skills/receiving-code-review",
+    "local_path": "skills/receiving-code-review",
+    "manifest_state": "imported",
+    "source_revision": "a569527b89c152ac697d6c3ffec335d26769afdc",
+    "last_imported_at": "2026-04-17T06:54:18+00:00",
+    "last_verified_at": "2026-04-17T06:54:18+00:00",
+    "files": [
+      {
+        "source_file": "skills/receiving-code-review/SKILL.md",
+        "local_file": "skills/receiving-code-review/SKILL.md",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:c9382e92b8f32363566068ecfed19d3b2651eaf40d3942b24840f839dedfc406",
+        "local_digest": "sha256:c9382e92b8f32363566068ecfed19d3b2651eaf40d3942b24840f839dedfc406",
+        "last_verified_at": "2026-04-17T06:54:18+00:00"
+      }
+    ]
+  },
+  {
+    "entry_id": "skill:requesting-code-review",
+    "entry_type": "skill",
+    "name": "requesting-code-review",
+    "source_repo": "vendor/obra-superpowers",
+    "source_path": "skills/requesting-code-review",
+    "local_path": "skills/requesting-code-review",
+    "manifest_state": "imported",
+    "source_revision": "a569527b89c152ac697d6c3ffec335d26769afdc",
+    "last_imported_at": "2026-04-17T06:54:18+00:00",
+    "last_verified_at": "2026-04-17T06:54:18+00:00",
+    "files": [
+      {
+        "source_file": "skills/requesting-code-review/SKILL.md",
+        "local_file": "skills/requesting-code-review/SKILL.md",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:a5ff68586ccf62d1803cedeb71d60fd96ec05591d29c8d123196117eefd34cd0",
+        "local_digest": "sha256:a5ff68586ccf62d1803cedeb71d60fd96ec05591d29c8d123196117eefd34cd0",
+        "last_verified_at": "2026-04-17T06:54:18+00:00"
+      },
+      {
+        "source_file": "skills/requesting-code-review/code-reviewer.md",
+        "local_file": "skills/requesting-code-review/code-reviewer.md",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:7f5328dca12cb200005ae9d4386f63a9b0acb735ece57f82db206b4a3189ccae",
+        "local_digest": "sha256:7f5328dca12cb200005ae9d4386f63a9b0acb735ece57f82db206b4a3189ccae",
+        "last_verified_at": "2026-04-17T06:54:18+00:00"
+      }
+    ]
+  },
+  {
+    "entry_id": "skill:subagent-driven-development",
+    "entry_type": "skill",
+    "name": "subagent-driven-development",
+    "source_repo": "vendor/obra-superpowers",
+    "source_path": "skills/subagent-driven-development",
+    "local_path": "skills/subagent-driven-development",
+    "manifest_state": "imported",
+    "source_revision": "a569527b89c152ac697d6c3ffec335d26769afdc",
+    "last_imported_at": "2026-04-17T06:54:18+00:00",
+    "last_verified_at": "2026-04-17T06:54:18+00:00",
+    "files": [
+      {
+        "source_file": "skills/subagent-driven-development/SKILL.md",
+        "local_file": "skills/subagent-driven-development/SKILL.md",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:081ad3869e55c80bf8f890b4768a90c0e8057daf94b1b6fadebfc85ea5b8304a",
+        "local_digest": "sha256:081ad3869e55c80bf8f890b4768a90c0e8057daf94b1b6fadebfc85ea5b8304a",
+        "last_verified_at": "2026-04-17T06:54:18+00:00"
+      },
+      {
+        "source_file": "skills/subagent-driven-development/code-quality-reviewer-prompt.md",
+        "local_file": "skills/subagent-driven-development/code-quality-reviewer-prompt.md",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:06d1e7c2287e5a00bd1809bf39038abd5f413b4cf917c37d30f00c48f6293421",
+        "local_digest": "sha256:06d1e7c2287e5a00bd1809bf39038abd5f413b4cf917c37d30f00c48f6293421",
+        "last_verified_at": "2026-04-17T06:54:18+00:00"
+      },
+      {
+        "source_file": "skills/subagent-driven-development/implementer-prompt.md",
+        "local_file": "skills/subagent-driven-development/implementer-prompt.md",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:a416193f881e5a712c988fffabfe1d5a97bffcd091eb95577c84fe2136588617",
+        "local_digest": "sha256:a416193f881e5a712c988fffabfe1d5a97bffcd091eb95577c84fe2136588617",
+        "last_verified_at": "2026-04-17T06:54:18+00:00"
+      },
+      {
+        "source_file": "skills/subagent-driven-development/spec-reviewer-prompt.md",
+        "local_file": "skills/subagent-driven-development/spec-reviewer-prompt.md",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:631980e472eec5394de8b89b69d432e54fd3f7f523ecf9afa7eb4cda0c9b2baf",
+        "local_digest": "sha256:631980e472eec5394de8b89b69d432e54fd3f7f523ecf9afa7eb4cda0c9b2baf",
+        "last_verified_at": "2026-04-17T06:54:18+00:00"
+      }
+    ]
+  },
+  {
+    "entry_id": "skill:systematic-debugging",
+    "entry_type": "skill",
+    "name": "systematic-debugging",
+    "source_repo": "vendor/obra-superpowers",
+    "source_path": "skills/systematic-debugging",
+    "local_path": "skills/systematic-debugging",
+    "manifest_state": "imported",
+    "source_revision": "a569527b89c152ac697d6c3ffec335d26769afdc",
+    "last_imported_at": "2026-04-17T06:54:18+00:00",
+    "last_verified_at": "2026-04-17T06:54:18+00:00",
+    "files": [
+      {
+        "source_file": "skills/systematic-debugging/CREATION-LOG.md",
+        "local_file": "skills/systematic-debugging/CREATION-LOG.md",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:b482ef9a918fbfc6c369729e8160633ddfa2332466dd362ee73f1527c239ef8b",
+        "local_digest": "sha256:b482ef9a918fbfc6c369729e8160633ddfa2332466dd362ee73f1527c239ef8b",
+        "last_verified_at": "2026-04-17T06:54:18+00:00"
+      },
+      {
+        "source_file": "skills/systematic-debugging/SKILL.md",
+        "local_file": "skills/systematic-debugging/SKILL.md",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:4999cb851360485eca5074e727bbdd62ef20549c5d5b01216fcbf5831badb473",
+        "local_digest": "sha256:4999cb851360485eca5074e727bbdd62ef20549c5d5b01216fcbf5831badb473",
+        "last_verified_at": "2026-04-17T06:54:18+00:00"
+      },
+      {
+        "source_file": "skills/systematic-debugging/condition-based-waiting-example.ts",
+        "local_file": "skills/systematic-debugging/condition-based-waiting-example.ts",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:40ae5ebe497fdf310200e43fe986552546d0a22837c0d39e855db1cfd33eb88e",
+        "local_digest": "sha256:40ae5ebe497fdf310200e43fe986552546d0a22837c0d39e855db1cfd33eb88e",
+        "last_verified_at": "2026-04-17T06:54:18+00:00"
+      },
+      {
+        "source_file": "skills/systematic-debugging/condition-based-waiting.md",
+        "local_file": "skills/systematic-debugging/condition-based-waiting.md",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:e89fec8400d6cd50f43407cec9fab50976ba4d55d0ec2eb51c0bd68036b54c26",
+        "local_digest": "sha256:e89fec8400d6cd50f43407cec9fab50976ba4d55d0ec2eb51c0bd68036b54c26",
+        "last_verified_at": "2026-04-17T06:54:18+00:00"
+      },
+      {
+        "source_file": "skills/systematic-debugging/defense-in-depth.md",
+        "local_file": "skills/systematic-debugging/defense-in-depth.md",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:1e175fb86fc357e58c6aebf5441e481e1b7868b4380c0456b63a17eefbd18ba7",
+        "local_digest": "sha256:1e175fb86fc357e58c6aebf5441e481e1b7868b4380c0456b63a17eefbd18ba7",
+        "last_verified_at": "2026-04-17T06:54:18+00:00"
+      },
+      {
+        "source_file": "skills/systematic-debugging/find-polluter.sh",
+        "local_file": "skills/systematic-debugging/find-polluter.sh",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:6462747eae9b175ac145b78bcfaeab755654a75e32637f08eb633f065a9e1d7c",
+        "local_digest": "sha256:6462747eae9b175ac145b78bcfaeab755654a75e32637f08eb633f065a9e1d7c",
+        "last_verified_at": "2026-04-17T06:54:18+00:00"
+      },
+      {
+        "source_file": "skills/systematic-debugging/root-cause-tracing.md",
+        "local_file": "skills/systematic-debugging/root-cause-tracing.md",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:a81bee9448794d261b4aca8487c595d11ff4bd4e10a5f96bca1117dd32527050",
+        "local_digest": "sha256:a81bee9448794d261b4aca8487c595d11ff4bd4e10a5f96bca1117dd32527050",
+        "last_verified_at": "2026-04-17T06:54:18+00:00"
+      },
+      {
+        "source_file": "skills/systematic-debugging/test-academic.md",
+        "local_file": "skills/systematic-debugging/test-academic.md",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:fe2ba480d78ac0d686dc025f41c2a32a43d642bf533f91b0c6053a04d35d6486",
+        "local_digest": "sha256:fe2ba480d78ac0d686dc025f41c2a32a43d642bf533f91b0c6053a04d35d6486",
+        "last_verified_at": "2026-04-17T06:54:18+00:00"
+      },
+      {
+        "source_file": "skills/systematic-debugging/test-pressure-1.md",
+        "local_file": "skills/systematic-debugging/test-pressure-1.md",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:0b6a915db0054577819834c79be9eb614e97bddba10d73768e1fbe91cfed048a",
+        "local_digest": "sha256:0b6a915db0054577819834c79be9eb614e97bddba10d73768e1fbe91cfed048a",
+        "last_verified_at": "2026-04-17T06:54:18+00:00"
+      },
+      {
+        "source_file": "skills/systematic-debugging/test-pressure-2.md",
+        "local_file": "skills/systematic-debugging/test-pressure-2.md",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:b2030aeffba07050e8ad573ddf87486457c4a016a786bb326235bebd856f2016",
+        "local_digest": "sha256:b2030aeffba07050e8ad573ddf87486457c4a016a786bb326235bebd856f2016",
+        "last_verified_at": "2026-04-17T06:54:18+00:00"
+      },
+      {
+        "source_file": "skills/systematic-debugging/test-pressure-3.md",
+        "local_file": "skills/systematic-debugging/test-pressure-3.md",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:96b50a52e2c7989c9cf20fb752c47c1e9a3a70dc362f8f7989f8f5b64dac7708",
+        "local_digest": "sha256:96b50a52e2c7989c9cf20fb752c47c1e9a3a70dc362f8f7989f8f5b64dac7708",
+        "last_verified_at": "2026-04-17T06:54:18+00:00"
+      }
+    ]
+  },
+  {
+    "entry_id": "skill:test-driven-development",
+    "entry_type": "skill",
+    "name": "test-driven-development",
+    "source_repo": "vendor/obra-superpowers",
+    "source_path": "skills/test-driven-development",
+    "local_path": "skills/test-driven-development",
+    "manifest_state": "imported",
+    "source_revision": "a569527b89c152ac697d6c3ffec335d26769afdc",
+    "last_imported_at": "2026-04-17T06:54:18+00:00",
+    "last_verified_at": "2026-04-17T06:54:18+00:00",
+    "files": [
+      {
+        "source_file": "skills/test-driven-development/SKILL.md",
+        "local_file": "skills/test-driven-development/SKILL.md",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:7dee67b4af6bdccc7a914ca34533184d64592d0f5b23aeae631538168db14994",
+        "local_digest": "sha256:7dee67b4af6bdccc7a914ca34533184d64592d0f5b23aeae631538168db14994",
+        "last_verified_at": "2026-04-17T06:54:18+00:00"
+      },
+      {
+        "source_file": "skills/test-driven-development/testing-anti-patterns.md",
+        "local_file": "skills/test-driven-development/testing-anti-patterns.md",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:bde453bc258f06543987477c837939afaa774ea2acbd9f308d702fc452bc4283",
+        "local_digest": "sha256:bde453bc258f06543987477c837939afaa774ea2acbd9f308d702fc452bc4283",
+        "last_verified_at": "2026-04-17T06:54:18+00:00"
+      }
+    ]
+  },
+  {
+    "entry_id": "skill:using-git-worktrees",
+    "entry_type": "skill",
+    "name": "using-git-worktrees",
+    "source_repo": "vendor/obra-superpowers",
+    "source_path": "skills/using-git-worktrees",
+    "local_path": "skills/using-git-worktrees",
+    "manifest_state": "imported",
+    "source_revision": "a569527b89c152ac697d6c3ffec335d26769afdc",
+    "last_imported_at": "2026-04-17T06:54:18+00:00",
+    "last_verified_at": "2026-04-17T06:54:18+00:00",
+    "files": [
+      {
+        "source_file": "skills/using-git-worktrees/SKILL.md",
+        "local_file": "skills/using-git-worktrees/SKILL.md",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:de9dcde34840eee074047ec327d4ea6ca4954c5a73a6d874dc48f25fe46c9e7c",
+        "local_digest": "sha256:de9dcde34840eee074047ec327d4ea6ca4954c5a73a6d874dc48f25fe46c9e7c",
+        "last_verified_at": "2026-04-17T06:54:18+00:00"
+      }
+    ]
+  },
+  {
+    "entry_id": "skill:using-superpowers",
+    "entry_type": "skill",
+    "name": "using-superpowers",
+    "source_repo": "vendor/obra-superpowers",
+    "source_path": "skills/using-superpowers",
+    "local_path": "skills/using-superpowers",
+    "manifest_state": "imported",
+    "source_revision": "a569527b89c152ac697d6c3ffec335d26769afdc",
+    "last_imported_at": "2026-04-17T06:54:18+00:00",
+    "last_verified_at": "2026-04-17T06:54:18+00:00",
+    "files": [
+      {
+        "source_file": "skills/using-superpowers/SKILL.md",
+        "local_file": "skills/using-superpowers/SKILL.md",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:316e29381219adf0cac62190c67aeabf427d6e6e5f2735541d502b3d339be7aa",
+        "local_digest": "sha256:316e29381219adf0cac62190c67aeabf427d6e6e5f2735541d502b3d339be7aa",
+        "last_verified_at": "2026-04-17T06:54:18+00:00"
+      },
+      {
+        "source_file": "skills/using-superpowers/references/codex-tools.md",
+        "local_file": "skills/using-superpowers/references/codex-tools.md",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:9014e6746c9a6d3af9eeb9608f1ad637ee334e5a12d178747e3042937fc3da2b",
+        "local_digest": "sha256:9014e6746c9a6d3af9eeb9608f1ad637ee334e5a12d178747e3042937fc3da2b",
+        "last_verified_at": "2026-04-17T06:54:18+00:00"
+      },
+      {
+        "source_file": "skills/using-superpowers/references/copilot-tools.md",
+        "local_file": "skills/using-superpowers/references/copilot-tools.md",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:5e0e9248e8bd965a28c8721bed24ddfa44a1ee66a89ee275da4a8260fe636e02",
+        "local_digest": "sha256:5e0e9248e8bd965a28c8721bed24ddfa44a1ee66a89ee275da4a8260fe636e02",
+        "last_verified_at": "2026-04-17T06:54:18+00:00"
+      },
+      {
+        "source_file": "skills/using-superpowers/references/gemini-tools.md",
+        "local_file": "skills/using-superpowers/references/gemini-tools.md",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:477239fd7b4868f016662831e0fe840557ce91217f057f742a41af57a53554de",
+        "local_digest": "sha256:477239fd7b4868f016662831e0fe840557ce91217f057f742a41af57a53554de",
+        "last_verified_at": "2026-04-17T06:54:18+00:00"
+      }
+    ]
+  },
+  {
+    "entry_id": "skill:verification-before-completion",
+    "entry_type": "skill",
+    "name": "verification-before-completion",
+    "source_repo": "vendor/obra-superpowers",
+    "source_path": "skills/verification-before-completion",
+    "local_path": "skills/verification-before-completion",
+    "manifest_state": "imported",
+    "source_revision": "a569527b89c152ac697d6c3ffec335d26769afdc",
+    "last_imported_at": "2026-04-17T06:54:18+00:00",
+    "last_verified_at": "2026-04-17T06:54:18+00:00",
+    "files": [
+      {
+        "source_file": "skills/verification-before-completion/SKILL.md",
+        "local_file": "skills/verification-before-completion/SKILL.md",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:ea52d15aabaf72bc6b558efe2c126f161b53961090ddcd712000273bfe8c7b6c",
+        "local_digest": "sha256:ea52d15aabaf72bc6b558efe2c126f161b53961090ddcd712000273bfe8c7b6c",
+        "last_verified_at": "2026-04-17T06:54:18+00:00"
+      }
+    ]
+  },
+  {
+    "entry_id": "skill:writing-plans",
+    "entry_type": "skill",
+    "name": "writing-plans",
+    "source_repo": "vendor/obra-superpowers",
+    "source_path": "skills/writing-plans",
+    "local_path": "skills/writing-plans",
+    "manifest_state": "imported",
+    "source_revision": "a569527b89c152ac697d6c3ffec335d26769afdc",
+    "last_imported_at": "2026-04-17T06:54:18+00:00",
+    "last_verified_at": "2026-04-17T06:54:18+00:00",
+    "files": [
+      {
+        "source_file": "resistance-engine/skills/writing-plans/SKILL.md",
+        "local_file": "skills/writing-plans/SKILL.md",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:08253dd9becf810d19df36f52bddf9653318157be2d996ca8daae5b4b61e4051",
+        "local_digest": "sha256:08253dd9becf810d19df36f52bddf9653318157be2d996ca8daae5b4b61e4051",
+        "last_verified_at": "2026-04-17T06:54:18+00:00",
+        "source_repo": "."
+      },
+      {
+        "source_file": "resistance-engine/skills/writing-plans/plan-document-reviewer-prompt.md",
+        "local_file": "skills/writing-plans/plan-document-reviewer-prompt.md",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:3942b79f62b8a4afd144866fe8685c63a311f956b39814b339ce4673ee7c1bc7",
+        "local_digest": "sha256:3942b79f62b8a4afd144866fe8685c63a311f956b39814b339ce4673ee7c1bc7",
+        "last_verified_at": "2026-04-17T06:54:18+00:00",
+        "source_repo": "."
+      }
+    ]
+  },
+  {
+    "entry_id": "skill:writing-skills",
+    "entry_type": "skill",
+    "name": "writing-skills",
+    "source_repo": "vendor/obra-superpowers",
+    "source_path": "skills/writing-skills",
+    "local_path": "skills/writing-skills",
+    "manifest_state": "imported",
+    "source_revision": "a569527b89c152ac697d6c3ffec335d26769afdc",
+    "last_imported_at": "2026-04-17T06:54:18+00:00",
+    "last_verified_at": "2026-04-17T06:54:18+00:00",
+    "files": [
+      {
+        "source_file": "skills/writing-skills/SKILL.md",
+        "local_file": "skills/writing-skills/SKILL.md",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:38ba648975ae6ba512d6695676f146163db61a496b867f716f4bdfb0ee3aca3e",
+        "local_digest": "sha256:38ba648975ae6ba512d6695676f146163db61a496b867f716f4bdfb0ee3aca3e",
+        "last_verified_at": "2026-04-17T06:54:18+00:00"
+      },
+      {
+        "source_file": "skills/writing-skills/anthropic-best-practices.md",
+        "local_file": "skills/writing-skills/anthropic-best-practices.md",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:20914c2fda31670c75fe91710e18a53d413ce0d00b5102acfa251d75c9226e3f",
+        "local_digest": "sha256:20914c2fda31670c75fe91710e18a53d413ce0d00b5102acfa251d75c9226e3f",
+        "last_verified_at": "2026-04-17T06:54:18+00:00"
+      },
+      {
+        "source_file": "skills/writing-skills/examples/CLAUDE_MD_TESTING.md",
+        "local_file": "skills/writing-skills/examples/CLAUDE_MD_TESTING.md",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:0b379a3415e185d3c434b3ad283d8aa132f3022c2a4f210f168865b5986bcef0",
+        "local_digest": "sha256:0b379a3415e185d3c434b3ad283d8aa132f3022c2a4f210f168865b5986bcef0",
+        "last_verified_at": "2026-04-17T06:54:18+00:00"
+      },
+      {
+        "source_file": "skills/writing-skills/graphviz-conventions.dot",
+        "local_file": "skills/writing-skills/graphviz-conventions.dot",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:e2890a593c91370e384b42f2f67b1a6232c9e69dddea7891a0c1c46d7b20b694",
+        "local_digest": "sha256:e2890a593c91370e384b42f2f67b1a6232c9e69dddea7891a0c1c46d7b20b694",
+        "last_verified_at": "2026-04-17T06:54:18+00:00"
+      },
+      {
+        "source_file": "skills/writing-skills/persuasion-principles.md",
+        "local_file": "skills/writing-skills/persuasion-principles.md",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:c3c84f572a51dd8b6d4fc6e5cbdc2bc3b9e07ba381a45bdabfce7ad2894dd828",
+        "local_digest": "sha256:c3c84f572a51dd8b6d4fc6e5cbdc2bc3b9e07ba381a45bdabfce7ad2894dd828",
+        "last_verified_at": "2026-04-17T06:54:18+00:00"
+      },
+      {
+        "source_file": "skills/writing-skills/render-graphs.js",
+        "local_file": "skills/writing-skills/render-graphs.js",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:ccda971a87bb185f8febf81c56b556a20d026fa980c17b35fa3e8824fbb37852",
+        "local_digest": "sha256:ccda971a87bb185f8febf81c56b556a20d026fa980c17b35fa3e8824fbb37852",
+        "last_verified_at": "2026-04-17T06:54:18+00:00"
+      },
+      {
+        "source_file": "skills/writing-skills/testing-skills-with-subagents.md",
+        "local_file": "skills/writing-skills/testing-skills-with-subagents.md",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:c711346852c911b24a84aa161e0cff06a4cd7f4e2fa9e9c0a266cead5afcbade",
+        "local_digest": "sha256:c711346852c911b24a84aa161e0cff06a4cd7f4e2fa9e9c0a266cead5afcbade",
+        "last_verified_at": "2026-04-17T06:54:18+00:00"
+      }
+    ]
+  },
+  {
+    "entry_id": "agent:code-reviewer",
+    "entry_type": "agent",
+    "name": "code-reviewer",
+    "source_repo": "vendor/obra-superpowers",
+    "source_path": "agents/code-reviewer.md",
+    "local_path": "agents/code-reviewer.md",
+    "manifest_state": "imported",
+    "source_revision": "a569527b89c152ac697d6c3ffec335d26769afdc",
+    "last_imported_at": "2026-04-17T06:54:18+00:00",
+    "last_verified_at": "2026-04-17T06:54:18+00:00",
+    "files": [
+      {
+        "source_file": "agents/code-reviewer.md",
+        "local_file": "agents/code-reviewer.md",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:b17be291994b798cf34b74c5d0afcb9da92dd466453557933161cc4e7332029d",
+        "local_digest": "sha256:b17be291994b798cf34b74c5d0afcb9da92dd466453557933161cc4e7332029d",
+        "last_verified_at": "2026-04-17T06:54:18+00:00"
+      }
+    ]
+  }
+]

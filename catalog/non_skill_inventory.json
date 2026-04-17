@@ -1,0 +1,117 @@
+[
+  {
+    "source_path": ".claude-plugin",
+    "surface_kind": "directory",
+    "decision": "defer"
+  },
+  {
+    "source_path": ".codex",
+    "surface_kind": "directory",
+    "decision": "defer"
+  },
+  {
+    "source_path": ".cursor-plugin",
+    "surface_kind": "directory",
+    "decision": "defer"
+  },
+  {
+    "source_path": ".git",
+    "surface_kind": "file",
+    "decision": "ignore"
+  },
+  {
+    "source_path": ".gitattributes",
+    "surface_kind": "file",
+    "decision": "ignore"
+  },
+  {
+    "source_path": ".github",
+    "surface_kind": "directory",
+    "decision": "ignore"
+  },
+  {
+    "source_path": ".gitignore",
+    "surface_kind": "file",
+    "decision": "ignore"
+  },
+  {
+    "source_path": ".opencode",
+    "surface_kind": "directory",
+    "decision": "defer"
+  },
+  {
+    "source_path": ".version-bump.json",
+    "surface_kind": "file",
+    "decision": "ignore"
+  },
+  {
+    "source_path": "AGENTS.md",
+    "surface_kind": "file",
+    "decision": "defer"
+  },
+  {
+    "source_path": "CLAUDE.md",
+    "surface_kind": "file",
+    "decision": "defer"
+  },
+  {
+    "source_path": "CODE_OF_CONDUCT.md",
+    "surface_kind": "file",
+    "decision": "ignore"
+  },
+  {
+    "source_path": "GEMINI.md",
+    "surface_kind": "file",
+    "decision": "defer"
+  },
+  {
+    "source_path": "LICENSE",
+    "surface_kind": "file",
+    "decision": "defer"
+  },
+  {
+    "source_path": "README.md",
+    "surface_kind": "file",
+    "decision": "defer"
+  },
+  {
+    "source_path": "RELEASE-NOTES.md",
+    "surface_kind": "file",
+    "decision": "defer"
+  },
+  {
+    "source_path": "commands",
+    "surface_kind": "directory",
+    "decision": "defer"
+  },
+  {
+    "source_path": "docs",
+    "surface_kind": "directory",
+    "decision": "defer"
+  },
+  {
+    "source_path": "gemini-extension.json",
+    "surface_kind": "file",
+    "decision": "defer"
+  },
+  {
+    "source_path": "hooks",
+    "surface_kind": "directory",
+    "decision": "defer"
+  },
+  {
+    "source_path": "package.json",
+    "surface_kind": "file",
+    "decision": "defer"
+  },
+  {
+    "source_path": "scripts",
+    "surface_kind": "directory",
+    "decision": "defer"
+  },
+  {
+    "source_path": "tests",
+    "surface_kind": "directory",
+    "decision": "defer"
+  }
+]
