@@ -141,7 +141,7 @@ Rules:
 
 ## Strict RED / GREEN / REFACTOR
 
-Superpowers relies on Test-Driven Development. Your plan must structurally enforce
+Resistance Engine relies on Test-Driven Development. Your plan must structurally enforce
 this. Never bundle test creation and implementation into the same step.
 
 - **Step A (RED):** A discrete, standalone step that writes *failing* unit and

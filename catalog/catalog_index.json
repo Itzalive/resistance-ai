@@ -146,10 +146,10 @@
   },
   {
     "entry_type": "skill",
-    "name": "using-superpowers",
+    "name": "using-resistance-engine",
     "source_repo": "vendor/obra-superpowers",
     "source_path": "skills/using-superpowers",
-    "local_path": "skills/using-superpowers",
+    "local_path": "skills/using-resistance-engine",
     "imported_files": [
       "SKILL.md",
       "references/codex-tools.md",

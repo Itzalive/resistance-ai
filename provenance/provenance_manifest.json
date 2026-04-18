@@ -460,12 +460,12 @@
     ]
   },
   {
-    "entry_id": "skill:using-superpowers",
+    "entry_id": "skill:using-resistance-engine",
     "entry_type": "skill",
-    "name": "using-superpowers",
+    "name": "using-resistance-engine",
     "source_repo": "vendor/obra-superpowers",
     "source_path": "skills/using-superpowers",
-    "local_path": "skills/using-superpowers",
+    "local_path": "skills/using-resistance-engine",
     "manifest_state": "imported",
     "source_revision": "a569527b89c152ac697d6c3ffec335d26769afdc",
     "last_imported_at": "2026-04-17T06:54:18+00:00",
@@ -473,7 +473,7 @@
     "files": [
       {
         "source_file": "skills/using-superpowers/SKILL.md",
-        "local_file": "skills/using-superpowers/SKILL.md",
+        "local_file": "skills/using-resistance-engine/SKILL.md",
         "file_state": "imported",
         "local_sync_policy": "required",
         "source_digest": "sha256:316e29381219adf0cac62190c67aeabf427d6e6e5f2735541d502b3d339be7aa",
@@ -482,7 +482,7 @@
       },
       {
         "source_file": "skills/using-superpowers/references/codex-tools.md",
-        "local_file": "skills/using-superpowers/references/codex-tools.md",
+        "local_file": "skills/using-resistance-engine/references/codex-tools.md",
         "file_state": "imported",
         "local_sync_policy": "required",
         "source_digest": "sha256:9014e6746c9a6d3af9eeb9608f1ad637ee334e5a12d178747e3042937fc3da2b",
@@ -491,7 +491,7 @@
       },
       {
         "source_file": "skills/using-superpowers/references/copilot-tools.md",
-        "local_file": "skills/using-superpowers/references/copilot-tools.md",
+        "local_file": "skills/using-resistance-engine/references/copilot-tools.md",
         "file_state": "imported",
         "local_sync_policy": "required",
         "source_digest": "sha256:5e0e9248e8bd965a28c8721bed24ddfa44a1ee66a89ee275da4a8260fe636e02",
@@ -500,7 +500,7 @@
       },
       {
         "source_file": "skills/using-superpowers/references/gemini-tools.md",
-        "local_file": "skills/using-superpowers/references/gemini-tools.md",
+        "local_file": "skills/using-resistance-engine/references/gemini-tools.md",
         "file_state": "imported",
         "local_sync_policy": "required",
         "source_digest": "sha256:477239fd7b4868f016662831e0fe840557ce91217f057f742a41af57a53554de",
