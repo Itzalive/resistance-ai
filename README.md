@@ -30,6 +30,47 @@ git submodule update --init --recursive vendor/obra-superpowers
 - parent repositories should consume this project via a `resistance-engine/` git
   submodule and update the gitlink when adopting canonical changes
 
+## Installation
+
+### GitHub Copilot CLI
+
+Install from the repository-hosted marketplace:
+
+```bash
+copilot plugin marketplace add Itzalive/resistance-ai
+copilot plugin install resistance-engine@resistance-dev
+```
+
+Install directly from a local checkout:
+
+```bash
+git clone https://github.com/Itzalive/resistance-ai.git
+cd resistance-ai
+git submodule update --init --recursive vendor/obra-superpowers
+copilot plugin install .
+```
+
+The marketplace metadata lives in `.claude-plugin/marketplace.json`, and the
+plugin manifest lives in `.claude-plugin/plugin.json`.
+
+### VS Code
+
+This repository does not currently ship a standalone VS Code extension. Its
+`package.json` is metadata-only packaging for VS Code discovery and publishing
+workflows, and it is currently marked `private`.
+
+To use this repository from VS Code today, consume it from a parent repository
+or extension workspace:
+
+```bash
+git submodule add https://github.com/Itzalive/resistance-ai.git resistance-engine
+git submodule update --init --recursive resistance-engine/vendor/obra-superpowers
+```
+
+There is no public VS Code Marketplace install flow for this repository yet. If
+that changes later, document the Marketplace install path separately instead of
+changing the local/submodule flow described above.
+
 ## Refresh
 
 Run: `python3 scripts/import_superpowers_catalog.py`
