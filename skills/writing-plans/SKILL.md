@@ -261,6 +261,9 @@ the Unified Coherence Check:
    changed during self-review.
 6. **Unhappy-path coverage** — confirm at least two failure-mode tests per task.
 7. **Runbook completeness** — every manual infrastructure step has an explicit runbook entry.
+8. **Convention sync**: if planned work changes a repository-wide convention, include updates to contributor instruction files (for example 
+`.github/copilot-instructions.md`, `AGENTS.md`, and `CLAUDE.md`) in the same plan.
+
 
 Fix issues inline. No need to re-review after fixing — just correct and move on.
 If a spec requirement has no corresponding task, add the task.
