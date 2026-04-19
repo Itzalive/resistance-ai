@@ -52,6 +52,8 @@ Do not use this as a shortcut around repository inspection, review, or user appr
 ## Initial gate
 
 Before the spec body, return only the current gate output: `## Assumptions surface` plus blockers or blocking questions.
+For clearly visual layout/mockup/comparison requests, you may send the standalone visual-companion offer before `## Assumptions surface`.
+If the request already exposes security, privacy, permissions, data-sharing, source-of-truth, or approval blockers, skip the visual offer and start with `## Assumptions surface`.
 
 Do not emit downstream sections such as goals, user stories, architecture, or implementation steps before the first approved section.
 
@@ -135,6 +137,14 @@ digraph brainstorming {
     "Checklist Retrospective" -> "Invoke writing-plans";
 }
 ```
+
+## Visual Companion
+
+Some of what we're working on might be easier to explain if I can show it to you in a web browser. I can put together mockups, diagrams, comparisons, and other visuals as we go. This feature is still new and can be token-intensive. Want to try it? (Requires opening a local URL)
+
+This offer MUST be its own message. Do not combine it with clarifying questions, context summaries, or any other content.
+
+Accepting the companion does not waive repository inspection, blocker handling, or section-approval gates. Use it only for clearly visual questions, and then continue through the normal adversarial flow. Read `skills/brainstorming/visual-companion.md` before using the companion.
 
 ## Mandatory outputs
 

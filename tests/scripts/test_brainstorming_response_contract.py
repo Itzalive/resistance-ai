@@ -92,3 +92,37 @@ def test_brainstorming_quick_reference_forbids_retrofitting_spec_around_existing
         "If implementation already exists before design, stop. Do not retrofit a minimal spec around the current solution."
         in quick_reference
     )
+
+
+def test_brainstorming_initial_gate_allows_narrow_visual_offer() -> None:
+    skill_text = Path("skills/brainstorming/SKILL.md").read_text()
+
+    initial_gate = _section_text(skill_text, "Initial gate")
+
+    assert (
+        "For clearly visual layout/mockup/comparison requests, you may send the standalone visual-companion offer before `## Assumptions surface`."
+        in initial_gate
+    )
+    assert (
+        "If the request already exposes security, privacy, permissions, data-sharing, source-of-truth, or approval blockers, skip the visual offer and start with `## Assumptions surface`."
+        in initial_gate
+    )
+
+
+def test_brainstorming_visual_companion_preserves_gates() -> None:
+    skill_text = Path("skills/brainstorming/SKILL.md").read_text()
+
+    visual_companion = _section_text(skill_text, "Visual Companion")
+
+    assert (
+        "Some of what we're working on might be easier to explain if I can show it to you in a web browser."
+        in visual_companion
+    )
+    assert (
+        "This offer MUST be its own message."
+        in visual_companion
+    )
+    assert (
+        "accepting the companion does not waive repository inspection, blocker handling, or section-approval gates."
+        in visual_companion.lower()
+    )
