@@ -82,7 +82,7 @@ def test_validate_provenance_requires_authoring_default_contracts(
     assert "## Checklist" in brainstorming_skill
     assert "## Process Flow" in brainstorming_skill
     assert "## Quick Reference" in brainstorming_skill
-    assert "`APPROVED - CROSS-MODEL AUDIT` is required before plan writing" in brainstorming_skill
+    assert "Planning gate. Only specs with `APPROVED - CROSS-MODEL AUDIT` may proceed to" in brainstorming_skill
     assert ".review_log.jsonl" in brainstorming_skill
     checklist_text = section_text(brainstorming_skill, "Checklist")
     quick_reference_text = section_text(brainstorming_skill, "Quick Reference")

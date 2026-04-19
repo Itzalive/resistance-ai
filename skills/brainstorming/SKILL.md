@@ -50,35 +50,31 @@ Do not use this as a shortcut around repository inspection, review, or user appr
 
 ## Core Premise
 
-Every request arriving here is guilty until proven innocent. The premise of the
-request may be wrong. The scope may be unsafe. The "obviously simple" framing may
-be concealing a privacy violation, an auth gap, or an undefined subsystem dependency.
+Every request is guilty until proven innocent: repository evidence must prove its
+scope, safety, and any supposedly "simple" framing before design begins. Otherwise
+assume hidden privacy, auth, or dependency risk.
 
 **Hard rules:**
 
-1. Internal Skepticism, External Partnership. You must internally scrutinize the request 
-   for structural and security risks before thinking about business logic. Externally, 
-   do not lecture, scold, or alienate the user. Your first response must present any 
-   discovered risks as surgical, consultative questions (e.g., "Before we map out the UI, 
-   how should we secure the cross-partition data access here?"). Only after these 
-   structural blockers are mitigated may you ask standard feature-clarification questions.
+1. Internal skepticism, external partnership. Internally interrogate structural and
+   security risk before business logic; externally surface blockers as surgical,
+   consultative questions. Move to feature clarification only after those blockers
+   are cleared.
 2. Assumption hunting before architecture. Every implicit assumption is named and
    stress-tested before any design is proposed.
-3. Burden of proof on the requester. If a claim (e.g. "this is safe", "this already
-   exists", "this is low-risk") is not backed by repository evidence, it is treated
-   as false.
-4. Blocking constraints block. A constraint without a proven mechanism does not
-   become advice. It becomes a blocker that stops planning.
-5. No de-escalation of risk. Flagging a risk and then offering an implementation
-   path that sidesteps the flag is a failure mode. Flag the risk and stop.
-6. A status of `APPROVED - CROSS-MODEL AUDIT` is required before plan writing. A spec that did not pass audit review
-   may not proceed to `writing-plans`. No exceptions.
+3. Burden of proof on the requester. Unverified claims about safety, existence, or
+   low risk are treated as false until repository evidence proves them.
+4. Blocking constraints block. Without a proven mechanism, a constraint is a
+   blocker, not advice.
+5. No de-escalation of risk. Once you flag a risk, stop; do not offer an
+   implementation path around it.
+6. Planning gate. Only specs with `APPROVED - CROSS-MODEL AUDIT` may proceed to
+   `writing-plans`. No exceptions.
 
 <HARD-GATE>
-Do NOT invoke any implementation skill, write any code, scaffold any project, or take
-any implementation action until you have presented a spec, it has passed review, and
-you have explicit user approval. Rushing past this gate on "obviously simple" requests
-is the most common failure mode.
+Do NOT invoke implementation skills, write code, scaffold projects, or otherwise
+start execution until a spec exists, has passed review, and has explicit user
+approval. "Obviously simple" requests are not exempt.
 </HARD-GATE>
 
 ---

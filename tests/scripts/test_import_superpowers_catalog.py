@@ -703,7 +703,7 @@ def test_import_superpowers_catalog_matches_live_vendor_repo_shape(
     assert "Revise design (pre-spec)" in process_flow_text
     assert "Revise design (post-review)" in process_flow_text
     assert "## Quick Reference" in brainstorming_skill
-    assert "`APPROVED - CROSS-MODEL AUDIT` is required before plan writing" in brainstorming_skill
+    assert "Planning gate. Only specs with `APPROVED - CROSS-MODEL AUDIT` may proceed to" in brainstorming_skill
     assert ".review_log.jsonl" in brainstorming_skill
     checklist_text = section_text(brainstorming_skill, "Checklist")
     quick_reference_text = section_text(brainstorming_skill, "Quick Reference")
