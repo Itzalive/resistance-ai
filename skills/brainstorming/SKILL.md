@@ -167,35 +167,71 @@ Every spec produced by this skill must contain:
 
 ---
 
-## Drafting-time repository ingestion
+## Repository-grounded verification
 
-You must ground the spec in the actual codebase before writing the spec body. Memory is not a substitute. Because this skill operates across diverse repositories (frontend, backend, infrastructure), you must dynamically adapt your search tools (`grep`, `find`, `cat`) to the specific language and directory structure of the current project.
+You must ground the spec in the actual codebase before writing the spec body, and
+you must preserve that evidence through review. Memory is not a substitute.
+Because this skill operates across diverse repositories (frontend, backend,
+infrastructure), adapt your search tools (`grep`, `find`, `cat`) and search
+syntax (`def`, `class`, `interface`, `type`, `func`) to the current project.
 
-**Required Verification Categories:**
+Before finalizing any design, physically execute shell commands to verify:
 
-Before finalizing any design, you must physically execute shell commands to verify the following claims. Adapt your search syntax to the project's language (e.g., `def`, `class`, `interface`, `type`, `func`):
+1. **Security & guardrails** — claimed auth, sanitization, filters, or
+   middleware exist and intercept the target flow.
+   *Template:* `grep -rn "<ClaimedSafeguard>" <target_dir>/`
+2. **Signatures & contracts** — called components have the exact required
+   arguments, optional parameters, and return shape.
+   *Template:* `grep -rn "<claimed_function_name>" <target_dir>/ -A 10`
+3. **State & schema** — referenced fields exist in the schema, models, or
+   migrations.
+   *Template:* `grep -rn "<claimed_database_field>" <target_dir>/`
+4. **Configuration injection** — new settings, flags, or secrets follow the
+   repository's existing configuration pattern.
+5. **Supply chain & dependencies** — named third-party packages are physically
+   present in the manifest.
+   *Template:* `cat <dependency_manifest_file> | grep "<claimed_package>"`
 
-**1. Security & Guardrails**
-If the design relies on existing auth, sanitization, filters, or middleware, you must find its definition and verify it actually intercepts the target flow.
-*Template:* `grep -rn "<ClaimedSafeguard>" <target_dir>/`
+Before review, reject these substitutes for verification:
 
-**2. Signatures & Contracts**
-If the design calls an existing internal component, you must verify its exact required arguments, optional parameters, and return shape. Do not guess.
-*Template:* `grep -rn "<claimed_function_name>" <target_dir>/ -A 10`
+- Memory of how the codebase works.
+- A plausible description of a safeguard that sounds right.
+- "This is handled by existing controls."
+- Naming a class or function that has not been grep-confirmed to exist with the
+  claimed signature.
 
-**3. State & Schema**
-If the design reads or writes to a data store, verify the target fields actually exist in the repository's database models, schema files, or migration scripts.
-*Template:* `grep -rn "<claimed_database_field>" <target_dir>/`
+**Verification checklist (run via shell tools):**
 
-**4. Configuration Injection**
-If the design requires a new setting, feature flag, or secret, verify how the repository currently loads environment variables (e.g., `config.py`, `environment.ts`, `viper`). Do not invent a new configuration pattern.
+- [ ] Named methods and constructors exist and have the claimed signature.
+- [ ] Named return shapes match what callers actually receive.
+- [ ] Tool argument shapes match the real Bedrock/MCP call site.
+- [ ] Lifecycle ownership (created by X, destroyed by Y) is confirmed in source.
+- [ ] Tuple ordering is confirmed for any destructured return value.
+- [ ] Helper placement: helper is importable by all callers without creating a
+      circular import.
+- [ ] Settings wiring: the setting is defined in `config.py` and injected, not
+      read via `os.getenv` outside `config.py`.
+- [ ] Query defaults: any reused query helper has its real WHERE filters and
+      optional arguments confirmed, not assumed.
+- [ ] Logging/telemetry safety: any emitted or forwarded user/tool content is
+      sanitized before reaching logs, stdout, or telemetry sinks.
+- [ ] Hostile ingestion: any external file, network response, or tool output
+      that can affect prompts or context is validated, bounded, and sanitized
+      before use.
+- [ ] Bounded operations: list/retrieval paths, external calls, and background
+      work have explicit caps plus timeout and retry ceilings.
+- [ ] Least privilege: the spec only requests the narrowest required file, tool,
+      secret, and permission scope.
+- [ ] Supply chain: any new dependency is physically verified before being named
+      in the spec.
+- [ ] Executor contract: if the spec produces actions for later execution, the
+      consumer path is traced to its executor and the approval gate is confirmed.
 
-**5. Supply Chain & Dependencies**
-If the design assumes a third-party package is available, verify it is actually installed in the repository's manifest (`package.json`, `requirements.txt`, `go.mod`, etc.).
-*Template:* `cat <dependency_manifest_file> | grep "<claimed_package>"`
-
-**The Anti-Hallucination Rule:**
-Do not name a safeguard, component, or validation step in your spec without verified repository evidence. A security-shaped name with no proof is a hallucination, not a control. If the human claims a control exists, but you cannot find it via shell tools, it is an UNVERIFIED assumption and a blocking constraint.
+**Anti-hallucination rule:** Do not name a safeguard, component, or validation
+step in your spec without verified repository evidence. A security-shaped name
+with no proof is a hallucination, not a control. If the human claims a control
+exists, but you cannot find it via shell tools, it is an UNVERIFIED assumption
+and a blocking constraint.
 
 ---
 
@@ -254,46 +290,6 @@ The work item is the canonical source of truth for scope. A conversation that di
 from the work item without updating the work item is producing orphaned scope. This includes
 any discovery during brainstorming that changes the blast radius, the subsystems
 affected, or the acceptance criteria.
-
----
-
-## Empirical verification before review
-
-Before submitting a spec for review, every claimed behavior must be verified against
-the real codebase. The following are explicitly not acceptable substitutes for
-verification:
-
-- Memory of how the codebase works.
-- A plausible description of a safeguard that sounds right.
-- "This is handled by existing controls."
-- Naming a class or function that has not been grep-confirmed to exist with the
-  claimed signature.
-
-**Verification checklist (run via shell tools):**
-
-- [ ] Named methods and constructors exist and have the claimed signature.
-- [ ] Named return shapes match what callers actually receive.
-- [ ] Tool argument shapes match the real Bedrock/MCP call site.
-- [ ] Lifecycle ownership (created by X, destroyed by Y) is confirmed in source.
-- [ ] Tuple ordering is confirmed for any destructured return value.
-- [ ] Helper placement: helper is importable by all callers without creating a
-      circular import.
-- [ ] Settings wiring: the setting is defined in `config.py` and injected, not read
-      via `os.getenv` outside `config.py`.
-- [ ] Query defaults: any reused query helper has its real WHERE filters and optional
-      arguments confirmed, not assumed.
-- [ ] Logging/telemetry safety: any emitted or forwarded user/tool content is
-      sanitized before reaching logs, stdout, or telemetry sinks.
-- [ ] Hostile ingestion: any external file, network response, or tool output that can
-      affect prompts or context is validated, bounded, and sanitized before use.
-- [ ] Bounded operations: list/retrieval paths, external calls, and background work
-      have explicit caps plus timeout and retry ceilings.
-- [ ] Least privilege: the spec only requests the narrowest required file, tool,
-      secret, and permission scope.
-- [ ] Supply chain: any new dependency is physically verified before being named in
-      the spec.
-- [ ] Executor contract: if the spec produces actions for later execution, the
-      consumer path is traced to its executor and the approval gate is confirmed.
 
 ---
 
