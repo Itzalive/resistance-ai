@@ -711,6 +711,8 @@ def test_import_superpowers_catalog_matches_live_vendor_repo_shape(
     assert ".review_log.jsonl" in checklist_text
     assert "[SPEC-APPROVED]" in quick_reference_text
     assert ".review_log.jsonl" in quick_reference_text
+    assert "If ambiguity is unresolved, output blocking questions only" in quick_reference_text
+    assert "Cite only headings that actually exist in this package" in quick_reference_text
     assert '"Cross-model spec audit" -> "User review" [label="[SPEC-APPROVED]"]' in process_flow_text
     assert '"User review" ->  "Checklist Retrospective" [label="approved"]' in process_flow_text
     assert '"Checklist Retrospective" -> "Invoke writing-plans"' in process_flow_text

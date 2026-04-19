@@ -38,15 +38,21 @@ Do not use this as a shortcut around repository inspection, review, or user appr
 ## Quick Reference
 
 1. Load `SPEC_STANDARDS.md`.
-2. Inspect the repository before trusting the request.
-3. Surface blockers and assumptions before drafting the spec body.
-4. Present design sections one at a time and wait for approval before continuing.
+2. Inspect the repository before trusting the request. Cite only headings that actually exist in this package.
+3. If ambiguity is unresolved, output blocking questions only. Do not output `Draft Spec`, `MVP`, or any proposed solution while ambiguity remains unresolved.
+4. Before the first approved section, output only `## Assumptions surface` or blockers, then stop. Do not emit downstream sections such as goals, user stories, architecture, or implementation steps before the first approved section.
 5. Run self-review and cross-model audit, recording each outcome in `.review_log.jsonl` using `../review-log-jsonl.md`.
 6. Commit the spec before each new audit round.
 7. After audit approval, ask the user to review the written spec and treat `[SPEC-APPROVED]` as the only valid transition into `writing-plans`.
 8. Sync the source-of-truth work item before handing off to `writing-plans`.
 
 ---
+
+## Initial gate
+
+Before the spec body, return only the current gate output: `## Assumptions surface` plus blockers or blocking questions.
+
+Do not emit downstream sections such as goals, user stories, architecture, or implementation steps before the first approved section.
 
 ## Core Premise
 
@@ -384,9 +390,10 @@ adversarial scrutiny before proceeding.
 ## Common Mistakes
 
 - Treating "simple" or "obvious" scope as exempt from design gates.
-- Writing the spec body before repository inspection has verified key assumptions.
-- Converting blockers into advice instead of stopping for clarification.
-- Transitioning to `writing-plans` before audit approval, user approval, and work item sync.
+- Writing spec text or design sections before repository inspection has verified key assumptions.
+- Converting blockers into advice, follow-up items, or one-shot output instead of stopping.
+- Inventing headings such as "Rapid Spec Drafting", "Pressure-Test Protocol", or "Plan-Gate Protocol".
+- Moving to `writing-plans` before audit approval, user approval, and work item sync.
 
 ---
 
