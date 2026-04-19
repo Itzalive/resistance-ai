@@ -126,3 +126,26 @@ def test_brainstorming_visual_companion_preserves_gates() -> None:
         "accepting the companion does not waive repository inspection, blocker handling, or section-approval gates."
         in visual_companion.lower()
     )
+
+
+def test_brainstorming_quick_reference_stages_companion_loading() -> None:
+    skill_text = Path("skills/brainstorming/SKILL.md").read_text()
+
+    quick_reference = _section_text(skill_text, "Quick Reference")
+
+    assert "Load only the companion files needed for the current stage." in quick_reference
+    assert (
+        "`SPEC_STANDARDS.md` is required before drafting a spec body or when the request already exposes auth, privacy, data-sharing, or dependency risk."
+        in quick_reference
+    )
+    assert (
+        "`SPEC_REVIEW_MANIFEST.md` and `SPEC_RUBRIC.md` are required only after a written spec exists."
+        in quick_reference
+    )
+
+
+def test_brainstorming_later_stage_review_workflow_moves_to_support_file() -> None:
+    skill_text = Path("skills/brainstorming/SKILL.md").read_text()
+
+    assert "Load `review-workflow.md` after a written spec exists." in skill_text
+    assert Path("skills/brainstorming/review-workflow.md").exists()

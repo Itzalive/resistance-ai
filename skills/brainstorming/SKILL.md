@@ -12,10 +12,10 @@ request down, interrogate it, challenge its assumptions, and prove why the work 
 not yet safe to execute.
 
 Default authority lives in this package:
-- this `SKILL.md` is the shipped default spec-design rulebook
-- `SPEC_STANDARDS.md` is the architectural philosophy and threat model constraints
-- `SPEC_REVIEW_MANIFEST.md` is the shipped default review procedure
-- `SPEC_RUBRIC.md` is the shipped default grading contract
+- always load this `SKILL.md`
+- load `visual-companion.md` only for the standalone visual-companion path
+- load `SPEC_STANDARDS.md` for risk analysis or spec drafting
+- load `review-workflow.md` only after a written spec exists
 
 Repo-root `SPEC_DESIGN.md`, `SPEC_REVIEW_MANIFEST.md`, and `SPEC_RUBRIC.md` are
 optional overlays only. They may tighten or extend these defaults. They may not
@@ -37,15 +37,13 @@ Do not use this as a shortcut around repository inspection, review, or user appr
 
 ## Quick Reference
 
-1. Load `SPEC_STANDARDS.md`.
+1. Load only the companion files needed for the current stage. `SPEC_STANDARDS.md` is required before drafting a spec body or when the request already exposes auth, privacy, data-sharing, or dependency risk. `SPEC_REVIEW_MANIFEST.md` and `SPEC_RUBRIC.md` are required only after a written spec exists.
 2. Inspect the repository before trusting the request. Cite only headings that actually exist in this package.
 3. If ambiguity is unresolved, output blocking questions only. Do not output `Draft Spec`, `MVP`, or any proposed solution while ambiguity remains unresolved.
 4. Before the first approved section, output only `## Assumptions surface` or blockers, then stop. Do not emit downstream sections such as goals, user stories, architecture, or implementation steps before the first approved section.
 5. If implementation already exists before design, stop. Do not retrofit a minimal spec around the current solution.
-6. Run self-review and cross-model audit, recording each outcome in `.review_log.jsonl` using `../review-log-jsonl.md`.
-7. Commit the spec before each new audit round.
-8. After audit approval, ask the user to review the written spec and treat `[SPEC-APPROVED]` as the only valid transition into `writing-plans`.
-9. Sync the source-of-truth work item before handing off to `writing-plans`.
+6. After a written spec exists, load `review-workflow.md`. Run self-review and opposite-family cross-model audit, record each outcome in `.review_log.jsonl` using `../review-log-jsonl.md`, and treat `[SPEC-APPROVED]` as the only valid transition into `writing-plans`.
+7. Sync the source-of-truth work item before handing off to `writing-plans`.
 
 ---
 
@@ -95,8 +93,8 @@ treating "obvious" scope as a shortcut.
 
 ## Checklist
 
-1. Ingest Standards: Use your workspace tools to silently load `SPEC_STANDARDS.md`
-    to load the architectural philosophy into your working memory.
+1. Ingest Standards: Load `SPEC_STANDARDS.md` before drafting a spec body or when
+    the request already exposes auth, privacy, data-sharing, or dependency risk.
 2. Explore repository context before trusting the request.
 3. Surface blocking ambiguities before drafting the spec body.
 4. Interrogate assumptions before clarifying questions.
@@ -107,10 +105,8 @@ treating "obvious" scope as a shortcut.
     **CRITICAL:** You must halt generation immediately after presenting ONE section. 
     Do not generate the next section until the user explicitly replies with approval.
 9. Write the spec with `## Threat Model (CIA)` and `Given / When / Then` criteria.
-10. Run the self-review loop and post-fix consistency check from `Review loop discipline`.
-11. Record review outcomes in `.review_log.jsonl` using `../review-log-jsonl.md`.
-12. Run the Cross-model spec audit loop and post-fix consistency check from `Cross-model audit`.
-13. Do not invoke `writing-plans` until `APPROVED - CROSS-MODEL AUDIT`.
+10. After a written spec exists, load `review-workflow.md`, complete its review
+    and audit loop, and do not invoke `writing-plans` until `APPROVED - CROSS-MODEL AUDIT`.
 
 ## Process Flow
 
@@ -299,70 +295,15 @@ affected, or the acceptance criteria.
 
 ---
 
-## Review loop discipline
+## Review and audit gate
 
-After the spec is written, run the review using the shipped `SPEC_REVIEW_MANIFEST.md`
-in this directory. The review is not optional and may not be abbreviated.
+Load `review-workflow.md` after a written spec exists. Do not load review or
+audit companions for first-turn gate decisions.
 
-**Review procedure:**
-
-1. Ingest `SPEC_REVIEW_MANIFEST.md` and `SPEC_RUBRIC.md` using your workspace reading tools.
-2. If repo-root overlays exist, apply them only if they tighten the defaults.
-3. Run every check in the manifest against the drafted spec.
-4. Grade against every rubric item.
-5. Output `[SPEC-APPROVED]` or `[SPEC-REJECTED]` with the failed criterion and the
-   exact correction needed.
-
-**On rejection:**
-
-- Log the rejection to `.review_log.jsonl` using the `SPEC_REVIEW` rejection template
-  in `../review-log-jsonl.md`.
-- Fix the spec inline.
-- Run a post-fix consistency check across every affected section.
-- Commit the updated spec before dispatching the next review round.
-   `git commit -m "spec(<work_item_id>): r<N> fixes..."`
-- Re-run the full review from the beginning.
-  **Circuit Breaker:** If you fail self-review five consecutive times, you are strictly 
-  forbidden from attempting a sixth fix. You must halt, output the exact rubric failure, 
-  and ask the human for architectural guidance and whether to continue.
-- A rejected spec may **not** proceed to plan writing. No exceptions.
-
----
-
-## Cross-model audit
-
-After the spec passes self-review, it must be audited by a model from the opposite
-family before planning begins. Load `SPEC_REVIEW_MANIFEST.md` to create the audit context and ensure the auditor applies the same standards.
-
-**Invocation Syntax:** You must physically invoke the `requesting-code-review` skill.
-Determine your current model family. 
-- If you are Claude, explicitly set the skill's `model` parameter to `gpt-5.4`.
-- If you are GPT, explicitly set the skill's `model` parameter to `claude-sonnet-4.6`.
-
-Both models receive:
-- The issue title and description.
-- The full spec text.
-- The `grep` and `ls` logs generated during `Empirical verification before review`.
-- The git diff or file paths of any repository changes the spec depends on.
-- The shipped `SPEC_RUBRIC.md`.
-
-**Pass condition:** The auditing model returns `[SPEC-APPROVED]`.
-- Record the approval in `.review_log.jsonl` using the `CROSS_MODEL_AUDIT`
-  approval template in `../review-log-jsonl.md`.
-
-**On cross-model rejection:**
-
-- Log the rejection to `.review_log.jsonl` using the `CROSS_MODEL_AUDIT`
-  rejection template in `../review-log-jsonl.md`.
-- **Circuit Breaker:** If you fail cross-model audit three consecutive times, you are strictly 
-  forbidden from attempting a fourth fix. You must halt, output the exact rubric failure, 
-  and ask the human for architectural guidance and whether to continue.
-- Fix the spec inline.
-- Run a post-fix consistency check across every affected section.
-- Commit the updated spec before returning to the self-review loop.
-   `git commit -m "spec(<work_item_id>): cr<N> fixes..."`
-- Re-run the full review loop from the self-review step.
-- The spec may not proceed to plan writing until both reviews pass.
+A spec may not proceed to `writing-plans` until self-review passes,
+opposite-family cross-model audit returns `APPROVED - CROSS-MODEL AUDIT`, the
+user approves the written spec with `[SPEC-APPROVED]`, and source-of-truth sync
+is complete.
 
 ---
 
