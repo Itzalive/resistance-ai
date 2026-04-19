@@ -77,7 +77,7 @@ treating "obvious" scope as a shortcut.
 8. Present design sections and collect user approval section-by-section. 
     **CRITICAL:** You must halt generation immediately after presenting ONE section. 
     Do not generate the next section until the user explicitly replies with approval.
-9. Write the spec with `### Threat Model (CIA)` and `Given / When / Then` criteria.
+9. Write the spec with `## Threat Model (CIA)` and `Given / When / Then` criteria.
 10. Run the self-review loop and post-fix consistency check from `Review loop discipline`.
 11. Record review outcomes in `.review_log.jsonl`.
 12. Run the Cross-model spec audit loop and post-fix consistency check from `Cross-model audit`.
@@ -124,7 +124,7 @@ Every spec produced by this skill must contain:
 
 1. **Assumptions surface** — an explicit list of every assumption the request makes,
    each marked VERIFIED (with repository evidence) or UNVERIFIED (blocking).
-2. **`### Threat Model (CIA)`** — this section is mandatory. It must cover
+2. **`## Threat Model (CIA)`** — this section is mandatory. It must cover
     Confidentiality, Integrity, and Availability through concrete stress-test vectors,
     plus least-privilege and supply-chain. Generic headings are not sufficient. Each
     pillar must cite repository proof for the defensive mechanism (file path, symbol, grep

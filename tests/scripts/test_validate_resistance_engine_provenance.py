@@ -98,7 +98,7 @@ def test_validate_provenance_requires_authoring_default_contracts(
     assert '"User review" ->  "Checklist Retrospective" [label="approved"]' in process_flow_text
     assert '"Checklist Retrospective" -> "Invoke writing-plans"' in process_flow_text
     assert "## Checklist Retrospective" in brainstorming_skill
-    assert "### Threat Model (CIA)" in brainstorming_skill
+    assert "## Threat Model (CIA)" in brainstorming_skill
     assert "cite repository proof" in brainstorming_skill
     assert "emit a blocker" in brainstorming_skill
 

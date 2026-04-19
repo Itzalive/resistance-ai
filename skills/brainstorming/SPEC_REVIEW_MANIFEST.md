@@ -28,7 +28,7 @@ should block planning.
 
 - Verify the spec author physically grounded the draft in shell-read repository context
   before writing the spec body.
-- Verify the spec includes `### Threat Model (CIA)`.
+- Verify the spec includes `## Threat Model (CIA)`.
 - Verify the threat model covers confidentiality, integrity, and availability through
   concrete stress-test vectors instead of generic headings.
 - Verify every claimed defensive mechanism is backed by repository evidence (file path,

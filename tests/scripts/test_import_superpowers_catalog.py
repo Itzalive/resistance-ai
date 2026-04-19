@@ -694,7 +694,7 @@ def test_import_superpowers_catalog_matches_live_vendor_repo_shape(
     brainstorming_skill = (brainstorming_root / "SKILL.md").read_text()
     assert '## Anti-Pattern: "This Is Too Simple To Need A Design"' in brainstorming_skill
     assert "## Checklist" in brainstorming_skill
-    assert "### Threat Model (CIA)" in brainstorming_skill
+    assert "## Threat Model (CIA)" in brainstorming_skill
     assert "cite repository proof" in brainstorming_skill
     assert "emit a blocker" in brainstorming_skill
     assert "## Process Flow" in brainstorming_skill
