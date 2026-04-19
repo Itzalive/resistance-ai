@@ -36,7 +36,7 @@ should block planning.
   accepting a plausible security narrative.
 - Verify the spec surfaces assumptions and blocking constraints.
 - Verify the spec preserves shard evaluation, source-of-truth sync, and append-only
-  bead updates when scope shifts.
+  work item updates when scope shifts.
 - Verify the spec includes a future work section.
 - Verify the spec describes empirical verification against the real codebase rather
   than relying on memory.

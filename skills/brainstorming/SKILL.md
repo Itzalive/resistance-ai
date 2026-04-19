@@ -23,6 +23,28 @@ weaken them.
 
 ---
 
+## When to Use
+
+Use this skill when:
+
+- the request needs a design, spec, or architecture decision before execution
+- the request sounds simple but may hide auth, privacy, dependency, or scope risk
+- the request is underspecified and repository proof may invalidate assumptions
+- the conversation is drifting toward implementation before constraints are proven
+
+Do not use this as a shortcut around repository inspection, review, or user approval.
+
+## Quick Reference
+
+1. Load `SPEC_STANDARDS.md`.
+2. Inspect the repository before trusting the request.
+3. Surface blockers and assumptions before drafting the spec body.
+4. Present design sections one at a time and wait for approval before continuing.
+5. Run self-review, cross-model audit, and `.review_log.jsonl` recording before planning.
+6. Sync the source-of-truth work item before handing off to `writing-plans`.
+
+---
+
 ## Core Premise
 
 Every request arriving here is guilty until proven innocent. The premise of the
@@ -138,9 +160,9 @@ Every spec produced by this skill must contain:
 5. **Shard evaluation** — whether this spec should be split into sub-work-items (see
    Spec sharding section).
 6. **Future work (Downstream Cost)** — an explicit list of anticipated follow-on tasks, 
-    bugs, or enhancements this architecture will inevitably generate, with rough 
-    priority and effort estimates.
-7. **Source-of-truth sync** — the bead is updated using the append-only procedure
+     bugs, or enhancements this architecture will inevitably generate, with rough 
+     priority and effort estimates.
+7. **Source-of-truth sync** — the relevant work item is updated using the append-only procedure
    before planning begins (see Source-of-truth sync section).
 
 ---
@@ -354,7 +376,7 @@ Both models receive:
 
 ## Checklist Retrospective
 
-After a spec passes its final review, if the spec took more than 3 review rounds, ask:
+After a spec passes its user review, if the spec took more than 3 review rounds at any point, ask:
 
 > *"Would any of the issues that caused extra rounds have been caught by a new or adjusted checklist item?"*
 
@@ -388,6 +410,15 @@ adversarial scrutiny before proceeding.
 | "Option A basically exists already" | Existence must be verified. "Basically" is a gap. |
 | "Standard security practices apply" | Named, verified mechanisms are required. |
 | "We rely on existing controls" | Named and grep-confirmed controls are required. |
+
+---
+
+## Common Mistakes
+
+- Treating "simple" or "obvious" scope as exempt from design gates.
+- Writing the spec body before repository inspection has verified key assumptions.
+- Converting blockers into advice instead of stopping for clarification.
+- Transitioning to `writing-plans` before audit approval, user approval, and work item sync.
 
 ---
 
