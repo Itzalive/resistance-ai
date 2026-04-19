@@ -365,7 +365,8 @@ Provide the sub-agent with:
 5. Proof of Tabula Rasa / spec ingestion from the plan draft or shell history
    (for example, the `cat` / `ls` command used to read the spec before drafting).
 7. `.review_log.jsonl` entries that record the `Plan self-review` outcomes and any
-   rejection/retry chain relevant to the plan.
+   rejection/retry chain relevant to the plan, using the schema in
+   `../review-log-jsonl.md`.
 8. Any explicit opposite-model proof needed to satisfy the reviewer's hard gates
    (orchestrator family vs. reviewer family).
 
@@ -385,9 +386,9 @@ The sub-agent must validate:
 - `[REJECTED - SPEC INCOMPLETE]` — spec fails to deliver the original work item's
   requirements.
 
-Record the result and raw reasons in `.review_log.jsonl` at the repo root. If
-rejected, fix discrepancies, re-run verifications and the Plan self-review, then
-restart the Unified Coherence Check.
+Record the result and raw reasons in `.review_log.jsonl` at the repo root using
+`../review-log-jsonl.md`. If rejected, fix discrepancies, re-run verifications
+and the Plan self-review, then restart the Unified Coherence Check.
 
 
 

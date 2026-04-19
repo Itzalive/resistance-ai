@@ -40,7 +40,7 @@ Do not use this as a shortcut around repository inspection, review, or user appr
 2. Inspect the repository before trusting the request.
 3. Surface blockers and assumptions before drafting the spec body.
 4. Present design sections one at a time and wait for approval before continuing.
-5. Run self-review, cross-model audit, and `.review_log.jsonl` recording before planning.
+5. Run self-review, cross-model audit, and `.review_log.jsonl` recording before planning using `../review-log-jsonl.md`.
 6. Sync the source-of-truth work item before handing off to `writing-plans`.
 
 ---
@@ -101,7 +101,7 @@ treating "obvious" scope as a shortcut.
     Do not generate the next section until the user explicitly replies with approval.
 9. Write the spec with `## Threat Model (CIA)` and `Given / When / Then` criteria.
 10. Run the self-review loop and post-fix consistency check from `Review loop discipline`.
-11. Record review outcomes in `.review_log.jsonl`.
+11. Record review outcomes in `.review_log.jsonl` using `../review-log-jsonl.md`.
 12. Run the Cross-model spec audit loop and post-fix consistency check from `Cross-model audit`.
 13. Do not invoke `writing-plans` until `APPROVED - CROSS-MODEL AUDIT`.
 
@@ -309,20 +309,8 @@ in this directory. The review is not optional and may not be abbreviated.
 
 **On rejection:**
 
-- Log the rejection to `.review_log.jsonl`:
-  ```bash
-  jq -nc \
-    --arg ts "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
-    --arg wiid "<work_item_id>" \
-    --arg sk "brainstorming" \
-    --arg ph "SPEC_REVIEW" \
-    --arg st "REJECTED" \
-    --arg rs "<failed criterion and correction>" \
-    --arg orch "<insert_orchestrator_model_name>" \
-    --arg aud "<insert_your_model_name>" \
-    '{timestamp: $ts, item_id: $wiid, skill: $sk, phase: $ph, status: $st, reason: $rs, orchestrator: $orch, model: $aud}' \
-    >> .review_log.jsonl
-  ```
+- Log the rejection to `.review_log.jsonl` using the `SPEC_REVIEW` rejection template
+  in `../review-log-jsonl.md`.
 - Fix the spec inline.
 - Run a post-fix consistency check across every affected section.
 - Commit the updated spec before dispatching the next review round.
@@ -353,11 +341,13 @@ Both models receive:
 - The shipped `SPEC_RUBRIC.md`.
 
 **Pass condition:** The auditing model returns `[SPEC-APPROVED]`.
-- Record the approval in `.review_log.jsonl` with `status: "APPROVED - CROSS-MODEL AUDIT"`.
+- Record the approval in `.review_log.jsonl` using the `CROSS_MODEL_AUDIT`
+  approval template in `../review-log-jsonl.md`.
 
 **On cross-model rejection:**
 
-- Log to `.review_log.jsonl` with `status: "REJECTED - CROSS-MODEL AUDIT"`.
+- Log the rejection to `.review_log.jsonl` using the `CROSS_MODEL_AUDIT`
+  rejection template in `../review-log-jsonl.md`.
 - **Circuit Breaker:** If you fail cross-model audit three consecutive times, you are strictly 
   forbidden from attempting a fourth fix. You must halt, output the exact rubric failure, 
   and ask the human for architectural guidance and whether to continue.
