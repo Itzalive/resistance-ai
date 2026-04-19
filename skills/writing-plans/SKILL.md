@@ -1,98 +1,34 @@
 ---
 name: writing-plans
-description: Use when translating an approved specification into an implementation plan, especially when sequencing, failure paths, and execution risk must be made explicit before coding
+description: Use when you have a spec or requirements for a multi-step task, before touching code; especially when sequencing, failure paths, and execution risk must be made explicit before coding
 ---
 
-# Paranoid Plan Writing
+# Writing Plans
 
 ## Overview
 
-A specification is only a theory. This skill turns that theory into a battle-tested
-execution blueprint that assumes hostile reality: unreliable networks, partial
-failures, bad inputs, and operational chaos.
+Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent commits.
+
+Assume they are a skilled developer, but know almost nothing about our toolset or problem domain. Assume they don't know good test design very well.
 
 This skill is the shipped default plan-writing rulebook. Repo-root `PLAN_WRITING.md`
 is an optional overlay only. Strictly apply repo-root overlays; if they contradict this file, the overlay wins.
 
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
+**Context:** This should be run in a dedicated worktree (created by brainstorming skill).
+
 **Save plans to:** `docs/superpowers/plans/YYYY-MM-DD-<work-item-id>-<work-item-name>.md`
-(User preferences for plan location override this default.)
+- (User preferences for plan location override this default)
 
 ---
 
-## Scope Check
+## Scope Check: Spec simplification and pushback
 
 Before writing tasks, decide whether the approved spec should stay in one plan or be
 split into independent plans. Keep related changes in one plan only when they share
 the same acceptance surface, verification path, and dependency chain; otherwise shard
 them into separate plans before task writing begins.
-
-## File Structure
-
-- Map exact files before task decomposition.
-- Keep one core implementation surface per task plus the tests and generated artifacts
-  that prove that surface.
-- Regenerate any checked-in derived artifacts after source skill text changes.
-
-## Task Structure
-
-For each task, use one execution goal, a concrete file list, and ordered RED → GREEN
-→ REFACTOR steps that point back to the hard gates below.
-
-### Task N: [single execution goal]
-
-**Files:**
-- Modify: `[exact existing file]`
-- Add: `[new file if required]`
-- Regenerate: `[checked-in generated artifact if required]`
-
-- Satisfies Spec AC: [List specific Given/When/Then criteria covered]
-
-- [ ] Step 1: write RED tests for the happy path AND at least two failure modes.
-- [ ] Step 2: run the focused RED verification command
-- [ ] Step 3: write the minimum source change needed for GREEN
-- [ ] Step 4: refactor duplicated wording or structure without weakening gates
-- [ ] Step 5: regenerate artifacts and rerun exact verification commands
-- [ ] Step 6: commit the finished slice
-
-## No Placeholders
-
-- Do not write "preserve existing gates" without naming `### Risk & Confidence Assessment`, `Strict RED / GREEN / REFACTOR`, `Dependency ordering`, `Fail-closed planning contract`, `Unhappy-path-first planning`, and `Unified Coherence Check`.
-- Do not write "restore vendor sections" without naming the exact headings.
-- Do not write "run the tests" without the exact `pytest` command.
-
-
-## Process Flow
-
-```dot
-digraph writing-plans {
-    "Read spec" -> "Explore context";
-    "Explore context" -> "Spec simplification check";
-    "Spec simplification check" -> "Write plan";
-    "Write plan" -> "Pre-plan verification";
-    "Pre-plan verification" -> "Plan self-review";
-    "Plan self-review" -> "Unified Coherence Check" [label="approved"];
-    "Unified Coherence Check" -> "Execution Handoff" [label="approved"];
-    "Unified Coherence Check" -> "Fix plan" [label="rejected"];
-    "Fix plan" -> "Pre-plan verification";
-}
-```
-
-
----
-
-## Tabula Rasa Mandate
-
-Assume your memory of the specification is flawed, hallucinated, or incomplete.
-Your first action must be to shell-read the approved spec (for example,
-`ls docs/superpowers/specs/` then `cat <file>`). Do not outline execution steps
-until the spec is physically ingested. A plan translates a spec mechanically; it
-is not a second brainstorming phase.
-
----
-
-## Spec simplification and pushback
 
 Resist the urge to solve complexity by writing an increasingly complex plan. If
 execution requires edge-case workarounds, non-trivial data-model hacks, or
@@ -104,13 +40,41 @@ complex mock setups not defined in the spec, stop and push back on the spec:
 
 Do not silently absorb spec complexity into the plan.
 
----
+## File Structure
 
-## Mandatory opening output
+Before defining tasks, map out which files will be created or modified and what each one is responsible for. This is where decomposition decisions get locked in.
 
-**Every plan MUST start with this block before any task list:**
+- Design units with clear boundaries and well-defined interfaces. Each file should have one clear responsibility.
+- You reason best about code you can hold in context at once, and your edits are more reliable when files are focused. Prefer smaller, focused files over large ones that do too much.
+- Files that change together should live together. Split by responsibility, not by technical layer.
+- In existing codebases, follow established patterns. If the codebase uses large files, don't unilaterally restructure - but if a file you're modifying has grown unwieldy, including a split in the plan is reasonable.
+
+This structure informs the task decomposition. Each task should produce self-contained changes that make sense independently.
+
+## Bite-Sized Task Granularity
+
+**Each step is one action (2-5 minutes):**
+- "Write the failing test(s)" - step
+- "Run it to make sure it fails" - step
+- "Implement the minimal code to make the test(s) pass" - step
+- "Run the tests and make sure they pass" - step
+- "Commit" - step
+
+## Plan Document Header
+
+**Every plan MUST start with this header:**
 
 ```markdown
+# [Feature Name] Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** [One sentence describing what this builds]
+
+**Architecture:** [2-3 sentences about approach]
+
+**Tech Stack:** [Key technologies/libraries]
+
 ### Risk & Confidence Assessment
 
 **Confidence:** [N]% — [one-line rationale]
@@ -125,6 +89,8 @@ STS token exchange untested in this tenant"]
 
 **Unknown variables** (only when confidence < 95%):
 - [explicit list of what is unverified or ambiguous]
+
+---
 ```
 
 Rules:
@@ -137,7 +103,115 @@ Rules:
 - A plan with unresolved unknowns is a guess. Ask targeted questions or state the
   assumption explicitly before proceeding.
 
+## Task Structure
+
+For each task, use one execution goal, a concrete file list, and ordered RED → GREEN
+→ REFACTOR steps that point back to the hard gates below.
+
+````markdown
+### Task N: [Single execution goal]
+
+**Files:**
+- Create: `exact/path/to/file.py`
+- Modify: `exact/path/to/existing.py:123-145`
+- Test: `tests/exact/path/to/test.py`
+- Regenerate: `[checked-in generated artifact if required]`
+
+- Satisfies Spec AC: [List specific Given/When/Then criteria covered]
+
+- [ ] **Step 1: Write the RED failing test and at least two failure modes**
+
+```python
+def test_specific_behavior():
+    result = function(input)
+    assert result == expected
+```
+
+- [ ] **Step 2: Run focused RED verification command**
+
+Run: `pytest tests/path/test.py::test_name -v`
+Expected: FAIL with "function not defined"
+
+- [ ] **Step 3: Write minimal implementation for GREEN**
+
+```python
+def function(input):
+    return expected
+```
+
+- [ ] **Step 4: Run test to verify it's GREEN**
+
+Run: `pytest tests/path/test.py::test_name -v`
+Expected: PASS
+
+
+- [ ] **Step 5: Refactor duplicated wording or structure without weakening gates**
+
+```python
+def function(input):
+    return expected
+```
+
+- [ ] **Step 6: Regenerate artifacts and rerun exact verification commands**
+
+Run: `pytest tests/path/test.py::test_name -v`
+Expected: PASS
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add tests/path/test.py src/path/file.py
+git commit -m "feat: add specific feature"
+```
+````
+
+## No Placeholders
+
+Every step must contain the actual content an engineer needs. These are **plan failures** — never write them:
+- "TBD", "TODO", "implement later", "fill in details"
+- "Add appropriate error handling" / "add validation" / "handle edge cases"
+- "Write tests for the above" (without actual test code)
+- "Similar to Task N" (repeat the code — the engineer may be reading tasks out of order)
+- Steps that describe what to do without showing how (code blocks required for code steps)
+- References to types, functions, or methods not defined in any task
+- Do not write "preserve existing gates" without naming `### Risk & Confidence Assessment`, `Strict RED / GREEN / REFACTOR`, `Dependency ordering`, `Fail-closed planning contract`, `Unhappy-path-first planning`, and `Unified Coherence Check`.
+- Do not write "restore vendor sections" without naming the exact headings.
+- Do not write "run the tests" without the exact `pytest` command.
+
+## Remember
+- Exact file paths always
+- Complete code in every step — if a step changes code, show the code
+- Exact commands with expected output
+- DRY, YAGNI, TDD, frequent commits
+
+## Process Flow
+
+```dot
+digraph writing-plans {
+    "Read spec" -> "Explore context";
+    "Explore context" -> "Spec simplification check";
+    "Spec simplification check" -> "Write plan";
+    "Write plan" -> "Pre-plan verification";
+    "Pre-plan verification" -> "Self-Review";
+    "Self-Review" -> "Unified Coherence Check" [label="approved"];
+    "Unified Coherence Check" -> "Execution Handoff" [label="approved"];
+    "Unified Coherence Check" -> "Fix plan" [label="rejected"];
+    "Fix plan" -> "Pre-plan verification";
+}
+```
+
 ---
+
+## Tabula Rasa Mandate
+
+Assume your memory of the specification is flawed, hallucinated, or incomplete.
+Your first action must be to shell-read the approved spec (for example,
+`ls docs/superpowers/specs/` then `cat <file>`). Do not outline execution steps
+until the spec is physically ingested. A plan translates a spec mechanically; it
+is not a second brainstorming phase.
+
+---
+
 
 ## Strict RED / GREEN / REFACTOR
 
@@ -247,7 +321,7 @@ happy-path implementation.
 
 ---
 
-## Plan self-review
+## Self-Review
 
 After pre-plan verification, run this checklist yourself before dispatching
 the Unified Coherence Check:
