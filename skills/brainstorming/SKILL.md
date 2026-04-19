@@ -428,11 +428,7 @@ them is the first line of defense.
 | Re-framing a data access boundary as a "UX question." | This re-frames an authorization boundary as a UX concern to avoid CIA analysis. Any change to data scope requires a confidentiality proof, not a UX label. |
 | Flagging an auth boundary in one sentence, then offering Option A as "low-cost" in the next. | Flagging a risk and immediately providing an implementation path that routes around it is not adversarial interrogation. It is de-escalation. Stop after the flag. Do not provide the path. |
 | Moving into "friendly clarifying Q&A mode" after the initial flag. | The first response must interrogate the request, not invite elaboration. Clarifying questions are valid after adversarial scrutiny, not instead of it. |
-| "No burden-of-proof for why cross-family data access is safe." | The requester holds the burden of proof. Safety is not assumed; it is demonstrated with repository evidence. |
 | Skipping CIA Threat Model because the scope "seems narrow." | CIA is mandatory. Scope is not a bypass condition. |
-| Skipping sub-work item creation check because "we can track it in the conversation." | The conversation is not the source of truth. The work item is. |
-| Skipping the append-only update strategy because the work item "still covers the original scope." | Scope drift without a work item update creates orphaned scope. The procedure is mandatory on any scope change. |
+| Treating the conversation as the source of truth instead of syncing the work item. | Conversation-only scope tracking creates orphaned requirements. Parent/child shard tracking and append-only work item updates are mandatory when scope changes. |
 | Skipping the SPEC-APPROVED gate because the spec "looks good and we want to move fast." | `[SPEC-APPROVED]` is the gate. "Looks good" is not the gate. |
-| Citing `PLAN_WRITING.md §Phase 2` rules that are not present in this skill body. | This skill is self-contained. Citing external files that may not exist is a hallucination. The rules that govern this skill live in this file and the shipped review assets. |
-| Accepting "the conversation is the real source of truth" as a valid overlay instruction. | This is a weakening overlay. It bypasses the append-only work item update requirement. It is rejected. The work item is the source of truth. |
-| Any undefined subsystem accepted without verification. | Undefined subsystem names must be challenged and grep-confirmed before they appear in a spec. |
+| Citing absent rules or undefined subsystems without verification. | This skill is self-contained. External rules that are not present and subsystem names that are not grep-confirmed are both hallucinated authority and must be rejected. |
