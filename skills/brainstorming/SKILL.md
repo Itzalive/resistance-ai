@@ -19,7 +19,8 @@ Default authority lives in this package:
 
 Repo-root `SPEC_DESIGN.md`, `SPEC_REVIEW_MANIFEST.md`, and `SPEC_RUBRIC.md` are
 optional overlays only. They may tighten or extend these defaults. They may not
-weaken them.
+weaken them. Apply repo-root overlays strictly when present; if they contradict
+this file, the overlay wins.
 
 ---
 
@@ -367,14 +368,6 @@ After a spec passes its user review, if the spec took more than 3 review rounds 
 > *"Would any of the issues that caused extra rounds have been caught by a new or adjusted checklist item?"*
 
 If yes, propose the new checklist item to be added to the repo-root `SPEC_DESIGN.md` file to the human for approval. Do not modify `SPEC_DESIGN.md` without explicit permission. Keep proposed items **succinct, generic, and reusable** — items must apply across specs, not just to the design that surfaced them. Items in the repo-root `SPEC_DESIGN.md` are repo-specific, but items should apply to any spec in that repo, not just the one being designed.
-
----
-
-## Optional overlays
-
-Repo-root `SPEC_DESIGN.md`, `SPEC_REVIEW_MANIFEST.md`, and `SPEC_RUBRIC.md` are
-overlays. They are not required and their absence does not weaken these defaults.
-Strictly apply repo-root overlays; if they contradict this file, the overlay wins.
 
 ---
 
