@@ -1,6 +1,6 @@
 ---
 name: brainstorming
-description: Use when turning a request into a design or specification, especially when the request may be optimistic, underspecified, risky, or rushing toward implementation
+description: "You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Explores user intent, requirements and design before implementation."
 ---
 
 # Adversarial Brainstorming
@@ -41,10 +41,11 @@ Do not use this as a shortcut around repository inspection, review, or user appr
 2. Inspect the repository before trusting the request. Cite only headings that actually exist in this package.
 3. If ambiguity is unresolved, output blocking questions only. Do not output `Draft Spec`, `MVP`, or any proposed solution while ambiguity remains unresolved.
 4. Before the first approved section, output only `## Assumptions surface` or blockers, then stop. Do not emit downstream sections such as goals, user stories, architecture, or implementation steps before the first approved section.
-5. Run self-review and cross-model audit, recording each outcome in `.review_log.jsonl` using `../review-log-jsonl.md`.
-6. Commit the spec before each new audit round.
-7. After audit approval, ask the user to review the written spec and treat `[SPEC-APPROVED]` as the only valid transition into `writing-plans`.
-8. Sync the source-of-truth work item before handing off to `writing-plans`.
+5. If implementation already exists before design, stop. Do not retrofit a minimal spec around the current solution.
+6. Run self-review and cross-model audit, recording each outcome in `.review_log.jsonl` using `../review-log-jsonl.md`.
+7. Commit the spec before each new audit round.
+8. After audit approval, ask the user to review the written spec and treat `[SPEC-APPROVED]` as the only valid transition into `writing-plans`.
+9. Sync the source-of-truth work item before handing off to `writing-plans`.
 
 ---
 
@@ -78,9 +79,8 @@ assume hidden privacy, auth, or dependency risk.
    `writing-plans`. No exceptions.
 
 <HARD-GATE>
-Do NOT invoke implementation skills, write code, scaffold projects, or otherwise
-start execution until a spec exists, has passed review, and has explicit user
-approval. "Obviously simple" requests are not exempt.
+Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until you have presented a design and the user has approved it. This applies to EVERY project regardless of perceived simplicity.
+In this skill, that design is the reviewed spec, so `writing-plans` still requires `APPROVED - CROSS-MODEL AUDIT`.
 </HARD-GATE>
 
 ---

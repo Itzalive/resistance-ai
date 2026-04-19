@@ -63,3 +63,32 @@ def test_brainstorming_initial_gate_blocks_full_outline() -> None:
         "Do not emit downstream sections such as goals, user stories, architecture, or implementation steps before the first approved section."
         in first_response
     )
+
+
+def test_brainstorming_hard_gate_includes_vendor_no_implementation_line() -> None:
+    skill_text = Path("skills/brainstorming/SKILL.md").read_text()
+
+    assert (
+        "Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until you have presented a design and the user has approved it."
+        in skill_text
+    )
+
+
+def test_brainstorming_description_uses_vendor_pre_implementation_wording() -> None:
+    skill_text = Path("skills/brainstorming/SKILL.md").read_text()
+
+    assert (
+        'description: "You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Explores user intent, requirements and design before implementation."'
+        in skill_text
+    )
+
+
+def test_brainstorming_quick_reference_forbids_retrofitting_spec_around_existing_code() -> None:
+    skill_text = Path("skills/brainstorming/SKILL.md").read_text()
+
+    quick_reference = _section_text(skill_text, "Quick Reference")
+
+    assert (
+        "If implementation already exists before design, stop. Do not retrofit a minimal spec around the current solution."
+        in quick_reference
+    )
