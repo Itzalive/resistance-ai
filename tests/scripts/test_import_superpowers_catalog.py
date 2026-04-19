@@ -702,15 +702,15 @@ def test_import_superpowers_catalog_matches_live_vendor_repo_shape(
     assert '"Ask blocking question" -> "Assumptions / blockers" [label="answered"]' in process_flow_text
     assert "Revise design (pre-spec)" in process_flow_text
     assert "Revise design (post-review)" in process_flow_text
-    assert "## After the Design" in brainstorming_skill
+    assert "## Quick Reference" in brainstorming_skill
     assert "`APPROVED - CROSS-MODEL AUDIT` is required before plan writing" in brainstorming_skill
     assert ".review_log.jsonl" in brainstorming_skill
     checklist_text = section_text(brainstorming_skill, "Checklist")
-    after_text = section_text(brainstorming_skill, "After the Design")
+    quick_reference_text = section_text(brainstorming_skill, "Quick Reference")
     assert "APPROVED - CROSS-MODEL AUDIT" in checklist_text
     assert ".review_log.jsonl" in checklist_text
-    assert "[SPEC-APPROVED]" in after_text
-    assert ".review_log.jsonl" in after_text
+    assert "[SPEC-APPROVED]" in quick_reference_text
+    assert ".review_log.jsonl" in quick_reference_text
     assert '"Cross-model spec audit" -> "User review" [label="[SPEC-APPROVED]"]' in process_flow_text
     assert '"User review" ->  "Checklist Retrospective" [label="approved"]' in process_flow_text
     assert '"Checklist Retrospective" -> "Invoke writing-plans"' in process_flow_text

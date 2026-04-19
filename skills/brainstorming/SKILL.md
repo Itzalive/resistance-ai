@@ -41,8 +41,10 @@ Do not use this as a shortcut around repository inspection, review, or user appr
 2. Inspect the repository before trusting the request.
 3. Surface blockers and assumptions before drafting the spec body.
 4. Present design sections one at a time and wait for approval before continuing.
-5. Run self-review, cross-model audit, and `.review_log.jsonl` recording before planning using `../review-log-jsonl.md`.
-6. Sync the source-of-truth work item before handing off to `writing-plans`.
+5. Run self-review and cross-model audit, recording each outcome in `.review_log.jsonl` using `../review-log-jsonl.md`.
+6. Commit the spec before each new audit round.
+7. After audit approval, ask the user to review the written spec and treat `[SPEC-APPROVED]` as the only valid transition into `writing-plans`.
+8. Sync the source-of-truth work item before handing off to `writing-plans`.
 
 ---
 
@@ -131,15 +133,6 @@ digraph brainstorming {
     "Checklist Retrospective" -> "Invoke writing-plans";
 }
 ```
-
-## After the Design
-
-- Commit the spec before the next audit round.
-- Ask the user to review and approve the written spec.
-- Record the audit result in `.review_log.jsonl`.
-- Treat `[SPEC-APPROVED]` as the only valid transition into `writing-plans`.
-
----
 
 ## Mandatory outputs
 

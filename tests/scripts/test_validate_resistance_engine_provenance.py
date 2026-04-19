@@ -81,15 +81,15 @@ def test_validate_provenance_requires_authoring_default_contracts(
     assert '## Anti-Pattern: "This Is Too Simple To Need A Design"' in brainstorming_skill
     assert "## Checklist" in brainstorming_skill
     assert "## Process Flow" in brainstorming_skill
-    assert "## After the Design" in brainstorming_skill
+    assert "## Quick Reference" in brainstorming_skill
     assert "`APPROVED - CROSS-MODEL AUDIT` is required before plan writing" in brainstorming_skill
     assert ".review_log.jsonl" in brainstorming_skill
     checklist_text = section_text(brainstorming_skill, "Checklist")
-    after_text = section_text(brainstorming_skill, "After the Design")
+    quick_reference_text = section_text(brainstorming_skill, "Quick Reference")
     assert "APPROVED - CROSS-MODEL AUDIT" in checklist_text
     assert ".review_log.jsonl" in checklist_text
-    assert "[SPEC-APPROVED]" in after_text
-    assert ".review_log.jsonl" in after_text
+    assert "[SPEC-APPROVED]" in quick_reference_text
+    assert ".review_log.jsonl" in quick_reference_text
     process_flow_text = section_text(brainstorming_skill, "Process Flow")
     assert '"Ask blocking question" -> "Assumptions / blockers" [label="answered"]' in process_flow_text
     assert "Revise design (pre-spec)" in process_flow_text
