@@ -326,3 +326,186 @@ Current conclusion:
 - further optimization should start from a new evidence set (for example,
   multi-turn time-to-full-spec harnesses) rather than from more first-turn file
   surgery
+
+---
+
+## Round 3 — grounded full-spec benchmark
+
+To avoid overfitting first-turn timing, round 3 switched to a grounded multi-turn
+"time to full spec" benchmark. The simulated task was:
+
+- generalize the staged support-file approach for design-oriented skills
+- keep scope limited to `brainstorming` and `writing-plans`
+- preserve all review, audit, and planning gates
+- stop at the first complete spec body after fixed replies and section approvals
+
+### Full-spec baseline before new wording
+
+| Model | Duration | Assistant turns | Outcome | Read |
+|---|---:|---:|---|---|
+| GPT-5.4 | 574s | 6 | reached full spec | Read broadly across the repo, including `AGENTS.md`, `README.md`, manifests, tests, importer scripts, and historical spec docs before drafting |
+| Claude Sonnet 4.6 | 381s | 6 | reached full spec | Stayed relatively focused: brainstorming skill files, review assets, `writing-plans`, and the latency report |
+
+Baseline read:
+
+1. **GPT's real cost problem is inspection scope, not just prompt size.**
+   The grounded run showed GPT opening many repo-root and historical files that
+   were not obviously required to produce the first complete spec.
+2. **Claude was already materially tighter on the same task.**
+   Its baseline run finished faster and read a smaller, more relevant set of
+   files.
+
+### Variant 1 — batch up to 3 blocker questions and load standards during assumptions
+
+Hypothesis:
+
+- if the skill explicitly tells the model to load `SPEC_STANDARDS.md` during
+  `## Assumptions surface` when risk is already visible, and to ask up to 3
+  blocking questions in one batch, the model may resolve blocker analysis
+  faster and reduce full-spec latency without weakening risk handling
+
+Edit attempted:
+
+1. In `Quick Reference`, changed the staged-loading line to say:
+   - load `SPEC_STANDARDS.md` during `## Assumptions surface` whenever the
+     request already exposes auth, privacy, data-sharing, or dependency risk
+   - otherwise load it before drafting a spec body
+2. In `Checklist`, mirrored the same earlier standards-loading trigger
+3. In `Fail-closed ambiguity`, added:
+   - ask up to 3 blocking questions in one batch when the blocker set is
+     already visible
+   - do not drip-feed one blocker question per turn when the current ambiguity
+     already justifies a fuller batch
+
+Static read while active:
+
+- contract suite: **13 passed**
+- `SKILL.md`: **3012 words**
+- combined `SKILL.md` + `review-workflow.md`: **3463 words**
+
+Observed result:
+
+| Model | Baseline | Round 3 v1 | Outcome | Read |
+|---|---:|---:|---|---|
+| GPT-5.4 | 574s | 413s | reached full spec | Improved materially, but still over-inspected repo-wide context: `README.md`, `AGENTS.md`, `CLAUDE.md`, importer/tests, and historical spec docs |
+| Claude Sonnet 4.6 | 381s | 549s | reached full spec | Regressed badly; pulled in more late-stage material, including `SPEC_REVIEW_MANIFEST.md`, `SPEC_RUBRIC.md`, pressure-test evidence, and `writing-skills/SKILL.md` |
+
+Why rejected:
+
+1. **The paired-model gate failed.**
+   GPT-5.4 improved, but Claude Sonnet 4.6 regressed from **381s → 549s** on
+   the same grounded task.
+2. **The wording appears to widen analysis scope instead of narrowing it.**
+   Claude's variant run read more files than its already-good baseline,
+   including review and evidence artifacts that should not have been necessary
+   to reach the first spec body.
+3. **Batching blocker questions did not solve GPT's root problem.**
+   GPT was faster, but it still inspected repo-root docs, tests, scripts, and
+   historical specs before drafting. That suggests the larger remaining win is
+   stricter inspection-scope control, not more blocker-question wording.
+4. **The improvement was asymmetric rather than robust.**
+   This round helped one target model and hurt the other, so it is not safe to
+   keep as the new default wording.
+
+Verdict:
+
+- **REJECT**
+- Reverted to the round-1 winner after recording the evidence.
+
+Next candidate influence:
+
+- target **inspection-scope control** rather than blocker batching
+- prefer wording that limits first-pass repository reads to:
+  - the current skill file
+  - directly named companion files required for the current phase
+  - only the repository files needed to verify the currently claimed blockers or
+    scope
+- avoid encouraging repo-root docs, tests, importer scripts, or historical
+  design documents unless the current request specifically requires them
+
+---
+
+## Round 4 — first-pass inspection-scope control
+
+Round-3 evidence suggested that the real remaining cost center was not blocker
+batching. It was **early repository over-inspection**, especially on GPT-5.4.
+The next minimal candidate therefore tightened what the skill allows models to
+inspect before the first approved section.
+
+### Variant 1 — constrain first-pass repository reads
+
+Hypothesis:
+
+- if the skill explicitly says to inspect only the files needed for the current
+  blockers, scope, and current-stage instructions, then the grounded full-spec
+  benchmark should improve on both models without weakening blocker behavior
+
+RED / GREEN contract work:
+
+1. Added a failing contract test requiring this new `Quick Reference` line:
+   - `Before the first approved section, inspect only the files needed to verify the currently exposed blockers, scope, or current-stage instructions.`
+2. Added a failing contract test requiring this new
+   `Repository-grounded verification` line:
+   - `Before the first approved section, do not widen inspection to tests, scripts, repo guides, or historical design docs unless one is the direct source of truth for the claim being checked.`
+3. Verified both new tests failed first.
+4. Added the minimal wording to `SKILL.md`.
+5. Re-ran the full contract suite and got **14 passed**.
+
+Static read:
+
+- `SKILL.md`: **3016 words**
+- `review-workflow.md`: **451 words**
+- combined `SKILL.md` + `review-workflow.md`: **3467 words**
+
+Observed result:
+
+#### Grounded full-spec benchmark
+
+| Model | Prior grounded baseline | Round 4 v1 | Read |
+|---|---:|---:|---|
+| GPT-5.4 | 574s | 308s | Large win; the run still used latency evidence, but the overall path narrowed enough to cut the benchmark almost in half |
+| Claude Sonnet 4.6 | 381s | 371s | Small but real win; the run stayed focused and completed slightly faster than the prior grounded baseline |
+
+#### Directional first-turn guard checks
+
+These were used as **behavioral guards first** and as rough latency signals
+second. The scenario prompts were current-round probes, not the exact original
+round-1 prompt text, so treat the timings as directional rather than as a
+strict apples-to-apples regression table.
+
+| Scenario | GPT-5.4 | Claude Sonnet 4.6 | Read |
+|---|---:|---:|---|
+| Low-risk UX wording/layout | 88s, PASS | 36s, PASS | Both took the standalone visual-companion path correctly |
+| Ambiguous external sharing | 109s, PASS | 42s, PASS | Both failed closed and blocked on auth/privacy/data-sharing ambiguity |
+| Plan-jump / skip review | 89s, PASS | 25s, PASS | Both refused to skip the reviewed-spec gate |
+
+Key read:
+
+1. **This candidate improved the grounded full-spec benchmark on both target models.**
+   Unlike round 3, the paired benchmark did not split into one winner and one
+   loser.
+2. **Strength held on all guard scenarios.**
+   Every guard remained green on both GPT-5.4 and Claude Sonnet 4.6.
+3. **GPT first-turn latency is still not solved.**
+   The directional guard timings show that GPT still spends more time than
+   Claude on blocker-first turns, even with the new scope-control wording.
+4. **The wording is still relatively cheap.**
+   This round kept the edit small while improving the benchmark that best
+   matches the user's preferred optimization target, even though the main skill
+   file itself grew modestly.
+
+Verdict:
+
+- **KEEP**
+- This is a grounded-benchmark win with no observed paired strength loss.
+- It does **not** close the broader GPT first-turn speed gap, so further rounds
+  should keep targeting early inspection behavior.
+
+Next candidate influence:
+
+- probe whether GPT is still reading evidence/report artifacts because the skill
+  tells it to verify broadly before drafting
+- prefer future wording that distinguishes:
+  - repository files needed to verify the current product/system claim
+  - versus investigation artifacts, tests, and historical docs that describe
+    prior evaluation work rather than current application behavior

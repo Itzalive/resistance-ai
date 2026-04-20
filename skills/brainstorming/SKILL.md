@@ -38,7 +38,7 @@ Do not use this as a shortcut around repository inspection, review, or user appr
 ## Quick Reference
 
 1. Load only the companion files needed for the current stage. `SPEC_STANDARDS.md` is required before drafting a spec body or when the request already exposes auth, privacy, data-sharing, or dependency risk. `SPEC_REVIEW_MANIFEST.md` and `SPEC_RUBRIC.md` are required only after a written spec exists.
-2. Inspect the repository before trusting the request. Cite only headings that actually exist in this package.
+2. Inspect the repository before trusting the request. Before the first approved section, inspect only the files needed to verify the currently exposed blockers, scope, or current-stage instructions. Cite only headings that actually exist in this package.
 3. If ambiguity is unresolved, output blocking questions only. Do not output `Draft Spec`, `MVP`, or any proposed solution while ambiguity remains unresolved.
 4. Before the first approved section, output only `## Assumptions surface` or blockers, then stop. Do not emit downstream sections such as goals, user stories, architecture, or implementation steps before the first approved section.
 5. If implementation already exists before design, stop. Do not retrofit a minimal spec around the current solution.
@@ -176,6 +176,7 @@ you must preserve that evidence through review. Memory is not a substitute.
 Because this skill operates across diverse repositories (frontend, backend,
 infrastructure), adapt your search tools (`grep`, `find`, `cat`) and search
 syntax (`def`, `class`, `interface`, `type`, `func`) to the current project.
+Before the first approved section, do not widen inspection to tests, scripts, repo guides, or historical design docs unless one is the direct source of truth for the claim being checked.
 
 Before finalizing any design, physically execute shell commands to verify:
 

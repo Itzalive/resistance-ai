@@ -50,6 +50,17 @@ def test_brainstorming_quick_reference_forbids_draft_specs_under_ambiguity() -> 
     )
 
 
+def test_brainstorming_quick_reference_limits_first_pass_inspection_scope() -> None:
+    skill_text = Path("skills/brainstorming/SKILL.md").read_text()
+
+    quick_reference = _section_text(skill_text, "Quick Reference")
+
+    assert (
+        "Before the first approved section, inspect only the files needed to verify the currently exposed blockers, scope, or current-stage instructions."
+        in quick_reference
+    )
+
+
 def test_brainstorming_initial_gate_blocks_full_outline() -> None:
     skill_text = Path("skills/brainstorming/SKILL.md").read_text()
 
@@ -71,6 +82,17 @@ def test_brainstorming_hard_gate_includes_vendor_no_implementation_line() -> Non
     assert (
         "Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until you have presented a design and the user has approved it."
         in skill_text
+    )
+
+
+def test_brainstorming_repository_verification_forbids_broad_first_pass_reads() -> None:
+    skill_text = Path("skills/brainstorming/SKILL.md").read_text()
+
+    verification = _section_text(skill_text, "Repository-grounded verification")
+
+    assert (
+        "Before the first approved section, do not widen inspection to tests, scripts, repo guides, or historical design docs unless one is the direct source of truth for the claim being checked."
+        in verification
     )
 
 
