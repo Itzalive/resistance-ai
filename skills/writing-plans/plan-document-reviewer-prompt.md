@@ -49,6 +49,13 @@ Task tool (general-purpose):
     - Are test-writing steps and implementation steps separated into distinct steps?
     - Are RED steps (write failing tests) always before GREEN steps (implement)?
     - Are REFACTOR steps present for any existing tests broken by the changes?
+    - Does each new test in the plan include a `Test retention` note marking it as
+      **Permanent** or **Temporary**?
+    - If a test is marked **Temporary**, does the REFACTOR step explicitly delete
+      it or replace it with a behaviour-level test before completion?
+    - Do any planned tests assert only internal structure (type names,
+      inheritance, helper existence, accumulator shape, call ordering) without
+      a deliberate long-term contract?
     - Do tests assert specific data values (not just "is not null" or "status 200")?
     - Is there at least one negative test per task (expected failure path)?
 

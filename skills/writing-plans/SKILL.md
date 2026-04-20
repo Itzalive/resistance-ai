@@ -118,8 +118,9 @@ For each task, use one execution goal, a concrete file list, and ordered RED →
 - Regenerate: `[checked-in generated artifact if required]`
 
 - Satisfies Spec AC: [List specific Given/When/Then criteria covered]
+- **Test retention:** [**Permanent** | **Temporary** — remove before final commit]
 
-- [ ] **Step 1: Write the RED failing test and at least two failure modes**
+- [ ] **Step 1: Write the RED failing test, classify each new test, and cover at least two failure modes**
 
 ```python
 def test_specific_behavior():
@@ -219,11 +220,16 @@ Resistance Engine relies on Test-Driven Development. Your plan must structurally
 this. Never bundle test creation and implementation into the same step.
 
 - **Step A (RED):** A discrete, standalone step that writes *failing* unit and
-  integration tests based on the spec's Acceptance Criteria.
+  integration tests based on the spec's Acceptance Criteria. For refactors,
+  explicitly classify each new test as either **Permanent** (behaviour-facing,
+  must remain) or **Temporary** (implementation-shape guard used only to drive
+  the change).
 - **Step B (GREEN):** Only after the RED step is defined, a step implementing the
   minimum code to make those tests pass.
 - **Step C (REFACTOR):** Steps to clean up the code and update any legacy tests
-  broken by the new implementation.
+  broken by the new implementation. Delete temporary tests, or replace them with
+  permanent behaviour-facing tests, and keep only behaviour-facing tests unless
+  an implementation detail is itself a deliberate long-term contract.
 
 **Test rigour rules:**
 - *No smoke tests:* assertions must check specific data values, not merely
@@ -335,7 +341,8 @@ the Unified Coherence Check:
    changed during self-review.
 6. **Unhappy-path coverage** — confirm at least two failure-mode tests per task.
 7. **Runbook completeness** — every manual infrastructure step has an explicit runbook entry.
-8. **Convention sync**: if planned work changes a repository-wide convention, include updates to contributor instruction files (for example 
+8. **Test retention audit** — confirm every new test is marked Permanent or Temporary, and no Temporary test survives the final REFACTOR step unless it protects a deliberate contract.
+9. **Convention sync**: if planned work changes a repository-wide convention, include updates to contributor instruction files (for example 
 `.github/copilot-instructions.md`, `AGENTS.md`, and `CLAUDE.md`) in the same plan.
 
 
@@ -419,9 +426,11 @@ is a **red flag** that you are rationalising toward a shortcut.
 | "I remember the method signature from earlier in the session" | Pre-plan verification skipped | Shell-verify the signature before committing it to the plan |
 | "The spec covers it implicitly" | Invisible runbook step | Every manual step must be made explicit in the runbook |
 | "I'll just guess the unknown variable and note it" | Unknown variable unresolved | Name it in the Risk Assessment and ask targeted questions before planning |
+| "This temporary test is still useful, so I'll keep it" | REFACTOR stage bypassed | Delete or replace implementation-shape tests before completion unless they protect a deliberate contract |
 
 **Red flags in your own output:**
 - You started writing tasks before running `cat` on the spec file.
 - The plan has no `### Risk & Confidence Assessment` block.
 - Every task step describes the happy path only.
 - You wrote "handle errors appropriately" without specifying what that means.
+- A new test asserts inheritance, helper existence, or call ordering without a `Test retention` note explaining why it survives REFACTOR.
