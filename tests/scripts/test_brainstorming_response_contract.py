@@ -149,3 +149,14 @@ def test_brainstorming_later_stage_review_workflow_moves_to_support_file() -> No
 
     assert "Load `review-workflow.md` after a written spec exists." in skill_text
     assert Path("skills/brainstorming/review-workflow.md").exists()
+
+
+def test_brainstorming_checklist_delays_standards_until_spec_body() -> None:
+    skill_text = Path("skills/brainstorming/SKILL.md").read_text()
+
+    checklist = _section_text(skill_text, "Checklist").replace("\n    ", " ")
+
+    assert (
+        "Ingest Standards: Load `SPEC_STANDARDS.md` before drafting a spec body or when the request already exposes auth, privacy, data-sharing, or dependency risk."
+        in checklist
+    )
