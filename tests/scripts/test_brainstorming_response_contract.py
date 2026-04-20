@@ -96,6 +96,17 @@ def test_brainstorming_repository_verification_forbids_broad_first_pass_reads() 
     )
 
 
+def test_brainstorming_repository_verification_forbids_experiment_history_first_pass() -> None:
+    skill_text = Path("skills/brainstorming/SKILL.md").read_text()
+
+    verification = _section_text(skill_text, "Repository-grounded verification")
+
+    assert (
+        "Do not treat experiment reports, round logs, or investigation writeups as first-pass grounding unless the user explicitly asks for that history or a benchmark claim cannot be verified from live source."
+        in verification
+    )
+
+
 def test_brainstorming_description_uses_vendor_pre_implementation_wording() -> None:
     skill_text = Path("skills/brainstorming/SKILL.md").read_text()
 
@@ -131,6 +142,17 @@ def test_brainstorming_initial_gate_allows_narrow_visual_offer() -> None:
     )
 
 
+def test_brainstorming_initial_gate_sends_visual_offer_before_standards_for_clear_visual_requests() -> None:
+    skill_text = Path("skills/brainstorming/SKILL.md").read_text()
+
+    initial_gate = _section_text(skill_text, "Initial gate")
+
+    assert (
+        "For clearly visual layout/mockup/comparison requests with no visible blocker, no external fetch/dependency assumption, and no untrusted-input ingestion, send the standalone visual-companion offer before loading `SPEC_STANDARDS.md` or widening repository inspection."
+        in initial_gate
+    )
+
+
 def test_brainstorming_visual_companion_preserves_gates() -> None:
     skill_text = Path("skills/brainstorming/SKILL.md").read_text()
 
@@ -157,7 +179,7 @@ def test_brainstorming_quick_reference_stages_companion_loading() -> None:
 
     assert "Load only the companion files needed for the current stage." in quick_reference
     assert (
-        "`SPEC_STANDARDS.md` is required before drafting a spec body or when the request already exposes auth, privacy, data-sharing, or dependency risk."
+        "Load `SPEC_STANDARDS.md` during `## Assumptions surface` when the request already exposes auth, privacy, data-sharing, external fetches, new dependency assumptions, untrusted-input ingestion, or retention/storage concerns. Otherwise load it before drafting a spec body."
         in quick_reference
     )
     assert (
@@ -179,6 +201,6 @@ def test_brainstorming_checklist_delays_standards_until_spec_body() -> None:
     checklist = _section_text(skill_text, "Checklist").replace("\n    ", " ")
 
     assert (
-        "Ingest Standards: Load `SPEC_STANDARDS.md` before drafting a spec body or when the request already exposes auth, privacy, data-sharing, or dependency risk."
+        "Ingest Standards: Load `SPEC_STANDARDS.md` during `## Assumptions surface` when the request already exposes auth, privacy, data-sharing, external fetches, new dependency assumptions, untrusted-input ingestion, or retention/storage concerns; otherwise load it before drafting a spec body."
         in checklist
     )

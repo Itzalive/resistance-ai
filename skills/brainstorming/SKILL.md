@@ -37,7 +37,7 @@ Do not use this as a shortcut around repository inspection, review, or user appr
 
 ## Quick Reference
 
-1. Load only the companion files needed for the current stage. `SPEC_STANDARDS.md` is required before drafting a spec body or when the request already exposes auth, privacy, data-sharing, or dependency risk. `SPEC_REVIEW_MANIFEST.md` and `SPEC_RUBRIC.md` are required only after a written spec exists.
+1. Load only the companion files needed for the current stage. Load `SPEC_STANDARDS.md` during `## Assumptions surface` when the request already exposes auth, privacy, data-sharing, external fetches, new dependency assumptions, untrusted-input ingestion, or retention/storage concerns. Otherwise load it before drafting a spec body. For clearly visual layout/mockup/comparison requests with no visible blocker, no external fetch/dependency assumption, and no untrusted-input ingestion, send the standalone visual-companion offer before loading `SPEC_STANDARDS.md` or widening repository inspection. `SPEC_REVIEW_MANIFEST.md` and `SPEC_RUBRIC.md` are required only after a written spec exists.
 2. Inspect the repository before trusting the request. Before the first approved section, inspect only the files needed to verify the currently exposed blockers, scope, or current-stage instructions. Cite only headings that actually exist in this package.
 3. If ambiguity is unresolved, output blocking questions only. Do not output `Draft Spec`, `MVP`, or any proposed solution while ambiguity remains unresolved.
 4. Before the first approved section, output only `## Assumptions surface` or blockers, then stop. Do not emit downstream sections such as goals, user stories, architecture, or implementation steps before the first approved section.
@@ -51,6 +51,7 @@ Do not use this as a shortcut around repository inspection, review, or user appr
 
 Before the spec body, return only the current gate output: `## Assumptions surface` plus blockers or blocking questions.
 For clearly visual layout/mockup/comparison requests, you may send the standalone visual-companion offer before `## Assumptions surface`.
+For clearly visual layout/mockup/comparison requests with no visible blocker, no external fetch/dependency assumption, and no untrusted-input ingestion, send the standalone visual-companion offer before loading `SPEC_STANDARDS.md` or widening repository inspection.
 If the request already exposes security, privacy, permissions, data-sharing, source-of-truth, or approval blockers, skip the visual offer and start with `## Assumptions surface`.
 
 Do not emit downstream sections such as goals, user stories, architecture, or implementation steps before the first approved section.
@@ -93,8 +94,10 @@ treating "obvious" scope as a shortcut.
 
 ## Checklist
 
-1. Ingest Standards: Load `SPEC_STANDARDS.md` before drafting a spec body or when
-    the request already exposes auth, privacy, data-sharing, or dependency risk.
+1. Ingest Standards: Load `SPEC_STANDARDS.md` during `## Assumptions surface`
+    when the request already exposes auth, privacy, data-sharing, external
+    fetches, new dependency assumptions, untrusted-input ingestion, or
+    retention/storage concerns; otherwise load it before drafting a spec body.
 2. Explore repository context before trusting the request.
 3. Surface blocking ambiguities before drafting the spec body.
 4. Interrogate assumptions before clarifying questions.
@@ -177,6 +180,7 @@ Because this skill operates across diverse repositories (frontend, backend,
 infrastructure), adapt your search tools (`grep`, `find`, `cat`) and search
 syntax (`def`, `class`, `interface`, `type`, `func`) to the current project.
 Before the first approved section, do not widen inspection to tests, scripts, repo guides, or historical design docs unless one is the direct source of truth for the claim being checked.
+Do not treat experiment reports, round logs, or investigation writeups as first-pass grounding unless the user explicitly asks for that history or a benchmark claim cannot be verified from live source.
 
 Before finalizing any design, physically execute shell commands to verify:
 
