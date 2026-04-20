@@ -107,6 +107,18 @@ def test_brainstorming_repository_verification_forbids_experiment_history_first_
     )
 
 
+def test_brainstorming_overview_does_not_keep_broad_standards_loader() -> None:
+    skill_text = Path("skills/brainstorming/SKILL.md").read_text()
+
+    overview = _section_text(skill_text, "Overview")
+
+    assert "- load `SPEC_STANDARDS.md` for risk analysis or spec drafting" not in overview
+    assert (
+        "- load `SPEC_STANDARDS.md` during `## Assumptions surface` for explicit early-risk signals; otherwise load it before drafting a spec body"
+        in overview
+    )
+
+
 def test_brainstorming_description_uses_vendor_pre_implementation_wording() -> None:
     skill_text = Path("skills/brainstorming/SKILL.md").read_text()
 

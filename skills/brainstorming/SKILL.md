@@ -14,7 +14,7 @@ not yet safe to execute.
 Default authority lives in this package:
 - always load this `SKILL.md`
 - load `visual-companion.md` only for the standalone visual-companion path
-- load `SPEC_STANDARDS.md` for risk analysis or spec drafting
+- load `SPEC_STANDARDS.md` during `## Assumptions surface` for explicit early-risk signals; otherwise load it before drafting a spec body
 - load `review-workflow.md` only after a written spec exists
 
 Repo-root `SPEC_DESIGN.md`, `SPEC_REVIEW_MANIFEST.md`, and `SPEC_RUBRIC.md` are
