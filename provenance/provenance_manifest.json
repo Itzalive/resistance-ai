@@ -292,6 +292,30 @@
     ]
   },
   {
+    "entry_id": "skill:survivability",
+    "entry_type": "skill",
+    "name": "survivability",
+    "source_repo": ".",
+    "source_path": "skills/survivability",
+    "local_path": "skills/survivability",
+    "manifest_state": "imported",
+    "source_revision": "3442b8f533fdef85fa1272463bb0d1b19f7c6508",
+    "last_imported_at": "2026-04-21T09:57:51+00:00",
+    "last_verified_at": "2026-04-21T09:57:51+00:00",
+    "files": [
+      {
+        "source_repo": ".",
+        "source_file": "skills/survivability/SKILL.md",
+        "local_file": "skills/survivability/SKILL.md",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:f8502747315e3eedd2f7d65d01d5194e61bbad8df9d6c5b31e2226971de98847",
+        "local_digest": "sha256:f8502747315e3eedd2f7d65d01d5194e61bbad8df9d6c5b31e2226971de98847",
+        "last_verified_at": "2026-04-21T09:57:51+00:00"
+      }
+    ]
+  },
+  {
     "entry_id": "skill:systematic-debugging",
     "entry_type": "skill",
     "name": "systematic-debugging",

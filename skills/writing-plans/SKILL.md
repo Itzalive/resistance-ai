@@ -23,6 +23,36 @@ is an optional overlay only. Strictly apply repo-root overlays; if they contradi
 
 ---
 
+## When to Use
+
+Use this skill when:
+
+- you have an approved spec or requirements for a multi-step task
+- sequencing, dependency ordering, failure paths, or execution risk must be explicit before coding
+- the work spans multiple files, layers, or manual steps and a fresh execution agent could guess wrong
+- you need a plan that can be handed to another agent with minimal repository context
+
+## When NOT to Use
+
+Do not use this skill when:
+
+- the task is a trivial one-file wording or typo fix that only needs a lightweight inline outline
+- the request still needs design, scope, or architecture approval first (use `brainstorming`)
+- there is no meaningful sequencing, dependency, or failure-path risk to make explicit
+- the user wants direct implementation rather than a stored plan document
+
+## Checklist
+
+1. Ingest the approved spec before writing tasks.
+2. Verify current repository reality, including whether the target section, file, feature, or prior plan already exists.
+3. If scope or architecture proof is missing, ask one targeted question or reject the work as spec-incomplete.
+4. Push back on unnecessary complexity instead of silently absorbing it into the plan.
+5. Split work by dependency order and chunk size, not by convenience.
+6. Use RED → GREEN → REFACTOR for every task; for docs-only or config-only work, use exact verification checks instead of invented tests.
+7. Run self-review, then the Unified Coherence Check, before offering execution handoff.
+
+---
+
 ## Scope Check: Spec simplification and pushback
 
 Before writing tasks, decide whether the approved spec should stay in one plan or be
@@ -109,7 +139,7 @@ For each task, use one execution goal, a concrete file list, and ordered RED →
 → REFACTOR steps that point back to the hard gates below.
 
 ````markdown
-### Task N: [Single execution goal]
+### Task N: [single execution goal]
 
 **Files:**
 - Create: `exact/path/to/file.py`
@@ -120,7 +150,7 @@ For each task, use one execution goal, a concrete file list, and ordered RED →
 - Satisfies Spec AC: [List specific Given/When/Then criteria covered]
 - **Test retention:** [**Permanent** | **Temporary** — remove before final commit]
 
-- [ ] **Step 1: Write the RED failing test, classify each new test, and cover at least two failure modes**
+- [ ] **Step 1: write RED tests for the happy path AND at least two failure modes.**
 
 ```python
 def test_specific_behavior():
@@ -128,37 +158,32 @@ def test_specific_behavior():
     assert result == expected
 ```
 
-- [ ] **Step 2: Run focused RED verification command**
+- [ ] **Step 2: run focused RED verification command**
 
 Run: `pytest tests/path/test.py::test_name -v`
 Expected: FAIL with "function not defined"
 
-- [ ] **Step 3: Write minimal implementation for GREEN**
+- [ ] **Step 3: write minimal implementation for GREEN**
 
 ```python
 def function(input):
     return expected
 ```
 
-- [ ] **Step 4: Run test to verify it's GREEN**
+- [ ] **Step 4: run test to verify it's GREEN**
 
 Run: `pytest tests/path/test.py::test_name -v`
 Expected: PASS
 
 
-- [ ] **Step 5: Refactor duplicated wording or structure without weakening gates**
+- [ ] **Step 5: regenerate artifacts, rerun exact verification commands, and refactor duplicated wording or structure without weakening gates**
 
 ```python
 def function(input):
     return expected
 ```
 
-- [ ] **Step 6: Regenerate artifacts and rerun exact verification commands**
-
-Run: `pytest tests/path/test.py::test_name -v`
-Expected: PASS
-
-- [ ] **Step 7: Commit**
+- [ ] **Step 6: commit the finished slice**
 
 ```bash
 git add tests/path/test.py src/path/file.py
@@ -231,6 +256,17 @@ this. Never bundle test creation and implementation into the same step.
   permanent behaviour-facing tests, and keep only behaviour-facing tests unless
   an implementation detail is itself a deliberate long-term contract.
 
+**Docs-only / config-only branch:**
+- For documentation-only or config-only plans, RED and GREEN may be exact verification
+  checks rather than new automated product tests.
+- **RED:** prove the current state is absent, incorrect, or misleading with exact
+  commands such as `grep`, `sed -n`, config readback, or `--help`.
+- **GREEN:** make the smallest edit, then rerun the same checks against the real
+  metadata, config surface, or rendered file.
+- **REFACTOR:** tighten wording or structure and rerun the same checks. Do not invent
+  permanent regression tests unless that docs/config surface is already tested in-repo
+  or the spec explicitly requires it.
+
 **Test rigour rules:**
 - *No smoke tests:* assertions must check specific data values, not merely
   "is not null" or "status 200".
@@ -287,12 +323,15 @@ yields a passing test suite.
 
 Before review, physically execute shell commands to verify:
 
-1. **Target directories** — `ls` or `tree` planned write paths; add a creation step if missing.
-2. **Test runners** — confirm the test commands against `package.json`, `pyproject.toml`, or equivalent.
-3. **Method / class / return shapes** — `grep` the names and signatures the plan depends on.
-4. **Config templates** — if new env/config values appear, update the relevant example/template file.
-5. **MCP inputSchema args** — verify tool argument names against the real schema.
-6. **Naming collisions** — confirm no existing file already serves the planned purpose.
+1. **Existing implementation / state** — verify whether the target file, section,
+   feature, or prior plan already exists so the plan refines reality instead of
+   blindly recreating it.
+2. **Target directories** — `ls` or `tree` planned write paths; add a creation step if missing.
+3. **Test runners** — confirm the test commands against `package.json`, `pyproject.toml`, or equivalent.
+4. **Method / class / return shapes** — `grep` the names and signatures the plan depends on.
+5. **Config templates** — if new env/config values appear, update the relevant example/template file.
+6. **MCP inputSchema args** — verify tool argument names against the real schema.
+7. **Naming collisions** — confirm no existing file already serves the planned purpose.
 
 ---
 
@@ -363,19 +402,10 @@ a cross-model sub-agent (Rubber Duck).
 - Orchestrator is **claude-\*** → sub-agent must be **gpt-5.4**.
 - Orchestrator is **gpt-\*** → sub-agent must be **claude-sonnet-4.6**.
 
-Provide the sub-agent with:
-1. The full work item title, description and accompanying notes/comments from the work item management system.
-2. `docs/superpowers/specs/<spec-file>.md` (the final spec).
-3. `docs/superpowers/plans/<plan-file>.md` (the final plan).
-4. Shell verification evidence from the pre-plan checks (`ls` / `tree` / `grep`
-   / test-runner inspection output).
-5. Proof of Tabula Rasa / spec ingestion from the plan draft or shell history
-   (for example, the `cat` / `ls` command used to read the spec before drafting).
-7. `.review_log.jsonl` entries that record the `Plan self-review` outcomes and any
-   rejection/retry chain relevant to the plan, using the schema in
-   `../review-log-jsonl.md`.
-8. Any explicit opposite-model proof needed to satisfy the reviewer's hard gates
-   (orchestrator family vs. reviewer family).
+Build the reviewer input bundle using `unified-coherence-check-evidence.md` in this
+directory. That support file defines the exact evidence to provide, including the
+existing-state check, shell verification output, Tabula Rasa proof, review-log chain,
+and opposite-model proof.
 
 The sub-agent must validate:
 - **Alignment A (Spec vs. Work Item):** Does the spec satisfy every functional

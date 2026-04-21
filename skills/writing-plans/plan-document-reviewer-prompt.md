@@ -78,6 +78,8 @@ Task tool (general-purpose):
       committed?
 
     **7. Pre-plan verification performed**
+    - Was the current implementation/state checked first so the plan does not
+      blindly recreate an existing file, section, feature, or prior plan?
     - Are target directories verified with `ls` or `tree`?
     - Are test runner commands verified against `package.json` / `pyproject.toml`?
     - Are method signatures, class names, and return shapes verified with `grep`?
