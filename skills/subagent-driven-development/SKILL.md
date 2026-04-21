@@ -61,6 +61,7 @@ digraph process {
     "Read plan, extract all tasks with full text, note context, create TodoWrite" [shape=box];
     "More tasks remain?" [shape=diamond];
     "Dispatch final code reviewer subagent for entire implementation" [shape=box];
+    "Use resistance-engine:survivability" [shape=box style=filled fillcolor=khaki];
     "Use resistance-engine:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
     "Read plan, extract all tasks with full text, note context, create TodoWrite" -> "Dispatch implementer subagent (./implementer-prompt.md)";
@@ -80,7 +81,8 @@ digraph process {
     "Mark task complete in TodoWrite" -> "More tasks remain?";
     "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
     "More tasks remain?" -> "Dispatch final code reviewer subagent for entire implementation" [label="no"];
-    "Dispatch final code reviewer subagent for entire implementation" -> "Use resistance-engine:finishing-a-development-branch";
+    "Dispatch final code reviewer subagent for entire implementation" -> "Use resistance-engine:survivability";
+    "Use resistance-engine:survivability" -> "Use resistance-engine:finishing-a-development-branch";
 }
 ```
 
@@ -194,7 +196,9 @@ Code reviewer: ✅ Approved
 
 [After all tasks]
 [Dispatch final code-reviewer]
-Final reviewer: All requirements met, ready to merge
+Final reviewer: All requirements met, ready for the Phase 4 gate
+[Use resistance-engine:survivability]
+[Use resistance-engine:finishing-a-development-branch]
 
 Done!
 ```
@@ -230,6 +234,16 @@ Done!
 - Controller does more prep work (extracting all tasks upfront)
 - Review loops add iterations
 - But catches issues early (cheaper than debugging later)
+
+## Final Handoff
+
+After the final code reviewer approves the entire implementation:
+- Announce: "I'm using the survivability skill to run the Phase 4 gate."
+- **REQUIRED SUB-SKILL:** Use resistance-engine:survivability
+- Follow that skill to run the steady-state, mutation, chaos, and review-log checks
+- Announce: "I'm using the finishing-a-development-branch skill to complete this work."
+- **REQUIRED SUB-SKILL:** Use resistance-engine:finishing-a-development-branch
+- Follow that skill to verify tests, present options, execute choice
 
 ## Red Flags
 
@@ -268,6 +282,7 @@ Done!
 - **resistance-engine:using-git-worktrees** - REQUIRED: Set up isolated workspace before starting
 - **resistance-engine:writing-plans** - Creates the plan this skill executes
 - **resistance-engine:requesting-code-review** - Code review template for reviewer subagents
+- **resistance-engine:survivability** - REQUIRED: run the Phase 4 gate before finishing
 - **resistance-engine:finishing-a-development-branch** - Complete development after all tasks
 
 **Subagents should use:**

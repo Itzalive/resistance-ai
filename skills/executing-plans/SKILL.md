@@ -32,6 +32,9 @@ For each task:
 ### Step 3: Complete Development
 
 After all tasks complete and verified:
+- Announce: "I'm using the survivability skill to run the Phase 4 gate."
+- **REQUIRED SUB-SKILL:** Use resistance-engine:survivability
+- Follow that skill to run the steady-state, mutation, chaos, and review-log checks
 - Announce: "I'm using the finishing-a-development-branch skill to complete this work."
 - **REQUIRED SUB-SKILL:** Use resistance-engine:finishing-a-development-branch
 - Follow that skill to verify tests, present options, execute choice
@@ -67,4 +70,5 @@ After all tasks complete and verified:
 **Required workflow skills:**
 - **resistance-engine:using-git-worktrees** - REQUIRED: Set up isolated workspace before starting
 - **resistance-engine:writing-plans** - Creates the plan this skill executes
+- **resistance-engine:survivability** - REQUIRED: run the Phase 4 gate before finishing
 - **resistance-engine:finishing-a-development-branch** - Complete development after all tasks
