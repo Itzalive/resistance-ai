@@ -109,7 +109,8 @@ treating "obvious" scope as a shortcut.
     Do not generate the next section until the user explicitly replies with approval.
 9. Write the spec with `## Threat Model (CIA)` and `Given / When / Then` criteria.
 10. After a written spec exists, load `review-workflow.md`, complete its review
-    and audit loop, and do not invoke `writing-plans` until `APPROVED - CROSS-MODEL AUDIT`.
+    and audit loop, record each outcome in `.review_log.jsonl`, and do not invoke
+    `writing-plans` until `APPROVED - CROSS-MODEL AUDIT`.
 
 ## Process Flow
 

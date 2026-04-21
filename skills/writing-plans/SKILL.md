@@ -139,7 +139,7 @@ For each task, use one execution goal, a concrete file list, and ordered RED →
 → REFACTOR steps that point back to the hard gates below.
 
 ````markdown
-### Task N: [Single execution goal]
+### Task N: [single execution goal]
 
 **Files:**
 - Create: `exact/path/to/file.py`
@@ -150,7 +150,7 @@ For each task, use one execution goal, a concrete file list, and ordered RED →
 - Satisfies Spec AC: [List specific Given/When/Then criteria covered]
 - **Test retention:** [**Permanent** | **Temporary** — remove before final commit]
 
-- [ ] **Step 1: Write the RED failing test, classify each new test, and cover at least two failure modes**
+- [ ] **Step 1: write RED tests for the happy path AND at least two failure modes.**
 
 ```python
 def test_specific_behavior():
@@ -158,37 +158,32 @@ def test_specific_behavior():
     assert result == expected
 ```
 
-- [ ] **Step 2: Run focused RED verification command**
+- [ ] **Step 2: run focused RED verification command**
 
 Run: `pytest tests/path/test.py::test_name -v`
 Expected: FAIL with "function not defined"
 
-- [ ] **Step 3: Write minimal implementation for GREEN**
+- [ ] **Step 3: write minimal implementation for GREEN**
 
 ```python
 def function(input):
     return expected
 ```
 
-- [ ] **Step 4: Run test to verify it's GREEN**
+- [ ] **Step 4: run test to verify it's GREEN**
 
 Run: `pytest tests/path/test.py::test_name -v`
 Expected: PASS
 
 
-- [ ] **Step 5: Refactor duplicated wording or structure without weakening gates**
+- [ ] **Step 5: regenerate artifacts, rerun exact verification commands, and refactor duplicated wording or structure without weakening gates**
 
 ```python
 def function(input):
     return expected
 ```
 
-- [ ] **Step 6: Regenerate artifacts and rerun exact verification commands**
-
-Run: `pytest tests/path/test.py::test_name -v`
-Expected: PASS
-
-- [ ] **Step 7: Commit**
+- [ ] **Step 6: commit the finished slice**
 
 ```bash
 git add tests/path/test.py src/path/file.py
