@@ -20,12 +20,18 @@ def test_agents_phase4_points_to_survivability_skill() -> None:
     phase_4_text = _phase_4_section()
 
     assert phase_4_text.startswith(PHASE_4_HEADING)
-    assert "Use the `survivability` skill" in phase_4_text
+    assert (
+        "Use the `survivability` skill to run this gate after implementation/review "
+        "and before\nbranch finishing."
+    ) in phase_4_text
     assert "3 representative probes" in phase_4_text
+    assert "plus 1 per additional meaningful decision point" in phase_4_text
     assert "capped at 5 total" in phase_4_text
+    assert "the focused tests must fail for every injected mutation" in phase_4_text
     assert "1 chaos probe minimum for local-only changes" in phase_4_text
     assert "2 for dependency-touching changes" in phase_4_text
     assert "capped at 3 total" in phase_4_text
+    assert "the system degrades safely and restore completes cleanly" in phase_4_text
 
 
 def test_agents_phase4_preserves_review_log_and_retrospective_handoff() -> None:
