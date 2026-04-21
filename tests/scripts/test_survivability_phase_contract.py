@@ -4,40 +4,19 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 AGENTS_PATH = REPO_ROOT / "AGENTS.md"
-PHASE_4_HEADING = "## Lifecycle Phase 4: Resilience & Mutation Testing"
 
 
-def _phase_4_section() -> str:
+def test_agents_does_not_inline_survivability_phase_contract() -> None:
     agents_text = AGENTS_PATH.read_text()
-    start = agents_text.index(PHASE_4_HEADING)
-    end = agents_text.find("\n## ", start + len(PHASE_4_HEADING))
-    if end == -1:
-        end = len(agents_text)
-    return agents_text[start:end]
+
+    assert "## Lifecycle Phase 4: Resilience & Mutation Testing" not in agents_text
+    assert "3 representative probes for a small change" not in agents_text
+    assert "2 for dependency-touching changes" not in agents_text
+    assert 'Record the "Survivability Score" in your Phase 6 Retrospective.' not in agents_text
 
 
-def test_agents_phase4_points_to_survivability_skill() -> None:
-    phase_4_text = _phase_4_section()
+def test_agents_does_not_inline_survivability_score_language() -> None:
+    agents_text = AGENTS_PATH.read_text()
 
-    assert phase_4_text.startswith(PHASE_4_HEADING)
-    assert (
-        "Use the `survivability` skill to run this gate after implementation/review "
-        "and before\nbranch finishing."
-    ) in phase_4_text
-    assert "3 representative probes" in phase_4_text
-    assert "plus 1 per additional meaningful decision point" in phase_4_text
-    assert "capped at 5 total" in phase_4_text
-    assert "the focused tests must fail for every injected mutation" in phase_4_text
-    assert "1 chaos probe minimum for local-only changes" in phase_4_text
-    assert "2 for dependency-touching changes" in phase_4_text
-    assert "capped at 3 total" in phase_4_text
-    assert "the system degrades safely and restore completes cleanly" in phase_4_text
-
-
-def test_agents_phase4_preserves_review_log_and_retrospective_handoff() -> None:
-    phase_4_text = _phase_4_section()
-
-    assert phase_4_text.startswith(PHASE_4_HEADING)
-    assert "Survivability Score" in phase_4_text
-    assert "CRITICAL FRICTION" in phase_4_text
-    assert ".review_log.jsonl" in phase_4_text
+    assert 'Record the "Survivability Score" in your Phase 6 Retrospective.' not in agents_text
+    assert 'Log any "survived mutations" as CRITICAL FRICTION' not in agents_text
