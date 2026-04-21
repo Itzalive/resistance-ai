@@ -22,7 +22,10 @@ def test_agents_phase4_points_to_survivability_skill() -> None:
     assert phase_4_text.startswith(PHASE_4_HEADING)
     assert "Use the `survivability` skill" in phase_4_text
     assert "3 representative probes" in phase_4_text
+    assert "capped at 5 total" in phase_4_text
+    assert "1 chaos probe minimum for local-only changes" in phase_4_text
     assert "2 for dependency-touching changes" in phase_4_text
+    assert "capped at 3 total" in phase_4_text
 
 
 def test_agents_phase4_preserves_review_log_and_retrospective_handoff() -> None:
