@@ -21,6 +21,12 @@ def test_survivability_skill_defines_bounded_mutation_slate() -> None:
     assert "3 representative probes" in mutation_lane
     assert "capped at 5 total" in mutation_lane
     assert "meaningful decision point" in mutation_lane
+    assert (
+        "Treat a meaningful decision point as a modified branch condition, "
+        "guard clause, or early-return path that can independently change control flow."
+        in mutation_lane
+    )
+    assert skill_text.count("Treat a meaningful decision point as") == 1
     assert "route the work back to implementation hardening" in mutation_lane
 
 
@@ -34,6 +40,11 @@ def test_survivability_skill_defines_chaos_thresholds() -> None:
     assert "capped at 3 total" in chaos_lane
     assert "Treat a dependency-touching change as" in chaos_lane
     assert "abort/restore steps" in chaos_lane
+    assert (
+        "If a chaos probe causes unsafe degradation or restore cannot complete, "
+        "fail the gate and route the work back to implementation hardening before finish."
+        in chaos_lane
+    )
     assert "route the work back to implementation hardening" in chaos_lane
 
 
