@@ -45,3 +45,26 @@ cp -rf source dest          # NOT: cp -r source dest
 - `apt-get` - use `-y` flag
 - `brew` - use `HOMEBREW_NO_AUTO_UPDATE=1` env var
 
+## Lifecycle Phase 4: Resilience & Mutation Testing
+
+**CRITICAL:** Before an implementation is complete, it must survive the "Gauntlet."
+Use the `survivability` skill to run this gate after implementation/review and before
+branch finishing.
+
+### 1. Mutation Testing (Test Efficacy)
+Use the `survivability` skill to run a bounded mutation slate:
+- 3 representative probes for a small change
+- plus 1 per additional meaningful decision point
+- capped at 5 total
+- pass condition: the focused tests must fail for every injected mutation
+
+### 2. Chaos Injection (Logic Durability)
+Use the same `survivability` skill to run:
+- 1 chaos probe minimum for local-only changes
+- 2 for dependency-touching changes
+- capped at 3 total
+- pass condition: the system degrades safely and restore completes cleanly
+
+### 3. Log Submission
+Record the "Survivability Score" in your Phase 6 Retrospective.
+- Log any "survived mutations" as CRITICAL FRICTION in `.review_log.jsonl`.
