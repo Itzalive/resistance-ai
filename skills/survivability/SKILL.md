@@ -13,9 +13,10 @@ under realistic disruption.
 
 ## When to Use
 
-- After implementation and review are complete
+- After implementation is complete
+- After review if your workflow includes one
 - Before `finishing-a-development-branch`
-- When AGENTS Phase 4 applies and the change touched executable logic
+- When the change touched executable logic
 
 ## Steady-State Preflight
 

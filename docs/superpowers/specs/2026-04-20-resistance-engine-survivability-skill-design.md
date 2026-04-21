@@ -9,8 +9,9 @@
 
 ## Problem
 
-`AGENTS.md` defines a mandatory survivability phase, but the local skill catalog does
-not expose a standalone `survivability` skill that owns that phase.
+`AGENTS.md` carried an inline survivability phase template, but the local skill
+catalog did not expose a standalone `survivability` skill that could replace that
+template cleanly.
 
 Today, the local workflow jumps from completed implementation/review straight to branch
 finishing:
@@ -22,7 +23,7 @@ finishing:
 
 That leaves the Phase 4 "Gauntlet" as project prose rather than a first-class local
 catalog artifact. The result is an important local-only gate that is easy to skip,
-hard to audit, and not visible beside the other workflow skills.
+hard to audit, and duplicated between project prose and workflow behavior.
 
 ---
 
@@ -31,8 +32,8 @@ hard to audit, and not visible beside the other workflow skills.
 - Add a standalone local `survivability` skill as a first-class peer in the local
   catalog
 - Preserve the survivability phase as a gate, not just advisory prose
-- Externalize the existing AGENTS Phase 4 contract: mutation testing, chaos
-  injection, and review-log submission
+- Preserve the existing mutation, chaos, and review-log contract in the standalone
+  skill
 - Insert survivability into the real execution-to-finish workflow handoff
 - Keep the implementation tool-agnostic and compatible with the repo's current
   dependency set
@@ -45,8 +46,8 @@ hard to audit, and not visible beside the other workflow skills.
 - No bootstrap compatibility work in this shard; that belongs to issue #7
 - No new mutation-testing or chaos-engineering dependency in this shard
 - No production-only chaos platform requirement
-- No replacement of repo-local guidance in `AGENTS.md`; the new skill should
-  operationalize it, not erase it
+- No long-term duplication of survivability guidance between `AGENTS.md` and the
+  standalone skill; once the skill exists, it should own that contract
 
 ---
 
@@ -54,8 +55,8 @@ hard to audit, and not visible beside the other workflow skills.
 
 | Assumption | Status | Evidence / note |
 | --- | --- | --- |
-| The repo has a local-only survivability phase today | **VERIFIED** | `AGENTS.md:55-71` defines Phase 4, including mutation testing, chaos injection, and review-log submission |
-| Survivability results are expected to flow into retrospective work | **VERIFIED** | `AGENTS.md:70-71` records a survivability score for Phase 6 and logs survived mutations as critical friction |
+| The repo had a local-only survivability phase template at design time | **VERIFIED** | `AGENTS.md:55-71` defined Phase 4, including mutation testing, chaos injection, and review-log submission, before this branch removed the inline template |
+| Survivability results are expected to flow into retrospective work | **VERIFIED** | `AGENTS.md:70-71` recorded a survivability score for Phase 6 and logged survived mutations as critical friction before the inline template was replaced by the skill |
 | The repo already has a structured append-only review log | **VERIFIED** | `.review_log.jsonl` exists at the repo root; `skills/review-log-jsonl.md:1-97` defines the contract |
 | Local-only skills may exist as first-class peers in the local catalog | **VERIFIED** | `docs/superpowers/specs/2026-04-15-resistance-engine-catalog-retarget-design.md:140-156` allows local-only skills beside imported ones and expects them to consult local project guidance |
 | No local `survivability` skill exists yet | **VERIFIED** | `skills/` currently has no `survivability/` directory |
@@ -117,7 +118,7 @@ other external dependency as mandatory.
 | `skills/executing-plans/SKILL.md` | Modify | Insert survivability between completed execution and branch finishing |
 | `skills/subagent-driven-development/SKILL.md` | Modify | Insert survivability between final review and branch finishing |
 | `skills/review-log-jsonl.md` | Modify only if required | Add named survivability logging template only if the generic append contract is insufficient |
-| `AGENTS.md` | Modify only if required | Point Phase 4 at the new skill if prose-only guidance is no longer sufficient |
+| `AGENTS.md` | Modify only if required | Remove the temporary inline survivability template once the standalone skill owns the gate |
 | `tests/` | Create / modify | Prove the local catalog includes the skill and workflow skills reference it correctly |
 
 ---
@@ -265,9 +266,10 @@ closed if the workspace cannot be returned to the pre-probe state.
 **Risk:** Unbounded probe loops, hangs, or high-blast-radius fault injection can turn
 survivability itself into a failure source.
 
-**Repository proof:** `AGENTS.md:64-67` names realistic local faults (500ms latency,
-database timeout, null response). External chaos-engineering guidance requires a
-steady-state hypothesis and minimal blast radius.
+**Repository proof:** `skills/survivability/SKILL.md:53-70` names realistic local
+faults (500ms latency, timeout, null response, dependency unavailable). External
+chaos-engineering guidance requires a steady-state hypothesis and minimal blast
+radius.
 
 **Control:** Require a steady-state command before any experiment. Cap mutation probes
 at 3-5. Require 1 chaos probe minimum for local-only changes and 2 for
@@ -343,8 +345,8 @@ automation belongs to a later shard if the repo explicitly adds and verifies it.
 
 This draft is grounded in the current repository state:
 
-- `AGENTS.md` proves the local survivability phase exists and names its mutation,
-  chaos, and logging contract
+- At draft time, `AGENTS.md` contained the inline survivability template that this
+  branch replaces with the standalone skill
 - `skills/executing-plans/SKILL.md` and `skills/subagent-driven-development/SKILL.md`
   prove the current workflow bypasses an explicit survivability skill
 - `skills/review-log-jsonl.md` and `.review_log.jsonl` prove the append-only log

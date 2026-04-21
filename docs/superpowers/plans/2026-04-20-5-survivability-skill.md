@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use resistance-engine:subagent-driven-development (recommended) or resistance-engine:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add a standalone local `survivability` skill, wire it into the execution-to-finish workflow, and register it in the checked-in catalog/provenance artifacts so AGENTS Phase 4 becomes an explicit enforced gate.
+**Goal:** Add a standalone local `survivability` skill, wire it into the execution-to-finish workflow, and register it in the checked-in catalog/provenance artifacts so the skill owns the survivability gate and the obsolete AGENTS template can be removed.
 
-**Architecture:** Create one new skill doc at `skills/survivability/SKILL.md`, then integrate it into `executing-plans` and `subagent-driven-development` so survivability sits between completed implementation/review and branch finishing. Keep the review-log contract tool-agnostic by reusing the generic `.review_log.jsonl` schema, and register the new local-only skill explicitly in `catalog/catalog_index.json` plus `provenance/provenance_manifest.json` with digests computed from the checked-in file content.
+**Architecture:** Create one new skill doc at `skills/survivability/SKILL.md`, then integrate it into `executing-plans` and `subagent-driven-development` so survivability sits between completed implementation and branch finishing, with review remaining workflow-specific rather than mandatory in every path. Keep the review-log contract tool-agnostic by reusing the generic `.review_log.jsonl` schema, register the new local-only skill explicitly in `catalog/catalog_index.json` plus `provenance/provenance_manifest.json`, and delete the temporary inline survivability template from `AGENTS.md` once the standalone skill owns the gate.
 
 **Tech Stack:** Markdown skill docs, JSON metadata artifacts, Python 3.12, `.venv/bin/pytest`, `python3`, `jq`, `git`.
 
@@ -16,7 +16,7 @@
 
 **Environmental Risk:** Medium — two existing baseline tests (`tests/scripts/test_validate_resistance_engine_provenance.py` and `tests/scripts/test_import_superpowers_catalog.py`) already fail for unrelated brainstorming-contract drift, so final verification must rely on exact focused commands rather than those broader files.
 
-**Main failure modes:** survivability still gets skipped in workflow handoff, the new skill leaves “meaningful decision point” or “dependency-touching” undefined, catalog/provenance JSON omit the new entry or compute mismatched digests, AGENTS Phase 4 contradicts the new skill after implementation.
+**Main failure modes:** survivability still gets skipped in workflow handoff, the new skill leaves “meaningful decision point” or “dependency-touching” undefined, catalog/provenance JSON omit the new entry or compute mismatched digests, or repo docs still imply `AGENTS.md` owns the survivability gate after the standalone skill lands.
 
 **Unknown variables**:
 - No checked-in example currently shows how a standalone local-only skill should be represented in `catalog/catalog_index.json` and `provenance/provenance_manifest.json`; this plan assumes a local entry should use `source_repo: "."`, `source_path: "skills/survivability"`, and a `source_revision` generated from `git rev-parse HEAD`.
@@ -31,13 +31,13 @@
 | `skills/survivability/SKILL.md` | **Create** | Define the standalone survivability gate, including steady-state preflight, mutation slate, chaos slate, failure routing, and `.review_log.jsonl` usage |
 | `skills/executing-plans/SKILL.md` | **Modify** | Insert survivability between completed task execution and `finishing-a-development-branch` |
 | `skills/subagent-driven-development/SKILL.md` | **Modify** | Insert survivability between final review and `finishing-a-development-branch` in both prose and graph flow |
-| `AGENTS.md` | **Modify** | Point Phase 4 at the new survivability skill while preserving the repo-local examples and retrospective handoff |
+| `AGENTS.md` | **Modify** | Remove the temporary inline survivability template once the standalone skill owns the gate |
 | `catalog/catalog_index.json` | **Modify** | Register `skill:survivability` as a local catalog entry |
 | `provenance/provenance_manifest.json` | **Modify** | Register the new skill file with deterministic digest metadata |
 | `tests/scripts/test_survivability_response_contract.py` | **Create** | RED/GREEN contract tests for the new skill text |
 | `tests/scripts/test_survivability_workflow_contract.py` | **Create** | RED/GREEN contract tests for `executing-plans` and `subagent-driven-development` handoff order |
 | `tests/scripts/test_survivability_catalog_contract.py` | **Create** | RED/GREEN contract tests for catalog/provenance registration |
-| `tests/scripts/test_survivability_phase_contract.py` | **Create** | RED/GREEN contract tests for AGENTS Phase 4 alignment |
+| `tests/scripts/test_survivability_phase_contract.py` | **Create** | RED/GREEN contract tests proving AGENTS no longer inlines the survivability phase |
 
 ---
 
@@ -171,9 +171,10 @@ under realistic disruption.
 
 ## When to Use
 
-- After implementation and review are complete
+- After implementation is complete
+- After review if your workflow includes one
 - Before `finishing-a-development-branch`
-- When AGENTS Phase 4 applies and the change touched executable logic
+- When the change touched executable logic
 
 ## Steady-State Preflight
 
@@ -647,11 +648,11 @@ git commit -m "feat(skill-5): register survivability metadata" -m "Co-authored-b
 
 ---
 
-### Task 4: Align AGENTS Phase 4 with the new survivability skill
+### Task 4: Remove the inline AGENTS survivability phase
 
 **Files:**
 - Create: `tests/scripts/test_survivability_phase_contract.py`
-- Modify: `AGENTS.md:55-71`
+- Modify: `AGENTS.md:48-70`
 
 - Satisfies Spec AC: 4, 8
 
@@ -662,27 +663,29 @@ from __future__ import annotations
 
 from pathlib import Path
 
-
-def test_agents_phase4_points_to_survivability_skill() -> None:
-    agents_text = Path("AGENTS.md").read_text()
-
-    assert "Use the `survivability` skill" in agents_text
-    assert "3 representative probes" in agents_text
-    assert "2 for dependency-touching changes" in agents_text
+REPO_ROOT = Path(__file__).resolve().parents[2]
+AGENTS_PATH = REPO_ROOT / "AGENTS.md"
 
 
-def test_agents_phase4_preserves_review_log_and_retrospective_handoff() -> None:
-    agents_text = Path("AGENTS.md").read_text()
+def test_agents_does_not_inline_survivability_phase_contract() -> None:
+    agents_text = AGENTS_PATH.read_text()
 
-    assert "Survivability Score" in agents_text
-    assert "CRITICAL FRICTION" in agents_text
-    assert ".review_log.jsonl" in agents_text
+    assert "## Lifecycle Phase 4: Resilience & Mutation Testing" not in agents_text
+    assert "3 representative probes for a small change" not in agents_text
+    assert "2 for dependency-touching changes" not in agents_text
+
+
+def test_agents_does_not_inline_survivability_score_language() -> None:
+    agents_text = AGENTS_PATH.read_text()
+
+    assert 'Record the "Survivability Score" in your Phase 6 Retrospective.' not in agents_text
+    assert 'Log any "survived mutations" as CRITICAL FRICTION' not in agents_text
 ```
 
 Failure modes covered:
 
-- AGENTS Phase 4 still tells implementers to mutate via `executing-plans` instead of the new skill
-- AGENTS wording drops the retrospective handoff or review-log requirement while adding the skill reference
+- AGENTS still inlines the survivability template after the standalone skill exists
+- AGENTS still duplicates the survivability score / CRITICAL FRICTION wording that now belongs to the skill
 
 - [ ] **Step 2: Run focused RED verification command**
 
@@ -693,34 +696,12 @@ cd /home/pete/source/resistance-ai
 .venv/bin/pytest tests/scripts/test_survivability_phase_contract.py -q
 ```
 
-Expected: FAIL because `AGENTS.md` does not yet mention the `survivability` skill.
+Expected: FAIL because `AGENTS.md` still contains the inline survivability phase.
 
 - [ ] **Step 3: Write minimal implementation for GREEN**
 
 ```markdown
-## Lifecycle Phase 4: Resilience & Mutation Testing
-
-**CRITICAL:** Before an implementation is complete, it must survive the "Gauntlet."
-Use the `survivability` skill to run this gate after implementation/review and before
-branch finishing.
-
-### 1. Mutation Testing (Test Efficacy)
-Use the `survivability` skill to run a bounded mutation slate:
-- 3 representative probes for a small change
-- plus 1 per additional meaningful decision point
-- capped at 5 total
-- pass condition: the focused tests must fail for every injected mutation
-
-### 2. Chaos Injection (Logic Durability)
-Use the same `survivability` skill to run:
-- 1 chaos probe minimum for local-only changes
-- 2 for dependency-touching changes
-- capped at 3 total
-- pass condition: the system degrades safely and restore completes cleanly
-
-### 3. Log Submission
-Record the "Survivability Score" in your Phase 6 Retrospective.
-- Log any "survived mutations" as CRITICAL FRICTION in `.review_log.jsonl`.
+[delete the entire inline `## Lifecycle Phase 4: Resilience & Mutation Testing` block]
 ```
 
 - [ ] **Step 4: Run test to verify it's GREEN**
@@ -737,13 +718,11 @@ Expected: PASS.
 - [ ] **Step 5: Refactor duplicated wording or structure without weakening gates**
 
 ```markdown
-### 3. Log Submission
-Record the "Survivability Score" in your Phase 6 Retrospective.
-- Log any "survived mutations" as CRITICAL FRICTION in `.review_log.jsonl`.
+[keep the survivability score and CRITICAL FRICTION language in the skill, not in `AGENTS.md`]
 ```
 
-Refactor target: keep AGENTS Phase 4 aligned with the skill’s score format and
-review-log summary language instead of letting the repo guidance drift into older prose.
+Refactor target: keep AGENTS limited to evergreen repo instructions instead of letting
+skill-owned survivability prose drift back into the file.
 
 - [ ] **Step 6: Regenerate artifacts and rerun exact verification commands**
 
@@ -763,7 +742,7 @@ response-contract file, and repo layout.
 ```bash
 cd /home/pete/source/resistance-ai
 git add AGENTS.md tests/scripts/test_survivability_phase_contract.py
-git commit -m "feat(skill-5): align AGENTS survivability phase" -m "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
+git commit -m "refactor(skill-5): remove AGENTS survivability phase" -m "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
 ```
 
 ---

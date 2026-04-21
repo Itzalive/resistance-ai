@@ -44,6 +44,17 @@ def test_survivability_skill_requires_steady_state_preflight() -> None:
     )
 
 
+def test_survivability_skill_allows_workflow_specific_review_timing() -> None:
+    skill_text = Path("skills/survivability/SKILL.md").read_text()
+
+    when_to_use = _section_text(skill_text, "When to Use")
+
+    assert "- After implementation is complete" in when_to_use
+    assert "- After review if your workflow includes one" in when_to_use
+    assert "- Before `finishing-a-development-branch`" in when_to_use
+    assert "When AGENTS Phase 4 applies" not in when_to_use
+
+
 def test_survivability_skill_defines_chaos_thresholds() -> None:
     skill_text = Path("skills/survivability/SKILL.md").read_text()
 

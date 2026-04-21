@@ -309,8 +309,8 @@
         "local_file": "skills/survivability/SKILL.md",
         "file_state": "imported",
         "local_sync_policy": "required",
-        "source_digest": "sha256:892330a9979952364f6cd690631e24de17cd93f81f86bb87250d71d277a03d24",
-        "local_digest": "sha256:892330a9979952364f6cd690631e24de17cd93f81f86bb87250d71d277a03d24",
+        "source_digest": "sha256:f8502747315e3eedd2f7d65d01d5194e61bbad8df9d6c5b31e2226971de98847",
+        "local_digest": "sha256:f8502747315e3eedd2f7d65d01d5194e61bbad8df9d6c5b31e2226971de98847",
         "last_verified_at": "2026-04-21T09:57:51+00:00"
       }
     ]
