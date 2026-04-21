@@ -33,6 +33,7 @@ def test_survivability_skill_defines_chaos_thresholds() -> None:
     assert "For dependency-touching changes, run 2 chaos probes minimum" in chaos_lane
     assert "capped at 3 total" in chaos_lane
     assert "abort/restore steps" in chaos_lane
+    assert "route the work back to implementation hardening" in chaos_lane
 
 
 def test_survivability_skill_uses_generic_review_log_contract() -> None:
