@@ -99,6 +99,18 @@
   },
   {
     "entry_type": "skill",
+    "name": "survivability",
+    "source_repo": ".",
+    "source_path": "skills/survivability",
+    "local_path": "skills/survivability",
+    "imported_files": [
+      "SKILL.md"
+    ],
+    "source_revision": "3442b8f533fdef85fa1272463bb0d1b19f7c6508",
+    "imported_at": "2026-04-21T09:57:51Z"
+  },
+  {
+    "entry_type": "skill",
     "name": "systematic-debugging",
     "source_repo": "vendor/obra-superpowers",
     "source_path": "skills/systematic-debugging",
