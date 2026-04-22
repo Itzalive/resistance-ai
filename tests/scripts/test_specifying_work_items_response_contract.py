@@ -13,8 +13,8 @@ def _section_text(text: str, heading: str) -> str:
     return rest[:next_heading]
 
 
-def test_brainstorming_quick_reference_blocks_one_shot_designs() -> None:
-    skill_text = Path("skills/brainstorming/SKILL.md").read_text()
+def test_specifying_work_items_quick_reference_blocks_one_shot_designs() -> None:
+    skill_text = Path("skills/specifying-work-items/SKILL.md").read_text()
 
     quick_reference = _section_text(skill_text, "Quick Reference")
 
@@ -28,8 +28,8 @@ def test_brainstorming_quick_reference_blocks_one_shot_designs() -> None:
     )
 
 
-def test_brainstorming_common_mistakes_forbids_made_up_headings() -> None:
-    skill_text = Path("skills/brainstorming/SKILL.md").read_text()
+def test_specifying_work_items_common_mistakes_forbids_made_up_headings() -> None:
+    skill_text = Path("skills/specifying-work-items/SKILL.md").read_text()
 
     common_mistakes = _section_text(skill_text, "Common Mistakes")
 
@@ -39,8 +39,8 @@ def test_brainstorming_common_mistakes_forbids_made_up_headings() -> None:
     )
 
 
-def test_brainstorming_quick_reference_forbids_draft_specs_under_ambiguity() -> None:
-    skill_text = Path("skills/brainstorming/SKILL.md").read_text()
+def test_specifying_work_items_quick_reference_forbids_draft_specs_under_ambiguity() -> None:
+    skill_text = Path("skills/specifying-work-items/SKILL.md").read_text()
 
     quick_reference = _section_text(skill_text, "Quick Reference")
 
@@ -50,8 +50,8 @@ def test_brainstorming_quick_reference_forbids_draft_specs_under_ambiguity() -> 
     )
 
 
-def test_brainstorming_quick_reference_limits_first_pass_inspection_scope() -> None:
-    skill_text = Path("skills/brainstorming/SKILL.md").read_text()
+def test_specifying_work_items_quick_reference_limits_first_pass_inspection_scope() -> None:
+    skill_text = Path("skills/specifying-work-items/SKILL.md").read_text()
 
     quick_reference = _section_text(skill_text, "Quick Reference")
 
@@ -61,8 +61,8 @@ def test_brainstorming_quick_reference_limits_first_pass_inspection_scope() -> N
     )
 
 
-def test_brainstorming_initial_gate_blocks_full_outline() -> None:
-    skill_text = Path("skills/brainstorming/SKILL.md").read_text()
+def test_specifying_work_items_initial_gate_blocks_full_outline() -> None:
+    skill_text = Path("skills/specifying-work-items/SKILL.md").read_text()
 
     first_response = _section_text(skill_text, "Initial gate")
 
@@ -76,8 +76,8 @@ def test_brainstorming_initial_gate_blocks_full_outline() -> None:
     )
 
 
-def test_brainstorming_hard_gate_includes_vendor_no_implementation_line() -> None:
-    skill_text = Path("skills/brainstorming/SKILL.md").read_text()
+def test_specifying_work_items_hard_gate_includes_vendor_no_implementation_line() -> None:
+    skill_text = Path("skills/specifying-work-items/SKILL.md").read_text()
 
     assert (
         "Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until you have presented a design and the user has approved it."
@@ -85,8 +85,8 @@ def test_brainstorming_hard_gate_includes_vendor_no_implementation_line() -> Non
     )
 
 
-def test_brainstorming_repository_verification_forbids_broad_first_pass_reads() -> None:
-    skill_text = Path("skills/brainstorming/SKILL.md").read_text()
+def test_specifying_work_items_repository_verification_forbids_broad_first_pass_reads() -> None:
+    skill_text = Path("skills/specifying-work-items/SKILL.md").read_text()
 
     verification = _section_text(skill_text, "Repository-grounded verification")
 
@@ -96,8 +96,8 @@ def test_brainstorming_repository_verification_forbids_broad_first_pass_reads() 
     )
 
 
-def test_brainstorming_repository_verification_forbids_experiment_history_first_pass() -> None:
-    skill_text = Path("skills/brainstorming/SKILL.md").read_text()
+def test_specifying_work_items_repository_verification_forbids_experiment_history_first_pass() -> None:
+    skill_text = Path("skills/specifying-work-items/SKILL.md").read_text()
 
     verification = _section_text(skill_text, "Repository-grounded verification")
 
@@ -107,8 +107,8 @@ def test_brainstorming_repository_verification_forbids_experiment_history_first_
     )
 
 
-def test_brainstorming_overview_does_not_keep_broad_standards_loader() -> None:
-    skill_text = Path("skills/brainstorming/SKILL.md").read_text()
+def test_specifying_work_items_overview_does_not_keep_broad_standards_loader() -> None:
+    skill_text = Path("skills/specifying-work-items/SKILL.md").read_text()
 
     overview = _section_text(skill_text, "Overview")
 
@@ -119,17 +119,20 @@ def test_brainstorming_overview_does_not_keep_broad_standards_loader() -> None:
     )
 
 
-def test_brainstorming_description_uses_vendor_pre_implementation_wording() -> None:
-    skill_text = Path("skills/brainstorming/SKILL.md").read_text()
+def test_specifying_work_items_description_uses_vendor_pre_implementation_wording() -> None:
+    skill_text = Path("skills/specifying-work-items/SKILL.md").read_text()
 
+    assert (
+        "name: specifying-work-items" in skill_text
+    )
     assert (
         'description: "You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Explores user intent, requirements and design before implementation."'
         in skill_text
     )
 
 
-def test_brainstorming_quick_reference_forbids_retrofitting_spec_around_existing_code() -> None:
-    skill_text = Path("skills/brainstorming/SKILL.md").read_text()
+def test_specifying_work_items_quick_reference_forbids_retrofitting_spec_around_existing_code() -> None:
+    skill_text = Path("skills/specifying-work-items/SKILL.md").read_text()
 
     quick_reference = _section_text(skill_text, "Quick Reference")
 
@@ -139,8 +142,8 @@ def test_brainstorming_quick_reference_forbids_retrofitting_spec_around_existing
     )
 
 
-def test_brainstorming_initial_gate_allows_narrow_visual_offer() -> None:
-    skill_text = Path("skills/brainstorming/SKILL.md").read_text()
+def test_specifying_work_items_initial_gate_allows_narrow_visual_offer() -> None:
+    skill_text = Path("skills/specifying-work-items/SKILL.md").read_text()
 
     initial_gate = _section_text(skill_text, "Initial gate")
 
@@ -154,8 +157,8 @@ def test_brainstorming_initial_gate_allows_narrow_visual_offer() -> None:
     )
 
 
-def test_brainstorming_initial_gate_sends_visual_offer_before_standards_for_clear_visual_requests() -> None:
-    skill_text = Path("skills/brainstorming/SKILL.md").read_text()
+def test_specifying_work_items_initial_gate_sends_visual_offer_before_standards_for_clear_visual_requests() -> None:
+    skill_text = Path("skills/specifying-work-items/SKILL.md").read_text()
 
     initial_gate = _section_text(skill_text, "Initial gate")
 
@@ -165,8 +168,8 @@ def test_brainstorming_initial_gate_sends_visual_offer_before_standards_for_clea
     )
 
 
-def test_brainstorming_visual_companion_preserves_gates() -> None:
-    skill_text = Path("skills/brainstorming/SKILL.md").read_text()
+def test_specifying_work_items_visual_companion_preserves_gates() -> None:
+    skill_text = Path("skills/specifying-work-items/SKILL.md").read_text()
 
     visual_companion = _section_text(skill_text, "Visual Companion")
 
@@ -184,8 +187,8 @@ def test_brainstorming_visual_companion_preserves_gates() -> None:
     )
 
 
-def test_brainstorming_quick_reference_stages_companion_loading() -> None:
-    skill_text = Path("skills/brainstorming/SKILL.md").read_text()
+def test_specifying_work_items_quick_reference_stages_companion_loading() -> None:
+    skill_text = Path("skills/specifying-work-items/SKILL.md").read_text()
 
     quick_reference = _section_text(skill_text, "Quick Reference")
 
@@ -200,15 +203,15 @@ def test_brainstorming_quick_reference_stages_companion_loading() -> None:
     )
 
 
-def test_brainstorming_later_stage_review_workflow_moves_to_support_file() -> None:
-    skill_text = Path("skills/brainstorming/SKILL.md").read_text()
+def test_specifying_work_items_later_stage_review_workflow_moves_to_support_file() -> None:
+    skill_text = Path("skills/specifying-work-items/SKILL.md").read_text()
 
     assert "Load `review-workflow.md` after a written spec exists." in skill_text
-    assert Path("skills/brainstorming/review-workflow.md").exists()
+    assert Path("skills/specifying-work-items/review-workflow.md").exists()
 
 
-def test_brainstorming_checklist_delays_standards_until_spec_body() -> None:
-    skill_text = Path("skills/brainstorming/SKILL.md").read_text()
+def test_specifying_work_items_checklist_delays_standards_until_spec_body() -> None:
+    skill_text = Path("skills/specifying-work-items/SKILL.md").read_text()
 
     checklist = _section_text(skill_text, "Checklist").replace("\n    ", " ")
 

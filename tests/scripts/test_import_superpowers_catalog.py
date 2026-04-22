@@ -57,20 +57,20 @@ def test_import_superpowers_catalog_copies_skill_and_agent(tmp_path: Path) -> No
         imported_at="2026-04-15T00:00:00Z",
     )
 
-    skill_root = output_root / "skills" / "brainstorming"
+    skill_root = output_root / "skills" / "specifying-work-items"
     agent_path = output_root / "agents" / "code-reviewer.md"
 
-    assert (skill_root / "SKILL.md").read_text() == "---\nname: brainstorming\n---\n"
+    assert (skill_root / "SKILL.md").read_text() == "---\nname: specifying-work-items\n---\n"
     assert (skill_root / "scripts" / "helper.js").read_text() == "console.log('helper');\n"
     assert agent_path.read_text() == "# code-reviewer\n"
 
     assert result["catalog_index"] == [
         {
             "entry_type": "skill",
-            "name": "brainstorming",
+            "name": "specifying-work-items",
             "source_repo": "vendor/obra-superpowers",
             "source_path": "skills/brainstorming",
-            "local_path": "skills/brainstorming",
+            "local_path": "skills/specifying-work-items",
             "imported_files": ["SKILL.md", "scripts/helper.js"],
             "source_revision": "fixture-rev",
             "imported_at": "2026-04-15T00:00:00Z",
@@ -110,12 +110,12 @@ def test_import_superpowers_catalog_builds_provenance_manifest(
 
     assert result["provenance_manifest"] == [
         {
-            "entry_id": "skill:brainstorming",
+            "entry_id": "skill:specifying-work-items",
             "entry_type": "skill",
-            "name": "brainstorming",
+            "name": "specifying-work-items",
             "source_repo": "vendor/obra-superpowers",
             "source_path": "skills/brainstorming",
-            "local_path": "skills/brainstorming",
+            "local_path": "skills/specifying-work-items",
             "manifest_state": "imported",
             "source_revision": "fixture-rev",
             "last_imported_at": "2026-04-15T00:00:00Z",
@@ -123,16 +123,16 @@ def test_import_superpowers_catalog_builds_provenance_manifest(
             "files": [
                 {
                     "source_file": "skills/brainstorming/SKILL.md",
-                    "local_file": "skills/brainstorming/SKILL.md",
+                    "local_file": "skills/specifying-work-items/SKILL.md",
                     "file_state": "imported",
                     "local_sync_policy": "required",
                     "source_digest": "sha256:99694ffe2b46a3ac37ad2a4c501fa795b5aa723e255aa1f5b99ebe198efb5f73",
-                    "local_digest": "sha256:99694ffe2b46a3ac37ad2a4c501fa795b5aa723e255aa1f5b99ebe198efb5f73",
+                    "local_digest": "sha256:e61f6e4a89eec1999b8ef2d4705c1aff1f5706f82918c31ccd98b48c20b31789",
                     "last_verified_at": "2026-04-15T00:00:00Z",
                 },
                 {
                     "source_file": "skills/brainstorming/scripts/helper.js",
-                    "local_file": "skills/brainstorming/scripts/helper.js",
+                    "local_file": "skills/specifying-work-items/scripts/helper.js",
                     "file_state": "imported",
                     "local_sync_policy": "required",
                     "source_digest": "sha256:080aa3dd805c3665de0e06f0267ef9f71c06bbd62ff9a8a17afeceadf635a0be",
@@ -167,6 +167,32 @@ def test_import_superpowers_catalog_builds_provenance_manifest(
     ]
 
 
+def test_import_superpowers_catalog_retargets_brainstorming_to_specifying_work_items(
+    tmp_path: Path,
+) -> None:
+    from import_superpowers_catalog import import_superpowers_catalog
+
+    source_root = _fixture_vendor(tmp_path)
+    output_root = tmp_path / "resistance-engine"
+
+    result = import_superpowers_catalog(
+        source_root=source_root,
+        output_root=output_root,
+        source_repo="vendor/obra-superpowers",
+        source_revision="fixture-rev",
+        imported_at="2026-04-15T00:00:00Z",
+    )
+
+    skill_root = output_root / "skills" / "specifying-work-items"
+
+    assert skill_root.is_dir()
+    assert result["catalog_index"][0]["name"] == "specifying-work-items"
+    assert result["catalog_index"][0]["source_path"] == "skills/brainstorming"
+    assert result["catalog_index"][0]["local_path"] == "skills/specifying-work-items"
+    assert result["provenance_manifest"][0]["entry_id"] == "skill:specifying-work-items"
+    assert result["provenance_manifest"][0]["local_path"] == "skills/specifying-work-items"
+
+
 def test_import_superpowers_catalog_preserves_local_authoring_defaults_when_output_root_is_local_source(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -177,23 +203,23 @@ def test_import_superpowers_catalog_preserves_local_authoring_defaults_when_outp
     local_skills_root = output_root / "skills"
 
     _write(
-        local_skills_root / "brainstorming" / "SKILL.md",
-        "---\nname: brainstorming\nlocal: true\n---\n",
+        local_skills_root / "specifying-work-items" / "SKILL.md",
+        "---\nname: specifying-work-items\nlocal: true\n---\n",
     )
     _write(
-        local_skills_root / "brainstorming" / "SPEC_REVIEW_MANIFEST.md",
+        local_skills_root / "specifying-work-items" / "SPEC_REVIEW_MANIFEST.md",
         "# local manifest\n",
     )
     _write(
-        local_skills_root / "brainstorming" / "SPEC_RUBRIC.md",
+        local_skills_root / "specifying-work-items" / "SPEC_RUBRIC.md",
         "# local rubric\n",
     )
     _write(
-        local_skills_root / "brainstorming" / "SPEC_STANDARDS.md",
+        local_skills_root / "specifying-work-items" / "SPEC_STANDARDS.md",
         "# local standards\n",
     )
     _write(
-        local_skills_root / "brainstorming" / "spec-document-reviewer-prompt.md",
+        local_skills_root / "specifying-work-items" / "spec-document-reviewer-prompt.md",
         "# local prompt\n",
     )
     _write(
@@ -212,25 +238,25 @@ def test_import_superpowers_catalog_preserves_local_authoring_defaults_when_outp
         imported_at="2026-04-15T00:00:00Z",
     )
 
-    assert (output_root / "skills" / "brainstorming" / "SKILL.md").read_text() == (
-        "---\nname: brainstorming\nlocal: true\n---\n"
+    assert (output_root / "skills" / "specifying-work-items" / "SKILL.md").read_text() == (
+        "---\nname: specifying-work-items\nlocal: true\n---\n"
     )
     assert (
-        output_root / "skills" / "brainstorming" / "SPEC_REVIEW_MANIFEST.md"
+        output_root / "skills" / "specifying-work-items" / "SPEC_REVIEW_MANIFEST.md"
     ).read_text() == "# local manifest\n"
-    assert (output_root / "skills" / "brainstorming" / "SPEC_STANDARDS.md").read_text() == (
+    assert (output_root / "skills" / "specifying-work-items" / "SPEC_STANDARDS.md").read_text() == (
         "# local standards\n"
     )
 
     brainstorming_entry = next(
-        entry for entry in result["provenance_manifest"] if entry["entry_id"] == "skill:brainstorming"
+        entry for entry in result["provenance_manifest"] if entry["entry_id"] == "skill:specifying-work-items"
     )
     skill_record = next(
         file_record
         for file_record in brainstorming_entry["files"]
-        if file_record["local_file"] == "skills/brainstorming/SKILL.md"
+        if file_record["local_file"] == "skills/specifying-work-items/SKILL.md"
     )
-    assert skill_record["source_file"] == "resistance-engine/skills/brainstorming/SKILL.md"
+    assert skill_record["source_file"] == "resistance-engine/skills/specifying-work-items/SKILL.md"
     assert skill_record["source_repo"] == "."
 
 
@@ -288,8 +314,8 @@ def test_import_superpowers_catalog_preserves_non_generated_repo_surfaces(
     assert (output_root / "tests" / "keep.txt").read_text() == "keep\n"
     assert (output_root / "scripts" / "helper.py").read_text() == "print('keep')\n"
     assert (output_root / "vendor" / "obra-superpowers" / "README.md").read_text() == "# vendor\n"
-    assert (output_root / "skills" / "brainstorming" / "SKILL.md").read_text() == (
-        "---\nname: brainstorming\n---\n"
+    assert (output_root / "skills" / "specifying-work-items" / "SKILL.md").read_text() == (
+        "---\nname: specifying-work-items\n---\n"
     )
 
 
@@ -325,7 +351,7 @@ def test_main_writes_catalog_and_provenance_manifest(
     )
 
     assert [entry["entry_id"] for entry in manifest] == [
-        "skill:brainstorming",
+        "skill:specifying-work-items",
         "agent:code-reviewer",
     ]
 
@@ -386,7 +412,7 @@ def test_import_superpowers_catalog_defaults_local_sync_policy_to_required(
     )
 
     brainstorming = next(
-        entry for entry in result["provenance_manifest"] if entry["entry_id"] == "skill:brainstorming"
+        entry for entry in result["provenance_manifest"] if entry["entry_id"] == "skill:specifying-work-items"
     )
 
     assert [file_record["local_sync_policy"] for file_record in brainstorming["files"]] == [
@@ -406,7 +432,7 @@ def test_import_superpowers_catalog_applies_pruned_override(tmp_path: Path) -> N
         json.dumps(
             [
                 {
-                    "entry_id": "skill:brainstorming",
+                    "entry_id": "skill:specifying-work-items",
                     "source_file": "skills/brainstorming/scripts/helper.js",
                     "local_sync_policy": "pruned",
                 }
@@ -425,7 +451,7 @@ def test_import_superpowers_catalog_applies_pruned_override(tmp_path: Path) -> N
     )
 
     brainstorming = next(
-        entry for entry in result["provenance_manifest"] if entry["entry_id"] == "skill:brainstorming"
+        entry for entry in result["provenance_manifest"] if entry["entry_id"] == "skill:specifying-work-items"
     )
     helper_record = next(
         file_record
@@ -443,7 +469,7 @@ def test_import_superpowers_catalog_preserves_override_file(tmp_path: Path) -> N
     output_root = tmp_path / "resistance-engine"
     override_path = output_root / "consolidation" / "consolidation_overrides.json"
     override_text = (
-        '[{"entry_id":"skill:brainstorming","source_file":"skills/brainstorming/scripts/helper.js",'
+        '[{"entry_id":"skill:specifying-work-items","source_file":"skills/brainstorming/scripts/helper.js",'
         '"local_sync_policy":"pruned"}]\n'
     )
     _write(override_path, override_text)
@@ -469,7 +495,7 @@ def test_import_superpowers_catalog_rejects_unknown_override_target(tmp_path: Pa
         json.dumps(
             [
                 {
-                    "entry_id": "skill:brainstorming",
+                    "entry_id": "skill:specifying-work-items",
                     "source_file": "skills/brainstorming/scripts/missing.js",
                     "local_sync_policy": "pruned",
                 }
@@ -481,7 +507,7 @@ def test_import_superpowers_catalog_rejects_unknown_override_target(tmp_path: Pa
 
     with pytest.raises(
         ValueError,
-        match="override references unknown imported file: skill:brainstorming -> skills/brainstorming/scripts/missing.js",
+        match="override references unknown imported file: skill:specifying-work-items -> skills/brainstorming/scripts/missing.js",
     ):
         import_superpowers_catalog(
             source_root=source_root,
@@ -499,7 +525,7 @@ def test_import_superpowers_catalog_rejects_non_list_override_payload(tmp_path: 
     output_root = tmp_path / "resistance-engine"
     _write(
         output_root / "consolidation" / "consolidation_overrides.json",
-        '{"entry_id":"skill:brainstorming"}\n',
+        '{"entry_id":"skill:specifying-work-items"}\n',
     )
 
     with pytest.raises(ValueError, match="consolidation overrides must be a JSON list"):
@@ -556,7 +582,7 @@ def test_import_superpowers_catalog_marks_source_missing_entry(tmp_path: Path) -
         (output_root / "provenance" / "provenance_manifest.json").read_text()
     )
     brainstorming = next(
-        entry for entry in manifest if entry["entry_id"] == "skill:brainstorming"
+        entry for entry in manifest if entry["entry_id"] == "skill:specifying-work-items"
     )
 
     assert brainstorming["manifest_state"] == "source-missing"
@@ -576,7 +602,7 @@ def test_import_superpowers_catalog_carries_forward_pruned_policy_for_source_mis
         json.dumps(
             [
                 {
-                    "entry_id": "skill:brainstorming",
+                    "entry_id": "skill:specifying-work-items",
                     "source_file": "skills/brainstorming/scripts/helper.js",
                     "local_sync_policy": "pruned",
                 }
@@ -624,7 +650,7 @@ def test_import_superpowers_catalog_carries_forward_pruned_policy_for_source_mis
         (output_root / "provenance" / "provenance_manifest.json").read_text()
     )
     brainstorming = next(
-        entry for entry in manifest if entry["entry_id"] == "skill:brainstorming"
+        entry for entry in manifest if entry["entry_id"] == "skill:specifying-work-items"
     )
     helper_record = next(
         file_record
@@ -659,7 +685,7 @@ def test_import_superpowers_catalog_matches_live_vendor_repo_shape(
     inventory_paths = {entry["source_path"] for entry in result["non_skill_inventory"]}
     manifest_entry_ids = {entry["entry_id"] for entry in result["provenance_manifest"]}
     expected_manifest_entry_ids = {
-        f"skill:{normalize_name(path.name)}"
+        f"skill:{'specifying-work-items' if normalize_name(path.name) == 'brainstorming' else normalize_name(path.name)}"
         for path in (source_root / "skills").iterdir()
         if path.is_dir()
     } | {
@@ -678,7 +704,7 @@ def test_import_superpowers_catalog_matches_live_vendor_repo_shape(
     assert "commands" in inventory_paths
     assert "hooks" in inventory_paths
 
-    brainstorming_root = output_root / "skills" / "brainstorming"
+    brainstorming_root = output_root / "skills" / "specifying-work-items"
     writing_plans_root = output_root / "skills" / "writing-plans"
 
     assert (
@@ -752,7 +778,7 @@ def test_import_superpowers_catalog_matches_live_vendor_repo_shape(
     assert "exact `pytest` command" in no_placeholders_text
 
     brainstorming_manifest = next(
-        entry for entry in result["provenance_manifest"] if entry["entry_id"] == "skill:brainstorming"
+        entry for entry in result["provenance_manifest"] if entry["entry_id"] == "skill:specifying-work-items"
     )
     writing_plans_manifest = next(
         entry for entry in result["provenance_manifest"] if entry["entry_id"] == "skill:writing-plans"
@@ -762,28 +788,28 @@ def test_import_superpowers_catalog_matches_live_vendor_repo_shape(
         for file_record in brainstorming_manifest["files"] + writing_plans_manifest["files"]
         if file_record["local_file"]
         in {
-            "skills/brainstorming/SKILL.md",
-            "skills/brainstorming/SPEC_REVIEW_MANIFEST.md",
-            "skills/brainstorming/SPEC_RUBRIC.md",
-            "skills/brainstorming/SPEC_STANDARDS.md",
-            "skills/brainstorming/spec-document-reviewer-prompt.md",
+            "skills/specifying-work-items/SKILL.md",
+            "skills/specifying-work-items/SPEC_REVIEW_MANIFEST.md",
+            "skills/specifying-work-items/SPEC_RUBRIC.md",
+            "skills/specifying-work-items/SPEC_STANDARDS.md",
+            "skills/specifying-work-items/spec-document-reviewer-prompt.md",
             "skills/writing-plans/SKILL.md",
             "skills/writing-plans/plan-document-reviewer-prompt.md",
         }
     }
-    assert overlay_records["skills/brainstorming/SKILL.md"]["source_file"] == "skills/brainstorming/SKILL.md"
-    assert overlay_records["skills/brainstorming/SKILL.md"]["source_repo"] == "."
-    assert overlay_records["skills/brainstorming/SPEC_REVIEW_MANIFEST.md"]["source_file"] == (
-        "skills/brainstorming/SPEC_REVIEW_MANIFEST.md"
+    assert overlay_records["skills/specifying-work-items/SKILL.md"]["source_file"] == "skills/specifying-work-items/SKILL.md"
+    assert overlay_records["skills/specifying-work-items/SKILL.md"]["source_repo"] == "."
+    assert overlay_records["skills/specifying-work-items/SPEC_REVIEW_MANIFEST.md"]["source_file"] == (
+        "skills/specifying-work-items/SPEC_REVIEW_MANIFEST.md"
     )
-    assert overlay_records["skills/brainstorming/SPEC_REVIEW_MANIFEST.md"]["source_repo"] == "."
-    assert overlay_records["skills/brainstorming/SPEC_RUBRIC.md"]["source_file"] == (
-        "skills/brainstorming/SPEC_RUBRIC.md"
+    assert overlay_records["skills/specifying-work-items/SPEC_REVIEW_MANIFEST.md"]["source_repo"] == "."
+    assert overlay_records["skills/specifying-work-items/SPEC_RUBRIC.md"]["source_file"] == (
+        "skills/specifying-work-items/SPEC_RUBRIC.md"
     )
-    assert overlay_records["skills/brainstorming/SPEC_RUBRIC.md"]["source_repo"] == "."
-    assert overlay_records["skills/brainstorming/SPEC_STANDARDS.md"]["source_file"] == (
-        "skills/brainstorming/SPEC_STANDARDS.md"
+    assert overlay_records["skills/specifying-work-items/SPEC_RUBRIC.md"]["source_repo"] == "."
+    assert overlay_records["skills/specifying-work-items/SPEC_STANDARDS.md"]["source_file"] == (
+        "skills/specifying-work-items/SPEC_STANDARDS.md"
     )
-    assert overlay_records["skills/brainstorming/SPEC_STANDARDS.md"]["source_repo"] == "."
+    assert overlay_records["skills/specifying-work-items/SPEC_STANDARDS.md"]["source_repo"] == "."
     assert overlay_records["skills/writing-plans/SKILL.md"]["source_file"] == "skills/writing-plans/SKILL.md"
     assert overlay_records["skills/writing-plans/SKILL.md"]["source_repo"] == "."

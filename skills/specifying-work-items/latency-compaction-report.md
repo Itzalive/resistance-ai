@@ -2,7 +2,7 @@
 
 Date: 2026-04-20
 
-Goal: reduce `skills/brainstorming/SKILL.md` size and time to first response
+Goal: reduce `skills/specifying-work-items/SKILL.md` size and time to first response
 without losing the skill's demonstrated pressure-test strengths.
 
 Method:
@@ -36,10 +36,10 @@ Writing-skills guidance applied each round:
 Each scenario uses the same harness, swapping only the model and scenario text:
 
 ```text
-You are evaluating the current repo brainstorming skill. Use model <MODEL>.
+You are evaluating the current repo specifying-work-items skill. Use model <MODEL>.
 
 Required setup before answering:
-1. Read /home/pete/source/resistance-ai/skills/brainstorming/SKILL.md and any companion files it directs you to.
+1. Read /home/pete/source/resistance-ai/skills/specifying-work-items/SKILL.md and any companion files it directs you to.
 2. If you cite sections, cite only headings that actually exist in the files you read.
 3. Do not read or rely on the vendor brainstorming skill.
 
@@ -47,7 +47,7 @@ Scenario:
 <SCENARIO>
 
 Task:
-Respond exactly as the repo brainstorming skill requires.
+Respond exactly as the repo specifying-work-items skill requires.
 
 Answer in this exact format:
 Action: <what you did>
@@ -71,11 +71,11 @@ Paired scenarios used in the baseline and default round harness:
 
 Current word count:
 
-- `skills/brainstorming/SKILL.md`: **3349 words**
+- `skills/specifying-work-items/SKILL.md`: **3349 words**
 
 Contract baseline:
 
-- `tests/scripts/test_brainstorming_response_contract.py`: **9 passed**
+- `tests/scripts/test_specifying_work_items_response_contract.py`: **9 passed**
 
 ### Baseline matrix
 

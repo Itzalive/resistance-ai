@@ -1,6 +1,6 @@
 ---
 title: "Default Spec Review Rubric"
-description: "Binary grading rubric for the resistance-engine brainstorming skill."
+description: "Binary grading rubric for the resistance-engine specifying-work-items skill."
 version: 1.0
 type: "grading_rubric"
 strictness_level: "absolute"
@@ -16,7 +16,7 @@ Every spec must pass every item below before planning.
 - [ ] Does it isolate refactor work from feature work where needed?
 - [ ] Is it small enough for one implementation plan?
 
-## 2. Adversarial brainstorming contract
+## 2. Specifying-work-items contract
 
 - [ ] Does the spec treat the request as something to interrogate, not simply accept?
 - [ ] Does it surface assumptions and the blast radius of failure?

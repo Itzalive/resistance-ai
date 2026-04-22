@@ -3,7 +3,7 @@
 Date: 2026-04-19
 
 This report records the evidence gathered while comparing the repo
-`skills/brainstorming` skill against the original vendor skill and while
+`skills/specifying-work-items` skill against the original vendor skill and while
 investigating the remaining behavior gaps.
 
 ## Scope
@@ -300,9 +300,9 @@ The intermediate risky rerun was important evidence:
 
 See:
 
-- `skills/brainstorming/pressure-test-evidence.md` — visual-companion rerun
+- `skills/specifying-work-items/pressure-test-evidence.md` — visual-companion rerun
   prompts, intermediate RED, and final GREEN reruns
-- `tests/scripts/test_brainstorming_response_contract.py` — contract coverage
+- `tests/scripts/test_specifying_work_items_response_contract.py` — contract coverage
   for the visual-carveout and blocker-preservation rules
 
 The analysis found:

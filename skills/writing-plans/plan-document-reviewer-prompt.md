@@ -113,7 +113,7 @@ Task tool (general-purpose):
       physical repository state as verified by the shell commands in the plan?
 
     **13. Cross-model review proof**
-    - Is there evidence that the Phase 4 spec audit (brainstorming phase) was
+    - Is there evidence that the Phase 4 spec audit (specifying-work-items phase) was
       performed by an opposite-family model?
     - Is the reviewer of this plan from the opposite model family to the
       orchestrator?

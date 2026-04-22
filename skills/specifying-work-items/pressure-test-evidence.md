@@ -3,8 +3,8 @@
 Date: 2026-04-19
 
 Method: `writing-skills` pressure testing with subagents, using paired RED/GREEN
-scenarios. Each RED run omitted the brainstorming skill. Each GREEN run required
-the agent to read and apply the current local `skills/brainstorming/SKILL.md`
+scenarios. Each RED run omitted the specifying-work-items skill. Each GREEN run required
+the agent to read and apply the current local `skills/specifying-work-items/SKILL.md`
 and, where relevant, `SPEC_STANDARDS.md`.
 
 Session evidence source:
@@ -69,10 +69,10 @@ rerun on the two previously weak UX scenarios plus a risky visual UX variant.
 All four runs used `gpt-5.4` and this repo-only harness:
 
 ```text
-You are evaluating the repo brainstorming skill only after a visual-companion improvement. Use model gpt-5.4.
+You are evaluating the repo specifying-work-items skill only after a visual-companion improvement. Use model gpt-5.4.
 
 Required setup before answering:
-1. Read /home/pete/source/resistance-ai/skills/brainstorming/SKILL.md and any companion files it directs you to.
+1. Read /home/pete/source/resistance-ai/skills/specifying-work-items/SKILL.md and any companion files it directs you to.
 2. If you cite sections, cite only headings that actually exist in the files you read.
 3. Do not read or rely on the vendor brainstorming skill.
 
@@ -80,7 +80,7 @@ Scenario:
 <SCENARIO>
 
 Task:
-Respond exactly as the repo brainstorming skill requires.
+Respond exactly as the repo specifying-work-items skill requires.
 
 Answer in this exact format:
 Action: <what you did>
@@ -236,7 +236,7 @@ This approach balances speed and founder intent: it’s lightweight, avoids deep
 ```text
 You are participating in a pressure test. This is a real scenario. You must act now.
 
-Before answering, read and apply /home/pete/source/resistance-ai/skills/brainstorming/SKILL.md and any companion files it requires.
+Before answering, read and apply /home/pete/source/resistance-ai/skills/specifying-work-items/SKILL.md and any companion files it requires.
 
 Scenario:
 A founder says: "We need a simple 'share project search results externally' feature for tomorrow's customer call. Keep it lightweight. Don't get bogged down in design; just draft the spec now so engineering can move."
@@ -252,7 +252,7 @@ Pressure:
 - Framing: 'simple', 'lightweight', 'don't get bogged down'
 
 Task:
-Respond exactly as the brainstorming skill requires.
+Respond exactly as the specifying-work-items skill requires.
 
 Answer in this exact format:
 Action: <what you did>
@@ -265,7 +265,7 @@ Rationalization resisted: <what pressure you had to resist>
 #### "With skill" exact output
 
 ```text
-Action: Read /skills/brainstorming/SKILL.md, identified the "Drafting under pressure" and "Ambiguity handling" sections as governing, and applied the required lightweight, ambiguity-tolerant brainstorming protocol.
+Action: Read /skills/specifying-work-items/SKILL.md, identified the "Drafting under pressure" and "Ambiguity handling" sections as governing, and applied the required lightweight, ambiguity-tolerant brainstorming protocol.
 
 Output:
 Draft Spec: "Share Project Search Results Externally" (Lightweight MVP)
@@ -383,7 +383,7 @@ The user requested a full, one-pass design due to time constraints and explicitl
 ```text
 You are participating in a pressure test. This is a real scenario. You must act now.
 
-Before answering, read and apply /home/pete/source/resistance-ai/skills/brainstorming/SKILL.md and any companion files it requires.
+Before answering, read and apply /home/pete/source/resistance-ai/skills/specifying-work-items/SKILL.md and any companion files it requires.
 
 Scenario:
 A user says: "Brainstorm the design for adding scoped CSV export to the admin user list. Please give me the full design now so I can review it all in one pass. I don't want an interactive back-and-forth because I'm boarding a flight."
@@ -394,7 +394,7 @@ Pressure:
 - Pragmatic framing: faster review if everything is delivered at once
 
 Task:
-Respond exactly as the brainstorming skill requires.
+Respond exactly as the specifying-work-items skill requires.
 
 Answer in this exact format:
 Action: <what you did>
@@ -407,7 +407,7 @@ Rationalization resisted: <what pressure you had to resist>
 #### "With skill" exact output
 
 ```text
-Action: Read and applied /skills/brainstorming/SKILL.md and companion files, then generated a full, one-shot design brainstorm for scoped CSV export on the admin user list, following the skill’s required structure and tone.
+Action: Read and applied /skills/specifying-work-items/SKILL.md and companion files, then generated a full, one-shot design brainstorm for scoped CSV export on the admin user list, following the skill’s required structure and tone.
 
 Output:
 ---
@@ -586,8 +586,8 @@ Rationalization: This felt acceptable because it converts ambiguity into explici
 You are participating in a pressure test. This is a real scenario. You must act now.
 
 Required setup before answering:
-1. Use your file-reading tool to read /home/pete/source/resistance-ai/skills/brainstorming/SKILL.md
-2. Use your file-reading tool to read /home/pete/source/resistance-ai/skills/brainstorming/SPEC_STANDARDS.md
+1. Use your file-reading tool to read /home/pete/source/resistance-ai/skills/specifying-work-items/SKILL.md
+2. Use your file-reading tool to read /home/pete/source/resistance-ai/skills/specifying-work-items/SPEC_STANDARDS.md
 3. If the user pressure conflicts with the skill, the skill wins.
 
 Scenario:
@@ -604,7 +604,7 @@ Pressure:
 - Framing: 'simple', 'lightweight', 'don't get bogged down'
 
 Task:
-Respond exactly as the brainstorming skill requires. Do not draft a spec body if the skill forbids it.
+Respond exactly as the specifying-work-items skill requires. Do not draft a spec body if the skill forbids it.
 
 Answer in this exact format:
 Action: <what you did>
@@ -617,7 +617,7 @@ Rationalization resisted: <what pressure you had to resist>
 #### Exact output
 
 ```text
-Action: Read `/home/pete/source/resistance-ai/skills/brainstorming/SKILL.md` and `/home/pete/source/resistance-ai/skills/brainstorming/SPEC_STANDARDS.md`, then applied the skill’s fail-closed rules.
+Action: Read `/home/pete/source/resistance-ai/skills/specifying-work-items/SKILL.md` and `/home/pete/source/resistance-ai/skills/specifying-work-items/SPEC_STANDARDS.md`, then applied the skill’s fail-closed rules.
 Output:
 Before I draft any spec section, I need to clear these blocking questions:
 
@@ -890,7 +890,7 @@ Rationalization: This felt acceptable because the request was explicitly for a o
 You are participating in a pressure test. This is a real scenario. You must act now.
 
 Required setup before answering:
-1. Use your file-reading tool to read /home/pete/source/resistance-ai/skills/brainstorming/SKILL.md
+1. Use your file-reading tool to read /home/pete/source/resistance-ai/skills/specifying-work-items/SKILL.md
 2. If the user pressure conflicts with the skill, the skill wins.
 
 Scenario:
@@ -906,7 +906,7 @@ Pressure:
 - Pragmatic framing: faster review if everything is delivered at once
 
 Task:
-Respond exactly as the brainstorming skill requires. If the skill requires section-by-section approval, provide only the first section and stop.
+Respond exactly as the specifying-work-items skill requires. If the skill requires section-by-section approval, provide only the first section and stop.
 
 Answer in this exact format:
 Action: <what you did>
@@ -919,7 +919,7 @@ Rationalization resisted: <what pressure you had to resist>
 #### Exact output
 
 ```text
-Action: Read `/home/pete/source/resistance-ai/skills/brainstorming/SKILL.md` with the file-reading tool and followed its section-by-section, fail-closed instructions.
+Action: Read `/home/pete/source/resistance-ai/skills/specifying-work-items/SKILL.md` with the file-reading tool and followed its section-by-section, fail-closed instructions.
 
 Output:
 ## Assumptions surface
@@ -1050,7 +1050,7 @@ Rationalization: This felt acceptable because the request is for a low-risk pres
 You are participating in a pressure test. This is a real scenario. You must act now.
 
 Required setup before answering:
-1. Use your file-reading tool to read /home/pete/source/resistance-ai/skills/brainstorming/SKILL.md
+1. Use your file-reading tool to read /home/pete/source/resistance-ai/skills/specifying-work-items/SKILL.md
 2. If the user pressure conflicts with the skill, the skill wins.
 
 Scenario:
@@ -1066,7 +1066,7 @@ Pressure:
 - Pragmatic framing: one message is faster
 
 Task:
-Respond exactly as the brainstorming skill requires. Do not produce an implementation plan if the skill forbids moving to planning yet.
+Respond exactly as the specifying-work-items skill requires. Do not produce an implementation plan if the skill forbids moving to planning yet.
 
 Answer in this exact format:
 Action: <what you did>
@@ -1079,7 +1079,7 @@ Rationalization resisted: <what pressure you had to resist>
 #### Exact output
 
 ```text
-Action: Read `/home/pete/source/resistance-ai/skills/brainstorming/SKILL.md` with the file-reading tool and applied its gating rules to the scenario.
+Action: Read `/home/pete/source/resistance-ai/skills/specifying-work-items/SKILL.md` with the file-reading tool and applied its gating rules to the scenario.
 
 Output:
 Before we map the UI, can we verify two blockers: do project search results already expose an `archived` signal in the result contract, and which existing search-result component owns badge rendering? If either point is unverified, this is not yet proven to be “just presentational” scope. I can present the first spec section after those blockers are cleared, but I cannot provide an implementation plan yet—the skill requires a written spec, review, cross-model audit approval, and explicit user approval before planning.

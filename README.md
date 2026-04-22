@@ -88,11 +88,11 @@ Run: `python3 scripts/validate_resistance_engine_provenance.py .`
 
 ## Authoring defaults
 
-- `skills/brainstorming/SKILL.md` is self-sufficient by default
-- `skills/brainstorming/SPEC_REVIEW_MANIFEST.md` and `skills/brainstorming/SPEC_RUBRIC.md`
+- `skills/specifying-work-items/SKILL.md` is self-sufficient by default
+- `skills/specifying-work-items/SPEC_REVIEW_MANIFEST.md` and `skills/specifying-work-items/SPEC_RUBRIC.md`
   ship the default spec review behavior
 - `skills/writing-plans/SKILL.md` is self-sufficient by default
-- the self-contained `brainstorming` default also carries sharding, source-of-truth
+- the self-contained `specifying-work-items` default also carries sharding, source-of-truth
   sync, empirical verification, self-review, and cross-model audit requirements
 - the self-contained `writing-plans` default also carries Tabula Rasa ingestion,
   topological TDD, chunking, pre-plan verification, runbook rules, and Unified

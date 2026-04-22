@@ -1,9 +1,9 @@
 ---
-name: brainstorming
+name: specifying-work-items
 description: "You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Explores user intent, requirements and design before implementation."
 ---
 
-# Adversarial Brainstorming
+# Specifying Work Items
 
 ## Overview
 
@@ -115,7 +115,7 @@ treating "obvious" scope as a shortcut.
 ## Process Flow
 
 ```dot
-digraph brainstorming {
+digraph specifying_work_items {
     "Explore context" -> "Assumptions / blockers";
     "Assumptions / blockers" -> "Ask blocking question" [label="ambiguity"];
     "Ask blocking question" -> "Assumptions / blockers" [label="answered"];
@@ -144,7 +144,7 @@ Some of what we're working on might be easier to explain if I can show it to you
 
 This offer MUST be its own message. Do not combine it with clarifying questions, context summaries, or any other content.
 
-Accepting the companion does not waive repository inspection, blocker handling, or section-approval gates. Use it only for clearly visual questions, and then continue through the normal adversarial flow. Read `skills/brainstorming/visual-companion.md` before using the companion.
+Accepting the companion does not waive repository inspection, blocker handling, or section-approval gates. Use it only for clearly visual questions, and then continue through the normal adversarial flow. Read `skills/specifying-work-items/visual-companion.md` before using the companion.
 
 ## Mandatory outputs
 
@@ -290,13 +290,13 @@ rejected.
 
 ## Source-of-truth sync
 
-When a spec is completed, approved, or when scope shifts during brainstorming, the
+When a spec is completed, approved, or when scope shifts during specifying work items, the
 work item must be updated using the append-only procedure. Never overwrite the original
 description.
 
 The work item is the canonical source of truth for scope. A conversation that diverges
 from the work item without updating the work item is producing orphaned scope. This includes
-any discovery during brainstorming that changes the blast radius, the subsystems
+any discovery during specifying work items that changes the blast radius, the subsystems
 affected, or the acceptance criteria.
 
 ---

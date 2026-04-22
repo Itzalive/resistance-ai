@@ -64,7 +64,7 @@ def test_validate_provenance_requires_authoring_default_contracts(
     from validate_resistance_engine_provenance import main
 
     output_root = _run_import(tmp_path)
-    brainstorming_root = output_root / "skills" / "brainstorming"
+    brainstorming_root = output_root / "skills" / "specifying-work-items"
     writing_plans_root = output_root / "skills" / "writing-plans"
 
     assert (
@@ -141,7 +141,7 @@ def test_validate_provenance_requires_authoring_default_contracts(
         (output_root / "provenance" / "provenance_manifest.json").read_text()
     )
     brainstorming_entry = next(
-        entry for entry in manifest if entry["entry_id"] == "skill:brainstorming"
+        entry for entry in manifest if entry["entry_id"] == "skill:specifying-work-items"
     )
     writing_plans_entry = next(
         entry for entry in manifest if entry["entry_id"] == "skill:writing-plans"
@@ -151,27 +151,27 @@ def test_validate_provenance_requires_authoring_default_contracts(
         for file_record in brainstorming_entry["files"] + writing_plans_entry["files"]
         if file_record["local_file"]
         in {
-            "skills/brainstorming/SKILL.md",
-            "skills/brainstorming/SPEC_REVIEW_MANIFEST.md",
-            "skills/brainstorming/SPEC_RUBRIC.md",
-            "skills/brainstorming/SPEC_STANDARDS.md",
+            "skills/specifying-work-items/SKILL.md",
+            "skills/specifying-work-items/SPEC_REVIEW_MANIFEST.md",
+            "skills/specifying-work-items/SPEC_RUBRIC.md",
+            "skills/specifying-work-items/SPEC_STANDARDS.md",
             "skills/writing-plans/SKILL.md",
         }
     }
-    assert overlay_records["skills/brainstorming/SKILL.md"]["source_file"] == "skills/brainstorming/SKILL.md"
-    assert overlay_records["skills/brainstorming/SKILL.md"]["source_repo"] == "."
-    assert overlay_records["skills/brainstorming/SPEC_REVIEW_MANIFEST.md"]["source_file"] == (
-        "skills/brainstorming/SPEC_REVIEW_MANIFEST.md"
+    assert overlay_records["skills/specifying-work-items/SKILL.md"]["source_file"] == "skills/specifying-work-items/SKILL.md"
+    assert overlay_records["skills/specifying-work-items/SKILL.md"]["source_repo"] == "."
+    assert overlay_records["skills/specifying-work-items/SPEC_REVIEW_MANIFEST.md"]["source_file"] == (
+        "skills/specifying-work-items/SPEC_REVIEW_MANIFEST.md"
     )
-    assert overlay_records["skills/brainstorming/SPEC_REVIEW_MANIFEST.md"]["source_repo"] == "."
-    assert overlay_records["skills/brainstorming/SPEC_RUBRIC.md"]["source_file"] == (
-        "skills/brainstorming/SPEC_RUBRIC.md"
+    assert overlay_records["skills/specifying-work-items/SPEC_REVIEW_MANIFEST.md"]["source_repo"] == "."
+    assert overlay_records["skills/specifying-work-items/SPEC_RUBRIC.md"]["source_file"] == (
+        "skills/specifying-work-items/SPEC_RUBRIC.md"
     )
-    assert overlay_records["skills/brainstorming/SPEC_RUBRIC.md"]["source_repo"] == "."
-    assert overlay_records["skills/brainstorming/SPEC_STANDARDS.md"]["source_file"] == (
-        "skills/brainstorming/SPEC_STANDARDS.md"
+    assert overlay_records["skills/specifying-work-items/SPEC_RUBRIC.md"]["source_repo"] == "."
+    assert overlay_records["skills/specifying-work-items/SPEC_STANDARDS.md"]["source_file"] == (
+        "skills/specifying-work-items/SPEC_STANDARDS.md"
     )
-    assert overlay_records["skills/brainstorming/SPEC_STANDARDS.md"]["source_repo"] == "."
+    assert overlay_records["skills/specifying-work-items/SPEC_STANDARDS.md"]["source_repo"] == "."
     assert overlay_records["skills/writing-plans/SKILL.md"]["source_file"] == "skills/writing-plans/SKILL.md"
     assert overlay_records["skills/writing-plans/SKILL.md"]["source_repo"] == "."
 
@@ -191,13 +191,13 @@ def test_validate_provenance_accepts_pruned_file_absence(
         tmp_path,
         overrides=[
             {
-                "entry_id": "skill:brainstorming",
+                "entry_id": "skill:specifying-work-items",
                 "source_file": "skills/brainstorming/scripts/helper.js",
                 "local_sync_policy": "pruned",
             }
         ],
     )
-    (output_root / "skills" / "brainstorming" / "scripts" / "helper.js").unlink()
+    (output_root / "skills" / "specifying-work-items" / "scripts" / "helper.js").unlink()
 
     exit_code = main([str(output_root)])
     captured = capsys.readouterr()
@@ -206,7 +206,7 @@ def test_validate_provenance_accepts_pruned_file_absence(
         (output_root / "provenance" / "provenance_manifest.json").read_text()
     )
     brainstorming = next(
-        entry for entry in manifest if entry["entry_id"] == "skill:brainstorming"
+        entry for entry in manifest if entry["entry_id"] == "skill:specifying-work-items"
     )
     helper_record = next(
         file_record
@@ -229,7 +229,7 @@ def test_validate_provenance_rejects_present_pruned_file(
         tmp_path,
         overrides=[
             {
-                "entry_id": "skill:brainstorming",
+                "entry_id": "skill:specifying-work-items",
                 "source_file": "skills/brainstorming/scripts/helper.js",
                 "local_sync_policy": "pruned",
             }
@@ -252,7 +252,7 @@ def test_validate_provenance_rejects_manifest_policy_mismatch(
     manifest_path = output_root / "provenance" / "provenance_manifest.json"
     manifest = json.loads(manifest_path.read_text())
     brainstorming = next(
-        entry for entry in manifest if entry["entry_id"] == "skill:brainstorming"
+        entry for entry in manifest if entry["entry_id"] == "skill:specifying-work-items"
     )
     helper_record = next(
         file_record
@@ -267,7 +267,7 @@ def test_validate_provenance_rejects_manifest_policy_mismatch(
 
     assert exit_code == 1
     assert (
-        "manifest override mismatch for file: skill:brainstorming -> skills/brainstorming/scripts/helper.js"
+        "manifest override mismatch for file: skill:specifying-work-items -> skills/brainstorming/scripts/helper.js"
         in captured.err
     )
 
@@ -287,7 +287,7 @@ def test_validate_provenance_rejects_invalid_manifest_policy(
     captured = capsys.readouterr()
 
     assert exit_code == 1
-    assert "invalid local_sync_policy for file: skills/brainstorming/SKILL.md" in captured.err
+    assert "invalid local_sync_policy for file: skills/specifying-work-items/SKILL.md" in captured.err
 
 
 def test_validate_provenance_rejects_catalog_entry_without_manifest(
@@ -314,7 +314,7 @@ def test_validate_provenance_rejects_imported_entry_with_missing_local_file(
     from validate_resistance_engine_provenance import main
 
     output_root = _run_import(tmp_path)
-    (output_root / "skills" / "brainstorming" / "SKILL.md").unlink()
+    (output_root / "skills" / "specifying-work-items" / "SKILL.md").unlink()
 
     exit_code = main([str(output_root)])
     captured = capsys.readouterr()
@@ -323,12 +323,12 @@ def test_validate_provenance_rejects_imported_entry_with_missing_local_file(
         (output_root / "provenance" / "provenance_manifest.json").read_text()
     )
     brainstorming = next(
-        entry for entry in manifest if entry["entry_id"] == "skill:brainstorming"
+        entry for entry in manifest if entry["entry_id"] == "skill:specifying-work-items"
     )
 
     assert exit_code == 1
     assert brainstorming["manifest_state"] == "missing-local-copy"
-    assert "missing local file for imported entry: skill:brainstorming" in captured.err
+    assert "missing local file for imported entry: skill:specifying-work-items" in captured.err
 
 
 def test_validate_provenance_rejects_drift_detected_file_digest_mismatch(
@@ -368,7 +368,7 @@ def test_validate_provenance_rejects_file_state_entry_state_disagreement(
     captured = capsys.readouterr()
 
     assert exit_code == 1
-    assert "entry/file state disagreement: skill:brainstorming" in captured.err
+    assert "entry/file state disagreement: skill:specifying-work-items" in captured.err
 
 
 def test_validate_provenance_rejects_source_missing_entry_with_local_file_present(
@@ -424,7 +424,7 @@ def test_validate_provenance_rejects_source_missing_entry_with_local_file_presen
         == 0
     )
 
-    local_file = output_root / "skills" / "brainstorming" / "SKILL.md"
+    local_file = output_root / "skills" / "specifying-work-items" / "SKILL.md"
     local_file.parent.mkdir(parents=True, exist_ok=True)
     local_file.write_text("unexpected resurrection\n")
 
@@ -432,7 +432,7 @@ def test_validate_provenance_rejects_source_missing_entry_with_local_file_presen
     captured = capsys.readouterr()
 
     assert exit_code == 1
-    assert "source-missing entry still has local file: skill:brainstorming" in captured.err
+    assert "source-missing entry still has local file: skill:specifying-work-items" in captured.err
 
 
 def test_validate_provenance_rejects_source_missing_entry_missing_lineage_metadata(
@@ -490,7 +490,7 @@ def test_validate_provenance_rejects_source_missing_entry_missing_lineage_metada
     manifest_path = output_root / "provenance" / "provenance_manifest.json"
     manifest = json.loads(manifest_path.read_text())
     source_missing_entry = next(
-        entry for entry in manifest if entry["entry_id"] == "skill:brainstorming"
+        entry for entry in manifest if entry["entry_id"] == "skill:specifying-work-items"
     )
     source_missing_entry.pop("source_repo")
     manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
@@ -521,7 +521,7 @@ def test_validate_provenance_rejects_missing_or_malformed_digest(
     captured = capsys.readouterr()
 
     assert exit_code == 1
-    assert "missing or malformed digest for file: skills/brainstorming/SKILL.md" in captured.err
+    assert "missing or malformed digest for file: skills/specifying-work-items/SKILL.md" in captured.err
 
 
 def test_validate_provenance_uses_deterministic_precedence_for_mixed_local_states(
@@ -530,8 +530,8 @@ def test_validate_provenance_uses_deterministic_precedence_for_mixed_local_state
     from validate_resistance_engine_provenance import main
 
     output_root = _run_import(tmp_path)
-    (output_root / "skills" / "brainstorming" / "SKILL.md").unlink()
-    (output_root / "skills" / "brainstorming" / "scripts" / "helper.js").write_text(
+    (output_root / "skills" / "specifying-work-items" / "SKILL.md").unlink()
+    (output_root / "skills" / "specifying-work-items" / "scripts" / "helper.js").write_text(
         "console.log('changed helper');\n"
     )
 
@@ -542,13 +542,13 @@ def test_validate_provenance_uses_deterministic_precedence_for_mixed_local_state
         (output_root / "provenance" / "provenance_manifest.json").read_text()
     )
     brainstorming = next(
-        entry for entry in manifest if entry["entry_id"] == "skill:brainstorming"
+        entry for entry in manifest if entry["entry_id"] == "skill:specifying-work-items"
     )
 
     assert exit_code == 1
     assert brainstorming["manifest_state"] == "drift-detected"
-    assert "missing local file for imported entry: skill:brainstorming" in captured.err
-    assert "digest mismatch for local file: skills/brainstorming/scripts/helper.js" in captured.err
+    assert "missing local file for imported entry: skill:specifying-work-items" in captured.err
+    assert "digest mismatch for local file: skills/specifying-work-items/scripts/helper.js" in captured.err
 
 
 def test_validate_provenance_rejects_duplicate_manifest_entry(
@@ -566,7 +566,7 @@ def test_validate_provenance_rejects_duplicate_manifest_entry(
     captured = capsys.readouterr()
 
     assert exit_code == 1
-    assert "duplicate manifest entry_id: skill:brainstorming" in captured.err
+    assert "duplicate manifest entry_id: skill:specifying-work-items" in captured.err
 
 
 def test_validate_provenance_rejects_manifest_entry_without_catalog_entry(
@@ -618,7 +618,7 @@ def test_validate_provenance_rejects_manifest_file_coverage_gap(
     captured = capsys.readouterr()
 
     assert exit_code == 1
-    assert "manifest file coverage mismatch: skill:brainstorming" in captured.err
+    assert "manifest file coverage mismatch: skill:specifying-work-items" in captured.err
 
 
 def test_validate_provenance_rejects_manifest_metadata_mismatch(
@@ -629,14 +629,14 @@ def test_validate_provenance_rejects_manifest_metadata_mismatch(
     output_root = _run_import(tmp_path)
     manifest_path = output_root / "provenance" / "provenance_manifest.json"
     manifest = json.loads(manifest_path.read_text())
-    manifest[0]["local_path"] = "skills/not-brainstorming"
+    manifest[0]["local_path"] = "skills/not-specifying-work-items"
     manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
 
     exit_code = main([str(output_root)])
     captured = capsys.readouterr()
 
     assert exit_code == 1
-    assert "manifest metadata mismatch for entry: skill:brainstorming (local_path)" in captured.err
+    assert "manifest metadata mismatch for entry: skill:specifying-work-items (local_path)" in captured.err
 
 
 def test_validate_provenance_accepts_recorded_missing_local_copy_on_rerun(
@@ -645,7 +645,7 @@ def test_validate_provenance_accepts_recorded_missing_local_copy_on_rerun(
     from validate_resistance_engine_provenance import main
 
     output_root = _run_import(tmp_path)
-    (output_root / "skills" / "brainstorming" / "SKILL.md").unlink()
+    (output_root / "skills" / "specifying-work-items" / "SKILL.md").unlink()
 
     first_exit = main([str(output_root)])
     first = capsys.readouterr()
@@ -656,11 +656,11 @@ def test_validate_provenance_accepts_recorded_missing_local_copy_on_rerun(
         (output_root / "provenance" / "provenance_manifest.json").read_text()
     )
     brainstorming = next(
-        entry for entry in manifest if entry["entry_id"] == "skill:brainstorming"
+        entry for entry in manifest if entry["entry_id"] == "skill:specifying-work-items"
     )
 
     assert first_exit == 1
-    assert "missing local file for imported entry: skill:brainstorming" in first.err
+    assert "missing local file for imported entry: skill:specifying-work-items" in first.err
     assert second_exit == 0
     assert brainstorming["manifest_state"] == "missing-local-copy"
     assert "provenance manifest valid" in second.out
@@ -672,7 +672,7 @@ def test_validate_provenance_accepts_recorded_drift_detected_on_rerun(
     from validate_resistance_engine_provenance import main
 
     output_root = _run_import(tmp_path)
-    (output_root / "skills" / "brainstorming" / "scripts" / "helper.js").write_text(
+    (output_root / "skills" / "specifying-work-items" / "scripts" / "helper.js").write_text(
         "console.log('changed helper');\n"
     )
 
@@ -685,12 +685,12 @@ def test_validate_provenance_accepts_recorded_drift_detected_on_rerun(
         (output_root / "provenance" / "provenance_manifest.json").read_text()
     )
     brainstorming = next(
-        entry for entry in manifest if entry["entry_id"] == "skill:brainstorming"
+        entry for entry in manifest if entry["entry_id"] == "skill:specifying-work-items"
     )
 
     assert first_exit == 1
     assert (
-        "digest mismatch for local file: skills/brainstorming/scripts/helper.js" in first.err
+        "digest mismatch for local file: skills/specifying-work-items/scripts/helper.js" in first.err
     )
     assert second_exit == 0
     assert brainstorming["manifest_state"] == "drift-detected"
@@ -703,8 +703,8 @@ def test_validate_provenance_accepts_recorded_mixed_local_states_on_rerun(
     from validate_resistance_engine_provenance import main
 
     output_root = _run_import(tmp_path)
-    (output_root / "skills" / "brainstorming" / "SKILL.md").unlink()
-    (output_root / "skills" / "brainstorming" / "scripts" / "helper.js").write_text(
+    (output_root / "skills" / "specifying-work-items" / "SKILL.md").unlink()
+    (output_root / "skills" / "specifying-work-items" / "scripts" / "helper.js").write_text(
         "console.log('changed helper');\n"
     )
 
@@ -717,12 +717,12 @@ def test_validate_provenance_accepts_recorded_mixed_local_states_on_rerun(
         (output_root / "provenance" / "provenance_manifest.json").read_text()
     )
     brainstorming = next(
-        entry for entry in manifest if entry["entry_id"] == "skill:brainstorming"
+        entry for entry in manifest if entry["entry_id"] == "skill:specifying-work-items"
     )
     skill_record = next(
         file_record
         for file_record in brainstorming["files"]
-        if file_record["source_file"] == "skills/brainstorming/SKILL.md"
+        if file_record["source_file"] == "skills/specifying-work-items/SKILL.md"
     )
     helper_record = next(
         file_record
@@ -731,8 +731,8 @@ def test_validate_provenance_accepts_recorded_mixed_local_states_on_rerun(
     )
 
     assert first_exit == 1
-    assert "missing local file for imported entry: skill:brainstorming" in first.err
-    assert "digest mismatch for local file: skills/brainstorming/scripts/helper.js" in first.err
+    assert "missing local file for imported entry: skill:specifying-work-items" in first.err
+    assert "digest mismatch for local file: skills/specifying-work-items/scripts/helper.js" in first.err
     assert second_exit == 0
     assert brainstorming["manifest_state"] == "drift-detected"
     assert skill_record["file_state"] == "missing-local-copy"

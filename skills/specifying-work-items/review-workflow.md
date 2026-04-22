@@ -1,4 +1,4 @@
-# Brainstorming review workflow
+# Specifying-work-items review workflow
 
 Load this support file only after a written spec exists.
 

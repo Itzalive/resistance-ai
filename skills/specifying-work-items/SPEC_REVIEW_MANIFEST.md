@@ -1,6 +1,6 @@
 ---
 title: "Default Spec Review Manifest"
-description: "Shipped review procedure for the resistance-engine brainstorming skill."
+description: "Shipped review procedure for the resistance-engine specifying-work-items skill."
 version: 1.0
 type: "agent_instruction"
 required_dependencies: ["SPEC_RUBRIC.md"]
@@ -9,7 +9,7 @@ execution_mode: "strict_critical_assessment"
 
 # Review Manifest
 
-You are executing the default self-review path for `brainstorming`.
+You are executing the default self-review path for `specifying-work-items`.
 
 ## Default authority
 

@@ -16,7 +16,7 @@ is an optional overlay only. Strictly apply repo-root overlays; if they contradi
 
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
-**Context:** This should be run in a dedicated worktree (created by brainstorming skill).
+**Context:** This should be run in a dedicated worktree (created by specifying-work-items).
 
 **Save plans to:** `docs/superpowers/plans/YYYY-MM-DD-<work-item-id>-<work-item-name>.md`
 - (User preferences for plan location override this default)
@@ -37,7 +37,7 @@ Use this skill when:
 Do not use this skill when:
 
 - the task is a trivial one-file wording or typo fix that only needs a lightweight inline outline
-- the request still needs design, scope, or architecture approval first (use `brainstorming`)
+- the request still needs design, scope, or architecture approval first (use `specifying-work-items`)
 - there is no meaningful sequencing, dependency, or failure-path risk to make explicit
 - the user wants direct implementation rather than a stored plan document
 

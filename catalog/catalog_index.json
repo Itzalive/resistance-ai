@@ -1,15 +1,19 @@
 [
   {
     "entry_type": "skill",
-    "name": "brainstorming",
+    "name": "specifying-work-items",
     "source_repo": "vendor/obra-superpowers",
     "source_path": "skills/brainstorming",
-    "local_path": "skills/brainstorming",
+    "local_path": "skills/specifying-work-items",
     "imported_files": [
       "SKILL.md",
       "SPEC_REVIEW_MANIFEST.md",
       "SPEC_RUBRIC.md",
       "SPEC_STANDARDS.md",
+      "investigation-report.md",
+      "latency-compaction-report.md",
+      "pressure-test-evidence.md",
+      "review-workflow.md",
       "scripts/frame-template.html",
       "scripts/helper.js",
       "scripts/server.cjs",
@@ -18,8 +22,8 @@
       "spec-document-reviewer-prompt.md",
       "visual-companion.md"
     ],
-    "source_revision": "a569527b89c152ac697d6c3ffec335d26769afdc",
-    "imported_at": "2026-04-17T06:54:18+00:00"
+    "source_revision": "b55764852ac78870e65c6565fb585b6cd8b3c5c9",
+    "imported_at": "2026-04-22T19:44:14+00:00"
   },
   {
     "entry_type": "skill",

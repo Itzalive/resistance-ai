@@ -1,119 +1,159 @@
 [
   {
-    "entry_id": "skill:brainstorming",
+    "entry_id": "skill:specifying-work-items",
     "entry_type": "skill",
-    "name": "brainstorming",
+    "name": "specifying-work-items",
     "source_repo": "vendor/obra-superpowers",
     "source_path": "skills/brainstorming",
-    "local_path": "skills/brainstorming",
+    "local_path": "skills/specifying-work-items",
     "manifest_state": "imported",
-    "source_revision": "a569527b89c152ac697d6c3ffec335d26769afdc",
-    "last_imported_at": "2026-04-17T06:54:18+00:00",
-    "last_verified_at": "2026-04-17T06:54:18+00:00",
+    "source_revision": "b55764852ac78870e65c6565fb585b6cd8b3c5c9",
+    "last_imported_at": "2026-04-22T19:44:14+00:00",
+    "last_verified_at": "2026-04-22T19:44:14+00:00",
     "files": [
       {
-        "source_file": "resistance-engine/skills/brainstorming/SKILL.md",
-        "local_file": "skills/brainstorming/SKILL.md",
+        "source_file": "skills/specifying-work-items/SKILL.md",
+        "local_file": "skills/specifying-work-items/SKILL.md",
         "file_state": "imported",
         "local_sync_policy": "required",
-        "source_digest": "sha256:692f47ad7d3d6efe9068390f3d293b14b9bb0bed17a2961c4932fa0a4bd93ca4",
-        "local_digest": "sha256:692f47ad7d3d6efe9068390f3d293b14b9bb0bed17a2961c4932fa0a4bd93ca4",
-        "last_verified_at": "2026-04-17T06:54:18+00:00",
+        "source_digest": "sha256:6e4d33f62c6759636a71b2cbca3fc6ef93b77ae68848cb272bd42c2fe6357ea2",
+        "local_digest": "sha256:6e4d33f62c6759636a71b2cbca3fc6ef93b77ae68848cb272bd42c2fe6357ea2",
+        "last_verified_at": "2026-04-22T19:44:14+00:00",
         "source_repo": "."
       },
       {
         "source_repo": ".",
-        "source_file": "resistance-engine/skills/brainstorming/SPEC_REVIEW_MANIFEST.md",
-        "local_file": "skills/brainstorming/SPEC_REVIEW_MANIFEST.md",
+        "source_file": "skills/specifying-work-items/SPEC_REVIEW_MANIFEST.md",
+        "local_file": "skills/specifying-work-items/SPEC_REVIEW_MANIFEST.md",
         "file_state": "imported",
         "local_sync_policy": "required",
-        "source_digest": "sha256:aa33ce0e1554ece11a309d3afa1bebac30053bceafe1d7ae5586fb621ab710da",
-        "local_digest": "sha256:aa33ce0e1554ece11a309d3afa1bebac30053bceafe1d7ae5586fb621ab710da",
-        "last_verified_at": "2026-04-17T06:54:18+00:00"
+        "source_digest": "sha256:83353bc16546521e2c9932a647c946d773c4d8035a308fdd48cad3ed99cdcb88",
+        "local_digest": "sha256:83353bc16546521e2c9932a647c946d773c4d8035a308fdd48cad3ed99cdcb88",
+        "last_verified_at": "2026-04-22T19:44:14+00:00"
       },
       {
         "source_repo": ".",
-        "source_file": "resistance-engine/skills/brainstorming/SPEC_RUBRIC.md",
-        "local_file": "skills/brainstorming/SPEC_RUBRIC.md",
+        "source_file": "skills/specifying-work-items/SPEC_RUBRIC.md",
+        "local_file": "skills/specifying-work-items/SPEC_RUBRIC.md",
         "file_state": "imported",
         "local_sync_policy": "required",
-        "source_digest": "sha256:ee1f1553bb5e1e0a36b4fa7a21f09786ae0735f9045880e9a12b47288a86fe86",
-        "local_digest": "sha256:ee1f1553bb5e1e0a36b4fa7a21f09786ae0735f9045880e9a12b47288a86fe86",
-        "last_verified_at": "2026-04-17T06:54:18+00:00"
+        "source_digest": "sha256:21545aa6bf05515aa9f50588300ddfc45727a7e758d9d735dac22f484d22ffe2",
+        "local_digest": "sha256:21545aa6bf05515aa9f50588300ddfc45727a7e758d9d735dac22f484d22ffe2",
+        "last_verified_at": "2026-04-22T19:44:14+00:00"
       },
       {
         "source_repo": ".",
-        "source_file": "resistance-engine/skills/brainstorming/SPEC_STANDARDS.md",
-        "local_file": "skills/brainstorming/SPEC_STANDARDS.md",
+        "source_file": "skills/specifying-work-items/SPEC_STANDARDS.md",
+        "local_file": "skills/specifying-work-items/SPEC_STANDARDS.md",
         "file_state": "imported",
         "local_sync_policy": "required",
         "source_digest": "sha256:84f7b7b6e623540f5bb49106bdf774231689424acbd67fc9067f9f19bfba5c80",
         "local_digest": "sha256:84f7b7b6e623540f5bb49106bdf774231689424acbd67fc9067f9f19bfba5c80",
-        "last_verified_at": "2026-04-17T06:54:18+00:00"
+        "last_verified_at": "2026-04-22T19:44:14+00:00"
+      },
+      {
+        "source_repo": ".",
+        "source_file": "skills/specifying-work-items/investigation-report.md",
+        "local_file": "skills/specifying-work-items/investigation-report.md",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:ec8ba69730befbe4d09edcb51dd8395bd7d2927581056f066257ab42fd57ed0d",
+        "local_digest": "sha256:ec8ba69730befbe4d09edcb51dd8395bd7d2927581056f066257ab42fd57ed0d",
+        "last_verified_at": "2026-04-22T19:44:14+00:00"
+      },
+      {
+        "source_repo": ".",
+        "source_file": "skills/specifying-work-items/latency-compaction-report.md",
+        "local_file": "skills/specifying-work-items/latency-compaction-report.md",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:174cd3b9fcbbb58db6e64a4cf9778aa762a20b78282f2d0b2d31858cfd55a1d5",
+        "local_digest": "sha256:174cd3b9fcbbb58db6e64a4cf9778aa762a20b78282f2d0b2d31858cfd55a1d5",
+        "last_verified_at": "2026-04-22T19:44:14+00:00"
+      },
+      {
+        "source_repo": ".",
+        "source_file": "skills/specifying-work-items/pressure-test-evidence.md",
+        "local_file": "skills/specifying-work-items/pressure-test-evidence.md",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:c7a96a5e01292602c65feafa4086ccf692d833d2ccc51d1bfb645634b95c17d2",
+        "local_digest": "sha256:c7a96a5e01292602c65feafa4086ccf692d833d2ccc51d1bfb645634b95c17d2",
+        "last_verified_at": "2026-04-22T19:44:14+00:00"
+      },
+      {
+        "source_repo": ".",
+        "source_file": "skills/specifying-work-items/review-workflow.md",
+        "local_file": "skills/specifying-work-items/review-workflow.md",
+        "file_state": "imported",
+        "local_sync_policy": "required",
+        "source_digest": "sha256:65475207dd488f2f54a000f98aa342b81bcd45de098b0065b416970f35216f82",
+        "local_digest": "sha256:65475207dd488f2f54a000f98aa342b81bcd45de098b0065b416970f35216f82",
+        "last_verified_at": "2026-04-22T19:44:14+00:00"
       },
       {
         "source_file": "skills/brainstorming/scripts/frame-template.html",
-        "local_file": "skills/brainstorming/scripts/frame-template.html",
+        "local_file": "skills/specifying-work-items/scripts/frame-template.html",
         "file_state": "imported",
         "local_sync_policy": "required",
         "source_digest": "sha256:fb22ba9d47f3b83b56e0a95d52a3c2727db03b0d4365078d92c850293a62457b",
         "local_digest": "sha256:fb22ba9d47f3b83b56e0a95d52a3c2727db03b0d4365078d92c850293a62457b",
-        "last_verified_at": "2026-04-17T06:54:18+00:00"
+        "last_verified_at": "2026-04-22T19:44:14+00:00"
       },
       {
         "source_file": "skills/brainstorming/scripts/helper.js",
-        "local_file": "skills/brainstorming/scripts/helper.js",
+        "local_file": "skills/specifying-work-items/scripts/helper.js",
         "file_state": "imported",
         "local_sync_policy": "required",
         "source_digest": "sha256:e763d82f32b4ebb320be2f0d08449d3e5a0585778edf5c407c1fdab3f39976a5",
         "local_digest": "sha256:e763d82f32b4ebb320be2f0d08449d3e5a0585778edf5c407c1fdab3f39976a5",
-        "last_verified_at": "2026-04-17T06:54:18+00:00"
+        "last_verified_at": "2026-04-22T19:44:14+00:00"
       },
       {
         "source_file": "skills/brainstorming/scripts/server.cjs",
-        "local_file": "skills/brainstorming/scripts/server.cjs",
+        "local_file": "skills/specifying-work-items/scripts/server.cjs",
         "file_state": "imported",
         "local_sync_policy": "required",
         "source_digest": "sha256:ea81185f581897c67d4b417eeb9bc7a158c50e0932c73047054fe53efc2683ef",
         "local_digest": "sha256:ea81185f581897c67d4b417eeb9bc7a158c50e0932c73047054fe53efc2683ef",
-        "last_verified_at": "2026-04-17T06:54:18+00:00"
+        "last_verified_at": "2026-04-22T19:44:14+00:00"
       },
       {
         "source_file": "skills/brainstorming/scripts/start-server.sh",
-        "local_file": "skills/brainstorming/scripts/start-server.sh",
+        "local_file": "skills/specifying-work-items/scripts/start-server.sh",
         "file_state": "imported",
         "local_sync_policy": "required",
         "source_digest": "sha256:3442a54b5ee5511637d27bf696e092b72f94c2324f40b5ba4410da4dd0c23bc8",
         "local_digest": "sha256:3442a54b5ee5511637d27bf696e092b72f94c2324f40b5ba4410da4dd0c23bc8",
-        "last_verified_at": "2026-04-17T06:54:18+00:00"
+        "last_verified_at": "2026-04-22T19:44:14+00:00"
       },
       {
         "source_file": "skills/brainstorming/scripts/stop-server.sh",
-        "local_file": "skills/brainstorming/scripts/stop-server.sh",
+        "local_file": "skills/specifying-work-items/scripts/stop-server.sh",
         "file_state": "imported",
         "local_sync_policy": "required",
         "source_digest": "sha256:f65b7634a27343eab2086bdb6c59ba78695685f471b5a577b08a8817f7c50600",
         "local_digest": "sha256:f65b7634a27343eab2086bdb6c59ba78695685f471b5a577b08a8817f7c50600",
-        "last_verified_at": "2026-04-17T06:54:18+00:00"
+        "last_verified_at": "2026-04-22T19:44:14+00:00"
       },
       {
-        "source_file": "resistance-engine/skills/brainstorming/spec-document-reviewer-prompt.md",
-        "local_file": "skills/brainstorming/spec-document-reviewer-prompt.md",
+        "source_file": "skills/specifying-work-items/spec-document-reviewer-prompt.md",
+        "local_file": "skills/specifying-work-items/spec-document-reviewer-prompt.md",
         "file_state": "imported",
         "local_sync_policy": "required",
-        "source_digest": "sha256:2a581a60e5b974217a9462bb32a05c7c9e3f3f83f71da5fd008135400d4b25d6",
-        "local_digest": "sha256:2a581a60e5b974217a9462bb32a05c7c9e3f3f83f71da5fd008135400d4b25d6",
-        "last_verified_at": "2026-04-17T06:54:18+00:00",
+        "source_digest": "sha256:b7f11fdddb4f418a66aeb03d6c25963a5acc3b51cfb4f6e4fa1f63ebd7bdfe80",
+        "local_digest": "sha256:b7f11fdddb4f418a66aeb03d6c25963a5acc3b51cfb4f6e4fa1f63ebd7bdfe80",
+        "last_verified_at": "2026-04-22T19:44:14+00:00",
         "source_repo": "."
       },
       {
         "source_file": "skills/brainstorming/visual-companion.md",
-        "local_file": "skills/brainstorming/visual-companion.md",
+        "local_file": "skills/specifying-work-items/visual-companion.md",
         "file_state": "imported",
         "local_sync_policy": "required",
         "source_digest": "sha256:a2bc6fc47d0df1df981d02f707a16225b147f462e7059175ad2bc5e6dd29fcae",
         "local_digest": "sha256:a2bc6fc47d0df1df981d02f707a16225b147f462e7059175ad2bc5e6dd29fcae",
-        "last_verified_at": "2026-04-17T06:54:18+00:00"
+        "last_verified_at": "2026-04-22T19:44:14+00:00"
       }
     ]
   },
@@ -147,7 +187,7 @@
     "source_repo": "vendor/obra-superpowers",
     "source_path": "skills/executing-plans",
     "local_path": "skills/executing-plans",
-    "manifest_state": "imported",
+    "manifest_state": "drift-detected",
     "source_revision": "a569527b89c152ac697d6c3ffec335d26769afdc",
     "last_imported_at": "2026-04-17T06:54:18+00:00",
     "last_verified_at": "2026-04-17T06:54:18+00:00",
@@ -155,10 +195,10 @@
       {
         "source_file": "skills/executing-plans/SKILL.md",
         "local_file": "skills/executing-plans/SKILL.md",
-        "file_state": "imported",
+        "file_state": "drift-detected",
         "local_sync_policy": "required",
         "source_digest": "sha256:a711f83fb762e2ea0fa151f598893da9911a408895c91cc7a7e0770dd59a27b3",
-        "local_digest": "sha256:a711f83fb762e2ea0fa151f598893da9911a408895c91cc7a7e0770dd59a27b3",
+        "local_digest": "sha256:ee521df2b7cc7092b60507230e0215d97f3605ee314e972b4612dd48c721b175",
         "last_verified_at": "2026-04-17T06:54:18+00:00"
       }
     ]
@@ -216,7 +256,7 @@
     "source_repo": "vendor/obra-superpowers",
     "source_path": "skills/requesting-code-review",
     "local_path": "skills/requesting-code-review",
-    "manifest_state": "imported",
+    "manifest_state": "drift-detected",
     "source_revision": "a569527b89c152ac697d6c3ffec335d26769afdc",
     "last_imported_at": "2026-04-17T06:54:18+00:00",
     "last_verified_at": "2026-04-17T06:54:18+00:00",
@@ -224,10 +264,10 @@
       {
         "source_file": "skills/requesting-code-review/SKILL.md",
         "local_file": "skills/requesting-code-review/SKILL.md",
-        "file_state": "imported",
+        "file_state": "drift-detected",
         "local_sync_policy": "required",
         "source_digest": "sha256:a5ff68586ccf62d1803cedeb71d60fd96ec05591d29c8d123196117eefd34cd0",
-        "local_digest": "sha256:a5ff68586ccf62d1803cedeb71d60fd96ec05591d29c8d123196117eefd34cd0",
+        "local_digest": "sha256:623c2fdd34f6ad7d867d0d72c3b52348d5e3e6a7bc3076938c4045521f29472a",
         "last_verified_at": "2026-04-17T06:54:18+00:00"
       },
       {
@@ -248,7 +288,7 @@
     "source_repo": "vendor/obra-superpowers",
     "source_path": "skills/subagent-driven-development",
     "local_path": "skills/subagent-driven-development",
-    "manifest_state": "imported",
+    "manifest_state": "drift-detected",
     "source_revision": "a569527b89c152ac697d6c3ffec335d26769afdc",
     "last_imported_at": "2026-04-17T06:54:18+00:00",
     "last_verified_at": "2026-04-17T06:54:18+00:00",
@@ -256,19 +296,19 @@
       {
         "source_file": "skills/subagent-driven-development/SKILL.md",
         "local_file": "skills/subagent-driven-development/SKILL.md",
-        "file_state": "imported",
+        "file_state": "drift-detected",
         "local_sync_policy": "required",
         "source_digest": "sha256:081ad3869e55c80bf8f890b4768a90c0e8057daf94b1b6fadebfc85ea5b8304a",
-        "local_digest": "sha256:081ad3869e55c80bf8f890b4768a90c0e8057daf94b1b6fadebfc85ea5b8304a",
+        "local_digest": "sha256:1508abe4789b7f3648a795f7167ff5a4f2affe86cd29a81ad7a1ca794c84d0c7",
         "last_verified_at": "2026-04-17T06:54:18+00:00"
       },
       {
         "source_file": "skills/subagent-driven-development/code-quality-reviewer-prompt.md",
         "local_file": "skills/subagent-driven-development/code-quality-reviewer-prompt.md",
-        "file_state": "imported",
+        "file_state": "drift-detected",
         "local_sync_policy": "required",
         "source_digest": "sha256:06d1e7c2287e5a00bd1809bf39038abd5f413b4cf917c37d30f00c48f6293421",
-        "local_digest": "sha256:06d1e7c2287e5a00bd1809bf39038abd5f413b4cf917c37d30f00c48f6293421",
+        "local_digest": "sha256:0f898c58c6c72ecb942570a8999f73ad61a3e8472b6924740e25a7d104be592c",
         "last_verified_at": "2026-04-17T06:54:18+00:00"
       },
       {
@@ -322,7 +362,7 @@
     "source_repo": "vendor/obra-superpowers",
     "source_path": "skills/systematic-debugging",
     "local_path": "skills/systematic-debugging",
-    "manifest_state": "imported",
+    "manifest_state": "drift-detected",
     "source_revision": "a569527b89c152ac697d6c3ffec335d26769afdc",
     "last_imported_at": "2026-04-17T06:54:18+00:00",
     "last_verified_at": "2026-04-17T06:54:18+00:00",
@@ -339,10 +379,10 @@
       {
         "source_file": "skills/systematic-debugging/SKILL.md",
         "local_file": "skills/systematic-debugging/SKILL.md",
-        "file_state": "imported",
+        "file_state": "drift-detected",
         "local_sync_policy": "required",
         "source_digest": "sha256:4999cb851360485eca5074e727bbdd62ef20549c5d5b01216fcbf5831badb473",
-        "local_digest": "sha256:4999cb851360485eca5074e727bbdd62ef20549c5d5b01216fcbf5831badb473",
+        "local_digest": "sha256:f2e0ce94cbaa0bab752f2a00f07d4021b0d946a57a9b0f6aeaf68149ad6107df",
         "last_verified_at": "2026-04-17T06:54:18+00:00"
       },
       {
@@ -490,7 +530,7 @@
     "source_repo": "vendor/obra-superpowers",
     "source_path": "skills/using-superpowers",
     "local_path": "skills/using-resistance-engine",
-    "manifest_state": "imported",
+    "manifest_state": "drift-detected",
     "source_revision": "a569527b89c152ac697d6c3ffec335d26769afdc",
     "last_imported_at": "2026-04-17T06:54:18+00:00",
     "last_verified_at": "2026-04-17T06:54:18+00:00",
@@ -498,28 +538,28 @@
       {
         "source_file": "skills/using-superpowers/SKILL.md",
         "local_file": "skills/using-resistance-engine/SKILL.md",
-        "file_state": "imported",
+        "file_state": "drift-detected",
         "local_sync_policy": "required",
         "source_digest": "sha256:316e29381219adf0cac62190c67aeabf427d6e6e5f2735541d502b3d339be7aa",
-        "local_digest": "sha256:316e29381219adf0cac62190c67aeabf427d6e6e5f2735541d502b3d339be7aa",
+        "local_digest": "sha256:ca10498645ffb005d72aa0164928c420885b653c6a4f8cf21ea858c0a672da7a",
         "last_verified_at": "2026-04-17T06:54:18+00:00"
       },
       {
         "source_file": "skills/using-superpowers/references/codex-tools.md",
         "local_file": "skills/using-resistance-engine/references/codex-tools.md",
-        "file_state": "imported",
+        "file_state": "drift-detected",
         "local_sync_policy": "required",
         "source_digest": "sha256:9014e6746c9a6d3af9eeb9608f1ad637ee334e5a12d178747e3042937fc3da2b",
-        "local_digest": "sha256:9014e6746c9a6d3af9eeb9608f1ad637ee334e5a12d178747e3042937fc3da2b",
+        "local_digest": "sha256:8ee09c30a1d352427debde1de98803aa8ecb019f6018b6089774992f6ef7c063",
         "last_verified_at": "2026-04-17T06:54:18+00:00"
       },
       {
         "source_file": "skills/using-superpowers/references/copilot-tools.md",
         "local_file": "skills/using-resistance-engine/references/copilot-tools.md",
-        "file_state": "imported",
+        "file_state": "drift-detected",
         "local_sync_policy": "required",
         "source_digest": "sha256:5e0e9248e8bd965a28c8721bed24ddfa44a1ee66a89ee275da4a8260fe636e02",
-        "local_digest": "sha256:5e0e9248e8bd965a28c8721bed24ddfa44a1ee66a89ee275da4a8260fe636e02",
+        "local_digest": "sha256:7df46be627c42ca07b87fa399751df4b7df08311ca54476c0b9a7cb636dd335a",
         "last_verified_at": "2026-04-17T06:54:18+00:00"
       },
       {
@@ -563,7 +603,7 @@
     "source_repo": "vendor/obra-superpowers",
     "source_path": "skills/writing-plans",
     "local_path": "skills/writing-plans",
-    "manifest_state": "imported",
+    "manifest_state": "drift-detected",
     "source_revision": "a569527b89c152ac697d6c3ffec335d26769afdc",
     "last_imported_at": "2026-04-17T06:54:18+00:00",
     "last_verified_at": "2026-04-17T06:54:18+00:00",
@@ -571,20 +611,20 @@
       {
         "source_file": "resistance-engine/skills/writing-plans/SKILL.md",
         "local_file": "skills/writing-plans/SKILL.md",
-        "file_state": "imported",
+        "file_state": "drift-detected",
         "local_sync_policy": "required",
         "source_digest": "sha256:08253dd9becf810d19df36f52bddf9653318157be2d996ca8daae5b4b61e4051",
-        "local_digest": "sha256:08253dd9becf810d19df36f52bddf9653318157be2d996ca8daae5b4b61e4051",
+        "local_digest": "sha256:06a2720fff048aa1b1ae215c94823c5e15c93e809bdd161bcbfe4c617ee3bbc0",
         "last_verified_at": "2026-04-17T06:54:18+00:00",
         "source_repo": "."
       },
       {
         "source_file": "resistance-engine/skills/writing-plans/plan-document-reviewer-prompt.md",
         "local_file": "skills/writing-plans/plan-document-reviewer-prompt.md",
-        "file_state": "imported",
+        "file_state": "drift-detected",
         "local_sync_policy": "required",
         "source_digest": "sha256:3942b79f62b8a4afd144866fe8685c63a311f956b39814b339ce4673ee7c1bc7",
-        "local_digest": "sha256:3942b79f62b8a4afd144866fe8685c63a311f956b39814b339ce4673ee7c1bc7",
+        "local_digest": "sha256:63885fa0df2ec726ebe9114c0f56946c9c97fe2f326fffe50fa6b3b523b32286",
         "last_verified_at": "2026-04-17T06:54:18+00:00",
         "source_repo": "."
       }
@@ -597,7 +637,7 @@
     "source_repo": "vendor/obra-superpowers",
     "source_path": "skills/writing-skills",
     "local_path": "skills/writing-skills",
-    "manifest_state": "imported",
+    "manifest_state": "drift-detected",
     "source_revision": "a569527b89c152ac697d6c3ffec335d26769afdc",
     "last_imported_at": "2026-04-17T06:54:18+00:00",
     "last_verified_at": "2026-04-17T06:54:18+00:00",
@@ -605,10 +645,10 @@
       {
         "source_file": "skills/writing-skills/SKILL.md",
         "local_file": "skills/writing-skills/SKILL.md",
-        "file_state": "imported",
+        "file_state": "drift-detected",
         "local_sync_policy": "required",
         "source_digest": "sha256:38ba648975ae6ba512d6695676f146163db61a496b867f716f4bdfb0ee3aca3e",
-        "local_digest": "sha256:38ba648975ae6ba512d6695676f146163db61a496b867f716f4bdfb0ee3aca3e",
+        "local_digest": "sha256:50a06c4102d7639d9738df4297e40e7c9a1ba770d23d4a5857758f68e21b5f50",
         "last_verified_at": "2026-04-17T06:54:18+00:00"
       },
       {
@@ -659,10 +699,10 @@
       {
         "source_file": "skills/writing-skills/testing-skills-with-subagents.md",
         "local_file": "skills/writing-skills/testing-skills-with-subagents.md",
-        "file_state": "imported",
+        "file_state": "drift-detected",
         "local_sync_policy": "required",
         "source_digest": "sha256:c711346852c911b24a84aa161e0cff06a4cd7f4e2fa9e9c0a266cead5afcbade",
-        "local_digest": "sha256:c711346852c911b24a84aa161e0cff06a4cd7f4e2fa9e9c0a266cead5afcbade",
+        "local_digest": "sha256:bde0f21b94a7dda7dd05da750ba58498dbb4444dd29b98ee2a926d78f97fed97",
         "last_verified_at": "2026-04-17T06:54:18+00:00"
       }
     ]

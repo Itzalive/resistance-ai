@@ -33,11 +33,15 @@ _MANAGED_OUTPUT_PATHS = {
 # from the real vendor tree.  Keys are normalised skill names; values are
 # file paths relative to the skill directory.
 _AUTHORING_OVERLAY_SKILL_FILES: dict[str, list[str]] = {
-    "brainstorming": [
+    "specifying-work-items": [
         "SKILL.md",
         "SPEC_REVIEW_MANIFEST.md",
         "SPEC_RUBRIC.md",
         "SPEC_STANDARDS.md",
+        "review-workflow.md",
+        "investigation-report.md",
+        "latency-compaction-report.md",
+        "pressure-test-evidence.md",
         "spec-document-reviewer-prompt.md",
     ],
     "writing-plans": [
@@ -47,6 +51,9 @@ _AUTHORING_OVERLAY_SKILL_FILES: dict[str, list[str]] = {
 }
 _LOCAL_AUTHORING_SKILLS_ROOT = REPO_ROOT / "skills"
 _LOCAL_SOURCE_REPO = "."
+_LOCAL_SKILL_NAME_OVERRIDES = {
+    "brainstorming": "specifying-work-items",
+}
 _NON_SKILL_DECISIONS = {
     "README.md": "defer",
     "docs": "defer",
@@ -107,6 +114,23 @@ def _copy_file(source_file: Path, destination_file: Path) -> list[str]:
     destination_file.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(source_file, destination_file)
     return [destination_file.name]
+
+
+def _rewrite_skill_frontmatter_name(
+    skill_file: Path, *, source_name: str, local_name: str
+) -> None:
+    if source_name == local_name or not skill_file.is_file():
+        return
+
+    skill_text = skill_file.read_text()
+    rewritten_text, replacements = re.subn(
+        rf"(?m)^name:\s*{re.escape(source_name)}\s*$",
+        f"name: {local_name}",
+        skill_text,
+        count=1,
+    )
+    if replacements:
+        skill_file.write_text(rewritten_text)
 
 
 def _reset_output_root(output_root: Path, *, preserved_override_text: str | None = None) -> None:
@@ -384,18 +408,22 @@ def import_superpowers_catalog(
     claimed_paths: set[str] = set()
 
     for skill_dir in sorted(path for path in skills_root.iterdir() if path.is_dir()):
-        normalized = normalize_name(skill_dir.name)
-        local_relative = Path("skills") / normalized
+        source_name = normalize_name(skill_dir.name)
+        local_name = _LOCAL_SKILL_NAME_OVERRIDES.get(source_name, source_name)
+        local_relative = Path("skills") / local_name
         local_path = local_relative.as_posix()
         if local_path in claimed_paths:
-            raise ValueError(f"normalized path collision for skill {normalized!r}")
+            raise ValueError(f"normalized path collision for skill {local_name!r}")
         claimed_paths.add(local_path)
         destination = _safe_output_path(output_root, local_relative)
         imported_files = _copy_tree(skill_dir, destination)
+        _rewrite_skill_frontmatter_name(
+            destination / "SKILL.md", source_name=source_name, local_name=local_name
+        )
         catalog_index.append(
             {
                 "entry_type": "skill",
-                "name": normalized,
+                "name": local_name,
                 "source_repo": source_repo,
                 "source_path": f"skills/{skill_dir.name}",
                 "local_path": local_path,
@@ -417,7 +445,7 @@ def import_superpowers_catalog(
         provenance_manifest.append(
             _build_manifest_entry(
                 entry_type="skill",
-                name=normalized,
+                name=local_name,
                 source_path=f"skills/{skill_dir.name}",
                 local_path=local_path,
                 source_repo=source_repo,

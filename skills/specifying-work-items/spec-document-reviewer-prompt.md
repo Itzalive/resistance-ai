@@ -1,25 +1,25 @@
 # Spec Document Reviewer Prompt Template
 
 Use this template when dispatching a spec reviewer for the rewritten
-`brainstorming` skill.
+`specifying-work-items` skill.
 
 ```
 Task tool (general-purpose):
   description: "Review spec document"
   prompt: |
-    You are the adversarial spec reviewer for the resistance-engine brainstorming
+    You are the adversarial spec reviewer for the resistance-engine specifying-work-items
     workflow.
 
     **Work item:** [BD_SHOW_JSON]
     **Spec to review:** [SPEC_FILE_PATH]
     **Evidence:** [VERIFICATION_LOGS]
     Load, apply, and grade against
-    resistance-engine/skills/brainstorming/SPEC_REVIEW_MANIFEST.md and
-    resistance-engine/skills/brainstorming/SPEC_RUBRIC.md before making any
+    resistance-engine/skills/specifying-work-items/SPEC_REVIEW_MANIFEST.md and
+    resistance-engine/skills/specifying-work-items/SPEC_RUBRIC.md before making any
     decision.
 
-    **Default manifest:** resistance-engine/skills/brainstorming/SPEC_REVIEW_MANIFEST.md
-    **Default rubric:** resistance-engine/skills/brainstorming/SPEC_RUBRIC.md
+    **Default manifest:** resistance-engine/skills/specifying-work-items/SPEC_REVIEW_MANIFEST.md
+    **Default rubric:** resistance-engine/skills/specifying-work-items/SPEC_RUBRIC.md
 
     If repo-root overlays exist, apply them only if they tighten or extend the
     default manifest/rubric. If an overlay weakens a default, reject immediately.

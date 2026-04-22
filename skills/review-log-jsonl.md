@@ -52,7 +52,7 @@ jq -nc \
   --arg orch "<orchestrator_model_name>" \
   --arg aud "<reviewer_model_name>" \
   --arg rs "<failed criterion and exact correction>" \
-  '{timestamp: $ts, item_id: $wiid, skill: "brainstorming", phase: "SPEC_REVIEW", status: "REJECTED", reason: $rs, orchestrator: $orch, model: $aud}' \
+  '{timestamp: $ts, item_id: $wiid, skill: "specifying-work-items", phase: "SPEC_REVIEW", status: "REJECTED", reason: $rs, orchestrator: $orch, model: $aud}' \
   >> .review_log.jsonl
 ```
 
@@ -65,7 +65,7 @@ jq -nc \
   --arg orch "<orchestrator_model_name>" \
   --arg aud "<reviewer_model_name>" \
   --arg rs "<approval note>" \
-  '{timestamp: $ts, item_id: $wiid, skill: "brainstorming", phase: "CROSS_MODEL_AUDIT", status: "APPROVED - CROSS-MODEL AUDIT", reason: $rs, orchestrator: $orch, model: $aud}' \
+  '{timestamp: $ts, item_id: $wiid, skill: "specifying-work-items", phase: "CROSS_MODEL_AUDIT", status: "APPROVED - CROSS-MODEL AUDIT", reason: $rs, orchestrator: $orch, model: $aud}' \
   >> .review_log.jsonl
 ```
 
@@ -78,7 +78,7 @@ jq -nc \
   --arg orch "<orchestrator_model_name>" \
   --arg aud "<reviewer_model_name>" \
   --arg rs "<raw rejection text>" \
-  '{timestamp: $ts, item_id: $wiid, skill: "brainstorming", phase: "CROSS_MODEL_AUDIT", status: "REJECTED - CROSS-MODEL AUDIT", reason: $rs, orchestrator: $orch, model: $aud}' \
+  '{timestamp: $ts, item_id: $wiid, skill: "specifying-work-items", phase: "CROSS_MODEL_AUDIT", status: "REJECTED - CROSS-MODEL AUDIT", reason: $rs, orchestrator: $orch, model: $aud}' \
   >> .review_log.jsonl
 ```
 
