@@ -57,7 +57,7 @@ hard to audit, and duplicated between project prose and workflow behavior.
 | --- | --- | --- |
 | The repo had a local-only survivability phase template at design time | **VERIFIED** | `AGENTS.md:55-71` defined Phase 4, including mutation testing, chaos injection, and review-log submission, before this branch removed the inline template |
 | Survivability results are expected to flow into retrospective work | **VERIFIED** | `AGENTS.md:70-71` recorded a survivability score for Phase 6 and logged survived mutations as critical friction before the inline template was replaced by the skill |
-| The repo already has a structured append-only review log | **VERIFIED** | `.review_log.jsonl` exists at the repo root; `skills/review-log-jsonl.md:1-97` defines the contract |
+| The repo already has a structured append-only review log | **VERIFIED** | `.review_log.jsonl` exists at the repo root; `skills/shared/review-log-jsonl.md:1-97` defines the contract |
 | Local-only skills may exist as first-class peers in the local catalog | **VERIFIED** | `docs/superpowers/specs/2026-04-15-resistance-engine-catalog-retarget-design.md:140-156` allows local-only skills beside imported ones and expects them to consult local project guidance |
 | No local `survivability` skill exists yet | **VERIFIED** | `skills/` currently has no `survivability/` directory |
 | Older lifecycle mapping treated survivability as a gate rather than a skill | **VERIFIED** | `docs/superpowers/specs/2026-04-14-superpowers-overlay-lifecycle-design.md:143-165` models `survivability` as a gate owned by controller/project rules |
@@ -117,7 +117,7 @@ other external dependency as mandatory.
 | `skills/survivability/SKILL.md` | Create | Local-only skill that owns the survivability gate procedure |
 | `skills/executing-plans/SKILL.md` | Modify | Insert survivability between completed execution and branch finishing |
 | `skills/subagent-driven-development/SKILL.md` | Modify | Insert survivability between final review and branch finishing |
-| `skills/review-log-jsonl.md` | Modify only if required | Add named survivability logging template only if the generic append contract is insufficient |
+| `skills/shared/review-log-jsonl.md` | Modify only if required | Add named survivability logging template only if the generic append contract is insufficient |
 | `AGENTS.md` | Modify only if required | Remove the temporary inline survivability template once the standalone skill owns the gate |
 | `tests/` | Create / modify | Prove the local catalog includes the skill and workflow skills reference it correctly |
 
@@ -218,7 +218,7 @@ At minimum, the logged summary must capture:
 If a mutant survives, the skill must record that as **critical friction** so issue `#6`
 can ingest it during retrospective analysis.
 
-The skill may reuse the generic append contract in `skills/review-log-jsonl.md`. A
+The skill may reuse the generic append contract in `skills/shared/review-log-jsonl.md`. A
 named survivability template should be added only if the spec proves the generic
 template is not enough.
 
@@ -241,7 +241,7 @@ the path to completion rather than an optional reminder in `AGENTS.md`.
 **Risk:** Mutation and chaos runs can capture secrets, environment output, or large raw
 test logs and accidentally persist them in `.review_log.jsonl`.
 
-**Repository proof:** `skills/review-log-jsonl.md:8-13,28-41` defines append-only
+**Repository proof:** `skills/shared/review-log-jsonl.md:8-13,28-41` defines append-only
 logging and preserves raw reason text, but does not provide a redaction layer.
 
 **Control:** The new skill must log only **bounded experiment summaries**. It must
@@ -349,7 +349,7 @@ This draft is grounded in the current repository state:
   branch replaces with the standalone skill
 - `skills/executing-plans/SKILL.md` and `skills/subagent-driven-development/SKILL.md`
   prove the current workflow bypasses an explicit survivability skill
-- `skills/review-log-jsonl.md` and `.review_log.jsonl` prove the append-only log
+- `skills/shared/review-log-jsonl.md` and `.review_log.jsonl` prove the append-only log
   contract and the existence of the log surface
 - `docs/superpowers/specs/2026-04-15-resistance-engine-catalog-retarget-design.md`
   proves local-only skills may be first-class peers

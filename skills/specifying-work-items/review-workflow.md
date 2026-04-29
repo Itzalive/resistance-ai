@@ -20,7 +20,7 @@ The review is not optional and may not be abbreviated.
 **On rejection:**
 
 - Log the rejection to `.review_log.jsonl` using the `SPEC_REVIEW` rejection
-  template in `../review-log-jsonl.md`.
+  template in `../shared/review-log-jsonl.md`.
 - Fix the spec inline.
 - Run a post-fix consistency check across every affected section.
 - Commit the updated spec before dispatching the next review round.
@@ -57,12 +57,12 @@ Both models receive:
 **Pass condition:** The auditing model returns `[SPEC-APPROVED]`.
 
 - Record the approval in `.review_log.jsonl` using the `CROSS_MODEL_AUDIT`
-  approval template in `../review-log-jsonl.md`.
+  approval template in `../shared/review-log-jsonl.md`.
 
 **On cross-model rejection:**
 
 - Log the rejection to `.review_log.jsonl` using the `CROSS_MODEL_AUDIT`
-  rejection template in `../review-log-jsonl.md`.
+  rejection template in `../shared/review-log-jsonl.md`.
 - **Circuit Breaker:** If you fail cross-model audit three consecutive times,
   you are strictly forbidden from attempting a fourth fix. You must halt,
   output the exact rubric failure, and ask the human for architectural guidance

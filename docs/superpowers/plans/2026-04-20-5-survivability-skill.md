@@ -238,7 +238,7 @@ and route the work back to implementation hardening before finish.
 ## Review Log Submission
 
 Append a bounded experiment summary to `.review_log.jsonl` using the generic append
-template from `skills/review-log-jsonl.md`.
+template from `skills/shared/review-log-jsonl.md`.
 
 Do not copy full stdout/stderr, full diffs, or secret-bearing output into the log.
 
@@ -755,7 +755,7 @@ git commit -m "refactor(skill-5): remove AGENTS survivability phase" -m "Co-auth
 4. Confirm the plan does **not** depend on the unrelated failing baseline tests in `tests/scripts/test_validate_resistance_engine_provenance.py` or `tests/scripts/test_import_superpowers_catalog.py`.
 5. Re-run the pre-plan verification commands if any file paths, test commands, or artifact names change during self-review.
 6. Confirm every task includes at least two failure modes in its RED step.
-7. Confirm this plan does not require `skills/review-log-jsonl.md` changes unless the generic append template proves insufficient during implementation; if you decide it is insufficient, stop and amend the plan rather than inventing an ad hoc logging shape mid-implementation.
+7. Confirm this plan does not require `skills/shared/review-log-jsonl.md` changes unless the generic append template proves insufficient during implementation; if you decide it is insufficient, stop and amend the plan rather than inventing an ad hoc logging shape mid-implementation.
 
 ---
 

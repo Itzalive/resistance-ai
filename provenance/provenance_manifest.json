@@ -16,8 +16,8 @@
         "local_file": "skills/specifying-work-items/SKILL.md",
         "file_state": "imported",
         "local_sync_policy": "required",
-        "source_digest": "sha256:6e4d33f62c6759636a71b2cbca3fc6ef93b77ae68848cb272bd42c2fe6357ea2",
-        "local_digest": "sha256:6e4d33f62c6759636a71b2cbca3fc6ef93b77ae68848cb272bd42c2fe6357ea2",
+        "source_digest": "sha256:d10ac1eeae76d3c76a8eac38872b7b271a370120a6b610c957401c594c37cc4f",
+        "local_digest": "sha256:d10ac1eeae76d3c76a8eac38872b7b271a370120a6b610c957401c594c37cc4f",
         "last_verified_at": "2026-04-22T19:44:14+00:00",
         "source_repo": "."
       },
@@ -87,8 +87,8 @@
         "local_file": "skills/specifying-work-items/review-workflow.md",
         "file_state": "imported",
         "local_sync_policy": "required",
-        "source_digest": "sha256:65475207dd488f2f54a000f98aa342b81bcd45de098b0065b416970f35216f82",
-        "local_digest": "sha256:65475207dd488f2f54a000f98aa342b81bcd45de098b0065b416970f35216f82",
+        "source_digest": "sha256:a3df8369c0907daa864a661a401b510b616196ad5b96ce1195f2f366e0b161b5",
+        "local_digest": "sha256:a3df8369c0907daa864a661a401b510b616196ad5b96ce1195f2f366e0b161b5",
         "last_verified_at": "2026-04-22T19:44:14+00:00"
       },
       {
@@ -349,8 +349,8 @@
         "local_file": "skills/survivability/SKILL.md",
         "file_state": "imported",
         "local_sync_policy": "required",
-        "source_digest": "sha256:f8502747315e3eedd2f7d65d01d5194e61bbad8df9d6c5b31e2226971de98847",
-        "local_digest": "sha256:f8502747315e3eedd2f7d65d01d5194e61bbad8df9d6c5b31e2226971de98847",
+        "source_digest": "sha256:16e8a9f7de0565d703f38926e56112a899ef220504a010fa75d2c2af5c94cb3a",
+        "local_digest": "sha256:16e8a9f7de0565d703f38926e56112a899ef220504a010fa75d2c2af5c94cb3a",
         "last_verified_at": "2026-04-21T09:57:51+00:00"
       }
     ]
@@ -614,7 +614,7 @@
         "file_state": "drift-detected",
         "local_sync_policy": "required",
         "source_digest": "sha256:08253dd9becf810d19df36f52bddf9653318157be2d996ca8daae5b4b61e4051",
-        "local_digest": "sha256:06a2720fff048aa1b1ae215c94823c5e15c93e809bdd161bcbfe4c617ee3bbc0",
+        "local_digest": "sha256:39213cfb64ee6f650ba4b05d553be47de007cdd0984f4bd233234db691eda9ee",
         "last_verified_at": "2026-04-17T06:54:18+00:00",
         "source_repo": "."
       },

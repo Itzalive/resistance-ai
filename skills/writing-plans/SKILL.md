@@ -424,7 +424,7 @@ The sub-agent must validate:
   requirements.
 
 Record the result and raw reasons in `.review_log.jsonl` at the repo root using
-`../review-log-jsonl.md`. If rejected, fix discrepancies, re-run verifications
+`../shared/review-log-jsonl.md`. If rejected, fix discrepancies, re-run verifications
 and the Plan self-review, then restart the Unified Coherence Check.
 
 

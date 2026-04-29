@@ -16,3 +16,9 @@ def test_readme_documents_pi_installation() -> None:
 
     assert "## Pi" in readme
     assert "pi install" in readme
+
+
+def test_skills_root_has_no_top_level_markdown_helpers() -> None:
+    top_level_markdown = sorted(path.name for path in Path("skills").glob("*.md"))
+
+    assert top_level_markdown == []

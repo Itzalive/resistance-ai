@@ -42,7 +42,7 @@ Do not use this as a shortcut around repository inspection, review, or user appr
 3. If ambiguity is unresolved, output blocking questions only. Do not output `Draft Spec`, `MVP`, or any proposed solution while ambiguity remains unresolved.
 4. Before the first approved section, output only `## Assumptions surface` or blockers, then stop. Do not emit downstream sections such as goals, user stories, architecture, or implementation steps before the first approved section.
 5. If implementation already exists before design, stop. Do not retrofit a minimal spec around the current solution.
-6. After a written spec exists, load `review-workflow.md`. Run self-review and opposite-family cross-model audit, record each outcome in `.review_log.jsonl` using `../review-log-jsonl.md`, and treat `[SPEC-APPROVED]` as the only valid transition into `writing-plans`.
+6. After a written spec exists, load `review-workflow.md`. Run self-review and opposite-family cross-model audit, record each outcome in `.review_log.jsonl` using `../shared/review-log-jsonl.md`, and treat `[SPEC-APPROVED]` as the only valid transition into `writing-plans`.
 7. Sync the source-of-truth work item before handing off to `writing-plans`.
 
 ---

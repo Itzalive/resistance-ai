@@ -72,7 +72,7 @@ If a chaos probe causes unsafe degradation or restore cannot complete, fail the 
 
 ## Review Log Submission
 
-Append a bounded experiment summary to `.review_log.jsonl` using the generic append template from `skills/review-log-jsonl.md`.
+Append a bounded experiment summary to `.review_log.jsonl` using the generic append template from `skills/shared/review-log-jsonl.md`.
 
 Do not copy full stdout/stderr, full diffs, or secret-bearing output into the log.
 

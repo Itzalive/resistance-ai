@@ -37,7 +37,7 @@ sub-agent.
 7. **`.review_log.jsonl` chain**
    - Relevant entries for plan self-review, rejection/retry loops, and prior
      spec-review outcomes
-   - Use the schema in `../review-log-jsonl.md`
+   - Use the schema in `../shared/review-log-jsonl.md`
 
 8. **Opposite-model proof**
    - Evidence that the reviewer is from the opposite model family to the
