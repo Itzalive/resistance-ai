@@ -26,7 +26,8 @@ git submodule update --init --recursive vendor/obra-superpowers
 
 - `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` are the canonical
   Copilot CLI plugin metadata for this repository
-- `package.json` is metadata-only packaging for VS Code discovery/publishing workflows
+- `package.json` remains the metadata surface for VS Code discovery/publishing workflows
+  and now also declares the Pi package manifest for skill discovery
 - parent repositories should consume this project via a `resistance-engine/` git
   submodule and update the gitlink when adopting canonical changes
 
@@ -53,11 +54,31 @@ copilot plugin install .
 The marketplace metadata lives in `.claude-plugin/marketplace.json`, and the
 plugin manifest lives in `.claude-plugin/plugin.json`.
 
+### Pi
+
+Install from GitHub:
+
+```bash
+pi install git:github.com/Itzalive/resistance-ai
+```
+
+Install from a local checkout:
+
+```bash
+git clone https://github.com/Itzalive/resistance-ai.git
+cd resistance-ai
+git submodule update --init --recursive vendor/obra-superpowers
+pi install .
+```
+
+Pi discovers this repository as a package via `package.json` and loads the shared
+`skills/` tree. The Claude/Copilot plugin metadata remains unchanged.
+
 ### VS Code
 
 This repository does not currently ship a standalone VS Code extension. Its
-`package.json` is metadata-only packaging for VS Code discovery and publishing
-workflows, and it is currently marked `private`.
+`package.json` still provides VS Code discovery and publishing metadata, is
+currently marked `private`, and also carries the Pi package manifest.
 
 To use this repository from VS Code today, consume it from a parent repository
 or extension workspace:

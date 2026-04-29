@@ -65,13 +65,19 @@ Each agent gets:
 
 ### 3. Dispatch in Parallel
 
-```typescript
-// In Claude Code / AI environment
-Task("Fix agent-tool-abort.test.ts failures")
-Task("Fix batch-completion-behavior.test.ts failures")
-Task("Fix tool-approval-race-conditions.test.ts failures")
-// All three run concurrently
-```
+Use your harness's parallel worker mechanism to launch one focused agent per domain.
+
+Examples:
+
+- **Claude Code:**
+  ```typescript
+  Task("Fix agent-tool-abort.test.ts failures")
+  Task("Fix batch-completion-behavior.test.ts failures")
+  Task("Fix tool-approval-race-conditions.test.ts failures")
+  ```
+- **Copilot CLI / pi / other multi-agent harnesses:** Start three isolated worker tasks with the same scopes above and let them run concurrently.
+
+All three should run at the same time, not sequentially.
 
 ### 4. Review and Integrate
 

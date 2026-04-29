@@ -1,7 +1,7 @@
 {
   "name": "resistance-engine",
   "displayName": "Resistance Engine",
-  "description": "Metadata-only VS Code packaging for the resistance-engine skills library",
+  "description": "Cross-harness packaging metadata for the resistance-engine skills library",
   "version": "0.1.0",
   "publisher": "Itzalive",
   "license": "MIT",
@@ -21,7 +21,14 @@
     "skills",
     "tdd",
     "debugging",
-    "workflow"
+    "workflow",
+    "pi",
+    "pi-package"
   ],
+  "pi": {
+    "skills": [
+      "./skills"
+    ]
+  },
   "private": true
 }
