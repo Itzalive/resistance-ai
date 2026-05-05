@@ -29,7 +29,11 @@ Task tool (general-purpose):
     - [SPEC-REJECTED]
 
     On rejection, list the failed criteria and the exact blocking correction.
-    Require explicit evidence for shard handling, source-of-truth sync, empirical
-    verification, repository-backed defensive mechanisms, and cross-model audit
-    prerequisites.
+    Require explicit evidence that shard handling, source-of-truth sync,
+    empirical verification, repository-backed defensive mechanisms, and
+    cross-model audit prerequisites were preserved. Do not reject solely because
+    the spec body lacks standalone `## Shard Evaluation`,
+    `## Source-of-Truth Sync`, or `## Review and Audit Gate` headings. If a
+    section can be deleted without changing what an implementer builds, tests,
+    or verifies, it does not belong in the work item body.
 ```

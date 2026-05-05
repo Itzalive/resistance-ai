@@ -146,9 +146,11 @@ This offer MUST be its own message. Do not combine it with clarifying questions,
 
 Accepting the companion does not waive repository inspection, blocker handling, or section-approval gates. Use it only for clearly visual questions, and then continue through the normal adversarial flow. Read `skills/specifying-work-items/visual-companion.md` before using the companion.
 
-## Mandatory outputs
+## Deliverable artifact and workflow obligations
 
-Every spec produced by this skill must contain:
+Every spec workflow must establish the following before planning:
+
+**Deliverable artifact must contain:**
 
 1. **Assumptions surface** — an explicit list of every assumption the request makes,
    each marked VERIFIED (with repository evidence) or UNVERIFIED (blocking).
@@ -156,20 +158,32 @@ Every spec produced by this skill must contain:
     Confidentiality, Integrity, and Availability through concrete stress-test vectors,
     plus least-privilege and supply-chain. Generic headings are not sufficient. Each
     pillar must cite repository proof for the defensive mechanism (file path, symbol, grep
-    output, or command result) or emit a blocker. 
-    **Greenfield Exception:** If the request is to build a net-new capability, you must 
-    explicitly design and propose the required defensive mechanism as part of the spec, 
+    output, or command result) or emit a blocker.
+    **Greenfield Exception:** If the request is to build a net-new capability, you must
+    explicitly design and propose the required defensive mechanism as part of the spec,
     rather than permanently blocking.
 3. **Acceptance criteria in `Given / When / Then` form** — binary and reviewable.
-4. **Blocking constraints** — explicit, not advisory. Any constraint without a proven
-   mechanism is a blocker.
-5. **Shard evaluation** — whether this spec should be split into sub-work-items (see
-   Spec sharding section).
-6. **Future work (Downstream Cost)** — an explicit list of anticipated follow-on tasks, 
-     bugs, or enhancements this architecture will inevitably generate, with rough 
-     priority and effort estimates.
-7. **Source-of-truth sync** — the relevant work item is updated using the append-only procedure
-   before planning begins (see Source-of-truth sync section).
+4. **Future work (Downstream Cost)** — an explicit list of anticipated follow-on tasks,
+   bugs, or enhancements this architecture will inevitably generate, with rough
+   priority and effort estimates.
+
+**Workflow must record / enforce:**
+
+1. **Blocking constraints** — explicit, not advisory. Any constraint without a proven
+   mechanism is a blocker. Surface blocking constraints in the most relevant
+   implementation section (Scope, Out-of-Scope, Assumptions surface, or a technical
+   appendix) rather than creating a standalone section by default.
+2. **Shard evaluation result** — whether this spec should be split into sub-work-items
+   (see Spec sharding section). Record the result in workflow state or work-item
+   updates rather than emitting a standalone `## Shard Evaluation` section by default.
+3. **Source-of-truth sync completion** — the relevant work item is updated using the
+   append-only procedure before planning begins (see Source-of-truth sync section).
+4. **Review and audit gate completion** — self-review, opposite-family cross-model
+   audit, user approval, and required logging must all complete before handoff to
+   planning.
+
+If a section can be deleted without changing what an implementer builds, tests, or
+verifies, it does not belong in the work item body.
 
 ---
 
@@ -282,6 +296,10 @@ independent subsystems or mixes a refactor with a feature.
 5. Brainstorm the first shard through the normal design flow. Each shard gets its
    own spec → review → plan → implementation cycle.
 
+Sharding evaluation is a workflow control. Record the result in workflow state or
+work-item updates. Do not emit `## Shard Evaluation` in the spec body unless a
+repository overlay explicitly requires implementation-relevant content.
+
 **Refactor isolation rule:** Structural refactors (renaming, restructuring, moving
 modules) must be isolated from behavioral changes. A spec that conflates the two is
 rejected.
@@ -294,6 +312,10 @@ When a spec is completed, approved, or when scope shifts during specifying work 
 work item must be updated using the append-only procedure. Never overwrite the original
 description.
 
+These are workflow controls, not deliverable-spec sections.
+Do not emit `## Source-of-Truth Sync` in the spec body unless a repository overlay
+explicitly requires it as implementation-relevant content.
+
 The work item is the canonical source of truth for scope. A conversation that diverges
 from the work item without updating the work item is producing orphaned scope. This includes
 any discovery during specifying work items that changes the blast radius, the subsystems
@@ -305,6 +327,10 @@ affected, or the acceptance criteria.
 
 Load `review-workflow.md` after a written spec exists. Do not load review or
 audit companions for first-turn gate decisions.
+
+These are workflow controls, not deliverable-spec sections.
+Do not emit `## Review and Audit Gate` in the spec body unless a repository overlay
+explicitly requires it as implementation-relevant content.
 
 A spec may not proceed to `writing-plans` until self-review passes,
 opposite-family cross-model audit returns `APPROVED - CROSS-MODEL AUDIT`, the

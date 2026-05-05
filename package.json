@@ -2,7 +2,7 @@
   "name": "resistance-engine",
   "displayName": "Resistance Engine",
   "description": "Cross-harness packaging metadata for the resistance-engine skills library",
-  "version": "0.1.0",
+  "version": "0.1.3",
   "publisher": "Itzalive",
   "license": "MIT",
   "homepage": "https://github.com/Itzalive/resistance-ai",

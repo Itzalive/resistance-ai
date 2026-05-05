@@ -34,22 +34,30 @@ should block planning.
 - Verify every claimed defensive mechanism is backed by repository evidence (file path,
   symbol, grep output, or command result). If the proof is missing, reject instead of
   accepting a plausible security narrative.
-- Verify the spec surfaces assumptions and blocking constraints.
-- Verify the spec preserves shard evaluation, source-of-truth sync, and append-only
-  work item updates when scope shifts.
+- Verify the spec surfaces assumptions and any blocking constraints in the most
+  relevant implementation sections when proof is missing.
+- Verify the workflow preserves shard evaluation results, source-of-truth sync,
+  and append-only work item updates when scope shifts. Do not require standalone
+  workflow headings in the spec body unless an overlay explicitly makes them
+  implementation-relevant.
 - Verify the spec includes a future work section.
 - Verify the spec describes empirical verification against the real codebase rather
   than relying on memory.
 - Verify acceptance criteria are in explicit `Given / When / Then` form.
 - Grade the spec against every checkbox in `SPEC_RUBRIC.md`.
 
-## Audit prerequisites
+## Audit and workflow prerequisites
 
-Do not approve a spec for planning unless it also defines:
+Do not approve a spec for planning unless the workflow records or enforces:
+- source-of-truth sync completion before planning handoff
 - the post-fix consistency check
 - the cross-model audit requirement with an opposite model family
 - `.review_log.jsonl` recording of review outcomes
 - the rule that rejected specs may not proceed to plan writing
+
+These are workflow controls, not mandatory spec-body headings.
+If a section can be deleted without changing what an implementer builds, tests, or
+verifies, it does not belong in the work item body.
 
 ## Output
 
