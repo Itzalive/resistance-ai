@@ -35,11 +35,16 @@ Every spec must pass every item below before planning.
 - [ ] For each pillar, the spec cites the repository-backed defensive mechanism
       (file path, symbol, grep output, or command result) or emits a blocker.
 
-## 4. Test-driven readiness
+## 4. Human-readable contract and test-driven readiness
 
-- [ ] Are acceptance criteria written in `Given / When / Then` form?
-- [ ] Are success conditions binary and reviewable?
+- [ ] Does the main body let a human recover the problem, scope, governing
+      business rules, key mechanics, and primary risks without reading dense
+      supporting detail first, and does it stay concise and non-repetitive?
+- [ ] Are acceptance criteria written in `Given / When / Then` form, binary and
+      reviewable, and limited to verifying rules already stated in the main body?
 - [ ] Does the spec preserve enough detail for RED tests to be written mechanically?
+- [ ] Are abstract terms unpacked immediately with concrete meaning instead of
+      standing in for missing mechanics?
 
 ## 5. Constraint integrity
 
@@ -57,6 +62,9 @@ Every spec must pass every item below before planning.
 - [ ] Does the spec require empirical verification against the current codebase?
 - [ ] Does every claimed safeguard cite repository evidence instead of security-shaped
       prose?
+- [ ] If the request is synchronization, projection, event-driven, or
+      state-driven work, does the main body explicitly name the source, target,
+      trigger, mapping rules, state rules, and replay/retry/failure behavior?
 - [ ] Does the workflow preserve issue/source-of-truth synchronization without
       requiring a dedicated spec-body section for it?
 - [ ] Does the workflow preserve cross-model audit and `.review_log.jsonl`

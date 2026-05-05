@@ -34,8 +34,13 @@ should block planning.
 - Verify every claimed defensive mechanism is backed by repository evidence (file path,
   symbol, grep output, or command result). If the proof is missing, reject instead of
   accepting a plausible security narrative.
+- Verify the main body is human-readable, concise, and non-repetitive, and that a
+  reviewer can recover the business rules and key mechanics before reading later
+  audit detail.
 - Verify the spec surfaces assumptions and any blocking constraints in the most
   relevant implementation sections when proof is missing.
+- Verify supporting sections deepen audit or verification detail without becoming
+  the first place critical behavior appears.
 - Verify the workflow preserves shard evaluation results, source-of-truth sync,
   and append-only work item updates when scope shifts. Do not require standalone
   workflow headings in the spec body unless an overlay explicitly makes them
@@ -43,7 +48,12 @@ should block planning.
 - Verify the spec includes a future work section.
 - Verify the spec describes empirical verification against the real codebase rather
   than relying on memory.
-- Verify acceptance criteria are in explicit `Given / When / Then` form.
+- Verify acceptance criteria are in explicit `Given / When / Then` form and only
+  verify rules already stated in the main body.
+- Verify abstract terms are unpacked immediately with concrete meaning. For
+  synchronization, projection, event-driven, or state-driven work, that means
+  the main body names the source, target, trigger, mapping rules, state rules,
+  and replay/retry/failure behavior.
 - Grade the spec against every checkbox in `SPEC_RUBRIC.md`.
 
 ## Audit and workflow prerequisites

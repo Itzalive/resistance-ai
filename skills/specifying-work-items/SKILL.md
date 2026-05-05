@@ -107,10 +107,36 @@ treating "obvious" scope as a shortcut.
 8. Present design sections and collect user approval section-by-section. 
     **CRITICAL:** You must halt generation immediately after presenting ONE section. 
     Do not generate the next section until the user explicitly replies with approval.
-9. Write the spec with `## Threat Model (CIA)` and `Given / When / Then` criteria.
+9. Write the spec using `## Writing the work item body`: the main body carries
+    the business rules and key mechanics; supporting sections carry dense audit
+    detail; acceptance criteria verify rather than define.
 10. After a written spec exists, load `review-workflow.md`, complete its review
-    and audit loop, record each outcome in `.review_log.jsonl`, and do not invoke
-    `writing-plans` until `APPROVED - CROSS-MODEL AUDIT`.
+     and audit loop, record each outcome in `.review_log.jsonl`, and do not invoke
+     `writing-plans` until `APPROVED - CROSS-MODEL AUDIT`.
+
+## Writing the work item body
+
+The written work item serves humans first. A product lead, engineer, or reviewer
+should be able to scan the main body and understand what changes, why it changes,
+the governing business rules, the key mechanics, and the primary risks before
+reading any deep audit detail.
+
+**Main-body rules:**
+
+1. Put the actual business rules and implementation-shaping mechanics in the main
+   body. Acceptance criteria and supporting sections may verify or deepen them,
+   but they may not define critical behavior for the first time.
+2. Keep human-facing sections concise and non-repetitive. If the same fact
+   appears twice, shorten the later mention or reference the earlier statement
+   instead of restating the full prose.
+3. Supporting sections come later and exist for dense verification, evidence,
+   audit notes, mapping tables, or similar AI-facing detail. Keep those sections
+   flexible; do not freeze one exact appendix list forever.
+4. Avoid abstract system words unless you unpack them immediately with concrete
+   meaning. For synchronization, projection, event-driven, or state-driven
+   work, the main body must name the source, target, trigger, mapping, state
+   rules, and replay / retry / failure behavior, plus ordering or idempotency
+   when those affect correctness.
 
 ## Process Flow
 
@@ -152,20 +178,32 @@ Every spec workflow must establish the following before planning:
 
 **Deliverable artifact must contain:**
 
-1. **Assumptions surface** — an explicit list of every assumption the request makes,
-   each marked VERIFIED (with repository evidence) or UNVERIFIED (blocking).
-2. **`## Threat Model (CIA)`** — this section is mandatory. It must cover
-    Confidentiality, Integrity, and Availability through concrete stress-test vectors,
-    plus least-privilege and supply-chain. Generic headings are not sufficient. Each
-    pillar must cite repository proof for the defensive mechanism (file path, symbol, grep
-    output, or command result) or emit a blocker.
-    **Greenfield Exception:** If the request is to build a net-new capability, you must
-    explicitly design and propose the required defensive mechanism as part of the spec,
-    rather than permanently blocking.
-3. **Acceptance criteria in `Given / When / Then` form** — binary and reviewable.
-4. **Future work (Downstream Cost)** — an explicit list of anticipated follow-on tasks,
+1. **Human-readable main body** — a concise, non-repetitive statement of the
+   problem, scope, governing business rules, implementation-shaping mechanics,
+   and primary risks. This is where humans should learn what the work item
+   actually means.
+2. **Assumptions surface** — an explicit list of every assumption the request
+   makes, each marked VERIFIED (with repository evidence) or UNVERIFIED
+   (blocking).
+3. **`## Threat Model (CIA)`** — this section is mandatory. It must cover
+     Confidentiality, Integrity, and Availability through concrete stress-test vectors,
+     plus least-privilege and supply-chain. Generic headings are not sufficient. Each
+     pillar must cite repository proof for the defensive mechanism (file path, symbol, grep
+     output, or command result) or emit a blocker.
+     **Greenfield Exception:** If the request is to build a net-new capability, you must
+     explicitly design and propose the required defensive mechanism as part of the spec,
+     rather than permanently blocking.
+4. **Acceptance criteria in `Given / When / Then` form** — binary, reviewable,
+   and limited to verifying rules and mechanics already stated in the main body.
+5. **Future work (Downstream Cost)** — an explicit list of anticipated follow-on tasks,
    bugs, or enhancements this architecture will inevitably generate, with rough
    priority and effort estimates.
+
+**Supporting sections may follow the main body.** Use them for verification or
+evidence detail, audit material, mapping tables, replay matrices, or other
+AI-facing depth that changes what an implementer tests or verifies. They may
+deepen the main body but may not become the first place where business rules or
+critical mechanics appear.
 
 **Workflow must record / enforce:**
 
@@ -196,6 +234,10 @@ infrastructure), adapt your search tools (`grep`, `find`, `cat`) and search
 syntax (`def`, `class`, `interface`, `type`, `func`) to the current project.
 Before the first approved section, do not widen inspection to tests, scripts, repo guides, or historical design docs unless one is the direct source of truth for the claim being checked.
 Do not treat experiment reports, round logs, or investigation writeups as first-pass grounding unless the user explicitly asks for that history or a benchmark claim cannot be verified from live source.
+When verification is dense, summarize the implication in the main body and place
+the long evidence table, raw command output, or audit matrix in a later
+supporting section. Do not paste long logs into the human-facing opening
+sections.
 
 Before finalizing any design, physically execute shell commands to verify:
 
@@ -377,6 +419,11 @@ adversarial scrutiny before proceeding.
 - Converting blockers into advice, follow-up items, or one-shot output instead of stopping.
 - Inventing headings such as "Rapid Spec Drafting", "Pressure-Test Protocol", or "Plan-Gate Protocol".
 - Moving to `writing-plans` before audit approval, user approval, and work item sync.
+- Letting acceptance criteria become the first complete definition of behavior.
+- Repeating the same rule across the main body, threat model, and criteria to
+  look rigorous.
+- Hiding sync, projection, or state behavior behind abstract labels instead of
+  naming concrete mechanics.
 
 ---
 
