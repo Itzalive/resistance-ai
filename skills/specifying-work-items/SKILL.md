@@ -33,6 +33,10 @@ Use this skill when:
 - the request is underspecified and repository proof may invalidate assumptions
 - the conversation is drifting toward implementation before constraints are proven
 
+If the work item is part of an epic whose product scope has not yet been defined,
+use `specifying-epics` first to establish the product-level requirements, then return
+here for architecture and design.
+
 Do not use this as a shortcut around repository inspection, review, or user approval.
 
 ## Quick Reference
