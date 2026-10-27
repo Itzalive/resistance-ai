@@ -85,8 +85,8 @@ changing the local/submodule flow described above.
 - the self-contained `specifying-work-items` default also carries sharding, source-of-truth
   sync, empirical verification, self-review, and independent audit requirements
 - the self-contained `writing-plans` default also carries Tabula Rasa ingestion,
-  topological TDD, chunking, pre-plan verification, runbook rules, and Unified
-  Coherence review requirements
+  topological TDD, rule-based sizing, the caller and test sweep, tier tags and
+  checkpoints, pre-plan verification, runbook rules, and alignment check requirements
 - repo-root `SPEC_DESIGN.md`, `PLAN_WRITING.md`, `SPEC_REVIEW_MANIFEST.md`, and
   `SPEC_RUBRIC.md` are optional overlays only
 - overlays may tighten or extend the shipped defaults, but may not weaken them

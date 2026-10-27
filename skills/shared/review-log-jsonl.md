@@ -49,7 +49,7 @@ Use this support file when a skill requires review outcomes to be appended to
 | `SPEC_REVIEW` | Spec self-review | `self` |
 | `PLAN_SELF_REVIEW` | Plan self-review | `self` |
 | `INDEPENDENT_AUDIT` | Epic or spec independent audit | `fresh-context` or `cross-family` |
-| `PLAN_REVIEW` | Plan reviewer / Unified Coherence Check | `fresh-context` or `cross-family` |
+| `PLAN_REVIEW` | Plan alignment check | `fresh-context` or `cross-family` |
 | `CHECKPOINT_REVIEW` | Review during execution (per task or checkpoint) | `fresh-context` or `cross-family` |
 | `CODE_REVIEW` | Final code review | `fresh-context` or `cross-family` |
 | `SURVIVABILITY` | Survivability gate | any |

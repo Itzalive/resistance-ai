@@ -1,4 +1,4 @@
-# Unified Coherence Check evidence bundle
+# Alignment check evidence bundle
 
 Use this reference when preparing the evidence passed into the plan reviewer
 sub-agent.
@@ -12,6 +12,7 @@ sub-agent.
 
 2. **Final spec**
    - `<specs-dir>/<spec-file>.md` (see `SKILL.md` for the default and how to override it)
+   - Any approved amendments and the decision register, when the spec has one
 
 3. **Final plan**
    - `<plans-dir>/<plan-file>.md`
@@ -22,6 +23,10 @@ sub-agent.
    - Target directory verification (`ls` / `tree`)
    - Test runner verification (`package.json`, `pyproject.toml`, or equivalent)
    - Method/class/return-shape verification (`grep`)
+   - Caller sweep: the directories searched and the search commands with their
+     output, covering every source directory (scripts and evals included)
+   - Pinning evidence: for each **Pinned by** entry, the named assert as it stands
+   - Entry-path count: the entry paths the spec touches
    - Config template verification when new env/config values appear
    - MCP `inputSchema` argument verification when applicable
    - Naming-collision checks

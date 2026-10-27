@@ -7,9 +7,11 @@ description: Use when you have a spec or requirements for a multi-step task, bef
 
 ## Overview
 
-Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent commits.
+Write implementation plans that a fresh executor with no context for our codebase can carry out task by task. Document everything they need: which files to touch, which callers move with each change, the tests, the commands, and what the checkpoint reviewer must prove. DRY. YAGNI. TDD. Every commit green.
 
-Assume they are a skilled developer, but know almost nothing about our toolset or problem domain. Assume they don't know good test design very well.
+Assume the executor is a skilled developer who knows almost nothing about our toolset or problem domain, and does not know good test design very well. Cheaper executors transcribe faithfully but do not notice what the plan left out, so the plan writer owns completeness: the caller sweep, the tests that pin each behaviour, and every decision.
+
+The plan format is what `subagent-driven-development` reads: per-task tier tags pick the executor, the caller table and per-task callers keep each commit green, and the "Reviewer looks at" items brief the checkpoint reviewer's mutations.
 
 This skill is the shipped default plan-writing rulebook. Repo-root `PLAN_WRITING.md`
 is an optional overlay only. Strictly apply repo-root overlays; if they contradict this file, the overlay wins.
@@ -46,11 +48,12 @@ Do not use this skill when:
 
 1. Ingest the approved spec before writing tasks.
 2. Verify current repository reality, including whether the target section, file, feature, or prior plan already exists.
-3. If scope or architecture proof is missing, ask one targeted question or reject the work as spec-incomplete.
-4. Push back on unnecessary complexity instead of silently absorbing it into the plan.
-5. Split work by dependency order and chunk size, not by convenience.
-6. Use RED → GREEN → REFACTOR for every task; for docs-only or config-only work, use exact verification checks instead of invented tests.
-7. Run self-review, then the Unified Coherence Check, before offering execution handoff.
+3. List open decisions. Anything the spec does not settle goes back to the spec before tasks are written.
+4. Count entry paths and apply the sizing rule; propose a split before writing tasks if it fails.
+5. Run the caller and test sweep and fill in its table.
+6. Write tasks in dependency order, each with its tier, the callers that move with it, its "Reviewer looks at" items and, where it adds no tests, what pins it.
+7. Use RED → GREEN → REFACTOR for every task; for docs-only or config-only work, use exact verification checks instead of invented tests.
+8. Place checkpoints, add the trust-boundary table when it applies, then run self-review and the alignment check before offering execution handoff.
 
 ---
 
@@ -59,7 +62,8 @@ Do not use this skill when:
 Before writing tasks, decide whether the approved spec should stay in one plan or be
 split into independent plans. Keep related changes in one plan only when they share
 the same acceptance surface, verification path, and dependency chain; otherwise shard
-them into separate plans before task writing begins.
+them into separate plans before task writing begins. The sizing rule below decides
+when a plan is too large.
 
 Resist the urge to solve complexity by writing an increasingly complex plan. If
 execution requires edge-case workarounds, non-trivial data-model hacks, or
@@ -71,6 +75,25 @@ complex mock setups not defined in the spec, stop and push back on the spec:
 
 Do not silently absorb spec complexity into the plan.
 
+## Open decisions go back to the spec
+
+A plan translates decisions; it does not make them. Before writing tasks, list every
+behaviour question the spec leaves open: defaults, what an empty value means, id
+composition, ordering and concurrency rules, what happens at each threshold. For each
+one, name the concrete gates or thresholds it crosses and what happens at each.
+
+- If the list is empty, say so in the plan header (`**Open decisions:** none`).
+- If it is not empty, stop. Take the questions to the owner with a recommendation,
+  then amend the spec (see `specifying-work-items`) so the spec stays the single
+  source of truth. Write tasks only after the amendment is approved.
+- Where the spec has a decision register, cite decision ids in the tasks that apply
+  them instead of restating the decision.
+- A decision that surfaces during execution is a spec gap too: the executor stops,
+  and the coordinator takes it back to the spec.
+
+Decisions settled in chat and recorded only in the plan get lost, and each one found
+late costs a plan rewrite and another review round.
+
 ## File Structure
 
 Before defining tasks, map out which files will be created or modified and what each one is responsible for. This is where decomposition decisions get locked in.
@@ -81,6 +104,73 @@ Before defining tasks, map out which files will be created or modified and what 
 - In existing codebases, follow established patterns. If the codebase uses large files, don't unilaterally restructure - but if a file you're modifying has grown unwieldy, including a split in the plan is reasonable.
 
 This structure informs the task decomposition. Each task should produce self-contained changes that make sense independently.
+
+## Sizing by rule
+
+Size the plan by rule, never by a number. A size number becomes a target: writers
+compress edits to fit a line count and pack tasks to fit a task count, and packed
+tasks hide the cross-task interactions that small tasks surface.
+
+**The per-task rule:**
+- one behaviour per task;
+- at most two core files plus their tests, unless the task is a true atomic change
+  that must update every caller together to keep the build green (say so in the task).
+
+**The per-plan rule:**
+- at most two entry paths per plan. An entry path is a distinct way the behaviour is
+  reached (a request handler, a CLI command, a scheduled job, a tool call). Count the
+  entry paths the spec touches before writing any task.
+
+Let the task count fall out of the per-task rule. If the plan then touches more than
+two entry paths, or the task count runs well past about eight, propose a split along
+the spec's own seams before writing tasks (for example one plan with no
+trust-boundary change and one carrying all of it).
+
+Report the plan's line count and task count in the header. The line count is reported,
+never a target: never shorten, summarise or omit an edit to save space.
+
+## Caller and test sweep
+
+The plan writer owns the caller sweep; the alignment reviewer only checks it. For
+every changed signature, return shape, default, fixture or behaviour, search for
+every caller, test, fake, mock and assert across **all** source directories, not only
+the main package: `scripts`, `evals`, `tools`, `migrations`, test fixtures and
+conftest files, docs that embed runnable examples, and any other directory with code
+in it. List the directories you searched and the commands you ran in the
+verification evidence.
+
+Record the result in the plan's **Caller and test sweep** table:
+
+```markdown
+## Caller and test sweep
+
+Searched: `src/`, `tests/`, `scripts/`, `evals/` with `rg -n "load_record\(" ...`
+
+| Changed | Caller, test, fake, mock or assert | Kind | Task | Literal edit |
+|---|---|---|---|---|
+| `load_record(path)` → `load_record(path, *, strict)` | `src/app/reader.py:88` | caller | 2 | `load_record(path, strict=True)` |
+| same | `tests/fakes.py:41` `FakeStore.load_record` | fake | 2 | `def load_record(self, path, *, strict=False):` |
+| same | `scripts/backfill.py:17` | caller | 2 | `load_record(p, strict=False)` |
+| `Record.default_ttl` 0 → None | `tests/conftest.py:12` fixture `record` | fixture default | 3 | `Record(ttl=0)` to keep the old meaning |
+```
+
+Rules:
+- One row per site. "Replacement rules" ("update every caller to pass `strict`")
+  are not edits; write the literal edit for each row.
+- A fixture or default whose meaning changes is a row, even if no call changes.
+- Every row names the task that makes its edit, and that task's
+  **Callers that move with this task** lists it.
+- If the sweep finds nothing, keep the table with one line saying what was searched
+  and that nothing was found.
+
+## Every commit green
+
+Each task ends in a commit with the full affected suite passing. For that:
+
+- each task lists the callers that move with it (rows from the sweep table), and its
+  verification step runs those callers' tests, not only its own;
+- no task consumes something a later task adds; reorder or merge tasks instead;
+- a task that changes a shared signature moves every caller in the same commit.
 
 ## Bite-Sized Task Granularity
 
@@ -105,6 +195,14 @@ This structure informs the task decomposition. Each task should produce self-con
 **Architecture:** [2-3 sentences about approach]
 
 **Tech Stack:** [Key technologies/libraries]
+
+**Spec:** [path] — decisions applied: [decision ids, or "none"]
+
+**Open decisions:** none
+
+**Size:** [N] tasks, [M] entry paths ([names]), [L] lines (reported, not a target)
+
+**Trust boundary:** [changed — see Trust-boundary table | unchanged]
 
 ### Risk & Confidence Assessment
 
@@ -134,13 +232,19 @@ Rules:
 - A plan with unresolved unknowns is a guess. Ask targeted questions or state the
   assumption explicitly before proceeding.
 
+After the header come, in order: the **Caller and test sweep** table, the
+**Trust-boundary table** (when required), the **Checkpoints** table, then the tasks.
+
 ## Task Structure
 
-For each task, use one execution goal, a concrete file list, and ordered RED → GREEN
-→ REFACTOR steps that point back to the hard gates below.
+For each task, use one execution goal, a concrete file list, its tier, the callers
+that move with it, its "Reviewer looks at" items, and ordered RED → GREEN → REFACTOR
+steps that point back to the hard gates below.
 
 ````markdown
 ### Task N: [single execution goal]
+
+**Tier:** fast | standard | strong — [one-line reason]
 
 **Files:**
 - Create: `exact/path/to/file.py`
@@ -148,10 +252,19 @@ For each task, use one execution goal, a concrete file list, and ordered RED →
 - Test: `tests/exact/path/to/test.py`
 - Regenerate: `[checked-in generated artifact if required]`
 
+**Callers that move with this task:** [sweep-table rows, e.g. `scripts/backfill.py:17`, `tests/fakes.py:41`; or "none"]
+
+**Reviewer looks at:**
+- [decision point] — mutation: [the fault to inject] — killed by: `tests/path/test.py::test_name`
+- [decision point] — mutation: [...] — killed by: [...]
+
+**Pinned by:** [only when this task adds no new test for a moved or changed behaviour: per behaviour, the existing test and the assert that pins it, e.g. `tests/test_writer.py::test_retry_stops_at_three` asserts `attempts == 3`]
+
 - Satisfies Spec AC: [List specific Given/When/Then criteria covered]
+- Decisions applied: [decision ids from the spec, or "none"]
 - **Test retention:** [**Permanent** | **Temporary** — remove before final commit]
 
-- [ ] **Step 1: write RED tests for the happy path AND at least two failure modes.**
+- [ ] **Step 1: write RED tests for the happy path, the failure modes and each threshold.**
 
 ```python
 def test_specific_behavior():
@@ -171,18 +284,12 @@ def function(input):
     return expected
 ```
 
-- [ ] **Step 4: run test to verify it's GREEN**
+- [ ] **Step 4: run the task's tests and the tests of every caller that moved with it**
 
-Run: `pytest tests/path/test.py::test_name -v`
+Run: `pytest tests/path/test.py tests/path/test_caller.py -v`
 Expected: PASS
 
-
 - [ ] **Step 5: regenerate artifacts, rerun exact verification commands, and refactor duplicated wording or structure without weakening gates**
-
-```python
-def function(input):
-    return expected
-```
 
 - [ ] **Step 6: commit the finished slice**
 
@@ -192,6 +299,91 @@ git commit -m "feat: add specific feature"
 ```
 ````
 
+### Tier tags
+
+Each task names the cheapest executor tier that can do it safely. Tiers are
+model-neutral; a repo-root overlay maps them to models (on Claude: fast = Haiku,
+standard = Sonnet, strong = Opus).
+
+- **fast** — mechanical work where the plan gives complete code and exact commands.
+- **standard** — the default; breadth work and integration across a few files.
+- **strong** — work where a mistake is costly and needs judgement: trust boundaries,
+  conditional writes, idempotency, concurrency.
+
+Drop one tier where the plan gives complete code for the task (strong → standard,
+except for genuine trust-boundary or conditional-write judgement; standard → fast
+where every edit is written out in full). The checkpoint reviewer, not the executor
+tier, owns test sufficiency.
+
+### Reviewer looks at
+
+List the decision points in the task that a weak test would let slip: each boundary,
+branch, conditional write, default, ordering or trust check. For each, name a
+mutation (the fault to inject, such as `>=` to `>`, a dropped filter, a skipped
+write) and the test that should kill it. The checkpoint reviewer runs one mutation per
+item on a scratch copy, so an item without a killing test is a plan hole: add the
+test now.
+
+### Pinned by
+
+"No new tests: existing tests pin it" is a claim to verify, not to assume. When a
+task adds no new test for a behaviour it moves or changes, name, per behaviour, the
+test and the assert that pins it, and confirm the assert would fail if the behaviour
+changed. Behaviour-preserving refactors are where pinning is weakest; if no assert
+pins a behaviour, write one in the RED step.
+
+### Code detail by tier (experiment)
+
+- **Always in full:** every RED test, every literal edit in the caller table, and
+  every exact command.
+- **fast tasks:** complete code for every step.
+- **standard and strong tasks:** interfaces (signatures, types, return shapes), the
+  RED tests and the caller-table rows are enough; the GREEN implementation may be
+  described against those interfaces.
+
+This is an experiment. Record which tasks got interface-only detail, and judge it at
+plan end on executor-attributable checkpoint findings and on plan tokens. If
+executor-attributable findings rise, give those tiers full code again.
+
+## Checkpoints
+
+Place a checkpoint review every three to five tasks: after cross-cutting changes,
+around strong-tier tasks, and at the end of each subsystem. The coordinator runs
+them as described in `subagent-driven-development`.
+
+```markdown
+## Checkpoints
+
+| Checkpoint | After task | Tasks covered | Reviewer looks at |
+|---|---|---|---|
+| C1 | 3 | 1–3 | Task 1 items 1–2, Task 3 item 1; full suite (Task 2 is cross-cutting) |
+| C2 | 6 | 4–6 | Task 5 items 1–3 (strong); trust-boundary rows 1–2 |
+```
+
+Every "Reviewer looks at" item belongs to exactly one checkpoint. Say whether the
+checkpoint runs the full suite (only when its tasks were cross-cutting) or the tasks'
+focused tests.
+
+## Trust-boundary table
+
+**Required when untrusted text can reach a model or a parser**, including text that
+was stored earlier and is read back later. List every reader of model-facing text and
+every producer into a model-facing block or parser input, what text each one
+receives, and the task and test that prove the trust rule holds there.
+
+```markdown
+## Trust-boundary table
+
+| Reader or producer | Model-facing block or parser | Text it receives | Untrusted source | Task | Proving test |
+|---|---|---|---|---|---|
+| `render_history()` | system prompt "history" block | stored message bodies | end users | 4 | `tests/test_render.py::test_history_escapes_tags` |
+| `parse_handles()` | handle parser | model output | model, after reading user text | 5 | `tests/test_handles.py::test_unknown_handle_rejected` |
+```
+
+If the spec names a trust rule but not every place it applies, that is a spec gap:
+take it back to the spec. When the plan changes no trust boundary, say so in the
+header and omit the table.
+
 ## No Placeholders
 
 Every step must contain the actual content an engineer needs. These are **plan failures** — never write them:
@@ -199,30 +391,38 @@ Every step must contain the actual content an engineer needs. These are **plan f
 - "Add appropriate error handling" / "add validation" / "handle edge cases"
 - "Write tests for the above" (without actual test code)
 - "Similar to Task N" (repeat the code — the engineer may be reading tasks out of order)
-- Steps that describe what to do without showing how (code blocks required for code steps)
+- "Update all callers" without a row per caller in the sweep table
+- "Existing tests cover it" without naming the test and the assert
+- Steps that describe what to do without showing how (code blocks required for RED tests, literal edits and fast-tier code)
 - References to types, functions, or methods not defined in any task
-- Do not write "preserve existing gates" without naming `### Risk & Confidence Assessment`, `Strict RED / GREEN / REFACTOR`, `Dependency ordering`, `Fail-closed planning contract`, `Unhappy-path-first planning`, and `Unified Coherence Check`.
+- Do not write "preserve existing gates" without naming `### Risk & Confidence Assessment`, `Strict RED / GREEN / REFACTOR`, `Dependency ordering`, `Fail-closed planning contract`, `Unhappy-path-first planning`, and `Alignment check`.
 - Do not write "restore vendor sections" without naming the exact headings.
 - Do not write "run the tests" without the exact `pytest` command.
 
 ## Remember
 - Exact file paths always
-- Complete code in every step — if a step changes code, show the code
+- Every RED test, literal edit and command in full
+- A row for every caller, test, fake, mock and assert of a changed thing
 - Exact commands with expected output
-- DRY, YAGNI, TDD, frequent commits
+- DRY, YAGNI, TDD, every commit green
 
 ## Process Flow
 
 ```dot
 digraph writing-plans {
     "Read spec" -> "Explore context";
-    "Explore context" -> "Spec simplification check";
-    "Spec simplification check" -> "Write plan";
-    "Write plan" -> "Pre-plan verification";
+    "Explore context" -> "Open decisions?";
+    "Open decisions?" -> "Amend spec with owner" [label="yes"];
+    "Amend spec with owner" -> "Read spec";
+    "Open decisions?" -> "Size by rule" [label="none"];
+    "Size by rule" -> "Propose split" [label="fails"];
+    "Size by rule" -> "Caller and test sweep" [label="passes"];
+    "Caller and test sweep" -> "Write tasks and checkpoints";
+    "Write tasks and checkpoints" -> "Pre-plan verification";
     "Pre-plan verification" -> "Self-Review";
-    "Self-Review" -> "Unified Coherence Check" [label="approved"];
-    "Unified Coherence Check" -> "Execution Handoff" [label="approved"];
-    "Unified Coherence Check" -> "Fix plan" [label="rejected"];
+    "Self-Review" -> "Alignment check" [label="approved"];
+    "Alignment check" -> "Execution Handoff" [label="approved"];
+    "Alignment check" -> "Fix plan" [label="rejected"];
     "Fix plan" -> "Pre-plan verification";
 }
 ```
@@ -273,8 +473,14 @@ this. Never bundle test creation and implementation into the same step.
   "is not null" or "status 200".
 - *Boundary verification:* every plan must include at least one negative test
   (expected failure) to prove the logic catches errors.
+- *Thresholds:* test every threshold at, below and above it.
+- *Real entry points:* test composed behaviour through the real entry point, not
+  only through unit-tested helpers.
 - *Isolated state:* every test must use a unique UUID or fresh transaction to
   prevent state pollution between runs.
+
+**Docs in code:** docstrings and comments written by the plan describe the code in
+the present tense; they do not narrate the change history.
 
 ---
 
@@ -310,16 +516,6 @@ human must follow before the code can be safely deployed or tested.
 
 ---
 
-## Chunking and context protection
-
-No single planned step may touch more than two core files plus their
-corresponding tests, unless it is a true atomic refactor that must update all
-consumers together to keep the build passing. Break larger features into
-verifiable RED / GREEN chunks, and do not advance until the current GREEN step
-yields a passing test suite.
-
----
-
 ## Pre-plan verification
 
 Before review, physically execute shell commands to verify:
@@ -330,9 +526,12 @@ Before review, physically execute shell commands to verify:
 2. **Target directories** — `ls` or `tree` planned write paths; add a creation step if missing.
 3. **Test runners** — confirm the test commands against `package.json`, `pyproject.toml`, or equivalent.
 4. **Method / class / return shapes** — `grep` the names and signatures the plan depends on.
-5. **Config templates** — if new env/config values appear, update the relevant example/template file.
-6. **MCP inputSchema args** — verify tool argument names against the real schema.
-7. **Naming collisions** — confirm no existing file already serves the planned purpose.
+5. **Caller sweep** — the search commands and directory list behind the sweep table,
+   covering every source directory.
+6. **Pinning claims** — for each **Pinned by** entry, show the named assert exists.
+7. **Config templates** — if new env/config values appear, update the relevant example/template file.
+8. **MCP inputSchema args** — verify tool argument names against the real schema.
+9. **Naming collisions** — confirm no existing file already serves the planned purpose.
 
 ---
 
@@ -370,34 +569,47 @@ happy-path implementation.
 ## Self-Review
 
 After pre-plan verification, run this checklist yourself before dispatching
-the Unified Coherence Check:
+the alignment check:
 
 1. **Placeholder scan** — verify no `TODO`, `TBD`, or hand-wavy instructions.
 2. **RED / GREEN integrity** — confirm test-writing steps and implementation steps
    are separate and in the correct order.
 3. **Dependency order** — verify the plan flows bottom-up from data to consumers.
-4. **Chunking check** — confirm no step exceeds the chunking rule.
-5. **Reality check** — re-run the `Pre-plan verification` shell verifications for any steps you
-   changed during self-review.
-6. **Unhappy-path coverage** — confirm at least two failure-mode tests per task.
-7. **Runbook completeness** — every manual infrastructure step has an explicit runbook entry.
-8. **Test retention audit** — confirm every new test is marked Permanent or Temporary, and no Temporary test survives the final REFACTOR step unless it protects a deliberate contract.
-9. **Convention sync**: if planned work changes a repository-wide convention, include updates to contributor instruction files (for example 
+4. **Per-task rule** — each task is one behaviour and touches at most two core files
+   plus tests (or says why it is an atomic change); the plan touches at most two
+   entry paths.
+5. **Caller sweep** — every changed thing has a row per site, every row names a task,
+   and every task lists the rows that move with it.
+6. **Every commit green** — no task consumes something a later task adds.
+7. **Tier, reviewer items and pinning** — every task has a tier, at least one
+   "Reviewer looks at" item with a killing test, and a **Pinned by** entry wherever it
+   adds no test for a moved behaviour; every item is in a checkpoint.
+8. **Open decisions** — none left in the plan; decisions cite the spec.
+9. **Trust boundary** — the table is present whenever untrusted text reaches a model or parser.
+10. **Reality check** — re-run the `Pre-plan verification` shell verifications for any steps you
+    changed during self-review.
+11. **Unhappy-path coverage** — confirm at least two failure-mode tests per task.
+12. **Runbook completeness** — every manual infrastructure step has an explicit runbook entry.
+13. **Test retention audit** — confirm every new test is marked Permanent or Temporary, and no Temporary test survives the final REFACTOR step unless it protects a deliberate contract.
+14. **Convention sync** — if planned work changes a repository-wide convention, include updates to contributor instruction files (for example
 `.github/copilot-instructions.md`, `AGENTS.md`, and `CLAUDE.md`) in the same plan.
 
+Record the result with the append CLI (`--phase PLAN_SELF_REVIEW`, `--independence self`).
 
 Fix issues inline. No need to re-review after fixing — just correct and move on.
 If a spec requirement has no corresponding task, add the task.
 
-After applying self-review fixes, re-run any affected verification from `Pre-plan verification` before dispatching the audit. If a fix changes command changes, file paths, or artifact names, the relevant shell checks must be refreshed first.
+After applying self-review fixes, re-run any affected verification from `Pre-plan verification` before dispatching the alignment check. If a fix changes commands, file paths, or artifact names, the relevant shell checks must be refreshed first.
 
 ---
 
-## Unified Coherence Check
+## Alignment check
 
-**CRITICAL:** Before marking work as approved, and only after the Plan self-review
-plus any resulting fixes are complete, perform a double-blind alignment check using
-an independent sub-agent (Rubber Duck).
+**CRITICAL:** Before marking the plan approved, and only after self-review and its
+fixes are complete, have an independent reviewer check the plan against the spec and
+the repository. The reviewer checks **completeness and the per-task rule**: that
+nothing the spec requires is missing, that every caller is in the sweep, and that
+each task holds one behaviour. It does not judge length.
 
 **Reviewer independence rule:**
 - **Required:** a fresh-context sub-agent that did not write or fix the plan. It gets
@@ -409,46 +621,49 @@ an independent sub-agent (Rubber Duck).
 - Round 2 and later go back to the same reviewer with the plan diff. Start a new
   reviewer only after a rewrite of the plan.
 
-Build the reviewer input bundle using `unified-coherence-check-evidence.md` in this
-directory. That support file defines the exact evidence to provide, including the
-existing-state check, shell verification output, Tabula Rasa proof, review-log chain,
-and reviewer independence proof.
+Build the reviewer input bundle using `alignment-check-evidence.md` in this
+directory, and dispatch the reviewer with `plan-document-reviewer-prompt.md`.
 
-The sub-agent must validate:
-- **Alignment A (Spec vs. Work Item):** Does the spec satisfy every functional
-  requirement, security guardrail, and constraint in the original work item?
-- **Alignment B (Plan vs. Spec):** Does the plan faithfully implement the spec
-  without omitting edge cases or simplifying complex logic?
-- **Alignment C (Context vs. Reality):** Do all file paths, method signatures,
-  and class names in the plan match the physical repository state (verified by
-  `grep` / `ls` commands and the provided shell evidence)?
+The reviewer must confirm:
+- **Completeness:** every spec requirement and acceptance criterion maps to a task;
+  the spec still meets the work item.
+- **Callers:** the sweep table covers every caller, test, fake, mock and assert of
+  each changed thing across all source directories, with literal edits; every commit
+  stays green.
+- **Per-task rule:** each task holds one behaviour and at most two core files plus
+  tests (or is a stated atomic change); the plan touches at most two entry paths.
+- **Execution-model fields:** tiers fit the tier rules; every "Reviewer looks at"
+  item has a mutation and a killing test and sits in a checkpoint; every **Pinned by**
+  names a real assert.
+- **Reality:** file paths, signatures and commands match the repository evidence.
+- **Decisions and trust:** no decision is made in the plan; the trust-boundary table
+  is present and complete when it applies.
 
 **Decision logic:** Do not proceed to execution until `[APPROVED]` is reached.
-- `[APPROVED - READY FOR EXECUTION]` — full alignment across all vectors.
-- `[REJECTED - PLAN DRIFT]` — plan deviates from the spec's logic or skips
-  complex requirements.
-- `[REJECTED - SPEC INCOMPLETE]` — spec fails to deliver the original work item's
-  requirements.
+- `[APPROVED - READY FOR EXECUTION]` — complete, and every task meets the per-task rule.
+- `[REJECTED - PLAN DRIFT]` — the plan misses or contradicts something the spec
+  requires, misses callers, or breaks the per-task rule.
+- `[REJECTED - SPEC INCOMPLETE]` — the spec fails the work item or leaves a decision open.
 
 Record the result with the append CLI described in `../shared/review-log-jsonl.md`:
 `--skill writing-plans --phase PLAN_REVIEW`, verdict `APPROVED` or `REJECTED`, the round
 number, the reviewer model and its `--independence`. Put the reviewer's status line in
 `--reason` and log each gate failure as a `--finding` (usually `plan-hole`,
 `spec-hole` or `missed-caller`). If rejected, fix discrepancies, re-run verifications
-and the Plan self-review, then restart the Unified Coherence Check.
-
-
+and the Plan self-review, then return to the same reviewer.
 
 ---
 
 ## Execution Handoff
 
-After the plan passes self-review and the final approval gate, offer:
+After the plan passes self-review and the alignment check, offer:
 
-1. **Subagent-Driven (recommended)** — use `subagent-driven-development`
-2. **Inline Execution** — use `executing-plans`
+1. **Subagent-Driven (recommended)** — use `subagent-driven-development`: tiered
+   executors per task and checkpoint reviews from the plan's **Checkpoints** table.
+   That skill also defines the inline fast path for small plans.
+2. **Separate session** — use `executing-plans`
 
-Neither path may skip Tabula Rasa, RED/GREEN/REFACTOR, or the final approval gate.
+Neither path may skip Tabula Rasa, RED/GREEN/REFACTOR, or the alignment check.
 
 ---
 
@@ -460,7 +675,13 @@ is a **red flag** that you are rationalising toward a shortcut.
 | Rationalisation | Red flag | Correct action |
 |---|---|---|
 | "The spec is obviously simple, I don't need to ingest it" | Tabula Rasa skipped | Shell-read the spec first, always |
-| "This is a small change, chunking doesn't apply" | Chunking rule bypassed | Still apply the two-file limit; atomic refactors are the only exception |
+| "This is a small change, the per-task rule doesn't apply" | Sizing rule bypassed | Still one behaviour and two core files per task; atomic changes are the only exception |
+| "The plan is getting long, I'll summarise these edits" | Writing to a size target | Write every edit in full; report the line count, never target it |
+| "I'll fit this into fewer tasks" | Packing tasks to a count | Let the count fall out of the per-task rule; propose a split if it runs long |
+| "I grepped the package, that's every caller" | Sweep too narrow | Search every source directory, scripts and evals included |
+| "Update every caller to pass the new argument" | Replacement rule | One sweep-table row and literal edit per site |
+| "Existing tests already pin this" | Unverified pinning claim | Name the test and the assert, per behaviour, or write one |
+| "The spec doesn't say, I'll pick a sensible default" | Decision made in the plan | Take it back to the spec as an amendment |
 | "The reviewer says don't overcomplicate failure cases" | Unhappy-path pressure | Reject; failure cases are real engineering, not complexity |
 | "I'll add error handling later" | Fail-closed planning violated | Every external-dependency step must have a failure branch now |
 | "I remember the method signature from earlier in the session" | Pre-plan verification skipped | Shell-verify the signature before committing it to the plan |
@@ -471,6 +692,8 @@ is a **red flag** that you are rationalising toward a shortcut.
 **Red flags in your own output:**
 - You started writing tasks before running `cat` on the spec file.
 - The plan has no `### Risk & Confidence Assessment` block.
+- The plan has no **Caller and test sweep** table, or a task has no tier.
+- A task has no "Reviewer looks at" item, or an item has no killing test.
 - Every task step describes the happy path only.
 - You wrote "handle errors appropriately" without specifying what that means.
 - A new test asserts inheritance, helper existence, or call ordering without a `Test retention` note explaining why it survives REFACTOR.
