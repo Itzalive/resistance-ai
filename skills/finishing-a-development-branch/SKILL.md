@@ -213,7 +213,7 @@ git worktree remove <worktree-path>
 ## Integration
 
 **Called by:**
-- **subagent-driven-development** (Step 7) - After all tasks complete
+- **subagent-driven-development** (Plan end) - After full suites, code review and survivability
 - **executing-plans** (Step 5) - After all batches complete
 
 **Pairs with:**

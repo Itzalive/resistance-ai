@@ -12,7 +12,7 @@ Dispatch resistance-engine:code-reviewer subagent to catch issues before they ca
 ## When to Request Review
 
 **Mandatory:**
-- After each task in subagent-driven development
+- At plan end in subagent-driven development (checkpoint reviews cover tasks during execution)
 - After completing major feature
 - Before merge to main
 
