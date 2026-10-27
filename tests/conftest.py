@@ -1,15 +1,9 @@
 from __future__ import annotations
 
 import re
-import sys
-from pathlib import Path
 from typing import Callable
 
 import pytest
-
-_SCRIPTS_DIR = str(Path(__file__).parents[1] / "scripts")
-if _SCRIPTS_DIR not in sys.path:
-    sys.path.insert(0, _SCRIPTS_DIR)
 
 
 @pytest.fixture

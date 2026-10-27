@@ -1,26 +1,13 @@
 # resistance-ai
 
-Canonical repository for Superpowers-derived skills and agents imported from
-`vendor/obra-superpowers/`.
-
-## Bootstrap
-
-Clone the repo, then initialize the nested vendor submodule before running importer
-or validation tooling:
-
-```bash
-git submodule update --init --recursive vendor/obra-superpowers
-```
+Canonical repository for the resistance-engine skills and agents. They began as a
+fork of [obra/superpowers](https://github.com/obra/superpowers) and are now maintained
+independently.
 
 ## Layout
 
-- `skills/` - imported skill directories with support files preserved
-- `agents/` - imported top-level agent markdown files
-- `consolidation/consolidation_overrides.json` - local pruning policy overrides for
-  intentionally omitted imported files
-- `catalog/catalog_index.json` - minimal unified index for imported skills and agents
-- `catalog/non_skill_inventory.json` - classification output for vendor repo surfaces
-  outside `skills/` and `agents/`
+- `skills/` - skill directories with their support files
+- `agents/` - top-level agent markdown files
 
 ## Packaging and consumption
 
@@ -47,7 +34,6 @@ Install directly from a local checkout:
 ```bash
 git clone https://github.com/Itzalive/resistance-ai.git
 cd resistance-ai
-git submodule update --init --recursive vendor/obra-superpowers
 copilot plugin install .
 ```
 
@@ -67,7 +53,6 @@ Install from a local checkout:
 ```bash
 git clone https://github.com/Itzalive/resistance-ai.git
 cd resistance-ai
-git submodule update --init --recursive vendor/obra-superpowers
 pi install .
 ```
 
@@ -85,27 +70,11 @@ or extension workspace:
 
 ```bash
 git submodule add https://github.com/Itzalive/resistance-ai.git resistance-engine
-git submodule update --init --recursive resistance-engine/vendor/obra-superpowers
 ```
 
 There is no public VS Code Marketplace install flow for this repository yet. If
 that changes later, document the Marketplace install path separately instead of
 changing the local/submodule flow described above.
-
-## Refresh
-
-Run: `python3 scripts/import_superpowers_catalog.py`
-
-## Provenance
-
-- `provenance/provenance_manifest.json` - authoritative lineage and state for every
-  skill and agent
-- every manifest file record includes `local_sync_policy`, which defaults to
-  `required` and may be set to `pruned` via the override file
-
-Validate the current local tree against the manifest:
-
-Run: `python3 scripts/validate_resistance_engine_provenance.py .`
 
 ## Authoring defaults
 
@@ -122,16 +91,3 @@ Run: `python3 scripts/validate_resistance_engine_provenance.py .`
   `SPEC_RUBRIC.md` are optional overlays only
 - overlays may tighten or extend the shipped defaults, but may not weaken them
 - malformed or contradictory overlays are blocking conditions
-
-## Consolidation overrides
-
-- keep `consolidation/consolidation_overrides.json` in git, even when it is `[]`
-- `required` means the imported file must remain present locally
-- `pruned` means the imported file should be absent locally while remaining in
-  provenance tracking
-
-## Guardrails
-
-- `vendor/obra-superpowers/` remains read-only
-- shard 1 owns import and inventory only; divergence tracking belongs to shard 2
-- non-skill vendor content is inventoried and classified before any future import

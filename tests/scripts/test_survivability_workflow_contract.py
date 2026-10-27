@@ -4,7 +4,7 @@ from pathlib import Path
 
 
 def test_executing_plans_invokes_survivability_before_finish() -> None:
-    skill_text = Path("skills/executing-plans/SKILL.md").read_text()
+    skill_text = Path("skills/executing-plans/SKILL.md").read_text(encoding="utf-8")
 
     assert "Use resistance-engine:survivability" in skill_text
     assert skill_text.index("Use resistance-engine:survivability") < skill_text.index(
@@ -13,7 +13,7 @@ def test_executing_plans_invokes_survivability_before_finish() -> None:
 
 
 def test_subagent_driven_development_invokes_survivability_before_finish() -> None:
-    skill_text = Path("skills/subagent-driven-development/SKILL.md").read_text()
+    skill_text = Path("skills/subagent-driven-development/SKILL.md").read_text(encoding="utf-8")
 
     assert "Use resistance-engine:survivability" in skill_text
     assert '"Use resistance-engine:survivability"' in skill_text

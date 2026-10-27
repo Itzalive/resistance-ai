@@ -14,7 +14,7 @@ def _section_text(text: str, heading: str) -> str:
 
 
 def test_survivability_skill_defines_bounded_mutation_slate() -> None:
-    skill_text = Path("skills/survivability/SKILL.md").read_text()
+    skill_text = Path("skills/survivability/SKILL.md").read_text(encoding="utf-8")
 
     mutation_lane = _section_text(skill_text, "Mutation Probe Lane")
 
@@ -31,7 +31,7 @@ def test_survivability_skill_defines_bounded_mutation_slate() -> None:
 
 
 def test_survivability_skill_requires_steady_state_preflight() -> None:
-    skill_text = Path("skills/survivability/SKILL.md").read_text()
+    skill_text = Path("skills/survivability/SKILL.md").read_text(encoding="utf-8")
 
     preflight = _section_text(skill_text, "Steady-State Preflight")
 
@@ -45,7 +45,7 @@ def test_survivability_skill_requires_steady_state_preflight() -> None:
 
 
 def test_survivability_skill_allows_workflow_specific_review_timing() -> None:
-    skill_text = Path("skills/survivability/SKILL.md").read_text()
+    skill_text = Path("skills/survivability/SKILL.md").read_text(encoding="utf-8")
 
     when_to_use = _section_text(skill_text, "When to Use")
 
@@ -56,7 +56,7 @@ def test_survivability_skill_allows_workflow_specific_review_timing() -> None:
 
 
 def test_survivability_skill_defines_chaos_thresholds() -> None:
-    skill_text = Path("skills/survivability/SKILL.md").read_text()
+    skill_text = Path("skills/survivability/SKILL.md").read_text(encoding="utf-8")
 
     chaos_lane = _section_text(skill_text, "Chaos Probe Lane")
 
@@ -75,7 +75,7 @@ def test_survivability_skill_defines_chaos_thresholds() -> None:
 
 
 def test_survivability_skill_uses_generic_review_log_contract() -> None:
-    skill_text = Path("skills/survivability/SKILL.md").read_text()
+    skill_text = Path("skills/survivability/SKILL.md").read_text(encoding="utf-8")
 
     review_log = _section_text(skill_text, "Review Log Submission")
 

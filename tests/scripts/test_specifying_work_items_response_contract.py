@@ -14,7 +14,7 @@ def _section_text(text: str, heading: str) -> str:
 
 
 def test_specifying_work_items_quick_reference_blocks_one_shot_designs() -> None:
-    skill_text = Path("skills/specifying-work-items/SKILL.md").read_text()
+    skill_text = Path("skills/specifying-work-items/SKILL.md").read_text(encoding="utf-8")
 
     quick_reference = _section_text(skill_text, "Quick Reference")
 
@@ -29,7 +29,7 @@ def test_specifying_work_items_quick_reference_blocks_one_shot_designs() -> None
 
 
 def test_specifying_work_items_common_mistakes_forbids_made_up_headings() -> None:
-    skill_text = Path("skills/specifying-work-items/SKILL.md").read_text()
+    skill_text = Path("skills/specifying-work-items/SKILL.md").read_text(encoding="utf-8")
 
     common_mistakes = _section_text(skill_text, "Common Mistakes")
 
@@ -40,7 +40,7 @@ def test_specifying_work_items_common_mistakes_forbids_made_up_headings() -> Non
 
 
 def test_specifying_work_items_quick_reference_forbids_draft_specs_under_ambiguity() -> None:
-    skill_text = Path("skills/specifying-work-items/SKILL.md").read_text()
+    skill_text = Path("skills/specifying-work-items/SKILL.md").read_text(encoding="utf-8")
 
     quick_reference = _section_text(skill_text, "Quick Reference")
 
@@ -51,7 +51,7 @@ def test_specifying_work_items_quick_reference_forbids_draft_specs_under_ambigui
 
 
 def test_specifying_work_items_quick_reference_limits_first_pass_inspection_scope() -> None:
-    skill_text = Path("skills/specifying-work-items/SKILL.md").read_text()
+    skill_text = Path("skills/specifying-work-items/SKILL.md").read_text(encoding="utf-8")
 
     quick_reference = _section_text(skill_text, "Quick Reference")
 
@@ -62,7 +62,7 @@ def test_specifying_work_items_quick_reference_limits_first_pass_inspection_scop
 
 
 def test_specifying_work_items_initial_gate_blocks_full_outline() -> None:
-    skill_text = Path("skills/specifying-work-items/SKILL.md").read_text()
+    skill_text = Path("skills/specifying-work-items/SKILL.md").read_text(encoding="utf-8")
 
     first_response = _section_text(skill_text, "Initial gate")
 
@@ -77,7 +77,7 @@ def test_specifying_work_items_initial_gate_blocks_full_outline() -> None:
 
 
 def test_specifying_work_items_hard_gate_includes_vendor_no_implementation_line() -> None:
-    skill_text = Path("skills/specifying-work-items/SKILL.md").read_text()
+    skill_text = Path("skills/specifying-work-items/SKILL.md").read_text(encoding="utf-8")
 
     assert (
         "Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until you have presented a design and the user has approved it."
@@ -86,7 +86,7 @@ def test_specifying_work_items_hard_gate_includes_vendor_no_implementation_line(
 
 
 def test_specifying_work_items_repository_verification_forbids_broad_first_pass_reads() -> None:
-    skill_text = Path("skills/specifying-work-items/SKILL.md").read_text()
+    skill_text = Path("skills/specifying-work-items/SKILL.md").read_text(encoding="utf-8")
 
     verification = _section_text(skill_text, "Repository-grounded verification")
 
@@ -97,7 +97,7 @@ def test_specifying_work_items_repository_verification_forbids_broad_first_pass_
 
 
 def test_specifying_work_items_repository_verification_forbids_experiment_history_first_pass() -> None:
-    skill_text = Path("skills/specifying-work-items/SKILL.md").read_text()
+    skill_text = Path("skills/specifying-work-items/SKILL.md").read_text(encoding="utf-8")
 
     verification = _section_text(skill_text, "Repository-grounded verification")
 
@@ -108,7 +108,7 @@ def test_specifying_work_items_repository_verification_forbids_experiment_histor
 
 
 def test_specifying_work_items_overview_does_not_keep_broad_standards_loader() -> None:
-    skill_text = Path("skills/specifying-work-items/SKILL.md").read_text()
+    skill_text = Path("skills/specifying-work-items/SKILL.md").read_text(encoding="utf-8")
 
     overview = _section_text(skill_text, "Overview")
 
@@ -120,7 +120,7 @@ def test_specifying_work_items_overview_does_not_keep_broad_standards_loader() -
 
 
 def test_specifying_work_items_description_uses_vendor_pre_implementation_wording() -> None:
-    skill_text = Path("skills/specifying-work-items/SKILL.md").read_text()
+    skill_text = Path("skills/specifying-work-items/SKILL.md").read_text(encoding="utf-8")
 
     assert (
         "name: specifying-work-items" in skill_text
@@ -132,7 +132,7 @@ def test_specifying_work_items_description_uses_vendor_pre_implementation_wordin
 
 
 def test_specifying_work_items_quick_reference_forbids_retrofitting_spec_around_existing_code() -> None:
-    skill_text = Path("skills/specifying-work-items/SKILL.md").read_text()
+    skill_text = Path("skills/specifying-work-items/SKILL.md").read_text(encoding="utf-8")
 
     quick_reference = _section_text(skill_text, "Quick Reference")
 
@@ -143,7 +143,7 @@ def test_specifying_work_items_quick_reference_forbids_retrofitting_spec_around_
 
 
 def test_specifying_work_items_initial_gate_allows_narrow_visual_offer() -> None:
-    skill_text = Path("skills/specifying-work-items/SKILL.md").read_text()
+    skill_text = Path("skills/specifying-work-items/SKILL.md").read_text(encoding="utf-8")
 
     initial_gate = _section_text(skill_text, "Initial gate")
 
@@ -158,7 +158,7 @@ def test_specifying_work_items_initial_gate_allows_narrow_visual_offer() -> None
 
 
 def test_specifying_work_items_initial_gate_sends_visual_offer_before_standards_for_clear_visual_requests() -> None:
-    skill_text = Path("skills/specifying-work-items/SKILL.md").read_text()
+    skill_text = Path("skills/specifying-work-items/SKILL.md").read_text(encoding="utf-8")
 
     initial_gate = _section_text(skill_text, "Initial gate")
 
@@ -169,7 +169,7 @@ def test_specifying_work_items_initial_gate_sends_visual_offer_before_standards_
 
 
 def test_specifying_work_items_visual_companion_preserves_gates() -> None:
-    skill_text = Path("skills/specifying-work-items/SKILL.md").read_text()
+    skill_text = Path("skills/specifying-work-items/SKILL.md").read_text(encoding="utf-8")
 
     visual_companion = _section_text(skill_text, "Visual Companion")
 
@@ -188,7 +188,7 @@ def test_specifying_work_items_visual_companion_preserves_gates() -> None:
 
 
 def test_specifying_work_items_quick_reference_stages_companion_loading() -> None:
-    skill_text = Path("skills/specifying-work-items/SKILL.md").read_text()
+    skill_text = Path("skills/specifying-work-items/SKILL.md").read_text(encoding="utf-8")
 
     quick_reference = _section_text(skill_text, "Quick Reference")
 
@@ -204,14 +204,14 @@ def test_specifying_work_items_quick_reference_stages_companion_loading() -> Non
 
 
 def test_specifying_work_items_later_stage_review_workflow_moves_to_support_file() -> None:
-    skill_text = Path("skills/specifying-work-items/SKILL.md").read_text()
+    skill_text = Path("skills/specifying-work-items/SKILL.md").read_text(encoding="utf-8")
 
     assert "Load `review-workflow.md` after a written spec exists." in skill_text
     assert Path("skills/specifying-work-items/review-workflow.md").exists()
 
 
 def test_specifying_work_items_checklist_delays_standards_until_spec_body() -> None:
-    skill_text = Path("skills/specifying-work-items/SKILL.md").read_text()
+    skill_text = Path("skills/specifying-work-items/SKILL.md").read_text(encoding="utf-8")
 
     checklist = _section_text(skill_text, "Checklist").replace("\n    ", " ")
 

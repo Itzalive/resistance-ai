@@ -5,14 +5,14 @@ from pathlib import Path
 
 
 def test_package_json_exposes_pi_skills_manifest() -> None:
-    package = json.loads(Path("package.json").read_text())
+    package = json.loads(Path("package.json").read_text(encoding="utf-8"))
 
     assert package["pi"]["skills"] == ["./skills"]
     assert "pi-package" in package["keywords"]
 
 
 def test_readme_documents_pi_installation() -> None:
-    readme = Path("README.md").read_text()
+    readme = Path("README.md").read_text(encoding="utf-8")
 
     assert "## Pi" in readme
     assert "pi install" in readme
