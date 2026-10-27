@@ -19,8 +19,10 @@ The review is not optional and may not be abbreviated.
 
 **On rejection:**
 
-- Log the rejection to `.review_log.jsonl` using the `SPEC_REVIEW` rejection
-  template in `../shared/review-log-jsonl.md`.
+- Log the rejection with the append CLI described in
+  `../shared/review-log-jsonl.md`: `--phase SPEC_REVIEW --verdict REJECTED
+  --independence self`, the round number, and one `--finding` per failed
+  criterion.
 - Fix the spec inline.
 - Run a post-fix consistency check across every affected section.
 - Commit the updated spec before dispatching the next review round.
@@ -69,13 +71,15 @@ finding. Start a new reviewer only after a rewrite of the spec.
 
 **Pass condition:** The reviewer returns `[SPEC-APPROVED]`.
 
-- Record the approval in `.review_log.jsonl` using the `INDEPENDENT_AUDIT`
-  approval template in `../shared/review-log-jsonl.md`.
+- Record the approval with the append CLI described in
+  `../shared/review-log-jsonl.md`: `--phase INDEPENDENT_AUDIT --verdict
+  APPROVED`, the round number, the reviewer model and its `--independence`.
 
 **On independent-audit rejection:**
 
-- Log the rejection to `.review_log.jsonl` using the `INDEPENDENT_AUDIT`
-  rejection template in `../shared/review-log-jsonl.md`.
+- Log the rejection with the append CLI: `--phase INDEPENDENT_AUDIT --verdict
+  REJECTED`, the round number, the reviewer model, its `--independence`, and
+  one `--finding` per blocking finding.
 - **Circuit Breaker:** If you fail independent audit three consecutive times,
   you are strictly forbidden from attempting a fourth fix. You must halt,
   output the exact rubric failure, and ask the human for architectural guidance

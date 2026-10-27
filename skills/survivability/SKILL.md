@@ -72,7 +72,7 @@ If a chaos probe causes unsafe degradation or restore cannot complete, fail the 
 
 ## Review Log Submission
 
-Append a bounded experiment summary to `.review_log.jsonl` using the generic append template from `skills/shared/review-log-jsonl.md`.
+Append a bounded experiment summary to `.review_log.jsonl` with the append CLI described in `skills/shared/review-log-jsonl.md`, using `--skill survivability --phase SURVIVABILITY`.
 
 Do not copy full stdout/stderr, full diffs, or secret-bearing output into the log.
 
@@ -80,9 +80,9 @@ Record the survivability score as:
 
 - `mutation_killed=<killed>/<total>`
 - `chaos_passed=<passed>/<total>`
-- overall result: `PASS` or `FAIL`
+- overall result: `--verdict PASS` or `--verdict FAIL`, with the two scores in `--reason`
 
-If any mutant survives, log it as CRITICAL FRICTION for retrospective ingestion.
+If any mutant survives, log it as a `critical:weak-test:<mutant and location>` finding (CRITICAL FRICTION for retrospective ingestion).
 
 ## Quick Reference
 

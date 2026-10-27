@@ -430,8 +430,11 @@ The sub-agent must validate:
 - `[REJECTED - SPEC INCOMPLETE]` — spec fails to deliver the original work item's
   requirements.
 
-Record the result and raw reasons in `.review_log.jsonl` at the repo root using
-`../shared/review-log-jsonl.md`. If rejected, fix discrepancies, re-run verifications
+Record the result with the append CLI described in `../shared/review-log-jsonl.md`:
+`--skill writing-plans --phase PLAN_REVIEW`, verdict `APPROVED` or `REJECTED`, the round
+number, the reviewer model and its `--independence`. Put the reviewer's status line in
+`--reason` and log each gate failure as a `--finding` (usually `plan-hole`,
+`spec-hole` or `missed-caller`). If rejected, fix discrepancies, re-run verifications
 and the Plan self-review, then restart the Unified Coherence Check.
 
 

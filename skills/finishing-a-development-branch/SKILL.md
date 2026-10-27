@@ -35,7 +35,26 @@ Cannot proceed with merge/PR until tests pass.
 
 Stop. Don't proceed to Step 2.
 
-**If tests pass:** Continue to Step 2.
+**If tests pass:** Continue to Step 1b.
+
+### Step 1b: Write the Run Record
+
+If this branch executed a plan, append one run record before presenting options, so
+later retrospectives can compare plans. Skip this step only when no plan was executed.
+
+Build it from `.review_log.jsonl` entries for this item and your own tallies during
+execution: tasks, executor tiers, escalations, attempts per task, tokens per phase,
+findings per layer and kind, plan changes and slips. Field shapes are in
+`../shared/review-log-jsonl.md`. Write the JSON to a temporary file, then:
+
+```bash
+python <skills-dir>/shared/scripts/review-log.py run-record --from <run-record.json>
+```
+
+If the CLI rejects the record (exit code 2), fix the field it names and rerun. Do not
+present options until the record is written.
+
+Continue to Step 2.
 
 ### Step 2: Determine Base Branch
 
@@ -186,6 +205,7 @@ git worktree remove <worktree-path>
 
 **Always:**
 - Verify tests before offering options
+- Write the run record before offering options when a plan was executed
 - Present exactly 4 options
 - Get typed confirmation for Option 4
 - Clean up worktree for Options 1 & 4 only

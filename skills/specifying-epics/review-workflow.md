@@ -19,9 +19,9 @@ The review is not optional and may not be abbreviated.
 
 **On rejection:**
 
-- Log the rejection to `.review_log.jsonl` using the `SPEC_REVIEW` rejection template
-  in `../shared/review-log-jsonl.md`, substituting `skill: "specifying-epics"` and
-  `phase: "EPIC_REVIEW"`.
+- Log the rejection with the append CLI described in `../shared/review-log-jsonl.md`:
+  `--skill specifying-epics --phase EPIC_REVIEW --verdict REJECTED --independence self`,
+  the round number, and one `--finding` per failed criterion.
 - Fix the spec inline.
 - Run a post-fix consistency check across every affected section.
 - Commit the updated spec before dispatching the next review round.
@@ -65,15 +65,15 @@ new reviewer only after a rewrite of the epic spec.
 
 **Pass condition:** The reviewer returns `[EPIC-APPROVED]`.
 
-- Record the approval in `.review_log.jsonl` using the `INDEPENDENT_AUDIT` approval
-  template in `../shared/review-log-jsonl.md`, substituting
-  `skill: "specifying-epics"`.
+- Record the approval with the append CLI: `--skill specifying-epics --phase
+  INDEPENDENT_AUDIT --verdict APPROVED`, the round number, the reviewer model and its
+  `--independence`.
 
 **On independent-audit rejection:**
 
-- Log the rejection to `.review_log.jsonl` using the `INDEPENDENT_AUDIT` rejection
-  template in `../shared/review-log-jsonl.md`, substituting
-  `skill: "specifying-epics"`.
+- Log the rejection with the append CLI: `--skill specifying-epics --phase
+  INDEPENDENT_AUDIT --verdict REJECTED`, the round number, the reviewer model, its
+  `--independence`, and one `--finding` per blocking finding.
 - **Circuit Breaker:** If you fail independent audit three consecutive times, halt and
   ask the human for product guidance and whether to continue.
 - Fix the spec inline.

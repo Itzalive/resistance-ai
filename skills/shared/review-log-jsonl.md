@@ -1,107 +1,142 @@
 # `.review_log.jsonl` reference
 
 Use this support file when a skill requires review outcomes to be appended to
-`.review_log.jsonl` at the repository root.
+`.review_log.jsonl` at the repository root, or a run record to be appended to
+`.run_records.jsonl`.
 
 ## Rules
 
-- Treat `.review_log.jsonl` as append-only. Never rewrite or delete prior entries.
-- Preserve the exact status vocabulary required by the invoking skill.
-- Preserve raw reviewer reason text instead of paraphrasing it.
+- Write entries only with the append CLI, `scripts/review-log.py` in this
+  directory. Never write JSON by hand, with `jq`, or with `echo`. The CLI
+  validates every field and escapes the text, and writes nothing when an entry
+  is invalid (exit code 2).
+- Run it from the repository root, using its path relative to where this
+  skill is installed, for example:
+  `python <skills-dir>/shared/scripts/review-log.py append ...`
+- Treat both logs as append-only. Never rewrite or delete prior entries.
 - Use the current work item identifier.
-- Include both orchestrator and reviewer model names when the review involves a
-  second model, plus `independence` for any review done by a reviewer other than
-  the orchestrator.
-- Entries written before 2026-10-27 use `CROSS_MODEL_AUDIT` / `CROSS-MODEL AUDIT`
-  and `model` instead of `reviewer_model`. Read them as `INDEPENDENT_AUDIT` and
-  `reviewer_model`. Never rewrite them.
+- Use only the values listed below. If a review does not fit a phase, use the
+  closest phase and say so in `--reason`; do not invent phase names.
+- Do not put full stdout/stderr, full diffs, or secret-bearing output in any
+  field.
 
-## Canonical fields
+## Review entry schema
 
-| Field | Meaning |
+| Field | Required | Meaning |
+|---|---|---|
+| `ts` | set by CLI | UTC time in ISO-8601 form |
+| `item_id` | yes | Current work item identifier |
+| `skill` | yes | Skill responsible for this review stage (enum below) |
+| `phase` | yes | Review stage (enum below) |
+| `round` | yes | Review round for this phase and item, starting at 1 |
+| `verdict` | yes | `APPROVED`, `REJECTED`, `PASS` or `FAIL` |
+| `orchestrator` | yes | Model running the workflow |
+| `reviewer_model` | yes | Model that performed the review (the orchestrator for self-review) |
+| `independence` | yes | `self`, `fresh-context` or `cross-family` |
+| `findings` | yes | List of `{severity, kind, text}`; may be empty only on `APPROVED` or `PASS` |
+| `tokens` | no | Tokens spent on this review round |
+| `reason` | no | Short raw note from the reviewer, such as the approval note |
+
+**`skill`:** `specifying-epics`, `specifying-work-items`, `writing-plans`,
+`subagent-driven-development`, `executing-plans`, `requesting-code-review`,
+`survivability`, `finishing-a-development-branch`.
+
+**`phase`:**
+
+| Phase | Used for | `independence` |
+|---|---|---|
+| `EPIC_REVIEW` | Epic self-review | `self` |
+| `SPEC_REVIEW` | Spec self-review | `self` |
+| `PLAN_SELF_REVIEW` | Plan self-review | `self` |
+| `INDEPENDENT_AUDIT` | Epic or spec independent audit | `fresh-context` or `cross-family` |
+| `PLAN_REVIEW` | Plan reviewer / Unified Coherence Check | `fresh-context` or `cross-family` |
+| `CHECKPOINT_REVIEW` | Review during execution (per task or checkpoint) | `fresh-context` or `cross-family` |
+| `CODE_REVIEW` | Final code review | `fresh-context` or `cross-family` |
+| `SURVIVABILITY` | Survivability gate | any |
+
+**`independence`:** `self` is the orchestrator reviewing its own work.
+`fresh-context` is a reviewer with no drafting context from the same model
+family. `cross-family` is a fresh-context reviewer from a different model
+family.
+
+**`findings[].severity`:** `critical`, `important`, `minor`.
+
+**`findings[].kind`:**
+
+| Kind | Meaning |
 |---|---|
-| `timestamp` | UTC time in ISO-8601 form |
-| `item_id` | Current work item identifier |
-| `skill` | Skill responsible for this review stage |
-| `phase` | Review stage, such as `SPEC_REVIEW`, `INDEPENDENT_AUDIT`, or `PLAN_REVIEW` |
-| `status` | Exact gate outcome required by the skill |
-| `reason` | Raw reviewer output or approval note |
-| `orchestrator` | Primary model running the workflow |
-| `reviewer_model` | Model that performed the review |
-| `independence` | `fresh-context` (reviewer with no drafting context, same model family) or `cross-family` (fresh context and a different model family); `self` for the orchestrator's own self-review |
+| `missed-caller` | A caller, test, fake, mock or assert the change breaks and the artifact missed |
+| `weak-test` | A test that would not catch the fault it claims to cover |
+| `plan-hole` | The plan omits or contradicts something the spec requires |
+| `spec-hole` | The spec leaves a behaviour undecided or fails the work item |
+| `real-bug` | Incorrect behaviour in code |
+| `slip` | An executor or orchestrator did not follow the plan or skill |
+| `wording` | Clarity or consistency only; no behaviour change |
 
-## Generic append template
+**Gate strings:** a skill gate such as `APPROVED - INDEPENDENT AUDIT` means the
+latest entry for that item with that phase has verdict `APPROVED`. Reviewer
+output such as `[REJECTED - PLAN DRIFT]` goes in `--reason`; the verdict is
+`REJECTED` and the findings carry the kinds.
 
-```bash
-jq -nc \
-  --arg ts "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
-  --arg wiid "<work_item_id>" \
-  --arg sk "<skill_name>" \
-  --arg ph "<phase>" \
-  --arg st "<status>" \
-  --arg rs "<raw_reason_text>" \
-  --arg orch "<orchestrator_model_name>" \
-  --arg aud "<reviewer_model_name>" \
-  --arg ind "<self|fresh-context|cross-family>" \
-  '{timestamp: $ts, item_id: $wiid, skill: $sk, phase: $ph, status: $st, reason: $rs, orchestrator: $orch, reviewer_model: $aud, independence: $ind}' \
-  >> .review_log.jsonl
-```
-
-## Named templates
-
-### `SPEC_REVIEW` rejection template
+## Appending a review entry
 
 ```bash
-jq -nc \
-  --arg ts "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
-  --arg wiid "<work_item_id>" \
-  --arg orch "<orchestrator_model_name>" \
-  --arg aud "<reviewer_model_name>" \
-  --arg ind "<self|fresh-context|cross-family>" \
-  --arg rs "<failed criterion and exact correction>" \
-  '{timestamp: $ts, item_id: $wiid, skill: "specifying-work-items", phase: "SPEC_REVIEW", status: "REJECTED", reason: $rs, orchestrator: $orch, reviewer_model: $aud, independence: $ind}' \
-  >> .review_log.jsonl
+python <skills-dir>/shared/scripts/review-log.py append \
+  --item-id "<work_item_id>" \
+  --skill specifying-work-items \
+  --phase INDEPENDENT_AUDIT \
+  --round 2 \
+  --verdict REJECTED \
+  --orchestrator "<orchestrator_model>" \
+  --reviewer-model "<reviewer_model>" \
+  --independence fresh-context \
+  --finding "critical:spec-hole:Empty-list behaviour for search results is undecided" \
+  --finding "minor:wording:AC3 says 'should' where it means 'must'" \
+  --tokens 85000
 ```
 
-### `INDEPENDENT_AUDIT` approval template
+Each `--finding` is `SEVERITY:KIND:TEXT`. The text may contain colons, quotes
+and backslashes. Add one `--finding` per finding.
+
+For self-review, pass `--independence self` and your own model as
+`--reviewer-model`. For survivability, use `--phase SURVIVABILITY`, put the
+score (`mutation_killed=k/n chaos_passed=k/n`) in `--reason`, and log each
+surviving mutant as a finding.
+
+## Run record (one per plan)
+
+`finishing-a-development-branch` writes one run record per executed plan to
+`.run_records.jsonl`, so later retrospectives can compare plans without
+normalising free text. Write the record as a JSON file (or pipe it), then:
 
 ```bash
-jq -nc \
-  --arg ts "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
-  --arg wiid "<work_item_id>" \
-  --arg orch "<orchestrator_model_name>" \
-  --arg aud "<reviewer_model_name>" \
-  --arg ind "<self|fresh-context|cross-family>" \
-  --arg rs "<approval note>" \
-  '{timestamp: $ts, item_id: $wiid, skill: "specifying-work-items", phase: "INDEPENDENT_AUDIT", status: "APPROVED - INDEPENDENT AUDIT", reason: $rs, orchestrator: $orch, reviewer_model: $aud, independence: $ind}' \
-  >> .review_log.jsonl
+python <skills-dir>/shared/scripts/review-log.py run-record --from run-record.json
 ```
 
-### `INDEPENDENT_AUDIT` rejection template
+All fields are required; use `0`, `{}` or `[]` when there is nothing to report.
 
-```bash
-jq -nc \
-  --arg ts "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
-  --arg wiid "<work_item_id>" \
-  --arg orch "<orchestrator_model_name>" \
-  --arg aud "<reviewer_model_name>" \
-  --arg ind "<self|fresh-context|cross-family>" \
-  --arg rs "<raw rejection text>" \
-  '{timestamp: $ts, item_id: $wiid, skill: "specifying-work-items", phase: "INDEPENDENT_AUDIT", status: "REJECTED - INDEPENDENT AUDIT", reason: $rs, orchestrator: $orch, reviewer_model: $aud, independence: $ind}' \
-  >> .review_log.jsonl
-```
+| Field | Shape | Meaning |
+|---|---|---|
+| `item_id` | string | Work item the plan implements |
+| `plan` | string | Path to the plan file |
+| `tasks` | integer | Number of tasks executed |
+| `tiers` | `{tier: count}` | Tasks per executor tier or model, e.g. `{"haiku": 3, "sonnet": 2}` |
+| `escalations` | list of `{task, from, to, reason}` | Every executor escalation |
+| `attempts` | `{task: count}` | Attempts per task |
+| `tokens` | `{phase: count}` | Tokens per phase, e.g. `planning`, `execution`, `code-review` |
+| `findings` | `{layer: {kind: count}}` | Findings per layer and kind; layers are `self-review`, `spec-audit`, `plan-review`, `checkpoint`, `code-review`, `survivability`; kinds as above |
+| `plan_changes` | list of strings | Changes made to the plan during execution |
+| `slips` | list of strings | Executor or orchestrator slips |
 
-### `PLAN_REVIEW` template
+## Reading older entries
 
-```bash
-jq -nc \
-  --arg ts "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
-  --arg wiid "<work_item_id>" \
-  --arg st "<plan review status>" \
-  --arg orch "<orchestrator_model_name>" \
-  --arg aud "<reviewer_model_name>" \
-  --arg ind "<self|fresh-context|cross-family>" \
-  --arg rs "<raw reviewer output>" \
-  '{timestamp: $ts, item_id: $wiid, skill: "writing-plans", phase: "PLAN_REVIEW", status: $st, reason: $rs, orchestrator: $orch, reviewer_model: $aud, independence: $ind}' \
-  >> .review_log.jsonl
-```
+Entries written before 2026-10-27 do not follow this schema. When reading them:
+
+- `timestamp` / `date` → `ts`; `bead_id` / `work_item` / `bead` → `item_id`;
+  `stage` → `skill`.
+- `status` / `result` → `verdict`, ignoring brackets and any suffix after
+  ` - ` (`[APPROVED - CROSS-MODEL AUDIT]` → `APPROVED`).
+- `CROSS_MODEL_AUDIT` → `INDEPENDENT_AUDIT`; `model` → `reviewer_model`.
+- `brainstorming` → `specifying-work-items`.
+
+Never rewrite them.

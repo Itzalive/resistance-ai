@@ -74,13 +74,14 @@ def test_survivability_skill_defines_chaos_thresholds() -> None:
     assert "route the work back to implementation hardening" in chaos_lane
 
 
-def test_survivability_skill_uses_generic_review_log_contract() -> None:
+def test_survivability_skill_uses_review_log_cli_contract() -> None:
     skill_text = Path("skills/survivability/SKILL.md").read_text(encoding="utf-8")
 
     review_log = _section_text(skill_text, "Review Log Submission")
 
     assert ".review_log.jsonl" in review_log
     assert "bounded experiment summary" in review_log
-    assert "generic append template" in review_log
+    assert "append CLI" in review_log
+    assert "--phase SURVIVABILITY" in review_log
     assert "survivability score" in review_log
     assert "CRITICAL FRICTION" in review_log
