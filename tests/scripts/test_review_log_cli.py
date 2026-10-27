@@ -196,3 +196,95 @@ def test_run_record_rejects_malformed_json(tmp_path: Path) -> None:
 
     assert result.returncode == 2
     assert "JSON" in result.stderr
+
+
+def survivability_args(**overrides: str) -> list[str]:
+    fields = {"--skill": "survivability", "--phase": "SURVIVABILITY", "--verdict": "PASS"}
+    fields.update(overrides)
+    return append_args(**fields)
+
+
+def test_survivability_entry_records_first_slate_and_lane(tmp_path: Path) -> None:
+    result = run(
+        tmp_path,
+        *survivability_args(**{"--round": "2"}),
+        "--mutation-lane",
+        "uncovered-only",
+        "--first-slate",
+        "3/5",
+        "--reason",
+        "FAIL -> hardened",
+    )
+
+    assert result.returncode == 0, result.stderr
+    [entry] = read_log(tmp_path)
+    assert entry["mutation_lane"] == "uncovered-only"
+    assert entry["first_slate"] == {"killed": 3, "total": 5}
+
+
+def test_survivability_round_one_with_survivors_cannot_pass(tmp_path: Path) -> None:
+    result = run(tmp_path, *survivability_args(), "--mutation-lane", "full", "--first-slate", "4/6")
+
+    assert result.returncode == 2
+    assert "FAIL" in result.stderr
+    assert not (tmp_path / ".review_log.jsonl").exists()
+
+
+def test_survivability_round_one_with_survivors_logs_fail(tmp_path: Path) -> None:
+    result = run(
+        tmp_path,
+        *survivability_args(**{"--verdict": "FAIL"}),
+        "--mutation-lane",
+        "full",
+        "--first-slate",
+        "4/6",
+        "--finding",
+        "critical:weak-test:retry boundary >= to > survived in writer.py:88",
+    )
+
+    assert result.returncode == 0, result.stderr
+    [entry] = read_log(tmp_path)
+    assert entry["verdict"] == "FAIL"
+    assert entry["first_slate"] == {"killed": 4, "total": 6}
+
+
+def test_survivability_requires_mutation_lane(tmp_path: Path) -> None:
+    result = run(tmp_path, *survivability_args(), "--first-slate", "5/5")
+
+    assert result.returncode == 2
+    assert "mutation-lane" in result.stderr
+
+
+def test_survivability_requires_first_slate_unless_lane_skipped(tmp_path: Path) -> None:
+    missing = run(tmp_path, *survivability_args(), "--mutation-lane", "full")
+    skipped = run(tmp_path, *survivability_args(), "--mutation-lane", "skipped")
+
+    assert missing.returncode == 2
+    assert "first-slate" in missing.stderr
+    assert skipped.returncode == 0, skipped.stderr
+    [entry] = read_log(tmp_path)
+    assert entry["mutation_lane"] == "skipped"
+    assert "first_slate" not in entry
+
+
+def test_first_slate_rejects_malformed_or_impossible_counts(tmp_path: Path) -> None:
+    for bad in ("5", "6/5", "a/b", "0/0"):
+        result = run(tmp_path, *survivability_args(), "--mutation-lane", "full", "--first-slate", bad)
+        assert result.returncode == 2, bad
+        assert "first-slate" in result.stderr, bad
+
+
+def test_lane_fields_are_rejected_outside_survivability(tmp_path: Path) -> None:
+    result = run(tmp_path, *append_args(), "--mutation-lane", "full", "--first-slate", "5/5")
+
+    assert result.returncode == 2
+    assert "SURVIVABILITY" in result.stderr
+
+
+def test_survivability_round_one_with_all_killed_passes(tmp_path: Path) -> None:
+    result = run(tmp_path, *survivability_args(), "--mutation-lane", "full", "--first-slate", "5/5")
+
+    assert result.returncode == 0, result.stderr
+    [entry] = read_log(tmp_path)
+    assert entry["verdict"] == "PASS"
+    assert entry["first_slate"] == {"killed": 5, "total": 5}

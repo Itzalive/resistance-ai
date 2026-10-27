@@ -151,7 +151,7 @@ After the last task and its checkpoint:
 
 1. Run the full suites — every test command the repository has, not only the plan's focused ones. Fix failures before review.
 2. **REQUIRED SUB-SKILL:** Use resistance-engine:requesting-code-review for the whole branch diff. It sees across tasks, which checkpoint reviews don't, and finds real bugs on almost every plan.
-3. **REQUIRED SUB-SKILL:** Use resistance-engine:survivability. Pass it the checkpoint mutation results, so it knows which decision points were already mutated; its chaos lane always runs.
+3. **REQUIRED SUB-SKILL:** Use resistance-engine:survivability. Pass it every checkpoint report: it skips mutating decision points the checkpoints already killed, mutates the rest, and always runs its chaos lane.
 4. **REQUIRED SUB-SKILL:** Use resistance-engine:finishing-a-development-branch, which writes the run record.
 
 ## Coordinator rules
@@ -167,7 +167,7 @@ After the last task and its checkpoint:
 
 A plan with **three tasks or fewer** and **no trust-boundary change** may run inline: the coordinator executes the tasks itself, following the same hygiene rules as an executor (`./implementer-prompt.md`), with one commit per task.
 
-Then, before plan end, one review covers all the tasks: dispatch the checkpoint reviewer with every task's "Reviewer looks at" items, including a **mutation** per item on a scratch copy, and handle its findings as above. Log it as `CHECKPOINT_REVIEW`. Plan end runs in full, and survivability runs its mutation lane in full because no executor-independent checkpoint ran during execution.
+Then, before plan end, one review covers all the tasks: dispatch the checkpoint reviewer with every task's "Reviewer looks at" items, including a **mutation** per item on a scratch copy, and handle its findings as above. Log it as `CHECKPOINT_REVIEW`. Plan end runs in full, and survivability runs its mutation lane in full because no checkpoint ran during execution.
 
 Say that you are taking the inline fast path, and why the plan qualifies, before starting. A plan that grows past three tasks or touches a trust boundary during execution leaves the fast path.
 

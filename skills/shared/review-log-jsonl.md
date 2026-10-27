@@ -101,7 +101,11 @@ and backslashes. Add one `--finding` per finding.
 For self-review, pass `--independence self` and your own model as
 `--reviewer-model`. For survivability, use `--phase SURVIVABILITY`, put the
 score (`mutation_killed=k/n chaos_passed=k/n`) in `--reason`, and log each
-surviving mutant as a finding.
+surviving mutant as a finding. Survivability entries also need
+`--mutation-lane full|uncovered-only|skipped` and, unless the lane was skipped,
+`--first-slate K/N` (the first mutation run, before hardening). They are stored as
+`mutation_lane` and `first_slate: {killed, total}`. Round 1 with survivors must be
+`FAIL`; the hardened rerun is round 2.
 
 ## Run record (one per plan)
 

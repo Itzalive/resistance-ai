@@ -7,6 +7,7 @@ The schema is documented in ../review-log-jsonl.md. Standard library only.
       --verdict VERDICT --orchestrator MODEL --reviewer-model MODEL
       --independence LEVEL [--finding SEVERITY:KIND:TEXT ...] [--tokens N]
       [--reason TEXT] [--log PATH]
+      SURVIVABILITY also takes --mutation-lane LANE [--first-slate K/N]
 
   review-log.py run-record --from FILE|- [--log PATH]
 
@@ -38,6 +39,7 @@ VERDICTS = ("APPROVED", "REJECTED", "PASS", "FAIL")
 INDEPENDENCE = ("self", "fresh-context", "cross-family")
 SEVERITIES = ("critical", "important", "minor")
 KINDS = ("missed-caller", "weak-test", "plan-hole", "spec-hole", "real-bug", "slip", "wording")
+MUTATION_LANES = ("full", "uncovered-only", "skipped")
 LAYERS = ("self-review", "spec-audit", "plan-review", "checkpoint", "code-review", "survivability")
 RUN_RECORD_FIELDS = (
     "item_id",
@@ -95,6 +97,35 @@ def parse_finding(raw: str) -> dict[str, str]:
     }
 
 
+def parse_first_slate(raw: str) -> dict[str, int]:
+    killed, _, total = raw.partition("/")
+    require(
+        killed.isdigit() and total.isdigit() and 0 < int(total) and int(killed) <= int(total),
+        f"--first-slate must be K/N with 0 <= K <= N and N > 0; got {raw!r}",
+    )
+    return {"killed": int(killed), "total": int(total)}
+
+
+def survivability_fields(args: argparse.Namespace, phase: str, verdict: str) -> dict[str, object]:
+    if phase != "SURVIVABILITY":
+        require(
+            args.mutation_lane is None and args.first_slate is None,
+            "--mutation-lane and --first-slate are only for phase SURVIVABILITY",
+        )
+        return {}
+    require(args.mutation_lane is not None, "SURVIVABILITY needs --mutation-lane")
+    fields: dict[str, object] = {"mutation_lane": one_of("--mutation-lane", args.mutation_lane, MUTATION_LANES)}
+    if args.mutation_lane == "skipped":
+        require(args.first_slate is None, "--first-slate is not allowed when the mutation lane was skipped")
+        return fields
+    require(args.first_slate is not None, "SURVIVABILITY needs --first-slate unless the mutation lane was skipped")
+    slate = parse_first_slate(args.first_slate)
+    if args.round == 1 and slate["killed"] < slate["total"]:
+        require(verdict == "FAIL", "round 1 with surviving mutants must be logged as FAIL; log the hardened rerun as round 2")
+    fields["first_slate"] = slate
+    return fields
+
+
 def build_entry(args: argparse.Namespace) -> dict[str, object]:
     phase = one_of("phase", args.phase, PHASES)
     independence = one_of("independence", args.independence, INDEPENDENCE)
@@ -118,6 +149,7 @@ def build_entry(args: argparse.Namespace) -> dict[str, object]:
         "independence": independence,
         "findings": findings,
     }
+    entry.update(survivability_fields(args, phase, verdict))
     if args.tokens is not None:
         entry["tokens"] = count("tokens", args.tokens)
     if args.reason is not None:
@@ -203,6 +235,8 @@ def parser() -> argparse.ArgumentParser:
     append.add_argument("--finding", action="append", default=[], metavar="SEVERITY:KIND:TEXT")
     append.add_argument("--tokens", type=int)
     append.add_argument("--reason")
+    append.add_argument("--mutation-lane", metavar="|".join(MUTATION_LANES))
+    append.add_argument("--first-slate", metavar="K/N")
     append.add_argument("--log", default=".review_log.jsonl")
 
     run_record = commands.add_parser("run-record", help="append one per-plan run record")
