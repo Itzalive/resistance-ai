@@ -141,6 +141,21 @@ reading any deep audit detail.
    work, the main body must name the source, target, trigger, mapping, state
    rules, and replay / retry / failure behavior, plus ordering or idempotency
    when those affect correctness.
+5. Lead with the trigger. The opening lines name what causes this work item's
+   behavior to start; if it takes over from another step, say so plainly before
+   deeper mechanics.
+6. State ownership early. Say what this work item is responsible for and
+   separate it from what upstream or downstream work items own. Where an
+   adjacent work item owns ingestion, lookup, forwarding, or confirmation,
+   say so in Out of Scope instead of leaving the boundary to inference.
+7. Describe the runtime path, not backlog history. Related work items may be
+   cited for traceability, but behavior is stated in runtime terms: what is
+   consumed, looked up, changed, emitted, and when nothing happens. Acceptance
+   criteria follow suit ("Given message X is received", "Given record Y is in
+   state Z"), not project sequencing.
+8. First-read test: a developer who reads the opening once should know why the
+   work exists, what wakes it up, what it checks, what it changes, and what it
+   emits. Cut scenario detail that does not change what is built or verified.
 
 ## Process Flow
 

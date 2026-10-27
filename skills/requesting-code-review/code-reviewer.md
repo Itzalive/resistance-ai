@@ -44,9 +44,15 @@ git diff {BASE_SHA}..{HEAD_SHA}
 
 **Testing:**
 - Tests actually test logic (not mocks)?
-- Edge cases covered?
+- New and changed branches covered?
+- Failure paths and edge cases explicitly tested, not only the happy path?
 - Integration tests where needed?
 - All tests passing?
+
+**Contracts and Naming:**
+- Method names and signatures match actual behaviour?
+- Changes backwards-compatible where required?
+- Public contracts free of internal detail (no storage shapes or internal IDs in external responses)?
 
 **Requirements:**
 - All plan requirements met?
@@ -59,6 +65,9 @@ git diff {BASE_SHA}..{HEAD_SHA}
 - Backward compatibility considered?
 - Documentation complete?
 - No obvious bugs?
+- Critical operations atomic where needed?
+
+Apply any repo-specific review rules in `CLAUDE.md` or `AGENTS.md` on top of this checklist.
 
 ## Output Format
 

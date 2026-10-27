@@ -40,8 +40,15 @@ Every spec must pass every item below before planning.
 - [ ] Does the main body let a human recover the problem, scope, governing
       business rules, key mechanics, and primary risks without reading dense
       supporting detail first, and does it stay concise and non-repetitive?
-- [ ] Are acceptance criteria written in `Given / When / Then` form, binary and
-      reviewable, and limited to verifying rules already stated in the main body?
+- [ ] Are acceptance criteria written in `Given / When / Then` form, binary,
+      limited to verifying rules already stated in the main body, and verifiable
+      by automated tests (unit, integration, or smoke)?
+- [ ] Are the following kept out of acceptance criteria (they are baselines or
+      belong in Scope)?
+      - Build, compile, or lint success — always assumed
+      - Static source inspection (which imports, files, or symbols exist) — a Scope concern
+      - Project, package, or dependency manifest entries — a Scope concern
+      - Dependency-injection or wiring checks with no named, scoped integration test
 - [ ] Does the spec preserve enough detail for RED tests to be written mechanically?
 - [ ] Are abstract terms unpacked immediately with concrete meaning instead of
       standing in for missing mechanics?
