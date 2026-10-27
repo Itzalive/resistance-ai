@@ -118,8 +118,10 @@ tasks hide the cross-task interactions that small tasks surface.
 
 **The per-plan rule:**
 - at most two entry paths per plan. An entry path is a distinct way the behaviour is
-  reached (a request handler, a CLI command, a scheduled job, a tool call). Count the
-  entry paths the spec touches before writing any task.
+  reached (a request handler, a CLI command, a scheduled job, a tool call). In a
+  library or a front end with no such paths, count each public surface instead: an
+  exported API, a screen or route, a published event. Count the entry paths the spec
+  touches before writing any task.
 
 Let the task count fall out of the per-task rule. If the plan then touches more than
 two entry paths, or the task count runs well past about eight, propose a split along
@@ -129,14 +131,18 @@ trust-boundary change and one carrying all of it).
 Report the plan's line count and task count in the header. The line count is reported,
 never a target: never shorten, summarise or omit an edit to save space.
 
+The split thresholds (two entry paths, about eight tasks) are defaults from field use,
+not limits. A repo-root `PLAN_WRITING.md` may set its own from the repo's run records;
+it still may not turn them into targets.
+
 ## Caller and test sweep
 
 The plan writer owns the caller sweep; the alignment reviewer only checks it. For
 every changed signature, return shape, default, fixture or behaviour, search for
-every caller, test, fake, mock and assert across **all** source directories, not only
-the main package: `scripts`, `evals`, `tools`, `migrations`, test fixtures and
-conftest files, docs that embed runnable examples, and any other directory with code
-in it. List the directories you searched and the commands you ran in the
+every caller, test, fake, mock and assert in **every directory with code in it**, not
+only the main package. Directories outside the package are where callers get missed:
+scripts, tools, migrations, evals, test fixtures and conftest files, and docs that
+embed runnable examples. List the directories you searched and the commands you ran in the
 verification evidence.
 
 Record the result in the plan's **Caller and test sweep** table:
@@ -308,7 +314,9 @@ standard = Sonnet, strong = Opus).
 - **fast** — mechanical work where the plan gives complete code and exact commands.
 - **standard** — the default; breadth work and integration across a few files.
 - **strong** — work where a mistake is costly and needs judgement: trust boundaries,
-  conditional writes, idempotency, concurrency.
+  conditional writes, idempotency, concurrency, and their equivalents elsewhere, such
+  as data migrations, money or unit arithmetic, auth and permission checks, and UI
+  state shared across async events.
 
 Drop one tier where the plan gives complete code for the task (strong → standard,
 except for genuine trust-boundary or conditional-write judgement; standard → fast
@@ -348,7 +356,9 @@ executor-attributable findings rise, give those tiers full code again.
 ## Checkpoints
 
 Place a checkpoint review every three to five tasks: after cross-cutting changes,
-around strong-tier tasks, and at the end of each subsystem. The coordinator runs
+around strong-tier tasks, and at the end of each subsystem. The three-to-five spacing
+is a default; a repo-root `PLAN_WRITING.md` may change it, but every task must still
+fall under a checkpoint. The coordinator runs
 them as described in `subagent-driven-development`.
 
 ```markdown
@@ -366,18 +376,27 @@ focused tests.
 
 ## Trust-boundary table
 
-**Required when untrusted text can reach a model or a parser**, including text that
-was stored earlier and is read back later. List every reader of model-facing text and
-every producer into a model-facing block or parser input, what text each one
-receives, and the task and test that prove the trust rule holds there.
+**Required when untrusted input can reach a place that interprets it or acts on it**,
+including input that was stored earlier and is read back later. Such places include a
+model prompt, a query, a shell or subprocess command, a template or HTML output, a
+deserialiser, a file path, a regex or `eval`, and any parser whose output drives a
+decision. Untrusted means anything an end user, an external system or a model
+produced. Routine parsing of trusted input (the repo's own config, fixtures) does not
+trigger the table.
+
+List every producer into each of those places and every reader of what comes out,
+what text each one receives, and the task and test that prove the trust rule holds
+there. Listing every place matters most: a rule applied at some of them is the usual
+hole.
 
 ```markdown
 ## Trust-boundary table
 
-| Reader or producer | Model-facing block or parser | Text it receives | Untrusted source | Task | Proving test |
+| Producer or reader | Where it is used | Text it receives | Untrusted source | Task | Proving test |
 |---|---|---|---|---|---|
-| `render_history()` | system prompt "history" block | stored message bodies | end users | 4 | `tests/test_render.py::test_history_escapes_tags` |
-| `parse_handles()` | handle parser | model output | model, after reading user text | 5 | `tests/test_handles.py::test_unknown_handle_rejected` |
+| `render_history()` | model prompt, "history" block | stored message bodies | end users | 4 | `tests/test_render.py::test_history_escapes_tags` |
+| `search_orders()` | SQL query | search box text | end users | 5 | `tests/test_search.py::test_quote_in_term_is_bound_not_spliced` |
+| `export_report()` | file path | report name saved last week | end users | 6 | `tests/test_export.py::test_name_with_dotdot_rejected` |
 ```
 
 If the spec names a trust rule but not every place it applies, that is a spec gap:
@@ -585,7 +604,7 @@ the alignment check:
    "Reviewer looks at" item with a killing test, and a **Pinned by** entry wherever it
    adds no test for a moved behaviour; every item is in a checkpoint.
 8. **Open decisions** — none left in the plan; decisions cite the spec.
-9. **Trust boundary** — the table is present whenever untrusted text reaches a model or parser.
+9. **Trust boundary** — the table is present whenever untrusted input reaches a place that interprets it, and lists every such place.
 10. **Reality check** — re-run the `Pre-plan verification` shell verifications for any steps you
     changed during self-review.
 11. **Unhappy-path coverage** — confirm at least two failure-mode tests per task.
@@ -678,7 +697,7 @@ is a **red flag** that you are rationalising toward a shortcut.
 | "This is a small change, the per-task rule doesn't apply" | Sizing rule bypassed | Still one behaviour and two core files per task; atomic changes are the only exception |
 | "The plan is getting long, I'll summarise these edits" | Writing to a size target | Write every edit in full; report the line count, never target it |
 | "I'll fit this into fewer tasks" | Packing tasks to a count | Let the count fall out of the per-task rule; propose a split if it runs long |
-| "I grepped the package, that's every caller" | Sweep too narrow | Search every source directory, scripts and evals included |
+| "I grepped the package, that's every caller" | Sweep too narrow | Search every directory with code in it, not only the package |
 | "Update every caller to pass the new argument" | Replacement rule | One sweep-table row and literal edit per site |
 | "Existing tests already pin this" | Unverified pinning claim | Name the test and the assert, per behaviour, or write one |
 | "The spec doesn't say, I'll pick a sensible default" | Decision made in the plan | Take it back to the spec as an amendment |

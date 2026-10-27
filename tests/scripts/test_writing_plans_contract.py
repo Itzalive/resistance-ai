@@ -58,6 +58,30 @@ def test_trust_boundary_table_and_open_decisions_go_back_to_spec() -> None:
     assert "amend" in skill_text.split("## Open decisions go back to the spec")[1].split("\n## ")[0]
 
 
+def test_trust_boundary_gate_covers_every_interpreting_sink_not_only_models() -> None:
+    skill_text = read(SKILL_PATH)
+    trust = skill_text.split("## Trust-boundary table")[1].split("\n## ")[0]
+    reviewer_gate = read(REVIEWER_PATH).split("**10. Trust-boundary table**")[1].split("**11.")[0]
+
+    for text in (trust, reviewer_gate):
+        assert "model-facing" not in text
+        for sink in ("model prompt", "query", "shell", "template", "deserialiser", "file path"):
+            assert sink in text, sink
+        assert "read back later" in text
+    assert "Untrusted means" in trust
+    assert "| Producer or reader | Where it is used | Text it receives |" in skill_text
+
+
+def test_size_and_checkpoint_numbers_are_overlay_defaults() -> None:
+    skill_text = read(SKILL_PATH)
+    sizing = skill_text.split("## Sizing by rule")[1].split("\n## ")[0]
+    checkpoints = skill_text.split("## Checkpoints")[1].split("\n## ")[0]
+
+    assert "PLAN_WRITING.md" in sizing
+    assert "public surface" in sizing
+    assert "PLAN_WRITING.md" in checkpoints
+
+
 def test_checkpoints_are_planned_for_the_execution_model() -> None:
     skill_text = read(SKILL_PATH)
 

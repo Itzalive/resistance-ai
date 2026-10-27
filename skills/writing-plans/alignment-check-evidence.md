@@ -24,9 +24,9 @@ sub-agent.
    - Test runner verification (`package.json`, `pyproject.toml`, or equivalent)
    - Method/class/return-shape verification (`grep`)
    - Caller sweep: the directories searched and the search commands with their
-     output, covering every source directory (scripts and evals included)
+     output, covering every directory with code in it, not only the package
    - Pinning evidence: for each **Pinned by** entry, the named assert as it stands
-   - Entry-path count: the entry paths the spec touches
+   - Entry-path count: the entry paths (or public surfaces) the spec touches
    - Config template verification when new env/config values appear
    - MCP `inputSchema` argument verification when applicable
    - Naming-collision checks

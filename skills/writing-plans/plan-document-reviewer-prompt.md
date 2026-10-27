@@ -69,8 +69,8 @@ Task tool (general-purpose):
     - Is there a **Caller and test sweep** table with one row per site and a literal
       edit for each?
     - Search for every changed signature, return shape, default and fixture yourself,
-      across all source directories (scripts, evals, tools, fixtures, conftest
-      files). Is any caller, test, fake, mock or assert missing?
+      in every directory with code in it (scripts, tools, migrations, evals,
+      fixtures, conftest files), not only the package. Is any caller, test, fake, mock or assert missing?
     - Does any row use a replacement rule ("update every caller") instead of an edit?
     - Does any fixture or default change meaning without a row?
 
@@ -83,20 +83,21 @@ Task tool (general-purpose):
     - Does each task hold exactly one behaviour, and touch at most two core files
       plus tests? If not, is it a stated atomic change across all callers?
     - Re-task any packed task by the per-task rule and report how many tasks it holds.
-    - Does the plan touch more than two entry paths, or run well past about eight
-      tasks without proposing a split?
+    - Does the plan touch more than two entry paths (or public surfaces), or run well
+      past about eight tasks, without proposing a split? Use the thresholds from a
+      repo-root `PLAN_WRITING.md` when it sets them.
     - Never reject a plan for its length. Reject a plan that shortened, summarised or
       omitted an edit to save space.
 
     **8. Execution-model fields**
     - Does every task have a **Tier** (fast, standard or strong) that fits the tier
-      rules? Is any trust-boundary, conditional-write, idempotency or concurrency
-      judgement tagged below strong without a complete-code reason?
+      rules? Is any trust-boundary, conditional-write, idempotency, concurrency,
+      migration, auth or similar judgement tagged below strong without a complete-code reason?
     - Does every task have at least one **Reviewer looks at** item naming a decision
       point, a mutation and the test that should kill it? Would that test really
       fail under that mutation?
     - Does every item belong to exactly one row of the **Checkpoints** table, with a
-      checkpoint every three to five tasks?
+      checkpoint every three to five tasks (or the repo overlay's spacing)?
     - Where a task adds no test for a behaviour it moves, does **Pinned by** name the
       test and the assert, and does the evidence show that assert exists and would
       fail if the behaviour changed?
@@ -114,11 +115,14 @@ Task tool (general-purpose):
     - Is there at least one negative test per task?
 
     **10. Trust-boundary table**
-    - Can untrusted text (including stored text read back later) reach a model or a
-      parser through anything this plan changes?
-    - If yes, does the plan have a **Trust-boundary table** listing every reader of
-      model-facing text and every producer into a model-facing block or parser,
-      with the task and the proving test? Is any reader or producer missing?
+    - Can untrusted input (from end users, external systems or a model, including
+      input stored earlier and read back later) reach a place that interprets it or
+      acts on it through anything this plan changes: a model prompt, a query, a
+      shell or subprocess command, a template or HTML output, a deserialiser, a
+      file path, a regex or `eval`, or a parser whose output drives a decision?
+    - If yes, does the plan have a **Trust-boundary table** listing every producer
+      into each such place and every reader of what comes out, with the task and
+      the proving test? Search for the places yourself: is any one missing?
 
     **11. Dependency ordering intact**
     - Does data layer come before logic, logic before transport/API/tool, transport

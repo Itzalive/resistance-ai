@@ -98,7 +98,7 @@ Dispatch each task's executor at the **Tier:** the plan gives it. Tiers are mode
 
 - **fast** — mechanical work where the plan gives complete code and exact commands.
 - **standard** — the default; breadth work and integration across a few files.
-- **strong** — trust boundaries, conditional writes, idempotency, concurrency.
+- **strong** — trust boundaries, conditional writes, idempotency, concurrency, and their equivalents (migrations, money or unit arithmetic, auth checks, shared async UI state).
 
 The plan writer already drops a tier where the plan gives complete code. Do not drop it further during execution, and do not raise it pre-emptively.
 
