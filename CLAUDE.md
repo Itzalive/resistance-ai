@@ -49,12 +49,17 @@ gh issue close <number> --comment "..."   # Close completed work
 
 ## Build & Test
 
-_Add your build and test commands here_
+```bash
+uv run pytest -q                                   # Run the test suite
+```
+
+## Releasing
+
+Bump versions with `scripts/bump_version.py` (see `AGENTS.md`). Never edit version strings by hand.
 
 ```bash
-# Example:
-# npm install
-# npm test
+uv run python scripts/bump_version.py minor        # or major / patch / X.Y.Z
+uv run python scripts/bump_version.py --check      # fails if manifests disagree
 ```
 
 ## Architecture Overview

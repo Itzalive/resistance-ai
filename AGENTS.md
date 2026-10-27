@@ -21,6 +21,18 @@ gh issue close <number> --comment "..."   # Close completed work
 - Reference the issue number in related branches, pull requests, and commits when it is practical to do so.
 - Close the issue once the work is complete, or leave a clear closing comment explaining why it was not finished.
 
+## Releasing
+
+The version lives in five files that must stay in sync: `package.json`, `pyproject.toml`, `uv.lock`, `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json`. Always bump them with the script, never by hand:
+
+```bash
+uv run python scripts/bump_version.py minor        # major | minor | patch, bumped from the highest current version
+uv run python scripts/bump_version.py 1.0.0        # explicit version
+uv run python scripts/bump_version.py --check      # list versions; exits 1 if they disagree
+```
+
+Pick the bump from the changes since the last release: `patch` for fixes and docs, `minor` for new or changed skill behaviour, `major` for breaking changes. Run the tests, then commit as `chore: bump version to X.Y.Z` and push.
+
 ## Non-Interactive Shell Commands
 
 **ALWAYS use non-interactive flags** with file operations to avoid hanging on confirmation prompts.
