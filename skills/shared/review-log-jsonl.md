@@ -10,7 +10,11 @@ Use this support file when a skill requires review outcomes to be appended to
 - Preserve raw reviewer reason text instead of paraphrasing it.
 - Use the current work item identifier.
 - Include both orchestrator and reviewer model names when the review involves a
-  second model.
+  second model, plus `independence` for any review done by a reviewer other than
+  the orchestrator.
+- Entries written before 2026-10-27 use `CROSS_MODEL_AUDIT` / `CROSS-MODEL AUDIT`
+  and `model` instead of `reviewer_model`. Read them as `INDEPENDENT_AUDIT` and
+  `reviewer_model`. Never rewrite them.
 
 ## Canonical fields
 
@@ -19,11 +23,12 @@ Use this support file when a skill requires review outcomes to be appended to
 | `timestamp` | UTC time in ISO-8601 form |
 | `item_id` | Current work item identifier |
 | `skill` | Skill responsible for this review stage |
-| `phase` | Review stage, such as `SPEC_REVIEW`, `CROSS_MODEL_AUDIT`, or `PLAN_REVIEW` |
+| `phase` | Review stage, such as `SPEC_REVIEW`, `INDEPENDENT_AUDIT`, or `PLAN_REVIEW` |
 | `status` | Exact gate outcome required by the skill |
 | `reason` | Raw reviewer output or approval note |
 | `orchestrator` | Primary model running the workflow |
-| `model` | Reviewer or auditing model |
+| `reviewer_model` | Model that performed the review |
+| `independence` | `fresh-context` (reviewer with no drafting context, same model family) or `cross-family` (fresh context and a different model family); `self` for the orchestrator's own self-review |
 
 ## Generic append template
 
@@ -37,7 +42,8 @@ jq -nc \
   --arg rs "<raw_reason_text>" \
   --arg orch "<orchestrator_model_name>" \
   --arg aud "<reviewer_model_name>" \
-  '{timestamp: $ts, item_id: $wiid, skill: $sk, phase: $ph, status: $st, reason: $rs, orchestrator: $orch, model: $aud}' \
+  --arg ind "<self|fresh-context|cross-family>" \
+  '{timestamp: $ts, item_id: $wiid, skill: $sk, phase: $ph, status: $st, reason: $rs, orchestrator: $orch, reviewer_model: $aud, independence: $ind}' \
   >> .review_log.jsonl
 ```
 
@@ -51,12 +57,13 @@ jq -nc \
   --arg wiid "<work_item_id>" \
   --arg orch "<orchestrator_model_name>" \
   --arg aud "<reviewer_model_name>" \
+  --arg ind "<self|fresh-context|cross-family>" \
   --arg rs "<failed criterion and exact correction>" \
-  '{timestamp: $ts, item_id: $wiid, skill: "specifying-work-items", phase: "SPEC_REVIEW", status: "REJECTED", reason: $rs, orchestrator: $orch, model: $aud}' \
+  '{timestamp: $ts, item_id: $wiid, skill: "specifying-work-items", phase: "SPEC_REVIEW", status: "REJECTED", reason: $rs, orchestrator: $orch, reviewer_model: $aud, independence: $ind}' \
   >> .review_log.jsonl
 ```
 
-### `CROSS_MODEL_AUDIT` approval template
+### `INDEPENDENT_AUDIT` approval template
 
 ```bash
 jq -nc \
@@ -64,12 +71,13 @@ jq -nc \
   --arg wiid "<work_item_id>" \
   --arg orch "<orchestrator_model_name>" \
   --arg aud "<reviewer_model_name>" \
+  --arg ind "<self|fresh-context|cross-family>" \
   --arg rs "<approval note>" \
-  '{timestamp: $ts, item_id: $wiid, skill: "specifying-work-items", phase: "CROSS_MODEL_AUDIT", status: "APPROVED - CROSS-MODEL AUDIT", reason: $rs, orchestrator: $orch, model: $aud}' \
+  '{timestamp: $ts, item_id: $wiid, skill: "specifying-work-items", phase: "INDEPENDENT_AUDIT", status: "APPROVED - INDEPENDENT AUDIT", reason: $rs, orchestrator: $orch, reviewer_model: $aud, independence: $ind}' \
   >> .review_log.jsonl
 ```
 
-### `CROSS_MODEL_AUDIT` rejection template
+### `INDEPENDENT_AUDIT` rejection template
 
 ```bash
 jq -nc \
@@ -77,8 +85,9 @@ jq -nc \
   --arg wiid "<work_item_id>" \
   --arg orch "<orchestrator_model_name>" \
   --arg aud "<reviewer_model_name>" \
+  --arg ind "<self|fresh-context|cross-family>" \
   --arg rs "<raw rejection text>" \
-  '{timestamp: $ts, item_id: $wiid, skill: "specifying-work-items", phase: "CROSS_MODEL_AUDIT", status: "REJECTED - CROSS-MODEL AUDIT", reason: $rs, orchestrator: $orch, model: $aud}' \
+  '{timestamp: $ts, item_id: $wiid, skill: "specifying-work-items", phase: "INDEPENDENT_AUDIT", status: "REJECTED - INDEPENDENT AUDIT", reason: $rs, orchestrator: $orch, reviewer_model: $aud, independence: $ind}' \
   >> .review_log.jsonl
 ```
 
@@ -91,7 +100,8 @@ jq -nc \
   --arg st "<plan review status>" \
   --arg orch "<orchestrator_model_name>" \
   --arg aud "<reviewer_model_name>" \
+  --arg ind "<self|fresh-context|cross-family>" \
   --arg rs "<raw reviewer output>" \
-  '{timestamp: $ts, item_id: $wiid, skill: "writing-plans", phase: "PLAN_REVIEW", status: $st, reason: $rs, orchestrator: $orch, model: $aud}' \
+  '{timestamp: $ts, item_id: $wiid, skill: "writing-plans", phase: "PLAN_REVIEW", status: $st, reason: $rs, orchestrator: $orch, reviewer_model: $aud, independence: $ind}' \
   >> .review_log.jsonl
 ```

@@ -33,37 +33,48 @@ The review is not optional and may not be abbreviated.
 - A rejected epic spec may **not** proceed to work item decomposition or
   `specifying-work-items`. No exceptions.
 
-## Cross-Model Audit
+## Independent Audit
 
-After the epic spec passes self-review, it must be audited by a model from the opposite
-family before work item decomposition begins. Load `EPIC_REVIEW_MANIFEST.md` to create
-the audit context and ensure the auditor applies the same standards.
+After the epic spec passes self-review, an independent reviewer must audit it
+before work item decomposition begins. What the audit needs is independence: fresh
+context and no stake in the draft. A different model family helps but is not
+required. Load `EPIC_REVIEW_MANIFEST.md` to create the audit context and ensure the
+auditor applies the same standards.
 
-**Invocation Syntax:** Physically invoke the `requesting-code-review` skill. Determine
-your current model family.
+**Invocation Syntax:** Physically invoke the `requesting-code-review` skill with a
+fresh-context reviewer. It must not be you, and it must not be a sub-agent that helped
+draft or fix the epic spec.
 
-- Set the skill's `model` parameter to a current model from the opposite family
-  (if you are Claude, a GPT model; if you are GPT, a Claude model).
-- If a repo-root overlay names the auditor model, use that model.
+- **Required:** fresh context. The reviewer gets only the inputs listed below, never
+  this conversation or your drafting notes.
+- **Preferred:** a different model family, when the harness offers one. If a repo-root
+  overlay names the reviewer model, use that model. This skill names none.
+- Record the result as `independence: "cross-family"` when the reviewer is from another
+  model family, otherwise `independence: "fresh-context"`. A fresh-context review from
+  the same family is a compliant audit, not a substitute. Do not log an excuse for it.
 
-Both models receive:
+The reviewer receives only:
 
 - The epic title and description.
 - The full epic spec text.
 - The shipped `EPIC_RUBRIC.md`.
 
-**Pass condition:** The auditing model returns `[EPIC-APPROVED]`.
+**Same reviewer across rounds:** round 2 and later go back to the same reviewer
+(resume or message it) with the spec diff and your response to each finding. Start a
+new reviewer only after a rewrite of the epic spec.
 
-- Record the approval in `.review_log.jsonl` using the `CROSS_MODEL_AUDIT` approval
+**Pass condition:** The reviewer returns `[EPIC-APPROVED]`.
+
+- Record the approval in `.review_log.jsonl` using the `INDEPENDENT_AUDIT` approval
   template in `../shared/review-log-jsonl.md`, substituting
   `skill: "specifying-epics"`.
 
-**On cross-model rejection:**
+**On independent-audit rejection:**
 
-- Log the rejection to `.review_log.jsonl` using the `CROSS_MODEL_AUDIT` rejection
+- Log the rejection to `.review_log.jsonl` using the `INDEPENDENT_AUDIT` rejection
   template in `../shared/review-log-jsonl.md`, substituting
   `skill: "specifying-epics"`.
-- **Circuit Breaker:** If you fail cross-model audit three consecutive times, halt and
+- **Circuit Breaker:** If you fail independent audit three consecutive times, halt and
   ask the human for product guidance and whether to continue.
 - Fix the spec inline.
 - Run a post-fix consistency check across every affected section.

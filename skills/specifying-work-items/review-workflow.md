@@ -32,20 +32,29 @@ The review is not optional and may not be abbreviated.
   whether to continue.
 - A rejected spec may **not** proceed to plan writing. No exceptions.
 
-## Cross-model audit
+## Independent audit
 
-After the spec passes self-review, it must be audited by a model from the
-opposite family before planning begins. Load `SPEC_REVIEW_MANIFEST.md` to
-create the audit context and ensure the auditor applies the same standards.
+After the spec passes self-review, an independent reviewer must audit it
+before planning begins. What the audit needs is independence: fresh context and
+no stake in the draft. A different model family helps but is not required.
+Load `SPEC_REVIEW_MANIFEST.md` to create the audit context and ensure the
+auditor applies the same standards.
 
 **Invocation Syntax:** You must physically invoke the `requesting-code-review`
-skill. Determine your current model family.
+skill with a fresh-context reviewer. It must not be you, and it must not be a
+sub-agent that helped draft or fix the spec.
 
-- Set the skill's `model` parameter to a current model from the opposite family
-  (if you are Claude, a GPT model; if you are GPT, a Claude model).
-- If a repo-root overlay names the auditor model, use that model.
+- **Required:** fresh context. The reviewer gets only the inputs listed below,
+  never this conversation or your drafting notes.
+- **Preferred:** a different model family, when the harness offers one. If a
+  repo-root overlay names the reviewer model, use that model. This skill names
+  none.
+- Record the result as `independence: "cross-family"` when the reviewer is from
+  another model family, otherwise `independence: "fresh-context"`. A
+  fresh-context review from the same family is a compliant audit, not a
+  substitute. Do not log an excuse for it.
 
-Both models receive:
+The reviewer receives only:
 
 - The issue title and description.
 - The full spec text.
@@ -54,16 +63,20 @@ Both models receive:
 - The git diff or file paths of any repository changes the spec depends on.
 - The shipped `SPEC_RUBRIC.md`.
 
-**Pass condition:** The auditing model returns `[SPEC-APPROVED]`.
+**Same reviewer across rounds:** round 2 and later go back to the same
+reviewer (resume or message it) with the spec diff and your response to each
+finding. Start a new reviewer only after a rewrite of the spec.
 
-- Record the approval in `.review_log.jsonl` using the `CROSS_MODEL_AUDIT`
+**Pass condition:** The reviewer returns `[SPEC-APPROVED]`.
+
+- Record the approval in `.review_log.jsonl` using the `INDEPENDENT_AUDIT`
   approval template in `../shared/review-log-jsonl.md`.
 
-**On cross-model rejection:**
+**On independent-audit rejection:**
 
-- Log the rejection to `.review_log.jsonl` using the `CROSS_MODEL_AUDIT`
+- Log the rejection to `.review_log.jsonl` using the `INDEPENDENT_AUDIT`
   rejection template in `../shared/review-log-jsonl.md`.
-- **Circuit Breaker:** If you fail cross-model audit three consecutive times,
+- **Circuit Breaker:** If you fail independent audit three consecutive times,
   you are strictly forbidden from attempting a fourth fix. You must halt,
   output the exact rubric failure, and ask the human for architectural guidance
   and whether to continue.

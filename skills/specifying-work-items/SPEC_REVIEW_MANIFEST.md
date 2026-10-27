@@ -61,7 +61,8 @@ should block planning.
 Do not approve a spec for planning unless the workflow records or enforces:
 - source-of-truth sync completion before planning handoff
 - the post-fix consistency check
-- the cross-model audit requirement with an opposite model family
+- the independent audit requirement: a fresh-context reviewer that did not
+  draft the spec, with `reviewer_model` and `independence` logged
 - `.review_log.jsonl` recording of review outcomes
 - the rule that rejected specs may not proceed to plan writing
 

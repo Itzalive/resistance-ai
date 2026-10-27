@@ -74,6 +74,6 @@ Every spec must pass every item below before planning.
       trigger, mapping rules, state rules, and replay/retry/failure behavior?
 - [ ] Does the workflow preserve issue/source-of-truth synchronization without
       requiring a dedicated spec-body section for it?
-- [ ] Does the workflow preserve cross-model audit and `.review_log.jsonl`
+- [ ] Does the workflow preserve independent audit and `.review_log.jsonl`
       recording without requiring dedicated review-metadata sections in the spec
       body?

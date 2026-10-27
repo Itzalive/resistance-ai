@@ -46,7 +46,7 @@ Do not use this as a shortcut around repository inspection, review, or user appr
 3. If ambiguity is unresolved, output blocking questions only. Do not output `Draft Spec`, `MVP`, or any proposed solution while ambiguity remains unresolved.
 4. Before the first approved section, output only `## Assumptions surface` or blockers, then stop. Do not emit downstream sections such as goals, user stories, architecture, or implementation steps before the first approved section.
 5. If implementation already exists before design, stop. Do not retrofit a minimal spec around the current solution.
-6. After a written spec exists, load `review-workflow.md`. Run self-review and opposite-family cross-model audit, record each outcome in `.review_log.jsonl` using `../shared/review-log-jsonl.md`, and treat `[SPEC-APPROVED]` as the only valid transition into `writing-plans`.
+6. After a written spec exists, load `review-workflow.md`. Run self-review and independent audit, record each outcome in `.review_log.jsonl` using `../shared/review-log-jsonl.md`, and treat `[SPEC-APPROVED]` as the only valid transition into `writing-plans`.
 7. Sync the source-of-truth work item before handing off to `writing-plans`.
 
 ---
@@ -80,12 +80,12 @@ assume hidden privacy, auth, or dependency risk.
    blocker, not advice.
 5. No de-escalation of risk. Once you flag a risk, stop; do not offer an
    implementation path around it.
-6. Planning gate. Only specs with `APPROVED - CROSS-MODEL AUDIT` may proceed to
+6. Planning gate. Only specs with `APPROVED - INDEPENDENT AUDIT` may proceed to
    `writing-plans`. No exceptions.
 
 <HARD-GATE>
 Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until you have presented a design and the user has approved it. This applies to EVERY project regardless of perceived simplicity.
-In this skill, that design is the reviewed spec, so `writing-plans` still requires `APPROVED - CROSS-MODEL AUDIT`.
+In this skill, that design is the reviewed spec, so `writing-plans` still requires `APPROVED - INDEPENDENT AUDIT`.
 </HARD-GATE>
 
 ---
@@ -116,7 +116,7 @@ treating "obvious" scope as a shortcut.
     detail; acceptance criteria verify rather than define.
 10. After a written spec exists, load `review-workflow.md`, complete its review
      and audit loop, record each outcome in `.review_log.jsonl`, and do not invoke
-     `writing-plans` until `APPROVED - CROSS-MODEL AUDIT`.
+     `writing-plans` until `APPROVED - INDEPENDENT AUDIT`.
 
 ## Writing the work item body
 
@@ -172,11 +172,11 @@ digraph specifying_work_items {
     "Present design sections" -> "Write spec" [label="approved"];
     "Write spec" -> "Empirical verification";
     "Empirical verification" -> "Self-review + consistency check";
-    "Self-review + consistency check" -> "Cross-model spec audit" [label="approved"];
+    "Self-review + consistency check" -> "Independent spec audit" [label="approved"];
     "Revise design (post-review)" -> "Self-review + consistency check";
-    "Cross-model spec audit" -> "Fix spec + re-review" [label="[SPEC-REJECTED]"];
+    "Independent spec audit" -> "Fix spec + re-review" [label="[SPEC-REJECTED]"];
     "Fix spec + re-review" -> "Self-review + consistency check";
-    "Cross-model spec audit" -> "User review" [label="[SPEC-APPROVED]"];
+    "Independent spec audit" -> "User review" [label="[SPEC-APPROVED]"];
     "User review" -> "Revise design (post-review)" [label="changes requested"];
     "User review" ->  "Checklist Retrospective" [label="approved"];
     "Checklist Retrospective" -> "Invoke writing-plans";
@@ -235,9 +235,8 @@ critical mechanics appear.
    updates rather than emitting a standalone `## Shard Evaluation` section by default.
 3. **Source-of-truth sync completion** — the relevant work item is updated using the
    append-only procedure before planning begins (see Source-of-truth sync section).
-4. **Review and audit gate completion** — self-review, opposite-family cross-model
-   audit, user approval, and required logging must all complete before handoff to
-   planning.
+4. **Review and audit gate completion** — self-review, independent audit, user
+   approval, and required logging must all complete before handoff to planning.
 
 If a section can be deleted without changing what an implementer builds, tests, or
 verifies, it does not belong in the work item body.
@@ -394,7 +393,7 @@ Do not emit `## Review and Audit Gate` in the spec body unless a repository over
 explicitly requires it as implementation-relevant content.
 
 A spec may not proceed to `writing-plans` until self-review passes,
-opposite-family cross-model audit returns `APPROVED - CROSS-MODEL AUDIT`, the
+independent audit returns `APPROVED - INDEPENDENT AUDIT`, the
 user approves the written spec with `[SPEC-APPROVED]`, and source-of-truth sync
 is complete.
 

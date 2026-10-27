@@ -397,17 +397,22 @@ After applying self-review fixes, re-run any affected verification from `Pre-pla
 
 **CRITICAL:** Before marking work as approved, and only after the Plan self-review
 plus any resulting fixes are complete, perform a double-blind alignment check using
-a cross-model sub-agent (Rubber Duck).
+an independent sub-agent (Rubber Duck).
 
-**Model selection rule:**
-- The sub-agent must be a current model from the opposite family to the orchestrator
-  (Claude orchestrator → GPT sub-agent; GPT orchestrator → Claude sub-agent).
-- If a repo-root overlay names the reviewer model, use that model.
+**Reviewer independence rule:**
+- **Required:** a fresh-context sub-agent that did not write or fix the plan. It gets
+  only the evidence bundle below, never this conversation.
+- **Preferred:** a different model family, when the harness offers one. If a repo-root
+  overlay names the reviewer model, use that model. This skill names none.
+- Log `reviewer_model` and `independence` (`fresh-context` or `cross-family`). A
+  same-family fresh-context review is compliant, not a substitute.
+- Round 2 and later go back to the same reviewer with the plan diff. Start a new
+  reviewer only after a rewrite of the plan.
 
 Build the reviewer input bundle using `unified-coherence-check-evidence.md` in this
 directory. That support file defines the exact evidence to provide, including the
 existing-state check, shell verification output, Tabula Rasa proof, review-log chain,
-and opposite-model proof.
+and reviewer independence proof.
 
 The sub-agent must validate:
 - **Alignment A (Spec vs. Work Item):** Does the spec satisfy every functional

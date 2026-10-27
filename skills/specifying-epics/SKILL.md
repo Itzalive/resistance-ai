@@ -64,7 +64,7 @@ Do not use this skill to produce architecture decisions. It ends at the product 
 5. If a decision to build already exists before the problem is understood, stop. Do not
    retrofit a product rationale around a predetermined solution.
 6. After a written epic spec exists, load `review-workflow.md`. Run self-review and
-   opposite-family cross-model audit, record each outcome in `.review_log.jsonl` using
+   independent audit, record each outcome in `.review_log.jsonl` using
    `../shared/review-log-jsonl.md`, and treat `[EPIC-APPROVED]` as the only valid
    transition into work item decomposition and `specifying-work-items`.
 7. Sync the source-of-truth epic before handing off.
@@ -116,7 +116,7 @@ conversation first — then interrogate the assumptions that remain.
 4. Assumption hunting before drafting. Every implicit assumption is named before the spec is written.
 5. Scope is a constraint, not a target. The epic defines the minimum verifiable value, not everything that could be built.
 6. Blocking constraints block. A business rule without a clear owner or verification path is a blocker, not advice.
-7. Product gate. Only epic specs with `APPROVED - CROSS-MODEL AUDIT` may proceed to work item decomposition and `specifying-work-items`. No exceptions.
+7. Product gate. Only epic specs with `APPROVED - INDEPENDENT AUDIT` may proceed to work item decomposition and `specifying-work-items`. No exceptions.
 
 <HARD-GATE>
 Do NOT decompose this epic into work items, invoke specifying-work-items, writing-plans,
@@ -144,7 +144,7 @@ instead. If the scope is uncertain, use this skill first.
 5. Evaluate whether the epic should be split before drafting.
 6. Present epic spec sections one at a time. **CRITICAL:** Halt after each section. Do not generate the next until the user explicitly approves.
 7. Write the epic spec using `## Writing the Epic Body` and `## Deliverable Artifact`.
-8. Load `review-workflow.md`, complete review and audit loop. Do not invoke work item decomposition until `APPROVED - CROSS-MODEL AUDIT`.
+8. Load `review-workflow.md`, complete review and audit loop. Do not invoke work item decomposition until `APPROVED - INDEPENDENT AUDIT`.
 
 ---
 
@@ -187,11 +187,11 @@ digraph specifying_epics {
     "Revise (pre-spec)" -> "Present epic sections";
     "Present epic sections" -> "Write epic spec" [label="approved"];
     "Write epic spec" -> "Self-review + consistency check";
-    "Self-review + consistency check" -> "Cross-model audit" [label="approved"];
+    "Self-review + consistency check" -> "Independent audit" [label="approved"];
     "Revise (post-review)" -> "Self-review + consistency check";
-    "Cross-model audit" -> "Fix spec + re-review" [label="[EPIC-REJECTED]"];
+    "Independent audit" -> "Fix spec + re-review" [label="[EPIC-REJECTED]"];
     "Fix spec + re-review" -> "Self-review + consistency check";
-    "Cross-model audit" -> "User review" [label="[EPIC-APPROVED]"];
+    "Independent audit" -> "User review" [label="[EPIC-APPROVED]"];
     "User review" -> "Revise (post-review)" [label="changes requested"];
     "User review" -> "Checklist Retrospective" [label="approved"];
     "Checklist Retrospective" -> "Sync source-of-truth epic";
@@ -260,7 +260,7 @@ Every epic spec workflow must establish the following before work item decomposi
    build on this one.
 4. **Source-of-truth sync completion** — the epic work item is updated using the
    append-only procedure before work item decomposition begins.
-5. **Review and audit gate completion** — self-review, cross-model audit, user approval,
+5. **Review and audit gate completion** — self-review, independent audit, user approval,
    and required logging must all complete before handoff.
 
 **This epic spec must NOT contain:**
@@ -344,7 +344,7 @@ companions for first-turn gate decisions.
 
 An epic spec may not proceed to work item decomposition or `specifying-work-items` until:
 - self-review passes
-- opposite-family cross-model audit returns `APPROVED - CROSS-MODEL AUDIT`
+- independent audit returns `APPROVED - INDEPENDENT AUDIT`
 - user approves the written spec with `[EPIC-APPROVED]`
 - source-of-truth sync is complete
 

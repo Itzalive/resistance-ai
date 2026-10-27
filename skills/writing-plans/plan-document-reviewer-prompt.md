@@ -6,18 +6,20 @@ Use this template when dispatching a plan document reviewer sub-agent.
 
 **Dispatch after:** The Plan self-review is finished and any inline fixes are applied.
 
-**Model selection rule (hard gate):**
-- The reviewer sub-agent must be a current model from the opposite family to the orchestrator
-  (Claude orchestrator → GPT reviewer; GPT orchestrator → Claude reviewer).
-- If a repo-root overlay names the reviewer model, use that model.
-The reviewer must be from the opposite model family. Do not use the same family.
+**Reviewer independence rule (hard gate):**
+- The reviewer must be a fresh-context sub-agent that did not write or fix the plan. It
+  gets only the inputs in the prompt below.
+- Prefer a different model family when the harness offers one. If a repo-root overlay
+  names the reviewer model, use that model. Otherwise omit `model` and use the default.
+- Round 2 and later go back to the same reviewer with the plan diff. Start a new
+  reviewer only after a rewrite of the plan.
 
 ```
 Task tool (general-purpose):
   description: "Review plan document"
   agent_type: "general-purpose"
   name: "plan-document-reviewer"
-  model: [OPPOSITE_FAMILY_REVIEW_MODEL]
+  model: [REVIEWER_MODEL_IF_OVERLAY_NAMES_ONE]
   prompt: |
     You are a paranoid plan document reviewer. Your job is NOT to approve quickly —
     it is to find every way this plan could fail in production or during execution.
@@ -29,7 +31,7 @@ Task tool (general-purpose):
     **Tabula Rasa / spec-ingestion proof:** [TABULA_RASA_EVIDENCE]
     **Phase 4 audit evidence:** [PHASE_4_AUDIT_EVIDENCE]
     **`.review_log.jsonl` chain:** [REVIEW_LOG_CHAIN]
-    **Orchestrator / reviewer family proof:** [MODEL_FAMILY_PROOF]
+    **Reviewer independence proof:** [REVIEWER_INDEPENDENCE_PROOF]
 
     ## Hard Gates (reject immediately if any fail)
 
@@ -113,11 +115,12 @@ Task tool (general-purpose):
     - Do all file paths, method signatures, and class names in the plan match the
       physical repository state as verified by the shell commands in the plan?
 
-    **13. Cross-model review proof**
+    **13. Independent review proof**
     - Is there evidence that the Phase 4 spec audit (specifying-work-items phase) was
-      performed by an opposite-family model?
-    - Is the reviewer of this plan from the opposite model family to the
-      orchestrator?
+      performed by a fresh-context reviewer, logged with `reviewer_model` and
+      `independence`?
+    - Is the reviewer of this plan a fresh-context reviewer that did not write the
+      plan? A same-family reviewer passes this gate.
 
     **14. `.review_log.jsonl` chain**
     - Does the plan reference or does prior Phase 4 evidence exist in

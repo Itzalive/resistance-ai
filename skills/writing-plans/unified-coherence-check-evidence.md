@@ -39,10 +39,11 @@ sub-agent.
      spec-review outcomes
    - Use the schema in `../shared/review-log-jsonl.md`
 
-8. **Opposite-model proof**
-   - Evidence that the reviewer is from the opposite model family to the
-     orchestrator
-   - Any other explicit model-family proof needed by the hard gates
+8. **Reviewer independence proof**
+   - The orchestrator model, the reviewer model, and the `independence` value
+     (`fresh-context` or `cross-family`)
+   - Confirmation that the reviewer received only this bundle and did not write
+     or fix the plan
 
 ## Placeholder mapping
 
@@ -53,4 +54,4 @@ sub-agent.
 - `**Tabula Rasa / spec-ingestion proof:**` → item 5
 - `**Phase 4 audit evidence:**` → relevant parts of items 6 and 7 when needed
 - `**.review_log.jsonl chain:**` → item 7
-- `**Orchestrator / reviewer family proof:**` → item 8
+- `**Reviewer independence proof:**` → item 8

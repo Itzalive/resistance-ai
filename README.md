@@ -83,7 +83,7 @@ changing the local/submodule flow described above.
   ship the default spec review behavior
 - `skills/writing-plans/SKILL.md` is self-sufficient by default
 - the self-contained `specifying-work-items` default also carries sharding, source-of-truth
-  sync, empirical verification, self-review, and cross-model audit requirements
+  sync, empirical verification, self-review, and independent audit requirements
 - the self-contained `writing-plans` default also carries Tabula Rasa ingestion,
   topological TDD, chunking, pre-plan verification, runbook rules, and Unified
   Coherence review requirements
