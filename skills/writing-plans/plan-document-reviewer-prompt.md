@@ -7,8 +7,9 @@ Use this template when dispatching a plan document reviewer sub-agent.
 **Dispatch after:** The Plan self-review is finished and any inline fixes are applied.
 
 **Model selection rule (hard gate):**
-- Orchestrator is **claude-\*** → reviewer sub-agent must be **gpt-5.4**.
-- Orchestrator is **gpt-\*** → reviewer sub-agent must be **claude-sonnet-4.6**.
+- The reviewer sub-agent must be a current model from the opposite family to the orchestrator
+  (Claude orchestrator → GPT reviewer; GPT orchestrator → Claude reviewer).
+- If a repo-root overlay names the reviewer model, use that model.
 The reviewer must be from the opposite model family. Do not use the same family.
 
 ```

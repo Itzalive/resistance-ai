@@ -42,8 +42,9 @@ the audit context and ensure the auditor applies the same standards.
 **Invocation Syntax:** Physically invoke the `requesting-code-review` skill. Determine
 your current model family.
 
-- If you are Claude, explicitly set the skill's `model` parameter to `gpt-5.4`.
-- If you are GPT, explicitly set the skill's `model` parameter to `claude-sonnet-4.6`.
+- Set the skill's `model` parameter to a current model from the opposite family
+  (if you are Claude, a GPT model; if you are GPT, a Claude model).
+- If a repo-root overlay names the auditor model, use that model.
 
 Both models receive:
 

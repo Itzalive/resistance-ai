@@ -18,8 +18,9 @@ is an optional overlay only. Strictly apply repo-root overlays; if they contradi
 
 **Context:** This should be run in a dedicated worktree (created by specifying-work-items).
 
-**Save plans to:** `docs/superpowers/plans/YYYY-MM-DD-<work-item-id>-<work-item-name>.md`
-- (User preferences for plan location override this default)
+**Save plans to:** `<plans-dir>/YYYY-MM-DD-<work-item-id>-<work-item-name>.md`
+- `<plans-dir>` defaults to `docs/plans`. A plan directory named in repo-root `PLAN_WRITING.md`, or a user preference, overrides it.
+- Specs live in `<specs-dir>`, which defaults to `docs/specs`. A spec directory named in a repo-root overlay, or a user preference, overrides it.
 
 ---
 
@@ -97,7 +98,7 @@ This structure informs the task decomposition. Each task should produce self-con
 ```markdown
 # [Feature Name] Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use resistance-engine:subagent-driven-development (recommended) or resistance-engine:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** [One sentence describing what this builds]
 
@@ -232,7 +233,7 @@ digraph writing-plans {
 
 Assume your memory of the specification is flawed, hallucinated, or incomplete.
 Your first action must be to shell-read the approved spec (for example,
-`ls docs/superpowers/specs/` then `cat <file>`). Do not outline execution steps
+`ls <specs-dir>/` then `cat <file>`). Do not outline execution steps
 until the spec is physically ingested. A plan translates a spec mechanically; it
 is not a second brainstorming phase.
 
@@ -399,8 +400,9 @@ plus any resulting fixes are complete, perform a double-blind alignment check us
 a cross-model sub-agent (Rubber Duck).
 
 **Model selection rule:**
-- Orchestrator is **claude-\*** → sub-agent must be **gpt-5.4**.
-- Orchestrator is **gpt-\*** → sub-agent must be **claude-sonnet-4.6**.
+- The sub-agent must be a current model from the opposite family to the orchestrator
+  (Claude orchestrator → GPT sub-agent; GPT orchestrator → Claude sub-agent).
+- If a repo-root overlay names the reviewer model, use that model.
 
 Build the reviewer input bundle using `unified-coherence-check-evidence.md` in this
 directory. That support file defines the exact evidence to provide, including the

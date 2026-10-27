@@ -11,10 +11,10 @@ sub-agent.
    - Notes or comments from the work-item system
 
 2. **Final spec**
-   - `docs/superpowers/specs/<spec-file>.md`
+   - `<specs-dir>/<spec-file>.md` (see `SKILL.md` for the default and how to override it)
 
 3. **Final plan**
-   - `docs/superpowers/plans/<plan-file>.md`
+   - `<plans-dir>/<plan-file>.md`
 
 4. **Pre-plan verification evidence**
    - Existing implementation/state check (for example whether the target section,
@@ -28,7 +28,7 @@ sub-agent.
 
 5. **Tabula Rasa / spec-ingestion proof**
    - Shell history or captured output showing the spec was physically ingested
-     before drafting (for example `ls docs/superpowers/specs/` then `cat <file>`)
+     before drafting (for example `ls <specs-dir>/` then `cat <file>`)
 
 6. **Plan self-review outcome**
    - Summary of the self-review pass
