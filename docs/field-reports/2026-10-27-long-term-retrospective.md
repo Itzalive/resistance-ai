@@ -113,9 +113,9 @@ All small, but agents copy them into every plan.
 
 ## 4. Recommendations
 
-Ordered by expected value. **Replace** means rewriting the section or skill; **update** means targeted edits.
+Ordered by expected value. **Replace** means rewriting the section or skill; **update** means targeted edits. Tracked in GitHub issue #18 (R1–R9 are #9–#17).
 
-### R1. Replace the review model in subagent-driven-development (high value)
+### R1. Replace the review model in subagent-driven-development (high value) — #9
 
 Rewrite the skill around the path that worked (field report §1, §9):
 
@@ -127,7 +127,7 @@ Rewrite the skill around the path that worked (field report §1, §9):
 6. **Name the inline fast path** (F4): a plan with ≤3 tasks and no trust-boundary change may run inline. One review at the end must then include mutations (R6).
 7. Replace TodoWrite with the project's tracker. Delete the per-task two-stage review flow.
 
-### R2. Split specs into behaviour and evidence, and add an amendment path (high value)
+### R2. Split specs into behaviour and evidence, and add an amendment path (high value) — #10
 
 In specifying-work-items:
 
@@ -138,7 +138,7 @@ In specifying-work-items:
 5. **Spec-gap pass before planning any item of a multi-item release** (field report §26–27). Present the questions in tiers: blocking decisions, then "defaults applied unless you object".
 6. **Section-by-section approval becomes a mode, not a rule** (F9). The default is to present the assumptions surface plus blocking decisions. The halt after each section applies only when the owner asks for it or the item is greenfield.
 
-### R3. Rename "cross-model audit" to "independent audit" and remove hard-coded models (high value, low effort)
+### R3. Rename "cross-model audit" to "independent audit" and remove hard-coded models (high value, low effort) — #11
 
 In specifying-work-items/review-workflow.md and writing-plans:
 
@@ -147,7 +147,7 @@ In specifying-work-items/review-workflow.md and writing-plans:
 - Log `reviewer_model` and `independence: fresh-context | cross-family`. Stop treating same-family review as a substitute.
 - The same reviewer continues into round 2 and later (field report §11). A new reviewer is used only after a rewrite.
 
-### R4. Make writing-plans the owner of the caller sweep and of sizing (high value)
+### R4. Make writing-plans the owner of the caller sweep and of sizing (high value) — #12
 
 Fold in field report §4 and §7:
 
@@ -160,23 +160,23 @@ Fold in field report §4 and §7:
 7. **Code detail by tier (experiment, measure it):** full code for every RED test and for haiku tasks. For sonnet and opus tasks, interfaces, tests and the caller table are enough. Judge it on executor-attributable checkpoint findings and on plan tokens (F5).
 8. Rename the "Unified Coherence Check" to an **alignment check**. Point it at completeness and the per-task rule rather than at a three-vector cross-model ceremony. Remove the `superpowers:` names and paths.
 
-### R5. Give the review log a strict schema and an append helper (medium value, unblocks every later retrospective)
+### R5. Give the review log a strict schema and an append helper (medium value, unblocks every later retrospective) — #13
 
 - **One schema** in `skills/shared/review-log-jsonl.md`: `ts`, `item_id`, `skill`, `phase` (from an enum), `round`, `verdict` (`APPROVED | REJECTED | PASS | FAIL`), `reviewer_model`, `independence`, `findings` (list of `{severity, kind, text}`, with `kind` one of `missed-caller | weak-test | plan-hole | spec-hole | real-bug | slip | wording`), and optional `tokens`.
 - **A small `scripts/review-log` append CLI** that validates the entry and escapes it correctly. Skills call the CLI instead of writing JSON by hand (that fixes the malformed line).
 - **A run record per plan**, written at plan end by finishing-a-development-branch (field report §6): tasks, tiers, escalations, attempts per step, tokens per phase, findings per layer and kind, plan changes, slips.
 
-### R6. Make survivability conditional and report it honestly (medium value)
+### R6. Make survivability conditional and report it honestly (medium value) — #14
 
 - Skip the **mutation lane** when checkpoint reviews have already mutated every changed decision point. Run it in full on the inline path and on any plan without checkpoints (F7).
 - Always run the **chaos lane**. The field report found it still useful.
 - Log `first_slate: k/n` alongside the final result. A run with survivors is `FAIL → hardened`, not `PASS`.
 
-### R7. Add a retrospective step to finishing-a-development-branch (medium value)
+### R7. Add a retrospective step to finishing-a-development-branch (medium value) — #15
 
 At plan end, ask: which layer found what, what the writer should have caught, which executor slips recurred, and whether this was a reshard. File skill feedback to resistance-engine's `docs/field-reports/`, not to the project. The field report shows that the owner asking "what did we do wrong?" produced the two biggest improvements; this step makes it routine.
 
-### R8. Put release sequencing in specifying-epics (lower urgency)
+### R8. Put release sequencing in specifying-epics (lower urgency) — #16
 
 Field report §7 and §14–17 belong before planning, at epic or release level:
 
@@ -186,9 +186,9 @@ Field report §7 and §14–17 belong before planning, at epic or release level:
 
 specifying-epics has 3 items so far (10/17 entries rejected); it's too early to judge the skill itself.
 
-### R9. Clean up stale references (low effort)
+### R9. Clean up stale references (low effort) — #17
 
-TodoWrite → bd/the tracker; `superpowers:` → `resistance-engine:`; plan and spec paths become configurable; delete the hard-coded model IDs (R3).
+TodoWrite → the project's tracker (GitHub issues here); `superpowers:` → `resistance-engine:`; plan and spec paths become configurable; delete the hard-coded model IDs (R3).
 
 ## 5. What not to change
 
