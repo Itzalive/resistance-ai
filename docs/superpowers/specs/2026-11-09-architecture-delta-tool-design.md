@@ -1,6 +1,6 @@
 # Architecture delta tool
 
-Work item: #20 (part of #19). Status: passed self-review and independent audit; awaiting owner approval.
+Work item: #20 (part of #19). Status: approved by the owner on 2026-11-09.
 
 ## What it is
 
