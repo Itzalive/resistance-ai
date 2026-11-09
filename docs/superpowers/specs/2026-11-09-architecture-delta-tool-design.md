@@ -283,8 +283,9 @@ path never imports. `@likec4/language-services` alone was rejected: it fails to 
 - **AC-9** Given containers A and B, a relationship A -> B and a component of A depending on a component
   of B, when `check` runs, then there is no breach.
 - **AC-10** Given B is tagged `#protected` and the only relationship goes to B's parent, when an element
-  depends on B, then that pair is a breach; given a relationship directly to B, then it is not; given two elements both inside B, when one
-  depends on the other, then the ordinary rule applies.
+  outside B depends on B, then that pair is a breach; given a relationship directly to B, then it is
+  not. Given two children of B, when one depends on the other, then the pair is a breach with no
+  relationship between them and not a breach with one.
 - **AC-11** Given a relationship between two elements with `code` and no matching code edge, when
   `check` runs, then the pair is listed under `not_yet_reached` and the exit code is 0.
 - **AC-12** Given a shards file in which two shards both cover element E, when `check` runs, then E is
