@@ -105,11 +105,10 @@ language; it only compares the model with a list of dependencies the repo suppli
     an element not allowed to use it;
   - **not yet reached:** relationships in the model that the code does not have yet;
   - **unmapped code:** modules no element's `code` covers;
-  - **shared hot spots:** with `--scope <elements>` and `--shards <file>`, modules that two or more
-    shards' scopes both touch.
+  - **shared hot spots:** with `--shards <file>`, model elements inside two or more shards' scopes.
 - **Known gap file** `architecture/known-gap.json`: today's accepted breaches. The check fails on a
   breach not in the file and on an entry that no longer matches anything, so the gap only shrinks.
-- **Model export for repo checkers:** `architecture-delta.mjs --export` writes the model's elements
+- **Model export for repo checkers:** `architecture-delta.mjs export` writes the model's elements
   (kind, tags, `code`) and allowed `uses` relationships as plain JSON, so a repo can generate its own
   language-specific checks from it (for example import-linter contracts in a Python repo). The
   generator itself belongs to the repo.
@@ -261,7 +260,7 @@ by one PR at the end.
 
 | # | Shard | Depends on |
 |---|---|---|
-| 1 | Delta tool: C4 specification, `architecture-delta.mjs` (delta and `--export`), overlay-named dependency command, known-gap handling, tests | — |
+| 1 | Delta tool: C4 specification, `architecture-delta.mjs` (`check` and `export`), overlay-named dependency command, known-gap handling, tests | — |
 | 2 | Review-log enum, phases and run-record field, with tests | — |
 | 3 | `defining-architecture` skill (RED baseline first) | 1, 2 |
 | 4 | `planning-features` skill (RED baseline first) | 3 |
