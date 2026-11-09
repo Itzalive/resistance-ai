@@ -46,12 +46,20 @@ All inputs are read-only. `--model`, `--deps`, `--gap` and `--shards` are resolv
   config file ran; one in a parent folder did not), which would run repository code;
 - more than 2,000 files, or more than 50 MB in total.
 
-- **`likec4`:** the repository's choice wins. The tool loads `<repo>`'s installed copy (resolved from
-  `<repo>/package.json`) when there is one, at whatever version the repository pins; otherwise the
-  plugin's own install (resolved relative to the script), which is 1.60.0. Neither: exit 2 with an
-  install hint. The version is read from the loaded copy's `package.json`. A version other than
-  1.60.0 (the one the tests cover) gets one line on stderr, `note: likec4 <version> from repo; tested
-  with 1.60.0`, and the run continues; an incompatible version fails as `model-error` or `internal`.
+- **`likec4`:** the repository's choice wins.
+  - **Repository copy:** `<repo>/node_modules/likec4`, when that folder exists and its real path lies
+    inside `--repo`'s real path. Only that exact folder is looked at: no parent folder of `--repo` is
+    searched, and `<repo>/package.json` need not list it. It is used at whatever version it is.
+  - **Plugin copy:** otherwise the plugin's own install (resolved relative to the script), which is
+    1.60.0.
+  - **Neither:** exit 2 with an install hint.
+  - **Version:** read from the loaded copy's `package.json`; a missing or non-string `version` is
+    reported as `unknown`. A version other than 1.60.0 (the one the tests cover) gets one line on stderr,
+    `note: likec4 <version> from <source>; tested with 1.60.0`, and the run continues.
+  - **API shape:** before matching, the tool checks what `likec4` returned: every element has a string
+    `id`, a string `kind`, a `tags` array and a callable `getMetadata`, and every relationship has a
+    string `source.id` and `target.id`. Any mismatch exits 2 with `internal`, so a copy whose API
+    differs can never give a clean result by checking nothing.
 - **Model:** the directory `--model` (default `<repo>/architecture`), loaded with
   `LikeC4.fromWorkspace`. Any entry from `getErrors()`, or an exception from `likec4`: exit 2, listing
   each error's message, file and line where known.
@@ -247,9 +255,11 @@ metadata has no schema.
   - the no-network test runs the tool as `node --import <preload> architecture-delta.mjs …`, where
     the preload (a fixture) replaces `fetch`, `http.request` and `https.request` with functions that
     throw;
-  - the loading tests copy the script and `c4.c4` into a temporary `skills/shared/…` layout with no
-    `node_modules`, then run it with `--repo` set to a temporary folder holding a version shim (for
-    AC-2's repository copy) or to one with no `likec4` (for AC-2's install hint);
+  - every loading test puts its fixture repository in a temporary folder outside the engine. The
+    shim tests (AC-2, AC-2b) run the engine's own script with that folder holding a
+    `node_modules/likec4` shim. The install-hint and parent-folder cases of AC-2 copy the script and
+    `c4.c4` into a temporary `skills/shared/…` layout with no `node_modules`, the parent-folder case
+    placing a shim one folder above `--repo`;
   - `npm audit` output recorded when the pin is made; a high or critical finding stops the pin for the
     owner's decision.
 
@@ -294,7 +304,8 @@ script of its own. A transitive dependency, `esbuild` 0.28.2, has `postinstall: 
 skipped by `npm ci --ignore-scripts` and by Claude Code's plugin install, but a consuming repository
 that installs `likec4` without `--ignore-scripts` runs it. A repository's own copy is that
 repository's supply-chain choice and may be any version; the report records which copy and version
-ran. The plugin's copy is pinned exactly with a committed lockfile carrying integrity hashes; the tests install
+ran. The licence, install-script and audit statements here cover only the plugin's 1.60.0; the engine
+does not audit a repository's copy. The plugin's copy is pinned exactly with a committed lockfile carrying integrity hashes; the tests install
 with `npm ci --ignore-scripts`, and Claude Code's plugin install runs no lifecycle scripts. Upgrades
 are their own reviewed change with the tests re-run. It pulls in `playwright`, which the tool's code
 path never imports. `@likec4/language-services` alone was rejected: it fails to load without
@@ -303,16 +314,20 @@ path never imports. `@likec4/language-services` alone was rejected: it fails to 
 ## Acceptance criteria
 
 *Loading and inputs*
-- **AC-1** Given `likec4` is installed beside the tool and a fixture repository without it, when
-  `check --format json` runs on a clean fixture, then it exits 0 and reports
-  `"likec4": {"version": "1.60.0", "source": "plugin"}`.
+- **AC-1** Given `likec4` is installed beside the tool and a fixture repository in a temporary folder
+  outside the engine, without `node_modules`, when `check --format json` runs on a clean fixture, then
+  it exits 0 and reports `"likec4": {"version": "1.60.0", "source": "plugin"}`.
 - **AC-2** Given the repository has its own `likec4` reporting version 1.59.0 (a test shim whose
   `package.json` says 1.59.0 and whose entry re-exports the engine's installed copy), when
   `check --format json` runs, then the repository's copy is used, the report says
   `"source": "repo"` and `"version": "1.59.0"`, stderr has
   `note: likec4 1.59.0 from repo; tested with 1.60.0`, and the exit code is unaffected. Given neither
   the repository nor the plugin has `likec4`, then it exits 2 with `error: likec4-missing:` and an
-  install hint.
+  install hint. Given a `node_modules/likec4` only in a folder above `--repo`, then it is not used:
+  the report says `"source": "plugin"`, or the run exits 2 with `error: likec4-missing:` when the
+  plugin has none.
+- **AC-2b** Given a repository shim whose `elements()` returns items without a string `id`, when `check`
+  runs, then it exits 2 with `error: internal:` and never 0.
 - **AC-3** Given the model has an unknown reference and an unknown element kind, when `check` runs,
   then it exits 2, stdout is empty, and stderr has two `error: model-error:` lines naming the file and
   line of each.
