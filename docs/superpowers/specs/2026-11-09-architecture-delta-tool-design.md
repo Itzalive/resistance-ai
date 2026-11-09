@@ -1,6 +1,6 @@
 # Architecture delta tool
 
-Work item: #20 (part of #19). Status: passed self-review and independent audit; awaiting owner approval.
+Work item: #20 (part of #19). Status: amended (repository version wins); in review.
 
 ## What it is
 
@@ -46,9 +46,12 @@ All inputs are read-only. `--model`, `--deps`, `--gap` and `--shards` are resolv
   config file ran; one in a parent folder did not), which would run repository code;
 - more than 2,000 files, or more than 50 MB in total.
 
-- **`likec4`:** loaded from the plugin's own install (resolved relative to the script), else from
-  `<repo>`'s installed copy (resolved from `<repo>/package.json`). Neither: exit 2 with an install hint.
-  Whichever copy is found must be version 1.60.0, read from its `package.json`; another version: exit 2.
+- **`likec4`:** the repository's choice wins. The tool loads `<repo>`'s installed copy (resolved from
+  `<repo>/package.json`) when there is one, at whatever version the repository pins; otherwise the
+  plugin's own install (resolved relative to the script), which is 1.60.0. Neither: exit 2 with an
+  install hint. The version is read from the loaded copy's `package.json`. A version other than
+  1.60.0 (the one the tests cover) gets one line on stderr, `note: likec4 <version> from repo; tested
+  with 1.60.0`, and the run continues; an incompatible version fails as `model-error` or `internal`.
 - **Model:** the directory `--model` (default `<repo>/architecture`), loaded with
   `LikeC4.fromWorkspace`. Any entry from `getErrors()`, or an exception from `likec4`: exit 2, listing
   each error's message, file and line where known.
@@ -132,6 +135,7 @@ live entry look stale.
 
 ```json
 {
+  "likec4": { "version": "…", "source": "repo|plugin" },
   "breaches": [{ "from": "…", "to": "…", "edges": [["…", "…"]], "more_edges": 0, "gap": "known|new" }],
   "not_yet_reached": [{ "from": "…", "to": "…" }],
   "unmapped": ["…"],
@@ -145,7 +149,7 @@ order (no locale). A breach carries at most 20 module edges (sorted the same way
 in `more_edges`. `--format text` (the default) prints the same content under these headings, in this
 order, each left out when empty: `New breaches`, `Stale gap entries`, `Known breaches`,
 `Not yet reached`, `Unmapped code`, `Shared hot spots`; then one summary line
-`<n> new, <n> stale, <n> known`. The JSON form is the tested contract for content; the text form is
+`<n> new, <n> stale, <n> known (likec4 <version> from <source>)`. The JSON form is the tested contract for content; the text form is
 tested for its headings and summary line only.
 
 **`export`.** Prints the model for repositories that generate their own checks:
@@ -182,7 +186,7 @@ the caller's own timeout. The model folder limits keep that load small.
 
 **Errors.** On exit 2 nothing is printed to stdout. stderr gets one line per problem,
 `error: <token>: <detail>`, with the detail cleaned as above. The tokens are: `usage`,
-`likec4-missing`, `likec4-version`, `model-error`, `model-config`, `model-symlink`, `model-size`,
+`likec4-missing`, `model-error`, `model-config`, `model-symlink`, `model-size`,
 `spec-copy`, `outside-repo`, `bad-input`, `unknown-scope`, `edge-cap`, `element-cap`, `file-size`,
 `timeout` and `internal`. A missing `--model` directory, a missing or unparseable input file, an
 unknown id in a gap or shards file and a duplicate gap entry are `bad-input`; `getErrors()` entries and
@@ -243,9 +247,9 @@ metadata has no schema.
   - the no-network test runs the tool as `node --import <preload> architecture-delta.mjs …`, where
     the preload (a fixture) replaces `fetch`, `http.request` and `https.request` with functions that
     throw;
-  - the fallback tests copy the script and `c4.c4` into a temporary `skills/shared/…` layout with no
-    `node_modules`, then run it with `--repo` set to the engine root (which has `likec4` installed, for
-    AC-2's fallback) or to a temporary folder without it (for AC-2's install hint);
+  - the loading tests copy the script and `c4.c4` into a temporary `skills/shared/…` layout with no
+    `node_modules`, then run it with `--repo` set to a temporary folder holding a version shim (for
+    AC-2's repository copy) or to one with no `likec4` (for AC-2's install hint);
   - `npm audit` output recorded when the pin is made; a high or critical finding stops the pin for the
     owner's decision.
 
@@ -288,8 +292,9 @@ completely is bounded by the caller's timeout. At most 20 module edges per breac
 **Supply chain.** `likec4` 1.60.0 is the only new dependency: MIT, published 2026-10-15, with no install
 script of its own. A transitive dependency, `esbuild` 0.28.2, has `postinstall: node install.js`; it is
 skipped by `npm ci --ignore-scripts` and by Claude Code's plugin install, but a consuming repository
-that installs `likec4` without `--ignore-scripts` runs it. A fallback copy must also be exactly
-1.60.0 (Inputs). It is pinned exactly with a committed lockfile carrying integrity hashes; the tests install
+that installs `likec4` without `--ignore-scripts` runs it. A repository's own copy is that
+repository's supply-chain choice and may be any version; the report records which copy and version
+ran. The plugin's copy is pinned exactly with a committed lockfile carrying integrity hashes; the tests install
 with `npm ci --ignore-scripts`, and Claude Code's plugin install runs no lifecycle scripts. Upgrades
 are their own reviewed change with the tests re-run. It pulls in `playwright`, which the tool's code
 path never imports. `@likec4/language-services` alone was rejected: it fails to load without
@@ -299,11 +304,15 @@ path never imports. `@likec4/language-services` alone was rejected: it fails to 
 
 *Loading and inputs*
 - **AC-1** Given `likec4` is installed beside the tool and a fixture repository without it, when
-  `check` runs on a clean fixture, then it exits 0.
-- **AC-2** Given `likec4` is not installed beside the tool, when the repository has 1.60.0 installed,
-  then `check` runs with the repository's copy; when neither has it, then it exits 2 with
-  `error: likec4-missing:` and an install hint; when the found copy reports another version, then it
-  exits 2 with `error: likec4-version:`.
+  `check --format json` runs on a clean fixture, then it exits 0 and reports
+  `"likec4": {"version": "1.60.0", "source": "plugin"}`.
+- **AC-2** Given the repository has its own `likec4` reporting version 1.59.0 (a test shim whose
+  `package.json` says 1.59.0 and whose entry re-exports the engine's installed copy), when
+  `check --format json` runs, then the repository's copy is used, the report says
+  `"source": "repo"` and `"version": "1.59.0"`, stderr has
+  `note: likec4 1.59.0 from repo; tested with 1.60.0`, and the exit code is unaffected. Given neither
+  the repository nor the plugin has `likec4`, then it exits 2 with `error: likec4-missing:` and an
+  install hint.
 - **AC-3** Given the model has an unknown reference and an unknown element kind, when `check` runs,
   then it exits 2, stdout is empty, and stderr has two `error: model-error:` lines naming the file and
   line of each.
@@ -352,7 +361,7 @@ path never imports. `@likec4/language-services` alone was rejected: it fails to 
 - **AC-18** Given one model, when `export` runs twice, then the outputs are byte-identical and have
   `format`, `elements` and `allowed` in the shape above.
 - **AC-19** Given `--format json` and a breach with 25 module edges, when `check` runs, then the report
-  has exactly the five keys above, each list sorted, and the breach shows 20 edges with
+  has exactly the six keys above, each list sorted, and the breach shows 20 edges with
   `more_edges: 5`.
 - **AC-20** Given a model string with an ANSI escape sequence, a C0, C1 or bidirectional control
   character, or more than 200 code points, when `check --format json` prints it, then the sequence and
@@ -383,7 +392,7 @@ path never imports. `@likec4/language-services` alone was rejected: it fails to 
 | Item | Priority | Effort | Why |
 |---|---|---|---|
 | Call the tool from `defining-architecture`, `specifying-features`, plan review and finishing | P1 | in #22–#25 | The tool has no effect until the skills run it |
-| Check whether Copilot CLI and Pi install plugin npm dependencies | P2 | S | Decides whether those harnesses rely on the repository fallback |
+| Check whether Copilot CLI and Pi install plugin npm dependencies | P2 | S | Decides whether those harnesses need the repository to install `likec4` |
 | A `likec4` upgrade routine (re-audit, re-run tests, re-check the loader) | P2 | S | `likec4` releases every few weeks |
 | Measure the ~109 MB dependency against plugin install time and Claude Code's 60 s install limit | P3 | S | The plugin install could time out on a slow link |
 | Relationship kinds that withhold permission | P3 | M | Only if a real model needs one |
@@ -404,7 +413,7 @@ path never imports. `@likec4/language-services` alone was rejected: it fails to 
 | A12 | `esbuild` 0.28.2 (transitive) has `postinstall: node install.js` | VERIFIED: `npm view esbuild@0.28.2 scripts` |
 | A8 | Claude Code installs a plugin's npm dependencies when it has `package.json` and a version 2 or 3 `package-lock.json` with exact registry pins, without lifecycle scripts, within 60 s | VERIFIED from Claude Code's plugin documentation; not yet exercised end to end |
 | A9 | `node_modules/` is not in `.gitignore` | VERIFIED: `.gitignore` |
-| A10 | Copilot CLI and Pi install plugin npm dependencies | UNVERIFIED, not blocking: the repository fallback covers both (future work) |
+| A10 | Copilot CLI and Pi install plugin npm dependencies | UNVERIFIED, not blocking: a repository copy covers both (future work) |
 
 Shard evaluation: one tool with one responsibility; `export` reads the same model. No split, no
 refactor mixed in.

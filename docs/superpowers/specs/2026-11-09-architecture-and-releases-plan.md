@@ -96,10 +96,9 @@ language; it only compares the model with a list of dependencies the repo suppli
   exit code 2 and a message saying what the overlay must name. (A Python repo might use `grimp`; a
   Kotlin repo a Konsist or Gradle dump. Those live in the repo, not here.)
 - **Where `likec4` comes from:** the engine pins `likec4` as a runtime dependency in its
-  `package.json`, with `package-lock.json` committed, so Claude Code installs it with the plugin. The
-  tool loads it from the plugin's own install first, then from the consuming repo's pinned copy (for
-  harnesses that do not install plugin dependencies), and exits 2 with an install hint if neither
-  exists. Cost: about 109 MB per plugin version for every user.
+  `package.json`, with `package-lock.json` committed, so Claude Code installs it with the plugin. A
+  consuming repo's own pinned copy wins, at whatever version it chooses; otherwise the tool uses the
+  plugin's copy, and exits 2 with an install hint if neither exists. Cost: about 109 MB per plugin version for every user.
 - **Output** (JSON and a short text report), each item naming the model elements and code modules:
   - **breaches:** code dependencies with no `uses` relationship, or into a `#protected` element from
     an element not allowed to use it;
@@ -283,8 +282,8 @@ Shards 1 and 2 are independent and can run in parallel.
 
 5. **Language-neutral engine:** the engine ships no language adapters. The repo's overlay names the
    command that writes the dependency file.
-6. **`likec4` ships with the plugin** (pinned in the engine's lockfile), with the consuming repo's
-   pinned copy as the fallback.
+6. **`likec4` ships with the plugin** (pinned in the engine's lockfile). A consuming repo that pins
+   its own version gets that version.
 
 ## Checked
 
