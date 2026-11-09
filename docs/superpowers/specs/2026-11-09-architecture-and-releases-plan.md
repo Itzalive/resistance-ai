@@ -85,14 +85,19 @@ The architecture model is LikeC4 DSL (`.c4` files, MIT), written as C4.
 
 ## Shared tool: architecture delta
 
-`skills/shared/scripts/architecture-delta.mjs` (Node, LikeC4's documented model API
-`LikeC4.fromWorkspace`). Language-neutral: it never reads source code itself.
+`skills/shared/scripts/architecture-delta.mjs` (Node, the `likec4` package's model API
+`LikeC4.fromWorkspace`). Language-neutral: the engine never reads source code and never assumes a
+language; it only compares the model with a list of dependencies the repo supplies.
 
-- **Input:** the model directory, and a dependency file of `{"edges": [[from_module, to_module], ...]}`
-  produced by a language adapter.
-- **Adapters:** `skills/shared/scripts/deps-python.py` (import graph via `grimp`, the library under
-  import-linter). Other languages: the repo's overlay names a command that writes the same JSON (for
-  example a Konsist or Gradle dependency dump for Kotlin).
+- **Input:** the model directory, and a dependency file of `{"edges": [[from_module, to_module], ...]}`.
+  Module names are opaque strings to the engine; the model's `code` metadata uses the same names.
+- **Where the dependencies come from:** the repo's overlay (`ARCHITECTURE_DESIGN.md`) names the command
+  that writes the dependency file, and how module names map to `code` metadata (for example dotted
+  module prefixes). The engine ships no language adapters. A repo with no command configured gets
+  exit code 2 and a message saying what the overlay must name. (A Python repo might use `grimp`; a
+  Kotlin repo a Konsist or Gradle dump. Those live in the repo, not here.)
+- **Where `likec4` comes from:** the consuming repo pins `likec4` as a dev dependency; the tool loads
+  it from that repo and exits 2 with an install hint when it is missing.
 - **Output** (JSON and a short text report), each item naming the model elements and code modules:
   - **breaches:** code dependencies with no `uses` relationship, or into a `#protected` element from
     an element not allowed to use it;
@@ -102,9 +107,10 @@ The architecture model is LikeC4 DSL (`.c4` files, MIT), written as C4.
     shards' scopes both touch.
 - **Known gap file** `architecture/known-gap.json`: today's accepted breaches. The check fails on a
   breach not in the file and on an entry that no longer matches anything, so the gap only shrinks.
-- **Optional generator** `generate-import-linter.mjs`: writes import-linter `layers` and `protected`
-  contracts from the model, so a Python repo's CI can keep import-linter as the gate while the model
-  stays the source.
+- **Model export for repo checkers:** `architecture-delta.mjs --export` writes the model's elements
+  (kind, tags, `code`) and allowed `uses` relationships as plain JSON, so a repo can generate its own
+  language-specific checks from it (for example import-linter contracts in a Python repo). The
+  generator itself belongs to the repo.
 - **Exit codes:** 0 clean, 1 new breach or stale gap entry, 2 input error.
 - Tests run under the repo's existing `uv run pytest` (fixture models and edge files, the Node script
   called as a subprocess), plus one contract test that the shipped C4 specification parses.
@@ -253,7 +259,7 @@ by one PR at the end.
 
 | # | Shard | Depends on |
 |---|---|---|
-| 1 | Delta tool: C4 specification, `architecture-delta.mjs`, `deps-python.py`, known-gap handling, import-linter generator, tests | — |
+| 1 | Delta tool: C4 specification, `architecture-delta.mjs` (delta and `--export`), overlay-named dependency command, known-gap handling, tests | — |
 | 2 | Review-log enum, phases and run-record field, with tests | — |
 | 3 | `defining-architecture` skill (RED baseline first) | 1, 2 |
 | 4 | `planning-features` skill (RED baseline first) | 3 |
@@ -269,7 +275,9 @@ Shards 1 and 2 are independent and can run in parallel.
    → one domain memory module → callers (chat, email extractor, summariser, tools, notifications,
    evals). Run the delta: today it shows at least the files outside the domain module that import the
    library directly.
-2. Record the known gap; generate import-linter contracts; add the check to CI.
+2. In that repo's overlay: name a `grimp`-based command that writes the dependency file, pin `likec4`
+   as a dev dependency, and generate import-linter contracts from `--export`. Record the known gap and
+   add the check to CI.
 3. Use `specifying-features` with the delta for the epic's next feature.
 
 ## Decisions (owner, 2026-11-09)
@@ -283,8 +291,15 @@ Shards 1 and 2 are independent and can run in parallel.
    scope (entry-path count, consolidation first, costing spike) moves to the `specifying-features`
    shard; #16 stays open for the step-file restructure.
 
-## Unverified
+5. **Language-neutral engine:** the engine ships no language adapters. The repo's overlay names the
+   command that writes the dependency file; consuming repos pin `likec4` as a dev dependency.
 
-- LikeC4's model API names (`fromWorkspace`, `elementsWhere`, relationship `source`/`target`) come
-  from its docs and have not been run here. Shard 1 starts by checking them.
-- `grimp` as the import-graph source is from general knowledge, not checked against its current docs.
+## Checked
+
+- `likec4` 1.60.0 (MIT, 54 packages, no install script; installed with `--ignore-scripts`): from the
+  package root, `LikeC4.fromWorkspace(dir, { logger: false })`, `getErrors()` (message, line, range,
+  file for unknown references and unknown kinds), `computedModel()`, `elements()` with `id`, `kind`,
+  `tags`, `getMetadata()`, and `relationships()` with `source.id`, `target.id`, `kind`, `title` all
+  work as described. A small model loads in under 200 ms.
+- `@likec4/language-services` alone does not load (a missing `bundle-require` dependency), so the
+  full `likec4` package is the one to pin.
