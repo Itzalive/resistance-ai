@@ -49,8 +49,8 @@ All inputs are read-only. `--model`, `--deps`, `--gap` and `--shards` are resolv
   `edges` key; each edge exactly two non-empty strings. A repeated edge counts once.
 - **Known-gap file** (`--gap`, default `<model>/known-gap.json`): optional; absent means an empty gap.
   Format below.
-- **Shards file** (`--shards`): optional, `{"shards": {"<name>": ["<element id>", …]}}`, each id a
-  model element.
+- **Shards file** (`--shards`): optional, `{"shards": {"<name>": ["<element id>", …]}}`; an id that is
+  not a model element: exit 2.
 
 ## Matching rules
 
@@ -72,8 +72,9 @@ or any ancestor of A to B or any ancestor of B. Any relationship grants the perm
 kind; relationship kinds only change how diagrams look.
 
 **`#protected`.** When B or an ancestor of B is tagged `#protected`, call the nearest such element P.
-An edge into B is then allowed only by a relationship from A or an ancestor of A to P or to a
-descendant of P. A relationship to an ancestor of P does not count.
+If A lies outside P, the edge is then allowed only by a relationship from A or an ancestor of A to P
+or to a descendant of P; a relationship to an ancestor of P does not count. Edges between elements
+that are both inside P follow the ordinary rule.
 
 **Reported.**
 - **Breach:** a checked edge that is not allowed; one breach per element pair (source element, target
@@ -207,8 +208,8 @@ metadata has no schema.
     with the message "run `npm ci`";
   - a source test that the tool imports neither `child_process` nor `worker_threads` and calls no
     `fs` write function;
-  - a test that `npm ci --ignore-scripts` on a fresh checkout installs `likec4` 1.60.0 from the
-    lockfile;
+  - a test that `package-lock.json` is lockfile version 3, pins `likec4` at exactly 1.60.0, and
+    that the installed `node_modules/likec4` is that version;
   - the no-network test runs the tool as `node --import <preload> architecture-delta.mjs …`, where
     the preload (a fixture) replaces `fetch`, `http.request` and `https.request` with functions that
     throw;
@@ -282,7 +283,8 @@ path never imports. `@likec4/language-services` alone was rejected: it fails to 
 - **AC-9** Given containers A and B, a relationship A -> B and a component of A depending on a component
   of B, when `check` runs, then there is no breach.
 - **AC-10** Given B is tagged `#protected` and the only relationship goes to B's parent, when an element
-  depends on B, then that pair is a breach; given a relationship directly to B, then it is not.
+  depends on B, then that pair is a breach; given a relationship directly to B, then it is not; given two elements both inside B, when one
+  depends on the other, then the ordinary rule applies.
 - **AC-11** Given a relationship between two elements with `code` and no matching code edge, when
   `check` runs, then the pair is listed under `not_yet_reached` and the exit code is 0.
 - **AC-12** Given a shards file in which two shards both cover element E, when `check` runs, then E is
