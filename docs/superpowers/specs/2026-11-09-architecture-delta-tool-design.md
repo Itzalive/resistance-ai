@@ -1,6 +1,6 @@
 # Architecture delta tool
 
-Work item: #20 (part of #19). Status: draft for review.
+Work item: #20 (part of #19). Status: passed self-review and independent audit; awaiting owner approval.
 
 ## What it is
 
@@ -184,7 +184,9 @@ the caller's own timeout. The model folder limits keep that load small.
 `error: <token>: <detail>`, with the detail cleaned as above. The tokens are: `usage`,
 `likec4-missing`, `likec4-version`, `model-error`, `model-config`, `model-symlink`, `model-size`,
 `spec-copy`, `outside-repo`, `bad-input`, `unknown-scope`, `edge-cap`, `element-cap`, `file-size`,
-`timeout` and `internal`. A top-level handler turns any other error into `internal` with exit 2, so an
+`timeout` and `internal`. A missing `--model` directory, a missing or unparseable input file, an
+unknown id in a gap or shards file and a duplicate gap entry are `bad-input`; `getErrors()` entries and
+exceptions from `likec4` while loading are `model-error`. A top-level handler turns any other error into `internal` with exit 2, so an
 unexpected failure can never read as a breach.
 
 **Exit codes.**
@@ -264,7 +266,8 @@ network call. Whether `likec4`'s loader ever reaches the network is not proven, 
 **Integrity.** Every input is repository content and treated as hostile:
 - `likec4` would execute a config file inside the model folder; the pre-load walk refuses any such
   file and any symlink, so loading the model runs no repository code and reads nothing outside
-  `--repo` (AC-24).
+  `--repo` (AC-24). A file changed between the walk and the load is out of scope: the caller controls
+  the working tree.
 - Strict shapes for the dependency, gap and shards files: unknown keys, wrong types and empty strings
   are exit 2 (AC-5).
 - Every input path must resolve inside `--repo` (Inputs above) (AC-5).
@@ -359,9 +362,9 @@ path never imports. `@likec4/language-services` alone was rejected: it fails to 
 - **AC-21** Given `fetch`, `http.request` and `https.request` throw, when `check` and `export` run on a
   fixture, then both succeed.
 - **AC-22** Given a dependency file over the edge cap, a model over the element cap, an input file over
-  50 MB, a model folder over 2,000 files, or `--timeout 0`, when the tool runs, then it exits 2 with
-  `error: edge-cap:`, `error: element-cap:`, `error: file-size:`, `error: model-size:` or
-  `error: timeout:` respectively.
+  50 MB, a model folder over 2,000 files or over 50 MB in total, or `--timeout 0`, when the tool runs,
+  then it exits 2 with `error: edge-cap:`, `error: element-cap:`, `error: file-size:`,
+  `error: model-size:` or `error: timeout:` respectively.
 - **AC-23** Given a model folder holding only the shipped `c4.c4`, when `export` runs, then it exits 0
   with no elements.
 - **AC-24** Given a model folder containing a `likec4.config.mjs` (at any depth) or a symbolic link, when

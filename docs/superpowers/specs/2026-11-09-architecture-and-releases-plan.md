@@ -109,7 +109,7 @@ language; it only compares the model with a list of dependencies the repo suppli
 - **Known gap file** `architecture/known-gap.json`: today's accepted breaches. The check fails on a
   breach not in the file and on an entry that no longer matches anything, so the gap only shrinks.
 - **Model export for repo checkers:** `architecture-delta.mjs export` writes the model's elements
-  (kind, tags, `code`) and allowed `uses` relationships as plain JSON, so a repo can generate its own
+  (kind, tags, `code`) and its allowed relationships (any kind) as plain JSON, so a repo can generate its own
   language-specific checks from it (for example import-linter contracts in a Python repo). The
   generator itself belongs to the repo.
 - **Exit codes:** 0 clean, 1 new breach or stale gap entry, 2 input error.
@@ -131,7 +131,7 @@ its failures recorded in the skill's evidence file, then the skill, then the sce
 - **Reads:** the approved epic, the repository, the delta tool's output for today's code.
 - **Writes:**
   - the target model in `architecture/`: systems, containers and components with `code` and `rules`
-    metadata, allowed `uses` relationships, `#protected` and `#layer` tags, and invariants as
+    metadata, allowed relationships, `#protected` and `#layer` tags, and invariants as
     relationship rules (for example "only the orders module uses the payments library"; "evals use
     production builders, never copies");
   - a short architecture document beside it: the decisions and the alternatives rejected (the
