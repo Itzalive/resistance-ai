@@ -1,6 +1,6 @@
 # Architecture delta tool
 
-Work item: #20 (part of #19). Status: amended (repository version wins); in review.
+Work item: #20 (part of #19). Status: passed self-review and independent audit; awaiting owner approval.
 
 ## What it is
 
@@ -55,7 +55,9 @@ All inputs are read-only. `--model`, `--deps`, `--gap` and `--shards` are resolv
     install puts its dependencies; it is 1.60.0. The same rule as the repository copy applies: only
     that exact folder, with its real path inside the engine root's real path, and no parent folder
     searched. Each copy is loaded by importing the entry its own `package.json` names, never by
-    package-name resolution.
+    package-name resolution: the first of `exports["."].import`, `exports["."].default.import`,
+    `exports["."].default` (when a string), `module` and `main`. No entry, or an entry whose real path
+    lies outside the copy's own folder, exits 2 with `internal`.
   - **Neither:** exit 2 with an install hint.
   - **Version:** read from the loaded copy's `package.json`; a missing or non-string `version` is
     reported as `unknown`. A version other than 1.60.0 (the one the tests cover) gets one line on stderr,
