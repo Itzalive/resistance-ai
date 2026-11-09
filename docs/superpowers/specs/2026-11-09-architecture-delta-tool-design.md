@@ -385,7 +385,7 @@ path never imports. `@likec4/language-services` alone was rejected: it fails to 
   `check` runs on a fixture with a new breach, then it exits 2 with `error: internal:`, never 1.
 - **AC-27** Given `--format text` with one new breach, one stale entry and one known breach, when `check`
   runs, then the output has the headings `New breaches`, `Stale gap entries` and `Known breaches` in
-  that order and ends with `1 new, 1 stale, 1 known`.
+  that order and its last line starts with `1 new, 1 stale, 1 known (likec4 `.
 
 ## Future work (downstream cost)
 
