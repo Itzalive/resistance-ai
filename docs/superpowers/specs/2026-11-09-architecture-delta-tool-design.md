@@ -50,16 +50,21 @@ All inputs are read-only. `--model`, `--deps`, `--gap` and `--shards` are resolv
   - **Repository copy:** `<repo>/node_modules/likec4`, when that folder exists and its real path lies
     inside `--repo`'s real path. Only that exact folder is looked at: no parent folder of `--repo` is
     searched, and `<repo>/package.json` need not list it. It is used at whatever version it is.
-  - **Plugin copy:** otherwise the plugin's own install (resolved relative to the script), which is
-    1.60.0.
+  - **Plugin copy:** otherwise exactly `<engine root>/node_modules/likec4`, where the engine root is the
+    folder three levels above the script (`skills/shared/scripts/` → root), which is where a plugin
+    install puts its dependencies; it is 1.60.0. The same rule as the repository copy applies: only
+    that exact folder, with its real path inside the engine root's real path, and no parent folder
+    searched. Each copy is loaded by importing the entry its own `package.json` names, never by
+    package-name resolution.
   - **Neither:** exit 2 with an install hint.
   - **Version:** read from the loaded copy's `package.json`; a missing or non-string `version` is
     reported as `unknown`. A version other than 1.60.0 (the one the tests cover) gets one line on stderr,
     `note: likec4 <version> from <source>; tested with 1.60.0`, and the run continues.
   - **API shape:** before matching, the tool checks what `likec4` returned: every element has a string
-    `id`, a string `kind`, a `tags` array and a callable `getMetadata`, and every relationship has a
-    string `source.id` and `target.id`. Any mismatch exits 2 with `internal`, so a copy whose API
-    differs can never give a clean result by checking nothing.
+    `id`, a string `kind`, a `tags` array and a callable `getMetadata` whose `code` and `rules` values
+    are each a string or absent, and every relationship has a string `source.id` and `target.id`. Any
+    mismatch exits 2 with `internal`, so a copy whose API differs can never give a clean result by
+    checking nothing.
 - **Model:** the directory `--model` (default `<repo>/architecture`), loaded with
   `LikeC4.fromWorkspace`. Any entry from `getErrors()`, or an exception from `likec4`: exit 2, listing
   each error's message, file and line where known.
@@ -259,7 +264,7 @@ metadata has no schema.
     shim tests (AC-2, AC-2b) run the engine's own script with that folder holding a
     `node_modules/likec4` shim. The install-hint and parent-folder cases of AC-2 copy the script and
     `c4.c4` into a temporary `skills/shared/…` layout with no `node_modules`, the parent-folder case
-    placing a shim one folder above `--repo`;
+    placing one shim in the folder above `--repo` and one in the folder above the copied engine root;
   - `npm audit` output recorded when the pin is made; a high or critical finding stops the pin for the
     owner's decision.
 
@@ -323,11 +328,12 @@ path never imports. `@likec4/language-services` alone was rejected: it fails to 
   `"source": "repo"` and `"version": "1.59.0"`, stderr has
   `note: likec4 1.59.0 from repo; tested with 1.60.0`, and the exit code is unaffected. Given neither
   the repository nor the plugin has `likec4`, then it exits 2 with `error: likec4-missing:` and an
-  install hint. Given a `node_modules/likec4` only in a folder above `--repo`, then it is not used:
-  the report says `"source": "plugin"`, or the run exits 2 with `error: likec4-missing:` when the
-  plugin has none.
-- **AC-2b** Given a repository shim whose `elements()` returns items without a string `id`, when `check`
-  runs, then it exits 2 with `error: internal:` and never 0.
+  install hint. Given a copied script with no `node_modules` at its engine root, a `node_modules/likec4`
+  shim in the folder above `--repo` and another in the folder above the copied engine root, when
+  `check` runs, then neither shim is used and it exits 2 with `error: likec4-missing:`.
+- **AC-2b** Given a repository shim whose `elements()` returns items without a string `id`, or whose
+  `getMetadata()` returns `code` as an array, when `check` runs, then it exits 2 with
+  `error: internal:` and never 0.
 - **AC-3** Given the model has an unknown reference and an unknown element kind, when `check` runs,
   then it exits 2, stdout is empty, and stderr has two `error: model-error:` lines naming the file and
   line of each.
@@ -423,7 +429,7 @@ path never imports. `@likec4/language-services` alone was rejected: it fails to 
 | A4 | `likec4` 1.60.0: MIT, published 2026-10-15, no install script, 54 packages, ~109 MB | VERIFIED: `npm view`; scratch install with `--ignore-scripts` |
 | A5 | `fromWorkspace`, `getErrors()` (message, line, range, file), `computedModel()`, `elements()` (`id`, `kind`, `tags`, `getMetadata()`), `relationships()` (`source.id`, `target.id`, `kind`, `title`) behave as used here; a small model loads in under 200 ms | VERIFIED: scratch run |
 | A6 | `@likec4/language-services` alone fails to load (`bundle-require` missing) | VERIFIED: scratch run |
-| A7 | A script outside a repository can load that repository's `likec4` via `createRequire(<repo>/package.json)`; without it, resolution fails with `MODULE_NOT_FOUND` | VERIFIED: scratch run from a separate folder |
+| A7 | A script in another folder can load a `likec4` copy from an exact `node_modules/likec4` folder by importing the entry its `package.json` names (`exports["."].default.import`, `./dist/index.mjs` in 1.60.0) through a file URL, with no package-name resolution | VERIFIED: scratch run from a separate folder |
 | A11 | `likec4` executes a `likec4.config.mjs` inside the loaded folder, including nested; not one in a parent folder | VERIFIED: scratch run (marker file written by the nested config, not by the parent one) |
 | A12 | `esbuild` 0.28.2 (transitive) has `postinstall: node install.js` | VERIFIED: `npm view esbuild@0.28.2 scripts` |
 | A8 | Claude Code installs a plugin's npm dependencies when it has `package.json` and a version 2 or 3 `package-lock.json` with exact registry pins, without lifecycle scripts, within 60 s | VERIFIED from Claude Code's plugin documentation; not yet exercised end to end |
@@ -453,5 +459,5 @@ Commands run against the repository and scratch installs while specifying:
   scratch folders; a two-component model (`#protected` tag, `code` and `rules` metadata, one
   relationship) loaded through `LikeC4.fromWorkspace`, printing elements and relationships; a broken
   model (unknown reference, unknown kind) printing `getErrors()`; a loader in a third folder resolving
-  `likec4` through `createRequire`, with and without it installed.
+  `likec4` by the entry its `package.json` names, from an exact folder.
 - File count and size of the scratch `node_modules` (7,256 files, 108.8 MB).
