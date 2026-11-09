@@ -1,7 +1,6 @@
 # Architecture and features: change plan
 
-Status: approved by the owner on 2026-11-09. Covers every change to resistance-engine; the first consuming repo's
-adoption is listed at the end as a separate piece of work.
+Status: approved by the owner on 2026-11-09. Covers every change to resistance-engine.
 
 ## Why
 
@@ -134,7 +133,7 @@ its failures recorded in the skill's evidence file, then the skill, then the sce
 - **Writes:**
   - the target model in `architecture/`: systems, containers and components with `code` and `rules`
     metadata, allowed `uses` relationships, `#protected` and `#layer` tags, and invariants as
-    relationship rules (for example "only the memory module uses the generic library"; "evals use
+    relationship rules (for example "only the orders module uses the payments library"; "evals use
     production builders, never copies");
   - a short architecture document beside it: the decisions and the alternatives rejected (the
     epic's decision log format), and every epic business rule mapped to the element that owns it;
@@ -271,17 +270,6 @@ by one PR at the end.
 | 7 | Version bump (minor) and release | 6 |
 
 Shards 1 and 2 are independent and can run in parallel.
-
-## Adoption in the first consuming repo (separate work, after release)
-
-1. Write the target model for the current memory epic as it should have been: generic memory library
-   → one domain memory module → callers (chat, email extractor, summariser, tools, notifications,
-   evals). Run the delta: today it shows at least the files outside the domain module that import the
-   library directly.
-2. In that repo's overlay: name a `grimp`-based command that writes the dependency file, pin `likec4`
-   only if its harness does not install the plugin's dependencies, and generate import-linter contracts from `--export`. Record the known gap and
-   add the check to CI.
-3. Use `specifying-features` with the delta for the epic's next feature.
 
 ## Decisions (owner, 2026-11-09)
 
