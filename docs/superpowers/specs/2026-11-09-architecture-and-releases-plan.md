@@ -249,7 +249,7 @@ its failures recorded in the skill's evidence file, then the skill, then the sce
   check runs before merge; a new breach or a stale gap entry blocks finishing.
 - **using-resistance-engine** and **README:** the skill list and the flow.
 - **Review log:** `defining-architecture`, `planning-features` and `specifying-features` added to the
-  CLI's skill enum and the schema doc, with phases `ARCH_REVIEW`, `FEATURES_REVIEW`,
+  CLI's skill enum and the schema doc, with phases `ARCH_REVIEW`, `FEATURES_PLAN_REVIEW`,
   `FEATURE_REVIEW`; run record gains an optional `feature` field.
 
 ## Delivery shards (resistance-engine)
