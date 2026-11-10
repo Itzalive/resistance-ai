@@ -39,7 +39,8 @@ Use this support file when a skill requires review outcomes to be appended to
 
 **`skill`:** `specifying-epics`, `specifying-work-items`, `writing-plans`,
 `subagent-driven-development`, `executing-plans`, `requesting-code-review`,
-`survivability`, `finishing-a-development-branch`.
+`survivability`, `finishing-a-development-branch`, `defining-architecture`,
+`planning-features`, `specifying-features`.
 
 **`phase`:**
 
@@ -48,7 +49,10 @@ Use this support file when a skill requires review outcomes to be appended to
 | `EPIC_REVIEW` | Epic self-review | `self` |
 | `SPEC_REVIEW` | Spec self-review | `self` |
 | `PLAN_SELF_REVIEW` | Plan self-review | `self` |
-| `INDEPENDENT_AUDIT` | Epic or spec independent audit | `fresh-context` or `cross-family` |
+| `ARCH_REVIEW` | Architecture self-review (`defining-architecture`) | `self` |
+| `FEATURES_PLAN_REVIEW` | Feature plan self-review (`planning-features`) | `self` |
+| `FEATURE_REVIEW` | Feature spec self-review (`specifying-features`) | `self` |
+| `INDEPENDENT_AUDIT` | Epic, architecture, feature plan, feature or spec independent audit | `fresh-context` or `cross-family` |
 | `PLAN_REVIEW` | Plan alignment check | `fresh-context` or `cross-family` |
 | `CHECKPOINT_REVIEW` | Review during execution (per task or checkpoint) | `fresh-context` or `cross-family` |
 | `CODE_REVIEW` | Final code review | `fresh-context` or `cross-family` |
@@ -117,11 +121,12 @@ normalising free text. Write the record as a JSON file (or pipe it), then:
 python <skills-dir>/shared/scripts/review-log.py run-record --from run-record.json
 ```
 
-All fields are required; use `0`, `{}` or `[]` when there is nothing to report.
+All fields except `feature` are required; use `0`, `{}` or `[]` when there is nothing to report.
 
 | Field | Shape | Meaning |
 |---|---|---|
 | `item_id` | string | Work item the plan implements |
+| `feature` | string, optional | Feature the plan's work item belongs to; omit when the work item is not part of a feature |
 | `plan` | string | Path to the plan file |
 | `tasks` | integer | Number of tasks executed |
 | `tiers` | `{tier: count}` | Tasks per executor tier or model, e.g. `{"haiku": 3, "sonnet": 2}` |
