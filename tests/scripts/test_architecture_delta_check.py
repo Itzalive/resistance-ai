@@ -190,3 +190,92 @@ def test_text_report_headings_and_summary(tmp_path) -> None:
     assert headings == ["New breaches", "Stale gap entries", "Known breaches"]
     assert lines[-1].startswith("1 new, 1 stale, 1 known (likec4 ")
     assert lines[-1] == "1 new, 1 stale, 1 known (likec4 1.60.0 from plugin)"
+
+
+def test_text_report_lists_every_heading_in_order_and_counts_each_kind(tmp_path) -> None:
+    repo = make_repo(tmp_path)
+    gap(repo, ("shop.orders.api", "shop.payments.card"), ("shop.orders", "shop.payments"), ("shop.checkout", "shop.orders"))
+    shards = write_json(repo / "shards.json", {"shards": {"a": ["shop.payments"], "b": ["shop.payments"]}})
+    edges = [BREACH, ["shop.payments.card.y", "shop.orders.x"], ["shop.checkout.a", "shop.orders.api.b"],
+             ["shop.payments.p", "shop.checkout.q"], ["zz.q", "shop.orders"]]
+    proc = check(repo, edges, "--shards", shards)
+    assert proc.returncode == 1, proc.stderr
+    lines = proc.stdout.splitlines()
+    every = ["New breaches", "Stale gap entries", "Known breaches", "Not yet reached", "Unmapped code", "Shared hot spots"]
+    assert [line for line in lines if line in every] == every
+    assert lines[-1] == "3 new, 2 stale, 1 known (likec4 1.60.0 from plugin)"
+
+
+def test_text_report_leaves_out_empty_headings(tmp_path) -> None:
+    proc = check(make_repo(tmp_path), CLEAN_EDGES)
+    assert proc.returncode == 0, proc.stderr
+    assert proc.stdout.splitlines() == ["0 new, 0 stale, 0 known (likec4 1.60.0 from plugin)"]
+
+
+@pytest.mark.parametrize("flag", ["--gap", "--shards"])
+def test_named_gap_or_shards_file_that_is_missing_is_bad_input(tmp_path, flag: str) -> None:
+    proc = check(make_repo(tmp_path), CLEAN_EDGES, flag, "nope.json")
+    assert proc.returncode == 2
+    assert proc.stdout == ""
+    assert error_lines(proc)[0].startswith("error: bad-input: ")
+
+
+def test_named_gap_file_is_used(tmp_path) -> None:
+    repo = make_repo(tmp_path)
+    write_json(repo / "other" / "gap.json",
+               {"entries": [{"from": "shop.orders.api", "to": "shop.payments.card", "reason": "r"}]})
+    proc = check(repo, [BREACH], "--gap", "other/gap.json", "--format", "json")
+    assert proc.returncode == 0, proc.stderr
+    assert report(proc)["breaches"][0]["gap"] == "known"
+
+
+@pytest.mark.parametrize("flag", ["--gap", "--shards"])
+def test_gap_or_shards_outside_the_repo_is_refused(tmp_path, flag: str) -> None:
+    outside = tmp_path / unique("outside")
+    write_json(outside / "gap.json", {"entries": []})
+    write_json(outside / "shards.json", {"shards": {}})
+    file = outside / ("gap.json" if flag == "--gap" else "shards.json")
+    proc = check(make_repo(tmp_path), CLEAN_EDGES, flag, file)
+    assert proc.returncode == 2
+    assert error_lines(proc)[0].startswith("error: outside-repo: ")
+
+
+def test_every_unknown_scope_id_is_listed(tmp_path) -> None:
+    proc = check(make_repo(tmp_path), CLEAN_EDGES, "--scope", "shop.nope,shop.orders,shop.zip")
+    assert proc.returncode == 2
+    assert error_lines(proc) == ["error: unknown-scope: shop.nope is not a model element",
+                                 "error: unknown-scope: shop.zip is not a model element"]
+
+
+def test_json_lists_are_sorted_by_raw_code_units(tmp_path) -> None:
+    repo = make_repo(tmp_path)
+    gap(repo, ("shop.orders", "shop.payments"), ("shop.checkout", "shop.orders"))
+    shards = write_json(repo / "shards.json", {"shards": {"a": ["shop"], "b": ["shop"]}})
+    edges = [["shop.payments.card.y", "shop.orders.x"],
+             ["shop.orders.api.b", "shop.payments.card.z"], ["shop.orders.api.b", "shop.payments.card.y"],
+             ["shop.orders.api.a", "shop.payments.card.z"], ["shop.orders.api.B", "shop.payments.card.z"],
+             ["zz.b", "shop.orders"], ["zz.a", "shop.orders"], ["Zz.c", "shop.orders"]]
+    data = report(check(repo, edges, "--shards", shards, "--format", "json"))
+    assert [(b["from"], b["to"]) for b in data["breaches"]] == [
+        ("shop.orders.api", "shop.payments.card"), ("shop.payments.card", "shop.orders")]
+    assert data["breaches"][0]["edges"] == [
+        ["shop.orders.api.B", "shop.payments.card.z"], ["shop.orders.api.a", "shop.payments.card.z"],
+        ["shop.orders.api.b", "shop.payments.card.y"], ["shop.orders.api.b", "shop.payments.card.z"]]
+    assert data["unmapped"] == ["Zz.c", "zz.a", "zz.b"]
+    assert [s["element"] for s in data["hot_spots"]] == [
+        "shop", "shop.checkout", "shop.orders", "shop.orders.api", "shop.payments", "shop.payments.card"]
+    assert data["not_yet_reached"] == [{"from": "shop.checkout", "to": "shop.payments"},
+                                       {"from": "shop.orders", "to": "shop.checkout"}]
+    assert data["gap"]["stale"] == [{"from": "shop.checkout", "to": "shop.orders"},
+                                    {"from": "shop.orders", "to": "shop.payments"}]
+
+
+def test_module_names_and_version_are_cleaned_after_sorting(tmp_path) -> None:
+    repo = make_repo(tmp_path)
+    make_shim(repo / "node_modules", version="1.59.0\x1b[31m")
+    edges = [["\x1bz.a", "shop.orders"], ["y.b", "shop.orders"], ["shop.orders.api.\x1b[31mx\u202e", "shop.payments.card.y"]]
+    proc = check(repo, edges, "--format", "json")
+    data = report(proc)
+    assert data["unmapped"] == ["z.a", "y.b"]
+    assert data["breaches"][0]["edges"] == [["shop.orders.api.x", "shop.payments.card.y"]]
+    assert data["likec4"]["version"] == "1.59.0"

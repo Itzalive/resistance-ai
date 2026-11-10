@@ -201,3 +201,11 @@ def test_hot_spots() -> None:
     out = compare(PROTECTED, [], [], shards={"one": ["s.p"], "two": ["s.p.a"], "three": []})
     assert [(h["element"], sorted(h["shards"])) for h in out["hotSpots"]] == [("s.p.a", ["one", "two"])]
     assert compare(PROTECTED, [], [])["hotSpots"] == []
+
+
+def test_scope_leaves_out_known_breaches_and_not_yet_reached_outside_it() -> None:
+    out = compare(GAP_MODEL, [("a", "c"), ("a", "x.y")], [["a", "b"]], scope=["x"], gap=[entry("a", "b")])
+    assert out["breaches"] == []
+    assert out["gap"] == {"known": [], "new": [], "stale": []}
+    assert pairs(out["notYetReached"]) == [("a", "x.y")]
+    assert out["exitCode"] == 0

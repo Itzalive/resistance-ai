@@ -66,3 +66,23 @@ def test_single_detail_becomes_one_line() -> None:
     )
     proc = run_module(code)
     assert json.loads(proc.stdout) == ["error: timeout: run exceeded"]
+
+
+def test_check_json_cleans_every_id_after_sorting() -> None:
+    dirty = "z\x1b[31m.a"
+    result = {
+        "breaches": [{"from": dirty, "to": "b\u202e", "edges": [["m", "n"]], "gap": "new"}],
+        "notYetReached": [{"from": dirty, "to": "c\u202e"}],
+        "unmapped": [],
+        "hotSpots": [{"element": dirty, "shards": ["s\u202e", "r"]}],
+        "gap": {"known": [{"from": dirty, "to": "d\u202e"}], "new": [{"from": dirty, "to": "b\u202e"}],
+                "stale": [{"from": dirty, "to": "e\u202e"}]},
+    }
+    out = call("report.mjs", "checkJson", result, {"version": "1", "source": "plugin"})
+    assert out["ok"], out
+    data = out["value"]
+    assert (data["breaches"][0]["from"], data["breaches"][0]["to"]) == ("z.a", "b")
+    assert data["not_yet_reached"] == [{"from": "z.a", "to": "c"}]
+    assert data["hot_spots"] == [{"element": "z.a", "shards": ["r", "s"]}]
+    assert data["gap"] == {"known": [{"from": "z.a", "to": "d"}], "new": [{"from": "z.a", "to": "b"}],
+                           "stale": [{"from": "z.a", "to": "e"}]}

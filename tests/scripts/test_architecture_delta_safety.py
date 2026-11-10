@@ -57,3 +57,82 @@ def test_tool_source_never_spawns_or_writes() -> None:
     )
     for source in sources:
         assert not forbidden.search(source.read_text(encoding="utf-8")), source
+
+
+STRICT_NO_NETWORK = """\
+import http from 'node:http';
+import https from 'node:https';
+import net from 'node:net';
+import tls from 'node:tls';
+
+const deny = () => {
+  process.stderr.write('network access attempted\\n');
+  process.exit(97);
+};
+globalThis.fetch = deny;
+for (const mod of [http, https]) {
+  mod.request = deny;
+  mod.get = deny;
+}
+net.connect = deny;
+net.createConnection = deny;
+tls.connect = deny;
+"""
+
+
+def test_no_network_even_when_the_error_would_be_caught(tmp_path) -> None:
+    preload = tmp_path / "strict-no-network.mjs"
+    preload.write_text(STRICT_NO_NETWORK, encoding="utf-8")
+    repo = make_repo(tmp_path)
+    deps = write_json(repo / "deps.json", {"edges": CLEAN_EDGES})
+    for args in (["check", "--repo", repo, "--deps", deps], ["export", "--repo", repo]):
+        proc = run_tool(*args, preload=preload)
+        assert proc.returncode == 0, proc.stderr
+        assert "network access attempted" not in proc.stderr
+
+
+CLOCK_JUMP = """\
+import fs from 'node:fs';
+
+const read = fs.readFileSync;
+const now = Date.now;
+let jump = 0;
+fs.readFileSync = function (file, ...rest) {
+  const out = read.call(this, file, ...rest);
+  if (String(file).endsWith(process.env.JUMP_AFTER)) jump = 3600 * 1000;
+  return out;
+};
+Date.now = () => now() + jump;
+"""
+
+
+@pytest.mark.parametrize("name", ["deps.json", "known-gap.json", "shards.json"])
+def test_deadline_is_checked_after_each_input_file(tmp_path, monkeypatch, name: str) -> None:
+    preload = tmp_path / "clock-jump.mjs"
+    preload.write_text(CLOCK_JUMP, encoding="utf-8")
+    monkeypatch.setenv("JUMP_AFTER", name)
+    repo = make_repo(tmp_path)
+    deps = write_json(repo / "deps.json", {"edges": CLEAN_EDGES})
+    write_json(repo / "architecture" / "known-gap.json", {"entries": []})
+    shards = write_json(repo / "shards.json", {"shards": {}})
+    proc = run_tool("check", "--repo", repo, "--deps", deps, "--shards", shards, preload=preload)
+    assert proc.returncode == 2
+    assert proc.stdout == ""
+    assert error_lines(proc)[0].startswith("error: timeout: ")
+
+
+CLOCK_JUMP_IN_MATCHING = """\
+const now = Date.now;
+Date.now = () => (new Error().stack.includes('match.mjs') ? now() + 3600 * 1000 : now());
+"""
+
+
+def test_deadline_is_checked_while_matching(tmp_path) -> None:
+    preload = tmp_path / "clock-jump-matching.mjs"
+    preload.write_text(CLOCK_JUMP_IN_MATCHING, encoding="utf-8")
+    repo = make_repo(tmp_path)
+    edges = [[f"shop.orders.api.m{i}", "shop.checkout.s"] for i in range(10_001)]
+    deps = write_json(repo / "deps.json", {"edges": edges})
+    proc = run_tool("check", "--repo", repo, "--deps", deps, preload=preload)
+    assert proc.returncode == 2
+    assert error_lines(proc)[0].startswith("error: timeout: ")
