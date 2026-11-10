@@ -18,7 +18,15 @@ def test_clean_removes_ansi_sequences_first() -> None:
 
 
 def test_clean_removes_c0_del_c1_and_bidi_controls() -> None:
-    assert clean("x\x00y\x7fz\x85w‮q⁦r\n") == "xyzwqr"
+    assert clean("x\x00y\x7fz\x85w\u202eq\u2066r\n") == "xyzwqr"
+
+
+def test_clean_removes_osc_with_st_and_csi_with_intermediates() -> None:
+    assert clean("a\x1b]0;title\x1b\x5cb\x1b[1 qc") == "abc"
+
+
+def test_clean_removes_the_ends_of_each_control_range() -> None:
+    assert clean("x\x9fy\u202az\u2069w") == "xyzw"
 
 
 def test_clean_keeps_exactly_200_code_points() -> None:

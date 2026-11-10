@@ -2896,3 +2896,9 @@ git commit -m "test(20): no network, limits end to end, internal errors, no writ
 | Scope: `npm audit` recorded at pin time | 1 |
 
 Deviation from the spec's Scope wording: tests are split across `tests/scripts/test_architecture_delta_*.py` files by area, with shared helpers in `tests/scripts/arch_delta_support.py`, rather than one `test_architecture_delta.py`. The behaviour covered is unchanged.
+
+## Changes during execution
+
+- Task 1: `test_shipped_spec_declares_the_c4_kinds_and_tags` splits on `"specification {"` (the header's first line also contains "specification"); checkpoint C1 added `test_shipped_spec_header_documents_code_and_rules`.
+- Task 3: `value-is-a-flag` does not kill the dropped `startsWith('--')` check; checkpoint C1 added `last-value-is-a-flag`, plus `format-other`, `command-from-prototype`, `empty-repo` and `empty-deps`. An empty `--repo` or `--deps` value counts as missing.
+- Task 2: checkpoint C1 added tests for the OSC string terminator, CSI intermediate bytes and the ends of each control range. Literal bidi characters written by tooling were replaced with escapes; every task now runs `escape_controls.py` on the files it writes.

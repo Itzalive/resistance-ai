@@ -62,6 +62,11 @@ def test_timeout_zero_is_valid() -> None:
         pytest.param(["export", "--repo", "r", "--timeout", "x"], id="timeout-text"),
         pytest.param(["check", "--repo", "r", "--deps", "d", "--separator", ""], id="empty-separator"),
         pytest.param(["check", "--repo", "r", "--deps", "d", "--scope", "a,,b"], id="empty-scope-item"),
+        pytest.param(["export", "--repo", "--model"], id="last-value-is-a-flag"),
+        pytest.param(["check", "--repo", "r", "--deps", "d", "--format", "TEXT"], id="format-other"),
+        pytest.param(["constructor", "--repo", "r"], id="command-from-prototype"),
+        pytest.param(["export", "--repo", ""], id="empty-repo"),
+        pytest.param(["check", "--repo", "r", "--deps", ""], id="empty-deps"),
     ],
 )
 def test_usage_errors(argv: list[str]) -> None:

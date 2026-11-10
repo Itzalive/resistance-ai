@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 import shutil
 
 from arch_delta_support import ENGINE, LIKEC4_DIR, LIKEC4_ENTRY, SHIPPED_SPEC, require_node, run_module, unique
@@ -34,6 +35,13 @@ def test_shipped_spec_declares_the_c4_kinds_and_tags() -> None:
         assert f"  {line}\n" in text
     assert "code" in text.split("specification {")[0]
     assert "rules" in text.split("specification {")[0]
+
+
+def test_shipped_spec_header_documents_code_and_rules() -> None:
+    header = SHIPPED_SPEC.read_text(encoding="utf-8").split("specification {")[0]
+
+    assert re.search(r"^//\s+code\s+- ", header, re.M)
+    assert re.search(r"^//\s+rules\s+- ", header, re.M)
 
 
 def test_shipped_spec_loads_without_errors(tmp_path) -> None:
