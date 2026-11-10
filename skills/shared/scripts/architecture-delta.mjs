@@ -10,7 +10,9 @@ import { locateLikeC4, importLikeC4, versionNote } from './architecture-delta/li
 import { walkModelDir, checkSpecCopy } from './architecture-delta/walk.mjs';
 import { loadModel } from './architecture-delta/model.mjs';
 import { realRepo, resolveInside } from './architecture-delta/paths.mjs';
-import { exportJson } from './architecture-delta/report.mjs';
+import { readJson, parseDeps, parseGap, parseShards } from './architecture-delta/inputs.mjs';
+import { compare } from './architecture-delta/match.mjs';
+import { exportJson, checkJson, checkText } from './architecture-delta/report.mjs';
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const ENGINE_ROOT = path.resolve(SCRIPT_DIR, '..', '..', '..');
@@ -50,16 +52,48 @@ async function loadRepoModel(args, deadline) {
   return { repo, modelDir: model.path, located, model: loaded };
 }
 
+// Spec, Errors: a missing input file is `bad-input`; only the default gap file may be absent.
+function readOptional(repo, value, fallback, flag, parse) {
+  const target = resolveInside(repo, value ?? fallback, flag);
+  if (!target.exists) {
+    if (value !== null) throw new ToolError('bad-input', `${flag} file not found`);
+    return null;
+  }
+  return parse(readJson(target.path, flag));
+}
+
+async function runCheck(args, deadline, loaded) {
+  const { repo, modelDir, located, model } = loaded;
+  const ids = model.elements.map((element) => element.id);
+  const deps = resolveInside(repo, args.deps, '--deps');
+  if (!deps.exists) throw new ToolError('bad-input', '--deps file not found');
+  const edges = parseDeps(readJson(deps.path, '--deps'));
+  deadline.check();
+  const gap = readOptional(repo, args.gap, path.join(modelDir, 'known-gap.json'), '--gap', (data) => parseGap(data, ids)) ?? [];
+  deadline.check();
+  const shards = args.shards === null ? null : readOptional(repo, args.shards, null, '--shards', (data) => parseShards(data, ids));
+  deadline.check();
+  if (args.scope !== null) {
+    const known = new Set(ids);
+    const unknown = args.scope.filter((id) => !known.has(id));
+    if (unknown.length > 0) throw new ToolError('unknown-scope', unknown.map((id) => `${id} is not a model element`));
+  }
+  const result = compare(model, edges, { separator: args.separator, gap, scope: args.scope, shards, tick: deadline.check });
+  const report = checkJson(result, located);
+  const output = args.format === 'json' ? `${JSON.stringify(report, null, 2)}\n` : checkText(report);
+  return { output, exitCode: result.exitCode };
+}
+
 async function main(argv) {
   const args = parseArgs(argv);
   const deadline = startDeadline(args.timeout);
-  const { model } = await loadRepoModel(args, deadline);
+  const loaded = await loadRepoModel(args, deadline);
   let output;
   let exitCode = 0;
   if (args.command === 'export') {
-    output = `${JSON.stringify(exportJson(model), null, 2)}\n`;
+    output = `${JSON.stringify(exportJson(loaded.model), null, 2)}\n`;
   } else {
-    throw new ToolError('internal', 'check is not available in this build');
+    ({ output, exitCode } = await runCheck(args, deadline, loaded));
   }
   deadline.stop();
   process.stdout.write(output);

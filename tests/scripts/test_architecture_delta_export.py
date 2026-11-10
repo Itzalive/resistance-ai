@@ -156,12 +156,6 @@ def test_missing_likec4_from_a_copied_engine(tmp_path) -> None:
     assert error_lines(proc)[0].startswith("error: likec4-missing: ")
 
 
-def test_check_is_not_available_yet(tmp_path) -> None:
-    proc = run_tool("check", "--repo", make_repo(tmp_path), "--deps", "d.json")
-    assert proc.returncode == 2
-    assert error_lines(proc)[0] == "error: internal: check is not available in this build"
-
-
 def test_model_that_is_a_file_is_bad_input(tmp_path) -> None:
     repo = make_repo(tmp_path)
     proc = run_tool("export", "--repo", repo, "--model", "architecture/c4.c4")
