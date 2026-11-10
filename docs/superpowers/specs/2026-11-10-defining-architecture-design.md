@@ -89,8 +89,8 @@ the diff touches, except where a check is marked "whole".
 1. **Assumptions surface:** the trigger and its entry gate; required or waived (epic run); the
    overlay's values or their defaults; `deps-command` named; for an epic run, the epic's
    capabilities (or its MoSCoW scope). Anything missing stops the run.
-2. **Baseline check.** Run `deps-command`, then `export` (skipped while the folder is empty) and
-   `check`. A `check` exit 1 (a breach not in the gap, or a stale entry) is a finding for 2a; exit 2
+2. **Baseline check.** Run `deps-command`, then `export` and `check`, both skipped while the folder
+   is empty (there is no model to load or compare). A `check` exit 1 (a breach not in the gap, or a stale entry) is a finding for 2a; exit 2
    stops the run with the tool's error. The agent then proposes the groups the run touches, from the
    epic's capabilities or the diff request, and the owner approves the list; 2a and 2b work from it.
    - **2a. Is the affected model current and valid?** For every modelled element the run touches,
