@@ -20,7 +20,7 @@ Used by the self-review and by the independent auditor. Gather the inputs, work 
 ## Checks to run
 
 - **The feature's elements:** work them out as `FEATURE_STANDARDS.md` defines them, and confirm the design's `--scope` lists them all.
-- **Quoted output:** the `check` output quoted in the design matches the run you make now. If they differ, the design is stale.
+- **Quoted output:** the `check` output quoted in the design matches the run you make now. If they differ, the design is stale. Skipped where the section records `no model`.
 - **AC tracing:** list every epic AC the map gives the feature and find an `AC-F` that serves it. List every `AC-F` and find its shard; each is in exactly one.
 - **Unchanged:** the diff touches only the design, the shards file, and this feature's state, actual cost and question answers on the map. No shard spec exists for the feature; no model file, epic text, code or other feature's row changed.
 
