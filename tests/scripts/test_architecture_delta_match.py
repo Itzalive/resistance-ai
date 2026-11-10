@@ -153,3 +153,51 @@ def test_duplicate_relationships_are_reported_once() -> None:
 def test_sibling_whose_id_starts_with_another_is_not_inside_it() -> None:
     out = compare([element("a", "a"), element("ab", "ab")], [], [["ab.x", "a.x"], ["a.x", "ab.x"]])
     assert pairs(out["breaches"]) == [("a", "ab"), ("ab", "a")]
+
+
+GAP_MODEL = [element("a", "a"), element("b", "b"), element("c", "c"), element("x"), element("x.y", "x.y")]
+
+
+def entry(a: str, b: str) -> dict:
+    return {"from": a, "to": b, "reason": "r", "close_by": None}
+
+
+def test_known_breach_exits_zero() -> None:
+    out = compare(GAP_MODEL, [], [["a", "b"]], gap=[entry("a", "b")])
+    assert out["breaches"][0]["gap"] == "known"
+    assert pairs(out["gap"]["known"]) == [("a", "b")]
+    assert out["exitCode"] == 0
+
+
+def test_new_breach_exits_one() -> None:
+    out = compare(GAP_MODEL, [], [["a", "b"], ["a", "c"]], gap=[entry("a", "b")])
+    assert pairs(out["gap"]["new"]) == [("a", "c")]
+    assert out["exitCode"] == 1
+
+
+def test_stale_entry_exits_one() -> None:
+    out = compare(GAP_MODEL, [], [], gap=[entry("a", "b")])
+    assert pairs(out["gap"]["stale"]) == [("a", "b")]
+    assert out["exitCode"] == 1
+
+
+def test_scope_decides_listing_and_exit_code() -> None:
+    outside_only = compare(GAP_MODEL, [], [["a", "b"]], scope=["x"])
+    assert outside_only["breaches"] == [] and outside_only["gap"]["new"] == []
+    assert outside_only["exitCode"] == 0
+    live = compare(GAP_MODEL, [], [["a", "x.y.z"]], scope=["x"], gap=[entry("a", "x.y")])
+    assert pairs(live["gap"]["known"]) == [("a", "x.y")]
+    assert live["gap"]["stale"] == []
+    assert live["exitCode"] == 0
+    stale_in = compare(GAP_MODEL, [], [], scope=["x"], gap=[entry("a", "x.y")])
+    assert pairs(stale_in["gap"]["stale"]) == [("a", "x.y")]
+    assert stale_in["exitCode"] == 1
+    stale_out = compare(GAP_MODEL, [], [], scope=["x"], gap=[entry("a", "b")])
+    assert stale_out["gap"]["stale"] == []
+    assert stale_out["exitCode"] == 0
+
+
+def test_hot_spots() -> None:
+    out = compare(PROTECTED, [], [], shards={"one": ["s.p"], "two": ["s.p.a"], "three": []})
+    assert [(h["element"], sorted(h["shards"])) for h in out["hotSpots"]] == [("s.p.a", ["one", "two"])]
+    assert compare(PROTECTED, [], [])["hotSpots"] == []

@@ -12,7 +12,7 @@ function ancestorsOrSelf(id) {
 }
 
 export function compare(model, edges, options) {
-  const { separator, tick = () => {} } = options;
+  const { separator, gap = [], scope = null, shards = null, tick = () => {} } = options;
   const elements = new Map(model.elements.map((element) => [element.id, element]));
   const prefixes = model.elements
     .flatMap((element) => element.code.map((prefix) => [prefix, element.id]))
@@ -72,14 +72,33 @@ export function compare(model, edges, options) {
   const notYetReached = relationships.filter(
     (r) => hasCode(r.from) && hasCode(r.to) && !checkedPairs.some(([s, t]) => within(s, r.from) && within(t, r.to)),
   );
-  const breaches = [...breachByPair.values()].map((breach) => ({ ...breach, gap: 'new' }));
-  const fresh = breaches.map(({ from, to }) => ({ from, to }));
+  const entryKeys = new Set(gap.map((entry) => key(entry.from, entry.to)));
+  const allBreaches = [...breachByPair.values()].map((breach) => ({
+    ...breach,
+    gap: entryKeys.has(key(breach.from, breach.to)) ? 'known' : 'new',
+  }));
+  const staleEverywhere = gap
+    .filter((entry) => !breachByPair.has(key(entry.from, entry.to)))
+    .map(({ from, to }) => ({ from, to }));
+  const inScope = (id) => scope === null || scope.some((root) => within(id, root));
+  const keep = (pair) => inScope(pair.from) || inScope(pair.to);
+  const breaches = allBreaches.filter(keep);
+  const known = breaches.filter((b) => b.gap === 'known').map(({ from, to }) => ({ from, to }));
+  const fresh = breaches.filter((b) => b.gap === 'new').map(({ from, to }) => ({ from, to }));
+  const stale = staleEverywhere.filter(keep);
+  const hotSpots = [];
+  if (shards !== null) {
+    for (const id of elements.keys()) {
+      const names = Object.keys(shards).filter((name) => shards[name].some((root) => within(id, root)));
+      if (names.length >= 2) hotSpots.push({ element: id, shards: names });
+    }
+  }
   return {
     breaches,
-    notYetReached,
+    notYetReached: notYetReached.filter(keep),
     unmapped: [...unmapped],
-    hotSpots: [],
-    gap: { known: [], new: fresh, stale: [] },
-    exitCode: fresh.length > 0 ? 1 : 0,
+    hotSpots,
+    gap: { known, new: fresh, stale },
+    exitCode: fresh.length > 0 || stale.length > 0 ? 1 : 0,
   };
 }
