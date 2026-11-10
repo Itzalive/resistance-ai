@@ -50,6 +50,7 @@ gh issue close <number> --comment "..."   # Close completed work
 ## Build & Test
 
 ```bash
+npm ci --ignore-scripts                            # Install the pinned likec4 (once, and after lockfile changes)
 uv run pytest -q                                   # Run the test suite
 ```
 
