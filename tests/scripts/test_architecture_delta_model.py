@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import shutil
 from pathlib import Path
 
@@ -186,3 +187,101 @@ def test_element_cap(tmp_path, count: int, ok: bool) -> None:
     assert result["ok"] is ok
     if not ok:
         assert result["token"] == "element-cap"
+
+
+
+def test_folder_at_exactly_50_mb_is_accepted(tmp_path) -> None:
+    folder = model_dir(tmp_path)
+    (folder / "big0.bin").write_bytes(b"\0" * (25 * MB))
+    (folder / "big1.bin").write_bytes(b"\0" * (25 * MB - SHIPPED_SPEC.stat().st_size))
+    assert call("walk.mjs", "walkModelDir", str(folder))["ok"] is True
+
+
+def test_one_model_error_is_reported(tmp_path) -> None:
+    folder = model_dir(tmp_path)
+    (folder / "model.c4").write_text("model {\n  b = nosuchkind 'B'\n}\n", encoding="utf-8")
+    result = load_model(folder)
+    assert result["token"] == "model-error"
+    assert any(d.startswith("model.c4:2:") for d in result["details"])
+
+
+SHIM = """export class LikeC4 {
+  static async fromWorkspace() {
+    FROM_WORKSPACE
+    return {
+      getErrors() { return ERRORS; },
+      async computedModel() {
+        COMPUTED
+        return { elements() { return [ELEMENT]; }, relationships() { return [RELATIONSHIP]; } };
+      },
+    };
+  }
+}
+"""
+
+
+GOOD = {
+    "FROM_WORKSPACE": "", "ERRORS": "[]", "COMPUTED": "",
+    "ELEMENT": "{ id: 'a', kind: 'component', tags: [], getMetadata() { return {}; } }",
+    "RELATIONSHIP": "{ source: { id: 'a' }, target: { id: 'a' } }",
+}
+
+
+def shim_source(**changes: str) -> str:
+    source = SHIM
+    for key, value in {**GOOD, **changes}.items():
+        source = source.replace(key, value)
+    return source
+
+
+def shim_load(tmp_path: Path, **changes: str) -> dict:
+    shim = make_shim(tmp_path / unique("nm"), source=shim_source(**changes))
+    return load_model(model_dir(tmp_path), entry=shim / "index.mjs")
+
+
+def test_good_shim_loads(tmp_path) -> None:
+    assert shim_load(tmp_path)["ok"] is True
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        pytest.param({"ERRORS": "'oops'"}, id="errors-not-a-list"),
+        pytest.param({"ELEMENT": "{ id: 'a', tags: [], getMetadata() { return {}; } }"}, id="no-kind"),
+        pytest.param({"ELEMENT": "{ id: 'a', kind: 'component', tags: [1], getMetadata() { return {}; } }"}, id="tag-not-string"),
+        pytest.param({"ELEMENT": "{ id: 'a', kind: 'component', tags: [], getMetadata() { return { rules: 1 }; } }"}, id="rules-number"),
+        pytest.param({"RELATIONSHIP": "{ target: { id: 'a' } }"}, id="no-source"),
+    ],
+)
+
+def test_more_unexpected_api_shapes_are_internal(tmp_path, changes: dict) -> None:
+    result = shim_load(tmp_path, **changes)
+    assert result["ok"] is False
+    assert result["token"] == "internal"
+
+
+@pytest.mark.parametrize("where", ["FROM_WORKSPACE", "COMPUTED"])
+
+def test_likec4_exceptions_are_model_errors(tmp_path, where: str) -> None:
+    result = shim_load(tmp_path, **{where: "throw new Error('boom');"})
+    assert result["token"] == "model-error"
+    assert result["details"] == ["boom"]
+
+
+def test_every_likec4_error_gets_a_line(tmp_path) -> None:
+    folder = model_dir(tmp_path)
+    errors = (
+        "[{ message: 'one', sourceFsPath: DIR + '/m.c4', line: 0 },"
+        " { message: 'two', sourceFsPath: DIR + '/m.c4', line: 4 },"
+        " { message: 'three' }]"
+    ).replace("DIR", json.dumps(str(folder)))
+    shim = make_shim(tmp_path / unique("nm"), source=shim_source(ERRORS=errors))
+    result = load_model(folder, entry=shim / "index.mjs")
+    assert result["token"] == "model-error"
+    assert result["details"] == ["m.c4:1: one", "m.c4:5: two", "?:?: three"]
+
+
+def test_config_name_anywhere_in_the_file_name_is_refused(tmp_path) -> None:
+    folder = model_dir(tmp_path)
+    (folder / "old-likec4.config.mjs.bak").write_text("x\n", encoding="utf-8")
+    assert call("walk.mjs", "walkModelDir", str(folder))["token"] == "model-config"

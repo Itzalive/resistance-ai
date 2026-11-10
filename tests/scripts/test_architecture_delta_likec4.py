@@ -137,3 +137,53 @@ def test_version_note() -> None:
         "note: likec4 1.59.0 from repo; tested with 1.60.0"
     )
     assert call("likec4.mjs", "versionNote", {"version": "1.60.0", "source": "plugin"})["value"] is None
+
+
+def test_is_inside(tmp_path) -> None:
+    base = tmp_path / unique("root")
+    cases = [
+        (base, True),
+        (base / "a" / "b", True),
+        (base / "..foo", True),
+        (base.parent / (base.name + "-x"), False),
+        (base.parent, False),
+        (base.parent / "other" / "x", False),
+    ]
+    if os.name == "nt":
+        other_drive = "Z:" if str(base)[0].upper() != "Z" else "Y:"
+        cases.append((Path(other_drive + "\\x"), False))
+    for child, expected in cases:
+        assert call("paths.mjs", "isInside", str(child), str(base))["value"] is expected, child
+
+
+def test_entry_through_a_link_out_of_the_copy_is_internal(tmp_path) -> None:
+    outside = tmp_path / unique("outside")
+    outside.mkdir()
+    (outside / "index.mjs").write_text("export const x = 1;\n", encoding="utf-8")
+    repo = tmp_path / unique("repo")
+    pkg = make_shim(repo / "node_modules", package={"name": "likec4", "version": "1.0.0", "main": "./sub/index.mjs"})
+    link_dir(outside, pkg / "sub")
+    assert call("likec4.mjs", "locateLikeC4", str(repo), str(ENGINE))["token"] == "internal"
+
+
+def test_unreadable_package_json_is_internal(tmp_path) -> None:
+    repo = tmp_path / unique("repo")
+    pkg = make_shim(repo / "node_modules")
+    (pkg / "package.json").write_text("{not json", encoding="utf-8")
+    assert call("likec4.mjs", "locateLikeC4", str(repo), str(ENGINE))["token"] == "internal"
+
+
+def test_version_note_cleans_the_version() -> None:
+    note = call("likec4.mjs", "versionNote", {"version": "1.0\x1b[31m\u202e", "source": "repo"})["value"]
+    assert note == "note: likec4 1.0 from repo; tested with 1.60.0"
+
+
+# --- model.py additions ----------------------------------------------------------------
+
+
+def test_empty_entry_field_is_skipped(tmp_path) -> None:
+    repo = tmp_path / unique("repo")
+    pkg = make_shim(repo / "node_modules", package={
+        "name": "likec4", "version": "1.0.0", "exports": {".": {"import": ""}}, "main": "./c.mjs"})
+    (pkg / "c.mjs").write_text("export const x = 1;\n", encoding="utf-8")
+    assert call("likec4.mjs", "locateLikeC4", str(repo), str(ENGINE))["value"]["entry"].endswith("c.mjs")

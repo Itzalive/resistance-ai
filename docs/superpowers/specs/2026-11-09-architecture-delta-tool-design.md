@@ -180,7 +180,8 @@ tested for its headings and summary line only.
 }
 ```
 
-`code` and `rules` are split on commas and trimmed (empty lists when absent). `allowed` lists the
+`code` and `rules` are split on commas and trimmed (empty lists when absent); an empty `rules` item is
+dropped, while an empty `code` item is a model error (Matching rules). `allowed` lists the
 model's relationships as declared, one entry per element pair with duplicates merged; a consumer
 applies the ancestor and `#protected` rules itself. Elements are sorted by id and `allowed` by `from`
 then `to`, so the same model always gives the same bytes. `format` is the schema version; a breaking
