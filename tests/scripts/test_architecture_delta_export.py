@@ -6,7 +6,7 @@ import shutil
 import pytest
 
 from arch_delta_support import (
-    SHIPPED_SPEC, SHOP_MODEL, copy_engine, error_lines, link_dir, make_repo, make_shim, require_node, run_tool, unique,
+    call, copy_engine, error_lines, link_dir, make_repo, make_shim, require_node, run_tool, unique, write_json, LIKEC4_ENTRY, SHIPPED_SPEC, SHOP_MODEL,
 )
 
 require_node()
@@ -160,3 +160,72 @@ def test_check_is_not_available_yet(tmp_path) -> None:
     proc = run_tool("check", "--repo", make_repo(tmp_path), "--deps", "d.json")
     assert proc.returncode == 2
     assert error_lines(proc)[0] == "error: internal: check is not available in this build"
+
+
+def test_model_that_is_a_file_is_bad_input(tmp_path) -> None:
+    repo = make_repo(tmp_path)
+    proc = run_tool("export", "--repo", repo, "--model", "architecture/c4.c4")
+    assert proc.returncode == 2
+    assert error_lines(proc)[0].startswith("error: bad-input: ")
+
+
+def test_repo_given_through_a_link_exports(tmp_path) -> None:
+    repo = make_repo(tmp_path)
+    link = tmp_path / unique("link")
+    link_dir(repo, link)
+    proc = run_tool("export", "--repo", link)
+    assert proc.returncode == 0, proc.stderr
+    assert json.loads(proc.stdout)["format"] == 1
+
+
+def test_unexpected_error_is_internal_exit_2(tmp_path) -> None:
+    preload = tmp_path / unique("preload")
+    preload.mkdir()
+    hook = preload / "throw.mjs"
+    hook.write_text("process.stdout.write = () => { throw new Error('boom'); };\n", encoding="utf-8")
+    proc = run_tool("export", "--repo", make_repo(tmp_path), preload=hook)
+    assert proc.returncode == 2
+    assert error_lines(proc) == ["error: internal: boom"]
+
+
+def test_an_input_error_ends_without_waiting_for_the_deadline(tmp_path) -> None:
+    proc = run_tool("export", "--repo", make_repo(tmp_path), "--model", "nope", "--timeout", "120", timeout=60)
+    assert proc.returncode == 2
+    assert error_lines(proc) == ["error: bad-input: --model directory not found"]
+
+
+def test_export_sorts_by_code_unit_not_locale(tmp_path) -> None:
+    model = "model {\n  a = component 'A'\n  B = component 'B'\n  a -> B\n  B -> a\n}\n"
+    data = json.loads(run_tool("export", "--repo", make_repo(tmp_path, model)).stdout)
+    assert [e["id"] for e in data["elements"]] == ["B", "a"]
+    assert data["allowed"] == [{"from": "B", "to": "a"}, {"from": "a", "to": "B"}]
+
+
+def test_deadline_check_fails_without_the_timer(tmp_path) -> None:
+    hook = tmp_path / f"{unique('no-timer')}.mjs"
+    hook.write_text(
+        "const real = globalThis.setTimeout;\n"
+        "let first = true;\n"
+        "globalThis.setTimeout = (...args) => {\n"
+        "  if (first) { first = false; return { unref() {}, ref() {} }; }\n"
+        "  return real(...args);\n"
+        "};\n",
+        encoding="utf-8",
+    )
+    proc = run_tool("export", "--repo", make_repo(tmp_path), "--timeout", "0", preload=hook)
+    assert proc.returncode == 2
+    assert proc.stdout == ""
+    assert error_lines(proc) == ["error: timeout: run exceeded --timeout 0s"]
+
+
+def test_timer_ends_a_slow_load_at_the_deadline(tmp_path) -> None:
+    repo = make_repo(tmp_path)
+    slow = (
+        "await new Promise((resolve) => setTimeout(resolve, 30000));\n"
+        f"export * from {json.dumps(LIKEC4_ENTRY.as_uri())};\n"
+    )
+    make_shim(repo / "node_modules", source=slow)
+    proc = run_tool("export", "--repo", repo, "--timeout", "1", timeout=20)
+    assert proc.returncode == 2
+    assert proc.stdout == ""
+    assert error_lines(proc) == ["error: timeout: run exceeded --timeout 1s"]

@@ -164,3 +164,34 @@ def test_shards_parse_and_empty_list_is_valid(tmp_path) -> None:
 )
 def test_shards_shape_errors(tmp_path, data: object) -> None:
     assert read_and("parseShards", write_json(tmp_path / unique("s"), data), IDS)["token"] == "bad-input"
+
+
+def test_missing_path_outside_is_refused(tmp_path) -> None:
+    repo = tmp_path / unique("repo")
+    repo.mkdir()
+    assert call("paths.mjs", "resolveInside", str(repo), "../missing.json", "--gap")["token"] == "outside-repo"
+
+
+def test_repo_reached_through_a_link_is_resolved(tmp_path) -> None:
+    real = tmp_path / unique("real")
+    write_json(real / "deps.json", {"edges": []})
+    link = tmp_path / unique("link")
+    link_dir(real, link)
+    root = call("paths.mjs", "realRepo", str(link))["value"]
+    assert call("paths.mjs", "resolveInside", root, "deps.json", "--deps")["value"]["exists"] is True
+
+
+def test_dedupe_keeps_edges_whose_joined_names_collide(tmp_path) -> None:
+    file = write_json(tmp_path / unique("d"), {"edges": [["ab", "c"], ["a", "bc"]]})
+    assert read_and("parseDeps", file)["value"] == [["ab", "c"], ["a", "bc"]]
+
+
+def test_shard_value_must_be_a_list(tmp_path) -> None:
+    for value in ("", 1):
+        file = write_json(tmp_path / unique("s"), {"shards": {"one": value}})
+        assert read_and("parseShards", file, IDS)["token"] == "bad-input"
+
+
+def test_null_gap_entry_is_bad_input(tmp_path) -> None:
+    file = write_json(tmp_path / unique("g"), {"entries": [None]})
+    assert read_and("parseGap", file, IDS)["token"] == "bad-input"

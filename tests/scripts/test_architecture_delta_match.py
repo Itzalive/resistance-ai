@@ -111,3 +111,45 @@ def test_tick_runs_after_every_10000_edges() -> None:
         proc = run_module(code)
         assert proc.returncode == 0, proc.stderr
         assert int(proc.stdout) == ticks, count
+
+
+def test_nearest_protected_ancestor_is_the_guard() -> None:
+    elements = [
+        element("s", "s", ["protected"]),
+        element("s.q", "s.q"),
+        element("s.p", "s.p", ["protected"]),
+        element("s.p.a", "s.p.a"),
+    ]
+    edge = [["s.q.x", "s.p.a.y"]]
+    assert pairs(compare(elements, [("s.q", "s")], edge)["breaches"]) == [("s.q", "s.p.a")]
+    assert compare(elements, [("s.q", "s.p")], edge)["breaches"] == []
+
+
+def test_allowed_is_decided_per_pair_not_per_source() -> None:
+    elements = [element("a", "a"), element("b", "b"), element("c", "c")]
+    for edges in ([["a.x", "b"], ["a.x", "c"]], [["a.x", "c"], ["a.x", "b"]]):
+        assert pairs(compare(elements, [("a", "b")], edges)["breaches"]) == [("a", "c")]
+
+
+def test_edge_from_an_element_into_its_descendant_is_ignored() -> None:
+    out = compare([element("a", "a"), element("a.b", "a.b")], [], [["a.x", "a.b.x"]])
+    assert out["breaches"] == []
+
+
+def test_not_yet_reached_needs_code_at_the_source() -> None:
+    assert compare(PROTECTED, [("s", "o")], [])["notYetReached"] == []
+
+
+def test_not_yet_reached_needs_an_edge_into_the_target() -> None:
+    out = compare(PROTECTED, [("o", "s.p.b")], [["o.x", "s.p.a.y"]])
+    assert pairs(out["notYetReached"]) == [("o", "s.p.b")]
+
+
+def test_duplicate_relationships_are_reported_once() -> None:
+    out = compare(PROTECTED, [("o", "s.p"), ("o", "s.p")], [])
+    assert pairs(out["notYetReached"]) == [("o", "s.p")]
+
+
+def test_sibling_whose_id_starts_with_another_is_not_inside_it() -> None:
+    out = compare([element("a", "a"), element("ab", "ab")], [], [["ab.x", "a.x"], ["a.x", "ab.x"]])
+    assert pairs(out["breaches"]) == [("a", "ab"), ("ab", "a")]
