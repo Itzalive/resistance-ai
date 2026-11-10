@@ -58,15 +58,22 @@ at step 1 and asks for one; it never guesses. Every tool call passes `--model <m
 `--separator <separator>` and `--deps <deps-file>` (`export` takes neither).
 
 **Terms.**
-- **Top-level module group:** take the longest prefix, at the separator, shared by every module in
-  the dependency file; a group is that prefix plus the next `group-depth` segments. A module equal
-  to the shared prefix is its own group.
+- **Repository module:** a module that is the first item of at least one edge in the dependency
+  file. A module that appears only as a target is outside the repository (a standard library or
+  third-party package) and is never grouped, counted or modelled.
+- **Top-level module group:** take the longest prefix, at the separator, shared by every repository
+  module; a group is that prefix plus the next `group-depth` segments. A repository module equal to
+  the shared prefix gets an element only when the whole repository is baselined; otherwise it is
+  listed under "Unmapped modules" with the reason `shared prefix`, and it is never an edge node,
+  because an element whose `code` is the shared prefix would match every uncovered module.
 - **Not yet built:** an element with no `code` metadata (a conceptual element). An element with
   `code` is built: each `code` value must equal a module in the dependency file or a prefix of one
   at the separator.
-- **Must rule:** every business rule owned by a Must Have capability of the epic.
-- **Edge node:** an element covering a neighbour group outside the baselined area, with `code` set
-  to that group's prefix, no children, no `rules`, and no part in any cross-cutting decision.
+- **Must rule:** every business rule owned by a Must Have capability of the epic. For an epic
+  written before capabilities existed, every business rule tied to a Must Have item of its MoSCoW
+  scope.
+- **Edge node:** a `component` covering a neighbour group outside the baselined area, with `code`
+  set to that group's prefix, no children, no `rules`, and no part in any cross-cutting decision.
 
 **Cross-cutting decisions.** A decision that two or more capabilities depend on (a data or storage
 format, a shared contract or API, an id or naming scheme, a vocabulary of kinds or types) is taken
@@ -80,9 +87,11 @@ or changed whole as part of a diff, never in part.
 **Steps.** One at a time, each approved by the owner before the next. Each step covers only what
 the diff touches, except where a check is marked "whole".
 1. **Assumptions surface:** the trigger and its entry gate; required or waived (epic run); the
-   overlay's values or their defaults; `deps-command` named. Anything missing stops the run.
+   overlay's values or their defaults; `deps-command` named; for an epic run, the epic's
+   capabilities (or its MoSCoW scope). Anything missing stops the run.
 2. **Baseline check.** Run `deps-command`, then `export` (skipped while the folder is empty) and
-   `check`.
+   `check`. A `check` exit 1 (a breach not in the gap, or a stale entry) is a finding for 2a; exit 2
+   stops the run with the tool's error.
    - **2a. Is the affected model current and valid?** For every modelled element the run touches,
      its relationships and its gap entries:
      - valid: the model loads, the spec copy matches, and the relationships have no cycles;
@@ -94,22 +103,26 @@ the diff touches, except where a check is marked "whole".
      updated to describe what is; a drift breach becomes a gap entry with a reason (the target
      stands) or a target change in this run's diff; a stale gap entry is removed. Nothing is resynced
      silently.
-   - **2b. How much to baseline?** Only when the run touches modules outside the current coverage
-     (all of them, when the folder is empty). One question with a recommendation, from the epic's
-     impact and the codebase's size:
-     - the whole repository, when the dependency file has at most `small-repo-modules` modules or at
+   - **2b. How much to baseline?** The agent proposes the groups the run touches, from the epic's
+     capabilities or the diff request, and the owner approves the list. Only when some of them are
+     outside the current coverage (all of them, when the folder is empty) is there one question,
+     with a recommendation from the run's impact and the codebase's size:
+     - the whole repository, when there are at most `small-repo-modules` repository modules or at
        most `small-repo-groups` top-level groups;
-     - the whole affected container, when the epic touches most of one container's groups or a
-       cross-cutting decision binds it;
-     - otherwise the affected groups plus edge nodes.
+     - the whole affected container, when the model already has containers and the run touches more
+       than half of one container's groups, or a cross-cutting decision binds that container;
+     - otherwise the touched groups plus edge nodes.
      The answer and the counts behind it are recorded in `architecture.md` under "Baseline
-     coverage", then `baseline-run.md` is loaded and its instructions build that coverage.
+     coverage", then `baseline-run.md` is loaded and its instructions build that coverage. The
+     baseline is its own diff: it goes through steps 3 to 6 with its own review and
+     `[ARCH-APPROVED]`, logged with the reason `baseline`. The outer run then resumes at step 3,
+     with `check` re-run against the approved baseline.
 3. **Cross-cutting decisions in scope:** every decision the diff depends on, existing or new, each
    presented with options and a recommendation and approved separately.
 4. **The diff:** elements with `code` and `rules`, tags (`#protected`, `#layer`, `#generic`,
    `#eval`), relationships and invariants expressed as relationships, shown before and after with
-   the rule map. If the diff needs an edge node's inside, that area is baselined first (step 2b) in
-   the same run.
+   the rule map. If the diff needs an edge node's inside, the run goes back to 2b for that area,
+   whose baseline is approved on its own as above, and then returns to step 3.
 5. **The known gap:** `check` against the amended model. Breaches the diff adds get a proposed
    reason; entries it closes are removed; entries naming an element the diff renames or removes are
    re-keyed or removed; the owner accepts or rejects each.
@@ -122,13 +135,14 @@ the diff touches, except where a check is marked "whole".
 **Baseline run** (`baseline-run.md`, loaded only by step 2b). It describes what the code is, not
 what it should be, for the coverage step 2b chose:
 - when the folder is empty, it creates the folder and copies the shipped `c4.c4` into it unchanged;
-- one element per top-level module group inside the coverage, with `code` set to the group's prefix
-  and no `rules`; one edge node per neighbour group outside it that has a code edge to or from the
-  coverage;
+- one `component` per top-level module group inside the coverage, with `code` set to the group's
+  prefix and no `rules`; one edge node per neighbour group outside it that has a code edge to or
+  from the coverage; containers and systems are added only by an epic's diff, never by a baseline;
 - one relationship per element pair with a code edge between them, edge nodes included; edges from
   an edge node into unmodelled code point at no element, so the tool ignores them;
-- where code has a dependency cycle between two groups, one edge of each cycle is left out of the
-  model and recorded in `known-gap.json` with the reason `cycle in current code`;
+- where the groups' code edges form a cycle of any length, one relationship of each cycle is left
+  out of the model and recorded in `known-gap.json` with the reason `cycle in current code`; the
+  agent recommends the relationship with the fewest module edges and the owner chooses in step 5;
 - "Baseline coverage" in `architecture.md` lists the baselined groups, the edge nodes, and the run
   that added each.
 
@@ -159,6 +173,10 @@ decision whose bound-elements list includes one of them; scope "whole" covers th
 - A `check` run's output is quoted in this run's decision-log entry, and every breach is in the gap
   file (whole).
 - Unmapped modules inside the coverage are mapped or listed with a reason (whole).
+- No element's `code` is the shared prefix unless the whole repository is baselined, so no element
+  matches modules outside its own groups (whole).
+- Every edge node listed under "Baseline coverage" is a `component` with `code`, no children and no
+  `rules`, and is in no decision's bound-elements list (whole).
 - No mechanism detail and no new product rules (changed).
 - The model loads with no errors (whole).
 
@@ -199,7 +217,8 @@ a baseline run on its own ends there.
     directly, and an import cycle between the `orders` and `inventory` groups; no model.
   - `modelled/`: the same repository with an approved model in `docs/architecture/` (with
     `architecture.md` and `known-gap.json`) holding one cross-cutting decision, plus one renamed
-    module, one drifted import in the affected area, and a written later-stage diff request that
+    module that is the whole `code` value of one modelled element, one drifted import in the
+    affected area, and a written later-stage diff request that
     changes only part of the decision.
 - `tests/scripts/test_defining_architecture_contract.py`: the package files exist; the description
   starts "Use when", names no workflow and is at most 500 characters; `SKILL.md` names
