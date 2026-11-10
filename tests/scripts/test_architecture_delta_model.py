@@ -92,3 +92,97 @@ def test_spec_copy_missing_or_changed_is_refused(tmp_path) -> None:
     changed = model_dir(tmp_path)
     (changed / "c4.c4").write_text(SHIPPED_SPEC.read_text(encoding="utf-8") + "// extra\n", encoding="utf-8")
     assert spec_copy(changed)["token"] == "spec-copy"
+
+
+from arch_delta_support import ENGINE, SHOP_MODEL, load_model, make_shim  # noqa: E402
+
+
+def write_model(tmp_path: Path, text: str) -> Path:
+    folder = model_dir(tmp_path)
+    (folder / "model.c4").write_text(text, encoding="utf-8")
+    return folder
+
+
+def test_shop_model_loads_elements_and_relationships(tmp_path) -> None:
+    result = load_model(write_model(tmp_path, SHOP_MODEL))
+    assert result["ok"], result
+    elements = {e["id"]: e for e in result["value"]["elements"]}
+    assert set(elements) == {"shop", "shop.orders", "shop.orders.api", "shop.checkout", "shop.payments", "shop.payments.card"}
+    assert elements["shop.payments"] == {
+        "id": "shop.payments", "kind": "container", "tags": ["protected"], "code": ["shop.payments"], "rules": [],
+    }
+    assert elements["shop"]["code"] == []
+    assert sorted((r["from"], r["to"]) for r in result["value"]["relationships"]) == [
+        ("shop.checkout", "shop.payments"), ("shop.orders", "shop.checkout"),
+    ]
+
+
+def test_code_and_rules_are_split_and_trimmed(tmp_path) -> None:
+    text = "model {\n  a = component 'A' {\n    metadata {\n      code 'a.one , a.two'\n      rules 'BR-1,  BR-2'\n    }\n  }\n}\n"
+    element = load_model(write_model(tmp_path, text))["value"]["elements"][0]
+    assert element["code"] == ["a.one", "a.two"]
+    assert element["rules"] == ["BR-1", "BR-2"]
+
+
+def test_model_errors_name_file_and_line(tmp_path) -> None:
+    text = "model {\n  a = component 'A'\n  a -> missing\n  b = nosuchkind 'B'\n}\n"
+    result = load_model(write_model(tmp_path, text))
+    assert result["token"] == "model-error"
+    assert len(result["details"]) >= 2
+    assert any(d.startswith("model.c4:3:") for d in result["details"])
+    assert any(d.startswith("model.c4:4:") for d in result["details"])
+
+
+@pytest.mark.parametrize(
+    ("codes", "label"),
+    [
+        pytest.param(["shared", "shared"], "duplicate", id="duplicate"),
+        pytest.param(["a,,b", "c"], "empty", id="empty-item"),
+    ],
+)
+def test_prefix_errors(tmp_path, codes: list[str], label: str) -> None:
+    text = "model {\n" + "".join(
+        f"  e{i} = component 'E{i}' {{\n    metadata {{\n      code '{code}'\n    }}\n  }}\n" for i, code in enumerate(codes)
+    ) + "}\n"
+    result = load_model(write_model(tmp_path, text))
+    assert result["token"] == "model-error"
+    assert label in result["details"][0]
+
+
+BAD_ELEMENT = """export class LikeC4 {
+  static async fromWorkspace() {
+    return {
+      getErrors() { return []; },
+      async computedModel() {
+        return { elements() { return [ELEMENT]; }, relationships() { return [RELATIONSHIP]; } };
+      },
+    };
+  }
+}
+"""
+
+
+@pytest.mark.parametrize(
+    ("element", "relationship"),
+    [
+        pytest.param("{ kind: 'component', tags: [], getMetadata() { return {}; } }", "{ source: { id: 'a' }, target: { id: 'a' } }", id="no-id"),
+        pytest.param("{ id: 'a', kind: 'component', tags: 'x', getMetadata() { return {}; } }", "{ source: { id: 'a' }, target: { id: 'a' } }", id="tags-not-array"),
+        pytest.param("{ id: 'a', kind: 'component', tags: [], getMetadata() { return { code: ['a'] }; } }", "{ source: { id: 'a' }, target: { id: 'a' } }", id="code-array"),
+        pytest.param("{ id: 'a', kind: 'component', tags: [], metadata: {} }", "{ source: { id: 'a' }, target: { id: 'a' } }", id="no-getmetadata"),
+        pytest.param("{ id: 'a', kind: 'component', tags: [], getMetadata() { return {}; } }", "{ source: { id: 'a' } }", id="no-target"),
+    ],
+)
+def test_unexpected_api_shapes_are_internal(tmp_path, element: str, relationship: str) -> None:
+    shim = make_shim(tmp_path / unique("nm"), source=BAD_ELEMENT.replace("ELEMENT", element).replace("RELATIONSHIP", relationship))
+    result = load_model(model_dir(tmp_path), entry=shim / "index.mjs")
+    assert result["ok"] is False
+    assert result["token"] == "internal"
+
+
+@pytest.mark.parametrize(("count", "ok"), [pytest.param(5000, True, id="5000-ok"), pytest.param(5001, False, id="5001-refused")])
+def test_element_cap(tmp_path, count: int, ok: bool) -> None:
+    text = "model {\n" + "".join(f"  e{i} = component 'E{i}'\n" for i in range(count)) + "}\n"
+    result = load_model(write_model(tmp_path, text))
+    assert result["ok"] is ok
+    if not ok:
+        assert result["token"] == "element-cap"
