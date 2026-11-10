@@ -16,7 +16,7 @@ export function compare(model, edges, options) {
   const elements = new Map(model.elements.map((element) => [element.id, element]));
   const byPrefix = new Map();
   for (const element of model.elements) {
-    for (const prefix of element.code) if (!byPrefix.has(prefix)) byPrefix.set(prefix, element.id);
+    for (const prefix of element.code) byPrefix.set(prefix, element.id); // loadModel refuses duplicate prefixes
   }
   // Longest matching prefix: the module itself, then each cut just before a separator, right to left.
   const mapModule = (module) => {
