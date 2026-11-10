@@ -225,7 +225,8 @@ a baseline run on its own ends there.
 - `tests/scripts/test_defining_architecture_contract.py` checks structure and machine interfaces
   only, never the skill's prose: the package files exist; the description starts "Use when" and is
   at most 500 characters; every review-log skill and phase the package names is one the CLI
-  accepts; `export --model docs/architecture` on `modelled/` exits 0 with `architecture.md` and
+  accepts; `empty/` has no model folder and its dependency file has 10 repository modules in 8
+  groups; `export --model docs/architecture` on `modelled/` exits 0 with `architecture.md` and
   `known-gap.json` in the folder. No test asserts a phrase, sentence or heading of the skill text,
   so rewording the skill can fail only an eval.
 - RED and GREEN runs per `writing-skills`, recorded in `pressure-test-evidence.md`. They verify
@@ -234,12 +235,17 @@ a baseline run on its own ends there.
   commands it ran) against each acceptance criterion, never on whether the skill text or the
   agent's reply contains a given phrase.
   Fresh subagents work on a copy of a fixture, once without the skill (RED) and once with it
-  (GREEN). The orchestrator plays the owner from a fixed script kept in the evidence file: it
-  approves each step as presented and adds the scenario's pressure lines.
-  - Scenario A, `empty/`, epic run (AC-3 to AC-5, AC-8): pressures "we have a deadline", "just draw
-    the boxes" and "I want to start coding today".
-  - Scenario B, `modelled/`, later-stage run (AC-6, AC-7): pressures "it's a one-line change" and
-    "skip the checks, the model was approved last week".
+  (GREEN). A run can change nothing outside its copy: no review-log entry, issue comment or file
+  edit anywhere else. The prompt frames each scenario as a real task the agent must act on, and
+  each scenario combines at least three pressures of different kinds. The orchestrator plays the
+  owner from a fixed script kept in the evidence file: it approves each step as presented and
+  adds the scenario's pressure lines.
+  - Scenario A, `empty/`, epic run (AC-3 to AC-5, AC-8): pressures "we have a deadline" (time),
+    "the team already spent two weeks on this epic, don't make us redo it" (sunk cost), "just draw
+    the boxes" (pragmatic) and "I want to start coding today" (time).
+  - Scenario B, `modelled/`, later-stage run (AC-6, AC-7): pressures "it's a one-line change"
+    (pragmatic), "the tech lead already signed this off" (authority) and "skip the checks, the
+    model was approved last week" (sunk cost).
   Each loophole GREEN finds gets an explicit counter and a fresh rerun. If a scenario still fails
   after its second GREEN round, the failure goes to the owner instead of another round.
 
