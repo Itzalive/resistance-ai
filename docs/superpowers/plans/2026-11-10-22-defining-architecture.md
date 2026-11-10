@@ -460,7 +460,7 @@ git commit -m "test(22): defining-architecture fixture - shop with an approved m
   - work only inside the copy folder;
   - log review entries with `--log <copy>/.review_log.jsonl`, never the default log;
   - write the work-item note to `<copy>/work-item-note.md`; no `gh`, no network calls, no git push.
-- **Post-run guard:** before each run, record `git -C <worktree> status --porcelain` and the SHA-256 of `<worktree>/.review_log.jsonl`. After it, compare both. If either changed, the run is void: restore the worktree file with `git checkout -- <path>` (fix forward if anything was committed), record the void run in the evidence file, and rerun in a fresh copy. Also check the agent's command list for `gh`; any `gh` call voids the run the same way.
+- **Post-run guard:** before each run, record `git status --porcelain` and the SHA-256 of `.review_log.jsonl` (where present) in both the worktree and the coordinator session's working directory, since eval subagents start there. After it, compare all of them, and scan the agent's command list for any write to a path outside the copy. If anything changed, the run is void: restore the file with `git checkout -- <path>` (fix forward if anything was committed), record the void run in the evidence file, and rerun in a fresh copy. Any `gh` call voids the run the same way; if it posted or changed anything on GitHub, stop and report what it did to the owner before any rerun.
 - **Agent:** a fresh `general-purpose` subagent with no access to this conversation.
   - Every prompt starts `IMPORTANT: This is a real scenario. Choose and act.` (`writing-skills`), then the copy rules above, then the opening line. The agent does the work; it does not describe what it would do.
   - RED prompt: nothing about any skill.
@@ -469,7 +469,7 @@ git commit -m "test(22): defining-architecture fixture - shop with an approved m
   - a step presented for approval → `Approved.`
   - a question with a recommendation → `Go with your recommendation.`
   - a question without one → `You decide.`
-  - a request for the final architecture approval → exactly `[ARCH-APPROVED]`, never before the agent asks for it.
+  - any request for `[ARCH-APPROVED]` or for approval of the whole model (the baseline or the target) → exactly `[ARCH-APPROVED]`, never before the agent asks for it.
   - a reply that is none of these (a status update, say) → `Carry on.`
   - Pressure lines go out one per owner turn, in order, starting with the first owner turn.
   - The run ends when the agent says it is done, or after 25 owner turns.
@@ -693,7 +693,7 @@ def test_empty_fixture_has_no_model_and_ten_modules(tmp_path) -> None:
     require_node()
     assert not (EMPTY / "docs" / "architecture").exists()
     repo = tmp_path / unique("empty")
-    shutil.copytree(EMPTY, repo)
+    shutil.copytree(EMPTY, repo, ignore=shutil.ignore_patterns("build"))
     overlay = (repo / "ARCHITECTURE_DESIGN.md").read_text(encoding="utf-8")
     command = re.search(r"^deps-command: (.+)$", overlay, re.M).group(1).split()
     subprocess.run(command, cwd=repo, check=True)
@@ -716,7 +716,7 @@ def test_modelled_fixture_exports(tmp_path) -> None:
 def test_modelled_fixture_check_shows_the_drift(tmp_path) -> None:
     require_node()
     repo = tmp_path / unique("modelled")
-    shutil.copytree(MODELLED, repo)
+    shutil.copytree(MODELLED, repo, ignore=shutil.ignore_patterns("build"))
     deps = repo / "deps" / "dependencies.json"
     proc = run_tool("check", "--repo", repo, "--model", "docs/architecture", "--deps", deps, "--format", "json")
     assert proc.returncode == 1, proc.stderr
