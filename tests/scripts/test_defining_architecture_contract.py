@@ -101,3 +101,7 @@ def test_modelled_fixture_check_shows_the_drift(tmp_path) -> None:
     assert report["gap"]["new"] == [{"from": "shop.checkout", "to": "shop.inventory"}]
     assert report["gap"]["stale"] == []
     assert report["unmapped"] == ["shop.returns.flow"]
+    assert report["not_yet_reached"] == [
+        {"from": "shop.refunds", "to": "shop.orders"},
+        {"from": "shop.refunds", "to": "shop.payments"},
+    ]
