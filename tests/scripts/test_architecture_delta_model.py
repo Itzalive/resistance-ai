@@ -285,3 +285,8 @@ def test_config_name_anywhere_in_the_file_name_is_refused(tmp_path) -> None:
     folder = model_dir(tmp_path)
     (folder / "old-likec4.config.mjs.bak").write_text("x\n", encoding="utf-8")
     assert call("walk.mjs", "walkModelDir", str(folder))["token"] == "model-config"
+
+
+def test_empty_rules_items_are_dropped(tmp_path) -> None:
+    text = "model {\n  a = component 'A' {\n    metadata {\n      rules 'BR-1,, BR-2,'\n    }\n  }\n}\n"
+    assert load_model(write_model(tmp_path, text))["value"]["elements"][0]["rules"] == ["BR-1", "BR-2"]
