@@ -338,8 +338,9 @@ path never imports. `@likec4/language-services` alone was rejected: it fails to 
   `getMetadata()` returns `code` as an array, when `check` runs, then it exits 2 with
   `error: internal:` and never 0.
 - **AC-3** Given the model has an unknown reference and an unknown element kind, when `check` runs,
-  then it exits 2, stdout is empty, and stderr has two `error: model-error:` lines naming the file and
-  line of each.
+  then it exits 2, stdout is empty, and stderr has one `error: model-error:` line per likec4 error,
+  each naming its file and line, including one for line 3 and one for line 4 (likec4 1.60.0 reports a
+  third, "Target not resolved", for the same reference).
 - **AC-4** Given the repository's `c4.c4` differs from the shipped one or is missing, when `check` or
   `export` runs, then it exits 2 with `error: spec-copy:`; given a copy that differs only by `\r\n` line
   endings, then it is accepted.
