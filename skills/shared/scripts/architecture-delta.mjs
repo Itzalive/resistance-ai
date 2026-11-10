@@ -96,12 +96,23 @@ async function main(argv) {
     ({ output, exitCode } = await runCheck(args, deadline, loaded));
   }
   deadline.stop();
+  if (failed) return;
   process.stdout.write(output);
   process.exitCode = exitCode;
 }
 
-main(process.argv.slice(2)).catch((err) => {
+// Spec, Errors: any failure, including one thrown later from a timer or a promise and a failed
+// stdout write, is exit 2; the first one is reported and nothing after it can set another code.
+let failed = false;
+function fail(err) {
+  if (failed) return;
+  failed = true;
   const error = err instanceof ToolError ? err : new ToolError('internal', err?.message ?? String(err));
-  process.stderr.write(`${errorLines(error).join('\n')}\n`);
   process.exitCode = 2;
-});
+  process.stderr.write(`${errorLines(error).join('\n')}\n`);
+}
+process.on('uncaughtException', fail);
+process.on('unhandledRejection', fail);
+process.stdout.on('error', fail);
+
+main(process.argv.slice(2)).catch(fail);

@@ -136,3 +136,34 @@ def test_deadline_is_checked_while_matching(tmp_path) -> None:
     proc = run_tool("check", "--repo", repo, "--deps", deps, preload=preload)
     assert proc.returncode == 2
     assert error_lines(proc)[0].startswith("error: timeout: ")
+
+
+LATE_FAILURES = {
+    "timer-throws": "setTimeout(() => { throw new Error('late timer failure'); }, 0);",
+    "promise-rejects": "setTimeout(() => { Promise.reject(new Error('late promise failure')); }, 0);",
+    "stdout-pipe-closed": (
+        "const original = process.stdout.write.bind(process.stdout);"
+        "process.stdout.write = (chunk, ...rest) => {"
+        "  if (String(chunk).includes('breaches')) {"
+        "    const err = Object.assign(new Error('write EPIPE'), { code: 'EPIPE' });"
+        "    process.nextTick(() => process.stdout.emit('error', err));"
+        "    return true;"
+        "  }"
+        "  return original(chunk, ...rest);"
+        "};"
+    ),
+}
+
+
+@pytest.mark.parametrize("case", sorted(LATE_FAILURES))
+def test_late_failures_exit_two_as_internal(tmp_path, case: str) -> None:
+    repo = make_repo(tmp_path)
+    deps = write_json(repo / "deps.json", {"edges": CLEAN_EDGES})
+    preload = tmp_path / f"{case}.mjs"
+    preload.write_text(LATE_FAILURES[case], encoding="utf-8")
+    proc = run_tool("check", "--repo", repo, "--deps", deps, "--format", "json", preload=preload)
+    assert proc.returncode == 2
+    lines = error_lines(proc)
+    assert len(lines) == 1 and lines[0].startswith("error: internal: ")
+    if case != "stdout-pipe-closed":
+        assert proc.stdout == ""
