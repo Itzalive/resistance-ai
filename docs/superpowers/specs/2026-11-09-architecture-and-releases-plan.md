@@ -96,21 +96,19 @@ language; it only compares the model with a list of dependencies the repo suppli
   exit code 2 and a message saying what the overlay must name. (A Python repo might use `grimp`; a
   Kotlin repo a Konsist or Gradle dump. Those live in the repo, not here.)
 - **Where `likec4` comes from:** the engine pins `likec4` as a runtime dependency in its
-  `package.json`, with `package-lock.json` committed, so Claude Code installs it with the plugin. The
-  tool loads it from the plugin's own install first, then from the consuming repo's pinned copy (for
-  harnesses that do not install plugin dependencies), and exits 2 with an install hint if neither
-  exists. Cost: about 109 MB per plugin version for every user.
+  `package.json`, with `package-lock.json` committed, so Claude Code installs it with the plugin. A
+  consuming repo's own pinned copy wins, at whatever version it chooses; otherwise the tool uses the
+  plugin's copy, and exits 2 with an install hint if neither exists. Cost: about 109 MB per plugin version for every user.
 - **Output** (JSON and a short text report), each item naming the model elements and code modules:
   - **breaches:** code dependencies with no `uses` relationship, or into a `#protected` element from
     an element not allowed to use it;
   - **not yet reached:** relationships in the model that the code does not have yet;
   - **unmapped code:** modules no element's `code` covers;
-  - **shared hot spots:** with `--scope <elements>` and `--shards <file>`, modules that two or more
-    shards' scopes both touch.
+  - **shared hot spots:** with `--shards <file>`, model elements inside two or more shards' scopes.
 - **Known gap file** `architecture/known-gap.json`: today's accepted breaches. The check fails on a
   breach not in the file and on an entry that no longer matches anything, so the gap only shrinks.
-- **Model export for repo checkers:** `architecture-delta.mjs --export` writes the model's elements
-  (kind, tags, `code`) and allowed `uses` relationships as plain JSON, so a repo can generate its own
+- **Model export for repo checkers:** `architecture-delta.mjs export` writes the model's elements
+  (kind, tags, `code`) and its allowed relationships (any kind) as plain JSON, so a repo can generate its own
   language-specific checks from it (for example import-linter contracts in a Python repo). The
   generator itself belongs to the repo.
 - **Exit codes:** 0 clean, 1 new breach or stale gap entry, 2 input error.
@@ -132,7 +130,7 @@ its failures recorded in the skill's evidence file, then the skill, then the sce
 - **Reads:** the approved epic, the repository, the delta tool's output for today's code.
 - **Writes:**
   - the target model in `architecture/`: systems, containers and components with `code` and `rules`
-    metadata, allowed `uses` relationships, `#protected` and `#layer` tags, and invariants as
+    metadata, allowed relationships, `#protected` and `#layer` tags, and invariants as
     relationship rules (for example "only the orders module uses the payments library"; "evals use
     production builders, never copies");
   - a short architecture document beside it: the decisions and the alternatives rejected (the
@@ -261,7 +259,7 @@ by one PR at the end.
 
 | # | Shard | Depends on |
 |---|---|---|
-| 1 | Delta tool: C4 specification, `architecture-delta.mjs` (delta and `--export`), overlay-named dependency command, known-gap handling, tests | — |
+| 1 | Delta tool: C4 specification, `architecture-delta.mjs` (`check` and `export`), overlay-named dependency command, known-gap handling, tests | — |
 | 2 | Review-log enum, phases and run-record field, with tests | — |
 | 3 | `defining-architecture` skill (RED baseline first) | 1, 2 |
 | 4 | `planning-features` skill (RED baseline first) | 3 |
@@ -284,8 +282,8 @@ Shards 1 and 2 are independent and can run in parallel.
 
 5. **Language-neutral engine:** the engine ships no language adapters. The repo's overlay names the
    command that writes the dependency file.
-6. **`likec4` ships with the plugin** (pinned in the engine's lockfile), with the consuming repo's
-   pinned copy as the fallback.
+6. **`likec4` ships with the plugin** (pinned in the engine's lockfile). A consuming repo that pins
+   its own version gets that version.
 
 ## Checked
 

@@ -1,0 +1,16 @@
+// Shipped C4 specification for resistance-engine architecture models.
+// Copy this file unchanged into a repository's model folder; add kinds or tags in other files.
+// Element metadata keys read by the architecture delta tool:
+//   code  - module prefixes the element owns, comma-separated (for example 'shop.orders, shop.billing')
+//   rules - epic business rules the element owns, comma-separated (for example 'BR-1, BR-4')
+specification {
+  element system
+  element container
+  element component
+  element external
+  tag protected
+  tag generic
+  tag layer
+  tag eval
+  relationship uses
+}
