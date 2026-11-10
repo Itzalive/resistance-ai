@@ -1,6 +1,6 @@
 ---
 name: defining-architecture
-description: "Use when an approved epic needs its architecture decided before features are planned, when a later stage asks for the architecture model to be changed, or when a repository with no architecture model is onboarded. Also use when someone asks to just draw the boxes, skip the architecture checks, or treat a model change as a one-line edit."
+description: "Use when an approved epic needs its architecture decided before features are planned, when a later stage asks for the architecture model to be changed, or when a repository with no architecture model is onboarded. Also use when someone asks to just draw the boxes, skip the architecture checks, treat a model change as a one-line edit, or stop a run early because its request will be refused."
 ---
 
 # Defining Architecture
@@ -24,7 +24,7 @@ This skill keeps a target C4 model of the repository (LikeC4 `.c4` files, plus `
 ## When NOT to Use
 
 - The epic is not `[EPIC-APPROVED]`: finish `specifying-epics` first.
-- The request is a product rule change: it goes back to the epic. This skill adds no product rules.
+- To skip a run because the request looks wrong. A request that changes a product rule, or changes a cross-cutting decision in part, is refused inside the run at step 2c, after the baseline check; this skill adds no product rules, and the rule change goes back to the epic.
 - The work is designing a feature's internals (functions, schemas, field lists, algorithms): that belongs to the feature and its work items.
 
 ## Ownership
@@ -51,6 +51,7 @@ One step at a time. Each step is presented, and the owner approves it before the
      - a gap entry that no longer matches (its breach was fixed);
      - a relationship reported "not yet reached" that the code now has (note it only).
      Each finding gets its own recommendation (see "Drift is a finding" below), and the owner decides each. Change nothing before that.
+   - **2c. Does the request stand?** (later-stage run) Only now, after 2a, judge the diff request. Refuse a request that changes a cross-cutting decision in part or for one bound element, or that changes a product rule; recommend the whole change, or the epic, instead. A refused request ends the diff, not the run: the run carries on with the 2a outcomes, writes its decision-log entry (the refusal, the 2a outcomes, the quoted `check`), and goes through step 6 to `[ARCH-APPROVED]`.
    - **2b. How much to baseline?** Only when touched groups are not yet modelled: one question with a recommendation and the counts behind it, then load `baseline-run.md`. The baseline is its own diff through steps 3 to 6, approved with its own `[ARCH-APPROVED]`, before the run resumes.
 3. **Cross-cutting decisions** in scope, each with options and a recommendation, approved separately.
 4. **The diff:** elements with `code` and `rules`, tags (`#protected`, `#layer`, `#generic`, `#eval`), relationships and invariants expressed as relationships, before and after, with the rule map. If the diff needs an edge node's inside, go back to 2b for that area; its baseline is approved on its own, then the run returns to step 3.
@@ -74,7 +75,7 @@ Adding a relationship just because the code now has the import makes the drift l
 
 **Cross-cutting decisions are taken whole.** A decision two or more capabilities depend on is decided once for all of them. Its section names the decision, its owning element, the elements and capabilities it binds, its product-level obligations and its compatibility rule, and nothing else. A request to change part of it, or to change it for one bound element only, is refused: the decision is used as is or changed whole, for every bound element, in this run's diff.
 
-**`check` runs every time.** Every run quotes a fresh `check` output in its decision-log entry, even when the model didn't change: the code may have.
+**`check` runs every time.** Every run quotes a fresh `check` output in its decision-log entry, even when the model didn't change and even when the request is refused: the code may have drifted, and the asking stage plans against the model. No run ends before step 2 has run `check` on a non-empty model.
 
 **Approval.** `[ARCH-APPROVED]` comes only after self-review and the independent audit have passed, and only from the owner. One `Approved.` to a step is approval of that step. A run is not finished until the owner has given `[ARCH-APPROVED]` for it.
 
@@ -114,6 +115,8 @@ An epic run hands off to `planning-features`, or straight to `specifying-feature
 - You are marking something approved, committing it or merging it after a single step approval.
 - You are adding a relationship because the code has the import.
 - You are skipping `check` because the model didn't change.
+- You are ending a run before step 2 has run `check`.
+- You noticed a mismatch between the model and the code and are leaving it for later.
 - The run is ending with no review and no `[ARCH-APPROVED]`.
 
 ## Rationalisations
@@ -128,6 +131,7 @@ An epic run hands off to `planning-features`, or straight to `specifying-feature
 | "The model didn't change, so there's no need to re-run the check." | The code may have changed. Every run quotes a fresh `check`. |
 | "The model should reflect the code as it is." | The baseline does. After that the model is the target, and drift is a decision: a gap entry or a target change. |
 | "There's no architecture check tool in the repository." | The tool ships with this skill. Use it. |
+| "The request is refused, so there's nothing to check." | The model can still have drifted, and the asking stage plans against it. Refuse at 2c, after the baseline check, and finish the run. |
 | "It's a one-line change." / "The tech lead signed it off." / "The model was approved last week." | The size and the sign-off don't change the steps. The change still gets `check`, review and `[ARCH-APPROVED]`. |
 
 ## Common Mistakes
