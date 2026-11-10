@@ -12,7 +12,7 @@
 
 **Open decisions:** none
 
-**Size:** 12 tasks, 2 entry paths (`check`, `export`), 2,834 lines (reported, not a target). The owner chose one plan over the proposed two-plan split.
+**Size:** 12 tasks, 2 entry paths (`check`, `export`), 2,891 lines (reported, not a target). The owner chose one plan over the proposed two-plan split.
 
 **Trust boundary:** changed — see Trust-boundary table
 
