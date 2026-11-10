@@ -8,7 +8,7 @@
 
 **Tech Stack:** Node 24 (plain ESM, standard library), `likec4` 1.60.0, Python 3.12 with pytest under `uv run pytest -q`.
 
-**Spec:** `docs/superpowers/specs/2026-11-09-architecture-delta-tool-design.md` — decisions applied: none (the spec has no decision register; every rule cited below is from its sections)
+**Spec:** `docs/superpowers/specs/2026-11-09-architecture-delta-tool-design.md` — decisions applied: none (the spec has no decision register; every rule cited below is from its sections, including the usage-error amendment of 2026-11-10)
 
 **Open decisions:** none
 
@@ -29,6 +29,7 @@
 **Unknown variables:**
 - How long `likec4` takes to load 5,000 and 5,001 elements (Task 6). If one load exceeds 120 s, the executor stops and reports; the cap test may move to a generated model with fewer files but the same element count.
 - Whether `npm install --save-exact` keeps `package.json` key order; Task 1 diffs it and restores order by hand if needed.
+- Checked, not unknown: `likec4` 1.60.0 drops a blank `code ''` from the metadata (the element has no `code`), so the spec's blank-value rule is reached only through `a,,b`-style empty items; Task 6 tests that form.
 
 ---
 
@@ -44,6 +45,7 @@ and `rg -n "architecture-delta|c4\.c4" skills tests scripts`.
 | same | `scripts/bump_version.py:22-29` `_json_top` rewrites the first `  "version": "…"` line | caller | 1 | none (the top-level `version` stays the first line at two-space indent) |
 | new `package-lock.json` | `scripts/bump_version.py:64-70` `TARGETS` mapping | caller | 1 | none (`npm ci --ignore-scripts --dry-run` accepts a lockfile root `version` that differs from `package.json`, checked in a scratch install) |
 | `.gitignore` gains `node_modules/` | none found | — | 1 | — |
+| the suite needs `node_modules/likec4` | `CLAUDE.md` "Build & Test" lists only `uv run pytest -q` | contributor instructions | 1 | add `npm ci --ignore-scripts` before `uv run pytest -q` |
 | new `skills/shared/…` files | `tests/test_pi_package.py::test_skills_root_has_no_top_level_markdown_helpers` asserts no top-level `skills/*.md` | test | 1 | none (no file added at `skills/` top level) |
 
 Nothing else references `architecture-delta` or `c4.c4` today.
@@ -60,15 +62,16 @@ Untrusted source throughout: the content of the repository under `--repo` (its f
 | `resolveInside()` | file paths read | `--model`, `--deps`, `--gap`, `--shards` values | 7, 11 | `tests/scripts/test_architecture_delta_inputs.py::test_path_through_a_link_outside_is_refused`, `tests/scripts/test_architecture_delta_check.py::test_deps_through_a_link_outside_is_refused` |
 | `readJson()`, `parseDeps()`, `parseGap()`, `parseShards()` | JSON parser whose output drives the comparison | dependency, gap and shards files | 7 | `tests/scripts/test_architecture_delta_inputs.py::test_deps_shape_errors`, `::test_gap_shape_errors`, `::test_shards_shape_errors` |
 | `loadModel()` shape check | values that drive matching | whatever `likec4` (possibly a repository copy) returns | 6, 11 | `tests/scripts/test_architecture_delta_model.py::test_unexpected_api_shapes_are_internal`, `tests/scripts/test_architecture_delta_check.py::test_bad_shape_shim_exits_internal` |
-| `clean()` in `errorLines()`, `exportJson()`, `checkJson()`, `checkText()` | stdout and stderr read by agents | ids, module names, tags, metadata, error messages | 2, 8, 11 | `tests/scripts/test_architecture_delta_errors.py::test_clean_removes_ansi_sequences_first`, `tests/scripts/test_architecture_delta_check.py::test_printed_strings_are_cleaned` |
+| `clean()` in `errorLines()`, `exportJson()`, `checkJson()`, `checkText()` | stdout and stderr read by agents | ids, module names, tags, metadata, error messages | 2, 8, 11 | `tests/scripts/test_architecture_delta_errors.py::test_clean_removes_ansi_sequences_first`, `tests/scripts/test_architecture_delta_export.py::test_model_strings_are_cleaned_in_export`, `tests/scripts/test_architecture_delta_check.py::test_printed_strings_are_cleaned` |
+| `versionNote()` | stderr read by agents | the `version` field of a repository's `likec4/package.json` | 4, 8 | `tests/scripts/test_architecture_delta_export.py::test_repo_version_is_cleaned_in_the_note` |
 
 ## Checkpoints
 
 | Checkpoint | After task | Tasks covered | Reviewer looks at |
 |---|---|---|---|
 | C1 | 3 | 1–3 | Task 1 items 1–2, Task 2 items 1–3, Task 3 items 1–3; focused tests |
-| C2 | 6 | 4–6 | Task 4 items 1–4, Task 5 items 1–3, Task 6 items 1–3; trust-boundary rows 1, 2, 5; focused tests |
-| C3 | 9 | 7–9 | Task 7 items 1–3, Task 8 items 1–3, Task 9 items 1–4; trust-boundary rows 3, 4; full suite (Task 8 is the first end-to-end task) |
+| C2 | 6 | 4–6 | Task 4 items 1–4 (strong), Task 5 items 1–3 (strong), Task 6 items 1–3; trust-boundary rows 1, 2, 5; focused tests |
+| C3 | 9 | 7–9 | Task 7 items 1–3 (strong), Task 8 items 1–4, Task 9 items 1–5; trust-boundary rows 3, 4, 7; full suite (Task 8 is the first end-to-end task) |
 | C4 | 12 | 10–12 | Task 10 items 1–3, Task 11 items 1–4, Task 12 items 1–3; trust-boundary row 6; full suite |
 
 ---
@@ -84,9 +87,10 @@ Untrusted source throughout: the content of the repository under `--repo` (its f
 - Create: `.gitattributes`
 - Create: `skills/shared/architecture/c4.c4`
 - Create: `tests/scripts/arch_delta_support.py`
+- Modify: `CLAUDE.md` ("Build & Test" block)
 - Test: `tests/scripts/test_architecture_delta_packaging.py`
 
-**Callers that move with this task:** none (sweep rows for `package.json`, `package-lock.json` and `.gitignore` need no edit; `tests/test_pi_package.py` must still pass).
+**Callers that move with this task:** `CLAUDE.md` "Build & Test" (contributors now need `npm ci` before the suite); sweep rows for `package.json`, `package-lock.json` and `.gitignore` need no edit; `tests/test_pi_package.py` must still pass.
 
 **Reviewer looks at:**
 - lockfile pin — mutation: change `"likec4": "1.60.0"` to `"^1.60.0"` in `package.json` — killed by: `tests/scripts/test_architecture_delta_packaging.py::test_lockfile_pins_likec4_exactly`
@@ -160,7 +164,7 @@ def require_node() -> None:
     """Fail (never skip) when Node or the pinned likec4 install is missing."""
     if shutil.which("node") is None or not (LIKEC4_DIR / "package.json").is_file():
         raise RuntimeError(
-            "architecture-delta tests need Node and node_modules/likec4: run `npm ci --ignore-scripts`"
+            "architecture-delta tests need Node and node_modules/likec4: run `npm ci` (as `npm ci --ignore-scripts`)"
         )
 
 
@@ -350,7 +354,7 @@ def test_line_endings_and_ignores() -> None:
 - [ ] **Step 2: run RED.**
 
 Run: `uv run pytest tests/scripts/test_architecture_delta_packaging.py -q`
-Expected: collection error `RuntimeError: architecture-delta tests need Node and node_modules/likec4: run `npm ci --ignore-scripts``
+Expected: collection error `RuntimeError: architecture-delta tests need Node and node_modules/likec4: run `npm ci` (as `npm ci --ignore-scripts`)`
 
 - [ ] **Step 3: GREEN — pin, generate the lockfile, add the spec and the git attributes.**
 
@@ -380,6 +384,19 @@ specification {
 
 Append to `.gitignore` (new last line): `node_modules/`
 
+In `CLAUDE.md`, replace the "Build & Test" code block
+
+```bash
+uv run pytest -q                                   # Run the test suite
+```
+
+with
+
+```bash
+npm ci --ignore-scripts                            # Install the pinned likec4 (once, and after lockfile changes)
+uv run pytest -q                                   # Run the test suite
+```
+
 `.gitattributes`:
 
 ```
@@ -399,7 +416,7 @@ Expected: the counts print. If `high` or `critical` is above 0, STOP: do not com
 - [ ] **Step 6: commit.** Put the vulnerability counts from Step 4 in the commit body.
 
 ```bash
-git add package.json package-lock.json .gitignore .gitattributes skills/shared/architecture/c4.c4 tests/scripts/arch_delta_support.py tests/scripts/test_architecture_delta_packaging.py
+git add package.json package-lock.json .gitignore .gitattributes CLAUDE.md skills/shared/architecture/c4.c4 tests/scripts/arch_delta_support.py tests/scripts/test_architecture_delta_packaging.py
 git commit -m "feat(20): pin likec4 1.60.0 and ship the C4 specification
 
 npm audit (prod): <paste counts>"
@@ -449,7 +466,7 @@ def test_clean_removes_ansi_sequences_first() -> None:
 
 
 def test_clean_removes_c0_del_c1_and_bidi_controls() -> None:
-    assert clean("x\x00y\x7fz\x85w‮q⁦r\n") == "xyzwqr"
+    assert clean("x\x00y\x7fz\x85w\u202eq\u2066r\n") == "xyzwqr"
 
 
 def test_clean_keeps_exactly_200_code_points() -> None:
@@ -463,6 +480,7 @@ def test_clean_cuts_201_code_points_to_199_plus_ellipsis() -> None:
 
 
 def test_clean_counts_code_points() -> None:
+    assert clean("\U0001f600" * 150) == "\U0001f600" * 150
     out = clean("\U0001f600" * 201)
     assert out == "\U0001f600" * 199 + "…"
 
@@ -510,7 +528,7 @@ export class ToolError extends Error {
 }
 
 const ANSI = /\u001b\[[0-?]*[ -\/]*[@-~]|\u001b\][^\u0007\u001b]*(?:\u0007|\u001b\\)?/g;
-const CONTROLS = /[\u0000-\u001f\u007f-\u009f‪-‮⁦-⁩]/g;
+const CONTROLS = /[\u0000-\u001f\u007f-\u009f\u202a-\u202e\u2066-\u2069]/g;
 export const MAX_POINTS = 200;
 
 export function clean(value) {
@@ -701,7 +719,7 @@ git commit -m "feat(20): argument parsing and usage errors"
 
 ### Task 4: Locate and load `likec4` (repository copy first, exact folders)
 
-**Tier:** standard — trust boundary (dynamic import of repository code), complete code given (strong → standard).
+**Tier:** strong — trust boundary: decides which repository code is imported (complete code is given, but the drop rule does not apply to trust-boundary judgement).
 
 **Files:**
 - Create: `skills/shared/scripts/architecture-delta/paths.mjs`
@@ -887,7 +905,7 @@ export function isInside(child, parent) {
 import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { ToolError } from './errors.mjs';
+import { ToolError, clean } from './errors.mjs';
 import { isInside } from './paths.mjs';
 
 export const TESTED_VERSION = '1.60.0';
@@ -951,7 +969,7 @@ export async function importLikeC4(located) {
 export function versionNote(located) {
   return located.version === TESTED_VERSION
     ? null
-    : `note: likec4 ${located.version} from ${located.source}; tested with ${TESTED_VERSION}`;
+    : `note: likec4 ${clean(located.version)} from ${located.source}; tested with ${TESTED_VERSION}`;
 }
 ```
 
@@ -968,7 +986,7 @@ git commit -m "feat(20): locate and load likec4, repository copy first, exact fo
 
 ### Task 5: Model-folder walk and C4 spec copy check
 
-**Tier:** standard — trust boundary (keeps `likec4` from running repository code); complete code given.
+**Tier:** strong — trust boundary: keeps `likec4` from running repository code (complete code is given; no tier drop for trust-boundary work).
 
 **Files:**
 - Create: `skills/shared/scripts/architecture-delta/walk.mjs`
@@ -1210,7 +1228,6 @@ def test_model_errors_name_file_and_line(tmp_path) -> None:
     [
         pytest.param(["shared", "shared"], "duplicate", id="duplicate"),
         pytest.param(["a,,b", "c"], "empty", id="empty-item"),
-        pytest.param(["", "c"], "empty", id="blank"),
     ],
 )
 def test_prefix_errors(tmp_path, codes: list[str], label: str) -> None:
@@ -1345,7 +1362,7 @@ export async function loadModel(LikeC4, modelDir) {
 }
 ```
 
-- [ ] **Step 4: run GREEN.** `uv run pytest tests/scripts/test_architecture_delta_model.py -q` — Expected: PASS (26). If a `test_element_cap` case takes over 120 s, STOP and report (see Unknown variables).
+- [ ] **Step 4: run GREEN.** `uv run pytest tests/scripts/test_architecture_delta_model.py -q` — Expected: PASS (25). If a `test_element_cap` case takes over 120 s, STOP and report (see Unknown variables).
 - [ ] **Step 5: refactor — none.**
 - [ ] **Step 6: commit.**
 
@@ -1358,7 +1375,7 @@ git commit -m "feat(20): load the model, check likec4's API shape, validate code
 
 ### Task 7: Input paths and input files
 
-**Tier:** standard — trust boundary (file paths and parsed input); complete code given.
+**Tier:** strong — trust boundary: real-path containment of every input path and validation of parsed input (complete code is given; no tier drop for trust-boundary work).
 
 **Files:**
 - Modify: `skills/shared/scripts/architecture-delta/paths.mjs` (add `realRepo`, `resolveInside`)
@@ -1692,10 +1709,11 @@ git commit -m "feat(20): input paths inside the repo and validated input files"
 
 **Reviewer looks at:**
 - stdout empty on exit 2 — mutation: write output before the last check — killed by: `test_usage_errors_end_to_end`
-- export sorting — mutation: drop the `sort` on elements — killed by: `test_export_is_stable_and_sorted`
+- export sorting — mutation: drop the `sort` on elements — killed by: `test_export_is_stable_and_sorted` (tags keep likec4's declaration order; the spec sorts elements and `allowed` only)
 - config refused before load — mutation: call `loadModel` before `walkModelDir` — killed by: `test_export_refuses_config_and_never_runs_it`
+- cleaning of repository strings — mutation: drop `clean(...)` around the version in `versionNote` — killed by: `test_repo_version_is_cleaned_in_the_note`
 
-- Satisfies Spec AC: AC-18, AC-23, AC-24, AC-25; AC-4 and AC-7 through `export`; the `timeout` part of AC-22 through `export`
+- Satisfies Spec AC: AC-18, AC-20 (model strings through `export`), AC-23, AC-24, AC-25; AC-4 and AC-7 through `export`; the `timeout` part of AC-22 through `export`
 - Decisions applied: none
 - **Test retention:** Permanent
 
@@ -1832,6 +1850,26 @@ def test_repo_version_note(tmp_path) -> None:
     assert "note: likec4 1.59.0 from repo; tested with 1.60.0" in proc.stderr.splitlines()
 
 
+def test_repo_version_is_cleaned_in_the_note(tmp_path) -> None:
+    repo = make_repo(tmp_path)
+    make_shim(repo / "node_modules", version="1.59.0\u001b[2J")
+    proc = run_tool("export", "--repo", repo)
+    assert proc.returncode == 0, proc.stderr
+    assert "note: likec4 1.59.0 from repo; tested with 1.60.0" in proc.stderr.splitlines()
+    assert "\x1b" not in proc.stderr
+
+
+def test_model_strings_are_cleaned_in_export(tmp_path) -> None:
+    model = (
+        "model {\n  a = component 'A' {\n    metadata {\n      code 'x\u001b[31my'\n"
+        "      rules 'BR-1\u202e, " + "R" * 250 + "'\n    }\n  }\n}\n"
+    )
+    repo = make_repo(tmp_path, model)
+    data = json.loads(run_tool("export", "--repo", repo).stdout)
+    assert data["elements"][0]["code"] == ["xy"]
+    assert data["elements"][0]["rules"] == ["BR-1", "R" * 199 + "…"]
+
+
 def test_missing_likec4_from_a_copied_engine(tmp_path) -> None:
     script = copy_engine(tmp_path / unique("copy"))
     proc = run_tool("export", "--repo", make_repo(tmp_path), script=script)
@@ -1878,7 +1916,7 @@ export function exportJson(model) {
     elements: [...model.elements].sort((a, b) => cmp(a.id, b.id)).map((element) => ({
       id: clean(element.id),
       kind: clean(element.kind),
-      tags: [...element.tags].sort(cmp).map(clean),
+      tags: element.tags.map(clean),
       code: element.code.map(clean),
       rules: element.rules.map(clean),
     })),
@@ -1991,6 +2029,7 @@ git commit -m "feat(20): CLI with the export command"
 - separator boundary — mutation: `m.startsWith(p)` without the separator — killed by: `test_longest_prefix_wins_and_separator_counts`
 - `#protected` from outside — mutation: let a relationship to P's ancestor count — killed by: `test_protected_needs_a_relationship_into_it`
 - inside a protected element — mutation: apply the protected rule when A is inside P — killed by: `test_children_of_a_protected_element_follow_the_ordinary_rule`
+- deadline tick — mutation: delete the `tick()` call (or change `% 10000` to `% 20000`) — killed by: `test_tick_runs_after_every_10000_edges`
 
 - Satisfies Spec AC: AC-6, AC-8, AC-9, AC-10, AC-11
 - Decisions applied: none
@@ -2079,6 +2118,7 @@ def test_children_of_a_protected_element_follow_the_ordinary_rule() -> None:
     edge = [["s.p.a.x", "s.p.b.y"]]
     assert pairs(compare(PROTECTED, [], edge)["breaches"]) == [("s.p.a", "s.p.b")]
     assert compare(PROTECTED, [("s.p.a", "s.p.b")], edge)["breaches"] == []
+    assert compare(PROTECTED, [("s.p.a", "s")], edge)["breaches"] == []
 
 
 def test_breach_carries_its_module_edges() -> None:
@@ -2096,6 +2136,21 @@ def test_not_yet_reached_and_exit_code() -> None:
 
 def test_new_breach_sets_exit_code_one() -> None:
     assert compare([element("a", "a"), element("b", "b")], [], [["a", "b"]])["exitCode"] == 1
+
+
+def test_tick_runs_after_every_10000_edges() -> None:
+    model = {"elements": [element("a", "a")], "relationships": []}
+    for count, ticks in ((10_000, 0), (10_001, 1), (20_000, 1), (20_001, 2)):
+        edges = [[f"a.m{i}", "a"] for i in range(count)]
+        code = (
+            f"import {{ compare }} from {json.dumps(lib_url('match.mjs'))};\n"
+            "let ticks = 0;\n"
+            f"compare({json.dumps(model)}, {json.dumps(edges)}, {{ separator: '.', tick: () => {{ ticks += 1; }} }});\n"
+            "process.stdout.write(String(ticks));\n"
+        )
+        proc = run_module(code)
+        assert proc.returncode == 0, proc.stderr
+        assert int(proc.stdout) == ticks, count
 ```
 
 - [ ] **Step 2: run RED.** `uv run pytest tests/scripts/test_architecture_delta_match.py -q` — Expected: FAIL (module not found)
@@ -2190,7 +2245,7 @@ export function compare(model, edges, options) {
 }
 ```
 
-- [ ] **Step 4: run GREEN.** `uv run pytest tests/scripts/test_architecture_delta_match.py -q` — Expected: PASS (9)
+- [ ] **Step 4: run GREEN.** `uv run pytest tests/scripts/test_architecture_delta_match.py -q` — Expected: PASS (10)
 - [ ] **Step 5: refactor — none.**
 - [ ] **Step 6: commit.**
 
@@ -2212,7 +2267,7 @@ git commit -m "feat(20): matching rules - mapping, allowed edges, protected, not
 **Callers that move with this task:** none (`compare` keeps its signature; the new options default to "none")
 
 **Reviewer looks at:**
-- staleness against the whole repo — mutation: compute stale entries after scope filtering — killed by: `test_scope_decides_listing_and_exit_code`
+- scope keeps an entry when either end is in scope — mutation: `inScope(pair.from) && inScope(pair.to)` in `keep` — killed by: `test_scope_decides_listing_and_exit_code` (the `stale_in` and `live` cases)
 - scope filters the exit code — mutation: compute `exitCode` from unscoped `new` — killed by: `test_scope_decides_listing_and_exit_code`
 - hot spot descendants — mutation: compare ids with `===` instead of `within` — killed by: `test_hot_spots`
 
@@ -2314,7 +2369,7 @@ and replace everything from `const breaches = [...breachByPair.values()]` to the
 }
 ```
 
-- [ ] **Step 4: run GREEN.** `uv run pytest tests/scripts/test_architecture_delta_match.py -q` — Expected: PASS (14)
+- [ ] **Step 4: run GREEN.** `uv run pytest tests/scripts/test_architecture_delta_match.py -q` — Expected: PASS (15)
 - [ ] **Step 5: refactor — none.**
 - [ ] **Step 6: commit.**
 
@@ -2527,7 +2582,7 @@ def test_hot_spots_end_to_end(tmp_path) -> None:
 
 def test_printed_strings_are_cleaned(tmp_path) -> None:
     long_name = "q" * 250
-    edges = [["zz\x1b[31m.evil‮", "shop.orders"], [long_name, "shop.orders"]]
+    edges = [["zz\x1b[31m.evil\u202e", "shop.orders"], [long_name, "shop.orders"]]
     data = report(check(make_repo(tmp_path), edges, "--format", "json"))
     assert sorted(data["unmapped"]) == sorted(["zz.evil", "q" * 199 + "…"])
 
@@ -2615,6 +2670,7 @@ import { exportJson, checkJson, checkText } from './architecture-delta/report.mj
 (remove the old `import { exportJson } from './architecture-delta/report.mjs';` line), and replace `main` with:
 
 ```js
+// Spec, Errors: a missing input file is `bad-input`; only the default gap file may be absent.
 function readOptional(repo, value, fallback, flag, parse) {
   const target = resolveInside(repo, value ?? fallback, flag);
   if (!target.exists) {
@@ -2690,7 +2746,7 @@ git commit -m "feat(20): check command with JSON and text reports"
 **Reviewer looks at:**
 - internal error exit code — mutation: set `process.exitCode = 1` in the top-level handler — killed by: `test_unexpected_error_is_internal_never_one`
 - no subprocess import — mutation: add `import { spawn } from 'node:child_process'` to `match.mjs` — killed by: `test_tool_source_never_spawns_or_writes`
-- timeout on `check` — mutation: drop `deadline.check()` after reading `--deps` and the timer — killed by: `test_limits_end_to_end[timeout]`
+- timeout on `check` — mutation: remove every `deadline.check()` call and the timer — killed by: `test_limits_end_to_end[timeout]` (a single removed check is covered by the next one; the per-10,000-edge check is pinned in Task 9)
 
 - Satisfies Spec AC: AC-21, AC-22 (`edge-cap`, `file-size`, `model-size`, `timeout` end to end; `element-cap` is covered in Task 6 through the same `loadModel`), AC-26; Scope's source test
 - Decisions applied: none
@@ -2786,8 +2842,9 @@ def test_unexpected_error_is_internal_never_one(tmp_path) -> None:
 def test_tool_source_never_spawns_or_writes() -> None:
     sources = [SCRIPT, *sorted(LIB.glob("*.mjs"))]
     forbidden = re.compile(
-        r"child_process|worker_threads|\b(writeFile|appendFile|mkdir|rm|unlink|rename|copyFile|cp"
-        r"|createWriteStream|symlink|link|truncate|chmod|chown|utimes)(Sync)?\s*\("
+        r"child_process|worker_threads|fs/promises|\bopenSync\s*\(|(?<!stdout\.)(?<!stderr\.)\bwrite(Sync)?\s*\("
+        r"|\b(writeFile|appendFile|mkdir|rm|unlink|rename|copyFile|cp|createWriteStream|symlink|link|truncate"
+        r"|chmod|chown|utimes)(Sync)?\s*\("
     )
     for source in sources:
         assert not forbidden.search(source.read_text(encoding="utf-8")), source
@@ -2822,7 +2879,7 @@ git commit -m "test(20): no network, limits end to end, internal errors, no writ
 | AC-14, AC-15, AC-16 | 10, 11 |
 | AC-17 | 11 |
 | AC-18, AC-23 | 8 |
-| AC-19, AC-20, AC-27 | 11 (2 for the cleaning rule) |
+| AC-19, AC-20, AC-27 | 11; 8 for AC-20 through model strings in `export`; 2 for the cleaning rule |
 | AC-21, AC-26 | 12 |
 | AC-22 | 5, 6, 7, 8, 12 |
 | AC-24 | 5, 8 |

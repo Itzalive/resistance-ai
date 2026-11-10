@@ -32,7 +32,8 @@ Relative paths resolve against `--repo`. The shipped C4 specification is found r
 (`../architecture/c4.c4`). `--timeout` takes a whole number of seconds from 0 to 600 (default 60).
 An unknown subcommand or flag, a missing `--repo` (or `--deps` for `check`), a `--format` other than
 `text` or `json`, a `--timeout` outside 0 to 600 or not a whole number, or an empty `--separator` is a
-usage error. An unknown `--scope` id is an input error.
+usage error. A flag with no value, a flag given twice, or an empty item in `--scope` is also a usage
+error. An unknown `--scope` id is an input error.
 
 ## Inputs
 
