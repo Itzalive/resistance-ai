@@ -30,7 +30,8 @@ node skills/shared/scripts/architecture-delta.mjs export --repo <dir> [--model a
 
 Relative paths resolve against `--repo`. The shipped C4 specification is found relative to the script
 (`../architecture/c4.c4`). `--timeout` takes a whole number of seconds from 0 to 600 (default 60).
-An unknown subcommand or flag, a missing or empty `--repo` (or `--deps` for `check`), a `--format` other than
+An unknown subcommand or flag, a missing or empty `--repo` (or `--deps` for `check`), an empty
+`--model`, `--gap` or `--shards`, a `--format` other than
 `text` or `json`, a `--timeout` outside 0 to 600 or not a whole number, or an empty `--separator` is a
 usage error. A flag with no value (a value starting with `--` counts as missing), a flag given twice, or an
 empty or blank item in `--scope` (items are trimmed; `--scope ""` counts) is also a usage error. An unknown `--scope` id is an input error.
@@ -50,7 +51,9 @@ All inputs are read-only. `--model`, `--deps`, `--gap` and `--shards` are resolv
 - **`likec4`:** the repository's choice wins.
   - **Repository copy:** `<repo>/node_modules/likec4`, when that folder exists and its real path lies
     inside `--repo`'s real path. Only that exact folder is looked at: no parent folder of `--repo` is
-    searched, and `<repo>/package.json` need not list it. It is used at whatever version it is.
+    searched, and `<repo>/package.json` need not list it. It is used at whatever version it is. It is
+    trusted code, like the rest of the repository's dependencies: importing it runs it, and the
+    modules it imports are resolved the way Node resolves them, which may look above `--repo`.
   - **Plugin copy:** otherwise exactly `<engine root>/node_modules/likec4`, where the engine root is the
     folder three levels above the script (`skills/shared/scripts/` → root), which is where a plugin
     install puts its dependencies; it is 1.60.0. The same rule as the repository copy applies: only
@@ -103,9 +106,11 @@ or any ancestor of A to B or any ancestor of B. Any relationship grants the perm
 kind; relationship kinds only change how diagrams look.
 
 **`#protected`.** When B or an ancestor of B is tagged `#protected`, call the nearest such element P.
-If A lies outside P, the edge is then allowed only by a relationship from A or an ancestor of A to P
-or to a descendant of P; a relationship to an ancestor of P does not count. Edges between elements
-that are both inside P follow the ordinary rule.
+If A lies outside P, the edge is then allowed only by a relationship from A or an ancestor of A to
+B or an ancestor of B that is P or lies inside P. A relationship to an ancestor of P does not count,
+and nor does one to another part of P: a relationship to `p.x` allows edges into `p.x` and its
+descendants, not into `p.y`. So the tag only ever narrows what the ordinary rule allows. Edges
+between elements that are both inside P follow the ordinary rule.
 
 **Reported.**
 - **Breach:** a checked edge that is not allowed; one breach per element pair (source element, target
@@ -205,10 +210,12 @@ the caller's own timeout. The model folder limits keep that load small.
 `error: <token>: <detail>`, with the detail cleaned as above. The tokens are: `usage`,
 `likec4-missing`, `model-error`, `model-config`, `model-symlink`, `model-size`,
 `spec-copy`, `outside-repo`, `bad-input`, `unknown-scope`, `edge-cap`, `element-cap`, `file-size`,
-`timeout` and `internal`. A missing `--model` directory, a missing or unparseable input file, an
+`timeout` and `internal`. A missing `--model` directory, a missing or unparseable input file, an input path that is not a
+regular file (a folder or a pipe, say), an
 unknown id in a gap or shards file and a duplicate gap entry are `bad-input`; `getErrors()` entries and
 exceptions from `likec4` while loading are `model-error`. A top-level handler turns any other error into `internal` with exit 2, so an
-unexpected failure can never read as a breach.
+unexpected failure can never read as a breach. That includes an error thrown later from a timer or
+a promise (inside `likec4` or not) and a failure writing to stdout, such as a closed pipe.
 
 **Exit codes.**
 
@@ -288,8 +295,12 @@ network call. Whether `likec4`'s loader ever reaches the network is not proven, 
 
 **Integrity.** Every input is repository content and treated as hostile:
 - `likec4` would execute a config file inside the model folder; the pre-load walk refuses any such
-  file and any symlink, so loading the model runs no repository code and reads nothing outside
-  `--repo` (AC-24). A file changed between the walk and the load is out of scope: the caller controls
+  file and any symlink, so the model folder cannot make `likec4` run code or read outside `--repo`
+  (AC-24).
+- A repository's own `likec4` copy is trusted, as its other dependencies are: the tool imports and
+  runs it. A caller that runs the tool on an untrusted change (a pull request from outside, say)
+  must treat a committed or changed `node_modules/likec4` as code from that change; the skills
+  that run the tool install the repository's dependencies with its own command first. A file changed between the walk and the load is out of scope: the caller controls
   the working tree.
 - Strict shapes for the dependency, gap and shards files: unknown keys, wrong types and empty strings
   are exit 2 (AC-5).
@@ -363,7 +374,8 @@ path never imports. `@likec4/language-services` alone was rejected: it fails to 
   of B, when `check` runs, then there is no breach.
 - **AC-10** Given B is tagged `#protected` and the only relationship goes to B's parent, when an element
   outside B depends on B, then that pair is a breach; given a relationship directly to B, then it is
-  not. Given two children of B, when one depends on the other, then the pair is a breach with no
+  not. Given the only relationship goes to B's child B.x, when an element outside B depends on B's
+  child B.y, then that pair is a breach, and when it depends on a child of B.x, then it is not. Given two children of B, when one depends on the other, then the pair is a breach with no
   relationship between them and not a breach with one.
 - **AC-11** Given a relationship between two elements with `code` and no matching code edge, when
   `check` runs, then the pair is listed under `not_yet_reached` and the exit code is 0.

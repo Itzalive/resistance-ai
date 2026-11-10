@@ -71,7 +71,7 @@ def test_protected_needs_a_relationship_into_it() -> None:
     edge = [["o.x", "s.p.a.y"]]
     assert pairs(compare(PROTECTED, [("o", "s")], edge)["breaches"]) == [("o", "s.p.a")]
     assert compare(PROTECTED, [("o", "s.p")], edge)["breaches"] == []
-    assert compare(PROTECTED, [("o", "s.p.b")], edge)["breaches"] == []
+    assert pairs(compare(PROTECTED, [("o", "s.p.b")], edge)["breaches"]) == [("o", "s.p.a")]
 
 
 def test_children_of_a_protected_element_follow_the_ordinary_rule() -> None:
@@ -209,3 +209,38 @@ def test_scope_leaves_out_known_breaches_and_not_yet_reached_outside_it() -> Non
     assert out["gap"] == {"known": [], "new": [], "stale": []}
     assert pairs(out["notYetReached"]) == [("a", "x.y")]
     assert out["exitCode"] == 0
+
+
+def test_protected_relationship_to_one_part_allows_only_that_part() -> None:
+    elements = PROTECTED + [element("s.p.a.k", "s.p.a.k")]
+    edges = [["o.x", "s.p.b.y"], ["o.x", "s.p.a.k.z"]]
+    assert pairs(compare(elements, [("o", "s.p.a")], edges)["breaches"]) == [("o", "s.p.b")]
+
+
+def test_protected_never_allows_what_the_ordinary_rule_refuses() -> None:
+    elements = PROTECTED + [element("s.p.a.k", "s.p.a.k")]
+    edge = [["o.x", "s.p.a.y"]]
+    assert pairs(compare(elements, [("o", "s.p.a.k")], edge)["breaches"]) == [("o", "s.p.a")]
+
+
+def test_compare_at_the_limits_is_fast() -> None:
+    # 5,000 elements with code, 5,000 relationships, 1,000,000 edges between distinct modules.
+    code = (
+        f"import {{ compare }} from {json.dumps(lib_url('match.mjs'))};\n"
+        "const elements = [];\n"
+        "for (let i = 0; i < 50; i++) {\n"
+        "  elements.push({ id: `g${i}`, kind: 'container', tags: i % 2 ? ['protected'] : [], code: [`g${i}`], rules: [] });\n"
+        "  for (let j = 0; j < 99; j++) elements.push({ id: `g${i}.c${j}`, kind: 'component', tags: [], code: [`g${i}.c${j}`], rules: [] });\n"
+        "}\n"
+        "const ids = elements.map((e) => e.id);\n"
+        "const relationships = [];\n"
+        "for (let i = 0; i < 5000; i++) relationships.push({ from: ids[(i * 7) % ids.length], to: ids[(i * 13 + 5) % ids.length] });\n"
+        "const edges = [];\n"
+        "for (let i = 0; i < 1000000; i++) edges.push([`${ids[i % ids.length]}.m${i}`, `${ids[(i * 31 + 17) % ids.length]}.n${i}`]);\n"
+        "const start = Date.now();\n"
+        "compare({ elements, relationships }, edges, { separator: '.' });\n"
+        "process.stdout.write(String(Date.now() - start));\n"
+    )
+    proc = run_module(code)
+    assert proc.returncode == 0, proc.stderr
+    assert int(proc.stdout) < 15000

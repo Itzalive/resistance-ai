@@ -14,16 +14,20 @@ function ancestorsOrSelf(id) {
 export function compare(model, edges, options) {
   const { separator, gap = [], scope = null, shards = null, tick = () => {} } = options;
   const elements = new Map(model.elements.map((element) => [element.id, element]));
-  const prefixes = model.elements
-    .flatMap((element) => element.code.map((prefix) => [prefix, element.id]))
-    .sort((a, b) => b[0].length - a[0].length);
-  const mapped = new Map();
+  const byPrefix = new Map();
+  for (const element of model.elements) {
+    for (const prefix of element.code) if (!byPrefix.has(prefix)) byPrefix.set(prefix, element.id);
+  }
+  // Longest matching prefix: the module itself, then each cut just before a separator, right to left.
   const mapModule = (module) => {
-    if (!mapped.has(module)) {
-      const hit = prefixes.find(([prefix]) => module === prefix || module.startsWith(prefix + separator));
-      mapped.set(module, hit ? hit[1] : null);
+    let hit = byPrefix.get(module);
+    let end = module.length;
+    while (hit === undefined && end > 0) {
+      end = module.lastIndexOf(separator, end - 1);
+      if (end < 0) break;
+      hit = byPrefix.get(module.slice(0, end));
     }
-    return mapped.get(module);
+    return hit ?? null;
   };
   const relationships = [];
   const relationshipKeys = new Set();
@@ -35,20 +39,18 @@ export function compare(model, edges, options) {
   }
   const nearestProtected = (id) =>
     ancestorsOrSelf(id).reverse().find((x) => elements.get(x)?.tags.includes('protected')) ?? null;
+  // Spec, #protected: from outside P only a relationship to B or an ancestor of B inside P counts.
   const allowed = (a, b) => {
-    const sources = ancestorsOrSelf(a);
     const guard = nearestProtected(b);
-    if (guard !== null && !within(a, guard)) {
-      return relationships.some((r) => sources.includes(r.from) && within(r.to, guard));
-    }
-    const targets = ancestorsOrSelf(b);
-    return relationships.some((r) => sources.includes(r.from) && targets.includes(r.to));
+    const outside = guard !== null && !within(a, guard);
+    const targets = ancestorsOrSelf(b).filter((t) => !outside || within(t, guard));
+    return ancestorsOrSelf(a).some((s) => targets.some((t) => relationshipKeys.has(key(s, t))));
   };
 
   const unmapped = new Set();
   const breachByPair = new Map();
   const allowedByPair = new Map();
-  const checkedPairs = [];
+  const reached = new Set();
   edges.forEach(([from, to], index) => {
     if (index > 0 && index % 10000 === 0) tick();
     const source = mapModule(from);
@@ -61,7 +63,7 @@ export function compare(model, edges, options) {
     const pair = key(source, target);
     if (!allowedByPair.has(pair)) {
       allowedByPair.set(pair, allowed(source, target));
-      checkedPairs.push([source, target]);
+      for (const s of ancestorsOrSelf(source)) for (const t of ancestorsOrSelf(target)) reached.add(key(s, t));
     }
     if (allowedByPair.get(pair)) return;
     if (!breachByPair.has(pair)) breachByPair.set(pair, { from: source, to: target, edges: [] });
@@ -70,7 +72,7 @@ export function compare(model, edges, options) {
 
   const hasCode = (id) => (elements.get(id)?.code.length ?? 0) > 0;
   const notYetReached = relationships.filter(
-    (r) => hasCode(r.from) && hasCode(r.to) && !checkedPairs.some(([s, t]) => within(s, r.from) && within(t, r.to)),
+    (r) => hasCode(r.from) && hasCode(r.to) && !reached.has(key(r.from, r.to)),
   );
   const entryKeys = new Set(gap.map((entry) => key(entry.from, entry.to)));
   const allBreaches = [...breachByPair.values()].map((breach) => ({
