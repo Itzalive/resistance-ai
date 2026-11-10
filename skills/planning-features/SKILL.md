@@ -9,7 +9,7 @@ description: "Use when an epic with an approved architecture needs to be split i
 
 This skill turns an approved epic into **features**: stages of value delivered in sequence, each shipping something measurable. It writes one file, the **feature map**.
 
-**Core principle:** a feature is chosen for where it sits in the sequence of value, never for the code its parts share. The order is proposed with its reasoning and decided by the owner.
+**Core principle:** a feature is chosen for where it sits in the sequence of value, never for the code its parts share.
 
 **Announce at start:** "I'm using the planning-features skill."
 
@@ -24,7 +24,6 @@ This skill turns an approved epic into **features**: stages of value delivered i
 
 - `check` does not exit 0: the run goes to `defining-architecture`. This skill never repairs the model.
 - The owner agrees the epic ships as one feature: append that agreement as a note to the epic's work item and go to `specifying-features`, which takes the epic as its feature.
-- A single work item with clear scope: go to `specifying-work-items`.
 
 ## Ownership
 
@@ -32,18 +31,16 @@ This skill owns the feature map and `close_by` on known-gap entries. It never ch
 
 ## Files and tools
 
-- Load `FEATURES_STANDARDS.md` at step 1: the map's format, the split-out test, the signals and cost fitting.
-- Load `replan-run.md` only for a re-plan run.
-- Load `review-workflow.md`, `FEATURES_REVIEW_MANIFEST.md` and `FEATURES_RUBRIC.md` only at step 6.
-- The delta tool, the overlay keys (`model`, `deps-command`, `deps-file`, `separator`) and their defaults are those of `defining-architecture`.
+- Load `FEATURES_STANDARDS.md` at step 1, `replan-run.md` only for a re-plan run, and `review-workflow.md` with the manifest and rubric only at step 6.
+- The delta tool and the overlay keys are those of `defining-architecture`.
 
 ## Ordering rules
 
 In priority order:
 
 1. **Decisions first.** Cross-cutting decisions are already taken whole by `defining-architecture`. The first feature that builds on one lays its foundation, so later features add to it and do not reshape it.
-2. **Direction-changing questions early, split by risk.** A question whose answer could change the plan (an unproven technique, a cost or quality unknown, a dependency on another party) is placed with the feature that needs its answer, as early as that feature allows.
-   - **Split it out** as its own item only when a wrong answer would waste or redo work in other features, or change the epic's direction (its capabilities, its value order or a cross-cutting decision). It is answered before every feature it could invalidate. Where it shares no files with the current feature and neither needs the other's result, it runs alongside that feature. The owner decides who runs it, and its answer comes back as a re-plan run.
+2. **Direction-changing questions early, split by risk.** A question whose answer could change the plan is placed with the feature that needs its answer, as early as that feature allows.
+   - **Split it out** as its own item only when a wrong answer would waste or redo work in other features, or change the epic's direction. It is answered before every feature it could invalidate, and runs alongside the current feature only where the two are independent. The owner decides who runs it; its answer comes back as a re-plan run.
    - **Otherwise** it stays with its feature and is answered by `specifying-features` before that feature's shard specs.
 3. **Value to cost.** Among what is left: MVP criteria first, then Musts by value per cost, then Shoulds and Coulds.
 4. **Every feature stands alone.** It ships, it is measured by its own eval run, and it leaves the product better if the next feature never comes. A feature that delivers no epic AC is not a feature.
@@ -51,7 +48,7 @@ In priority order:
 
 ## Steps of a planning run
 
-One step at a time. Each step is presented and the owner approves it before the next starts. In every step, put the decisions the owner must make first and list everything else as defaults applied unless the owner objects.
+One step at a time, each approved by the owner before the next. In every step, put the owner's decisions first and list the rest as defaults applied unless the owner objects.
 
 1. **Assumptions surface** (load `FEATURES_STANDARDS.md`). Your first output is this and nothing else: the trigger and its gate with the `check` result; the epic's capabilities, ACs, success metrics and MVP criteria; the cross-cutting decisions and known-gap entries; whether run records exist. Anything missing stops the run.
 2. **Questions.** Every direction-changing question, its risk (what changes at each possible answer), and whether it is split out, with the reason against rule 2.
