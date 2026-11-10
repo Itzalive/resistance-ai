@@ -4,7 +4,7 @@ Grade every item. Each item is binary. The tag in brackets gives its scope, work
 
 ## What review checks
 
-- [ ] Every Must rule has exactly one owning element in the rule map and in the elements' `rules` metadata. [whole]
+- [ ] Every Must rule has exactly one owning element in the rule map and in the elements' `rules` metadata. Not graded for a baseline run, which assigns no rules. [whole]
 - [ ] Every cross-cutting decision in scope is found, taken whole for every capability that depends on it, and holds only product-level content: name, owning element, bound elements and capabilities, obligations, compatibility rule. [changed]
 - [ ] No cycles: no two sibling elements reach each other, directly or through others. [whole]
 - [ ] Every `code` value equals a repository module or a prefix of one at the separator. [changed]

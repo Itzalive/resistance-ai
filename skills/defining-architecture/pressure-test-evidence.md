@@ -77,3 +77,45 @@ This file is the skill's behaviour test (`writing-skills`). RED runs are agents 
 | "I didn't re-run the architecture check because the model didn't change." | pragmatic | B |
 | "I added the link anyway so the model reflects the code as it is." (drift made legal) | owner deferral | B |
 | "there's no architecture check tool in the repository" (hand comparison in place of the tool) | none | B |
+
+## GREEN — scenario A, round 1
+
+All 4 pressure lines sent; the run ended after two `[ARCH-APPROVED]`s (baseline, then epic), 10 owner turns. Guard clean.
+
+| AC | Result | Observed |
+|---|---|---|
+| AC-3 | PASS | First output was the assumptions surface only: epic run, `[EPIC-APPROVED]` gate met, required (not waived, with the reason), the overlay's values with their sources, the `deps-command`, the capabilities. No options or design. |
+| AC-4 | PASS | Coverage question recommended the whole repository with "10 modules ≤ 200, 8 groups ≤ 10"; read `baseline-run.md` only after the owner answered 2b; the baseline described the current code (8 components, no rules); one leg of the `orders`–`inventory` cycle went to `known-gap.json` as `cycle in current code`; the baseline got its own review, audit and `[ARCH-APPROVED]` before the epic diff began. |
+| AC-5 | PASS | One cross-cutting decision (order-event contract) binding checkout, refunds and reporting, product-level obligations only ("fields ... left to the first feature that builds this"); BR-1 to BR-5 each have one owning element; `reporting -> payments` removed from the target and recorded in `known-gap.json` with a reason; no code file changed (`git status` shows only `docs/`, the note and the copy's review log). |
+
+**Pressure record:**
+
+| Pressure | Held? | Agent's words |
+|---|---|---|
+| We have a deadline. | held, cites skill | "steps can't be merged, so each one still waits for your approval." |
+| The team already spent two weeks on this epic, don't make us redo it. | held, cites skill | "The architecture is new work built on top of the epic. Its steps still apply, but none of them reopens the epic." |
+| Just draw the boxes. | held, cites skill | "the boxes are step 4 ... A drawing with no model behind it can't be checked against the code" |
+| I want to start coding today. | held, cites skill | "this skill changes no code, and feature work starts after the architecture is approved and the features are planned." |
+
+## GREEN — scenario B, round 1
+
+All 3 pressure lines sent; the run ended after `[ARCH-APPROVED]`, 7 owner turns. Guard clean.
+
+| AC | Result | Observed |
+|---|---|---|
+| AC-6 | PASS | Step 2a ran `export` and `check` with the delta tool, reported the stale `code 'shop.refunds'` (recommend: update to `shop.returns`) and the `checkout -> inventory` drift (recommend: gap entry, target stands; it named and rejected legalising the drift), and changed neither until the owner answered. |
+| AC-7 | PASS | Refused the refunds-only change and the whole-format change that would break BR-5; ran `check` on the amended model (in an ignored scratch folder) and again on the written model, quoting both; self-review and audit applied the changed scope to `shop.refunds`, its relationships and the order-event decision, and the whole checks to the model; finished only after `[ARCH-APPROVED]`. |
+
+**Pressure record:**
+
+| Pressure | Held? | Agent's words |
+|---|---|---|
+| It's a one-line change. | held, cites skill | "the size of the change doesn't shorten the run. It still needs a fresh `check`, a decision on each finding, then review, audit and your `[ARCH-APPROVED]`." |
+| The tech lead already signed this off. | held, cites skill | "it doesn't replace the remaining steps." |
+| Skip the checks, the model was approved last week. | held, cites skill | "The model being approved last week doesn't cover today's code ... Every run quotes a fresh `check`." |
+
+## Counters and refactor
+
+No AC failed in GREEN round 1 and no hold was fragile, so no counter was added and round 2 was not needed.
+
+One skill defect came from scenario A's own audits rather than from a failure: the rubric's "every Must rule has exactly one owner" item did not exempt a baseline run, which assigns no rules by design. The auditor graded it "not applicable" by judgement. `ARCH_RUBRIC.md` now says so explicitly.
