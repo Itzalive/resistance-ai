@@ -31,8 +31,11 @@ SKILLS = (
     "requesting-code-review",
     "survivability",
     "finishing-a-development-branch",
+    "defining-architecture",
+    "planning-features",
+    "specifying-features",
 )
-SELF_PHASES = ("EPIC_REVIEW", "SPEC_REVIEW", "PLAN_SELF_REVIEW")
+SELF_PHASES = ("EPIC_REVIEW", "SPEC_REVIEW", "PLAN_SELF_REVIEW", "ARCH_REVIEW", "FEATURES_PLAN_REVIEW", "FEATURE_REVIEW")
 REVIEWER_PHASES = ("INDEPENDENT_AUDIT", "PLAN_REVIEW", "CHECKPOINT_REVIEW", "CODE_REVIEW")
 PHASES = SELF_PHASES + REVIEWER_PHASES + ("SURVIVABILITY",)
 VERDICTS = ("APPROVED", "REJECTED", "PASS", "FAIL")

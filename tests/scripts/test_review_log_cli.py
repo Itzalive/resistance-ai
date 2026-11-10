@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+import importlib.util
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
+
+import pytest
 
 CLI = Path("skills/shared/scripts/review-log.py").resolve()
 
@@ -288,3 +292,36 @@ def test_survivability_round_one_with_all_killed_passes(tmp_path: Path) -> None:
     [entry] = read_log(tmp_path)
     assert entry["verdict"] == "PASS"
     assert entry["first_slate"] == {"killed": 5, "total": 5}
+
+
+NEW_SKILLS = ["defining-architecture", "planning-features", "specifying-features"]
+NEW_PHASES = ["ARCH_REVIEW", "FEATURES_PLAN_REVIEW", "FEATURE_REVIEW"]
+
+
+@pytest.mark.parametrize("skill", NEW_SKILLS)
+def test_new_skills_are_accepted(tmp_path: Path, skill: str) -> None:
+    result = run(tmp_path, *append_args(**{"--skill": skill, "--phase": "SPEC_REVIEW", "--independence": "self"}))
+    assert result.returncode == 0, result.stderr
+    assert read_log(tmp_path)[0]["skill"] == skill
+
+
+@pytest.mark.parametrize("phase", NEW_PHASES)
+def test_new_phases_accept_self(tmp_path: Path, phase: str) -> None:
+    result = run(tmp_path, *append_args(**{"--phase": phase, "--independence": "self"}))
+    assert result.returncode == 0, result.stderr
+    assert read_log(tmp_path)[0]["phase"] == phase
+
+
+@pytest.mark.parametrize("phase", NEW_PHASES)
+def test_new_phases_reject_other_independence(tmp_path: Path, phase: str) -> None:
+    result = run(tmp_path, *append_args(**{"--phase": phase, "--independence": "fresh-context"}))
+    assert result.returncode == 2
+    assert f"independence must be 'self' for {phase}" in result.stderr
+    assert not (tmp_path / ".review_log.jsonl").exists()
+
+
+def test_near_miss_phase_is_rejected(tmp_path: Path) -> None:
+    result = run(tmp_path, *append_args(**{"--phase": "FEATURES_REVIEW", "--independence": "self"}))
+    assert result.returncode == 2
+    assert "phase" in result.stderr
+    assert not (tmp_path / ".review_log.jsonl").exists()
