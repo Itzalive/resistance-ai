@@ -67,8 +67,8 @@ at step 1 and asks for one; it never guesses. Every tool call passes `--model <m
   listed under "Unmapped modules" with the reason `shared prefix`, and it is never an edge node,
   because an element whose `code` is the shared prefix would match every uncovered module.
 - **Not yet built:** an element with no `code` metadata (a conceptual element). An element with
-  `code` is built: each `code` value must equal a module in the dependency file or a prefix of one
-  at the separator.
+  `code` is built: each `code` value must equal a repository module or a prefix of one at the
+  separator.
 - **Must rule:** every business rule owned by a Must Have capability of the epic. For an epic
   written before capabilities existed, every business rule tied to a Must Have item of its MoSCoW
   scope.
@@ -91,7 +91,8 @@ the diff touches, except where a check is marked "whole".
    capabilities (or its MoSCoW scope). Anything missing stops the run.
 2. **Baseline check.** Run `deps-command`, then `export` (skipped while the folder is empty) and
    `check`. A `check` exit 1 (a breach not in the gap, or a stale entry) is a finding for 2a; exit 2
-   stops the run with the tool's error.
+   stops the run with the tool's error. The agent then proposes the groups the run touches, from the
+   epic's capabilities or the diff request, and the owner approves the list; 2a and 2b work from it.
    - **2a. Is the affected model current and valid?** For every modelled element the run touches,
      its relationships and its gap entries:
      - valid: the model loads, the spec copy matches, and the relationships have no cycles;
@@ -103,9 +104,7 @@ the diff touches, except where a check is marked "whole".
      updated to describe what is; a drift breach becomes a gap entry with a reason (the target
      stands) or a target change in this run's diff; a stale gap entry is removed. Nothing is resynced
      silently.
-   - **2b. How much to baseline?** The agent proposes the groups the run touches, from the epic's
-     capabilities or the diff request, and the owner approves the list. Only when some of them are
-     outside the current coverage (all of them, when the folder is empty) is there one question,
+   - **2b. How much to baseline?** Only when some touched groups are outside the current coverage (all of them, when the folder is empty) is there one question,
      with a recommendation from the run's impact and the codebase's size:
      - the whole repository, when there are at most `small-repo-modules` repository modules or at
        most `small-repo-groups` top-level groups;
@@ -144,7 +143,10 @@ what it should be, for the coverage step 2b chose:
   out of the model and recorded in `known-gap.json` with the reason `cycle in current code`; the
   agent recommends the relationship with the fewest module edges and the owner chooses in step 5;
 - "Baseline coverage" in `architecture.md` lists the baselined groups, the edge nodes, and the run
-  that added each.
+  that added each;
+- when an edge node's group is baselined, the edge node becomes that group's `component`: its entry
+  moves from the edge-node list to the baselined groups, and from then on it may have children and
+  `rules`.
 
 It goes through steps 3 to 6 like any diff, logged with the reason `baseline`. An epic's run then
 amends the baseline into the target, so its diff and its new gap entries show what the epic forbids
@@ -169,7 +171,7 @@ decision whose bound-elements list includes one of them; scope "whole" covers th
   (changed).
 - No cycles (whole): from the `export` relationships, each relationship counts for its endpoints and
   all their ancestors; two siblings that reach each other, directly or through others, form a cycle.
-- Every `code` value equals a module in the dependency file or a prefix of one (changed).
+- Every `code` value equals a repository module or a prefix of one at the separator (changed).
 - A `check` run's output is quoted in this run's decision-log entry, and every breach is in the gap
   file (whole).
 - Unmapped modules inside the coverage are mapped or listed with a reason (whole).
