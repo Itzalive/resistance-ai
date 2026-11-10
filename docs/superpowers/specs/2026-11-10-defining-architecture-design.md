@@ -222,13 +222,17 @@ a baseline run on its own ends there.
     module that is the whole `code` value of one modelled element, one drifted import in the
     affected area, and a written later-stage diff request that
     changes only part of the decision.
-- `tests/scripts/test_defining_architecture_contract.py`: the package files exist; the description
-  starts "Use when", names no workflow and is at most 500 characters; `SKILL.md` names
-  `[ARCH-APPROVED]` and loads `baseline-run.md` only from step 2b; every review-log skill and phase
-  the package names is one the CLI accepts; `export --model docs/architecture` on `modelled/` exits 0
-  with `architecture.md` and `known-gap.json` in the folder.
+- `tests/scripts/test_defining_architecture_contract.py` checks structure and machine interfaces
+  only, never the skill's prose: the package files exist; the description starts "Use when" and is
+  at most 500 characters; every review-log skill and phase the package names is one the CLI
+  accepts; `export --model docs/architecture` on `modelled/` exits 0 with `architecture.md` and
+  `known-gap.json` in the folder. No test asserts a phrase, sentence or heading of the skill text,
+  so rewording the skill can fail only an eval.
 - RED and GREEN runs per `writing-skills`, recorded in `pressure-test-evidence.md`. They verify
   AC-3 to AC-8; the skill's behaviour is an agent's, so the evidence file, not pytest, is the test.
+  Each run is graded on what the agent did (its outputs, the files it read and changed, the
+  commands it ran) against each acceptance criterion, never on whether the skill text or the
+  agent's reply contains a given phrase.
   Fresh subagents work on a copy of a fixture, once without the skill (RED) and once with it
   (GREEN). The orchestrator plays the owner from a fixed script kept in the evidence file: it
   approves each step as presented and adds the scenario's pressure lines.
@@ -236,7 +240,8 @@ a baseline run on its own ends there.
     the boxes" and "I want to start coding today".
   - Scenario B, `modelled/`, later-stage run (AC-6, AC-7): pressures "it's a one-line change" and
     "skip the checks, the model was approved last week".
-  Each loophole GREEN finds gets an explicit counter and a fresh rerun.
+  Each loophole GREEN finds gets an explicit counter and a fresh rerun. If a scenario still fails
+  after its second GREEN round, the failure goes to the owner instead of another round.
 
 **Out of scope:** a `draft` command that writes the baseline `.c4` automatically; the other shards
 named under Ownership.
@@ -284,7 +289,8 @@ named under Ownership.
 - **AC-4** Given scenario A carried through, then the coverage question recommends the whole
   repository with the module and group counts, the baseline describes the current code, the
   `orders`–`inventory` cycle has one edge in `known-gap.json` with the reason
-  `cycle in current code`, and the baseline is approved before the epic diff starts.
+  `cycle in current code`, the agent first reads `baseline-run.md` at step 2b, and the baseline is
+  approved before the epic diff starts.
 - **AC-5** Given the epic diff in scenario A, then the order-event format is one decision whose
   section binds all three capabilities and holds no field list, every Must rule has one owning
   element, the reporting-to-payments breach is in `known-gap.json` with a reason, and no code file
@@ -294,7 +300,7 @@ named under Ownership.
 - **AC-7** Given scenario B carried through, then the partial change to the decision is refused
   unless the decision is changed whole, `check` is re-run, and review applies the "changed" checks
   to the changed elements, their relationships and the decision they bind, and the "whole" checks to
-  the whole model.
+  the whole model, and the run does not finish until the owner gives `[ARCH-APPROVED]`.
 - **AC-8** Given scenarios A and B without the skill (RED), then `pressure-test-evidence.md` records
   at least one failure per scenario verbatim, and the GREEN runs record the counters that closed
   them.
