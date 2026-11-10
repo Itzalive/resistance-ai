@@ -29,7 +29,7 @@ This skill keeps a target C4 model of the repository (LikeC4 `.c4` files, plus `
 
 ## Ownership
 
-This skill owns the model folder's content: the `.c4` files, `architecture.md` and `known-gap.json`. It owns no code and changes none. It does not write the architecture into the overlay file, the epic or any other document. Outside the model folder it writes only a waiver entry in the epic's decision log (when an epic run is waived) and the append-only work-item notes. Filling `close_by` on gap entries belongs to `planning-features`. Merging, branching and feature planning belong to the stages after this one.
+This skill owns the model folder's content: the `.c4` files, `architecture.md` and `known-gap.json`. It owns no code and changes none. It does not write the architecture into the overlay file, the epic or any other document. Outside the model folder it writes only a waiver entry in the epic's decision log (when an epic run is waived) and the append-only work-item notes. Filling `close_by` on gap entries belongs to `planning-features`. Removing the gap entries `check` reports stale at a feature's close belongs to `specifying-features`. Merging, branching and feature planning belong to the stages after this one.
 
 ## Files and tools
 
