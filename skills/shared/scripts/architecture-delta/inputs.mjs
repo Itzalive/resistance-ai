@@ -22,7 +22,9 @@ function text(value) {
 }
 
 export function readJson(file, flag) {
-  if (fs.statSync(file).size > FILE_LIMIT) throw new ToolError('file-size', `${flag} is over 50 MB`);
+  const stat = fs.statSync(file);
+  if (!stat.isFile()) throw bad(`${flag} is not a regular file`);
+  if (stat.size > FILE_LIMIT) throw new ToolError('file-size', `${flag} is over 50 MB`);
   try {
     return JSON.parse(fs.readFileSync(file, 'utf8'));
   } catch (err) {
@@ -73,7 +75,7 @@ export function parseShards(data, elementIds) {
   const ids = new Set(elementIds);
   if (!isObject(data) || !isObject(data.shards)) throw bad('--shards must be an object with a shards object');
   onlyKeys(data, ['shards'], '--shards');
-  const shards = {};
+  const shards = Object.create(null); // a shard may be named __proto__
   for (const [name, list] of Object.entries(data.shards)) {
     if (!Array.isArray(list)) throw bad(`--shards ${name} must be a list of element ids`);
     for (const id of list) if (typeof id !== 'string' || !ids.has(id)) throw bad(`--shards ${name}: ${id} is not a model element`);

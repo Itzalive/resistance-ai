@@ -27,6 +27,7 @@ export function parseArgs(argv) {
   }
   if (!opts['--repo']) throw usage('--repo is required');
   if (command === 'check' && !opts['--deps']) throw usage('--deps is required for check');
+  for (const flag of ['--model', '--gap', '--shards']) if (opts[flag] === '') throw usage(`${flag} must not be empty`);
   const format = opts['--format'] ?? 'text';
   if (format !== 'text' && format !== 'json') throw usage('--format must be text or json');
   const timeoutText = opts['--timeout'] ?? '60';

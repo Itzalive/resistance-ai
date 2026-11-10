@@ -279,3 +279,22 @@ def test_module_names_and_version_are_cleaned_after_sorting(tmp_path) -> None:
     assert data["unmapped"] == ["z.a", "y.b"]
     assert data["breaches"][0]["edges"] == [["shop.orders.api.x", "shop.payments.card.y"]]
     assert data["likec4"]["version"] == "1.59.0"
+
+
+def test_shard_named_proto_is_kept(tmp_path) -> None:
+    repo = make_repo(tmp_path)
+    shards = write_json(repo / "shards.json", {"shards": {"__proto__": ["shop.payments"], "a": ["shop.payments.card"]}})
+    data = report(check(repo, CLEAN_EDGES, "--shards", shards, "--format", "json"))
+    assert data["hot_spots"] == [{"element": "shop.payments.card", "shards": ["__proto__", "a"]}]
+
+
+@pytest.mark.parametrize("flag", ["--deps", "--gap", "--shards"])
+def test_input_that_is_a_folder_is_bad_input(tmp_path, flag: str) -> None:
+    repo = make_repo(tmp_path)
+    (repo / "folder").mkdir()
+    deps = write_json(repo / "deps.json", {"edges": CLEAN_EDGES})
+    args = {"--deps": str(deps), flag: "folder"}
+    proc = run_tool("check", "--repo", repo, *[x for pair in args.items() for x in pair])
+    assert proc.returncode == 2
+    assert proc.stdout == ""
+    assert error_lines(proc) == [f"error: bad-input: {flag} is not a regular file"]
