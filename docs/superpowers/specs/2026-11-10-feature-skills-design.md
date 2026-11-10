@@ -24,7 +24,7 @@ They are built one after the other: `planning-features` is finished and committe
 | Skill | Owns | Never changes |
 |---|---|---|
 | `planning-features` | The feature map; `close_by` on known-gap entries | The epic, the model (apart from `close_by`), code, any feature design |
-| `specifying-features` | The feature design; its own feature's state, actual cost and question answers on the map; removing stale known-gap entries at close | The epic, the model (apart from stale entries), code, other features' rows, any shard spec |
+| `specifying-features` | The feature design; its own feature's state, actual cost and question answers on the map (where a map exists); removing stale known-gap entries at close | The epic, the model (apart from stale entries), code, other features' rows, any shard spec |
 
 The edits that wire these skills into `specifying-epics`, `specifying-work-items`, the skill index
 and the README belong to #25.
@@ -154,6 +154,8 @@ epic's work item and hands to no re-plan. Where the architecture was waived and 
 empty, `check` is not run: the Architecture delta section records `no model` with the waiver's
 reference, entry paths and implementations per rule are still counted by reading the code, and
 shard 0 is decided from that count. This is the only case where the section holds no tool output.
+In this case `deps-command` is not required at step 1, and the close run runs no `check` and
+removes no entries; its Close record holds the actual cost only.
 
 **The feature design** is one file, `docs/features/<epic>/<id>-<slug>.md`, with sections: Questions
 answered, Behaviour, Feature ACs, Architecture delta, Shard map, Eval plan, Costing, Decision log,
@@ -306,9 +308,9 @@ copies; the wiring edits in #25; any change to `writing-skills`.
 | A5 | `check` reports stale gap entries, and decides staleness against the whole repository | VERIFIED: delta tool spec, "Scope" and "Known gap" |
 | A6 | The tool does not report eval copies | VERIFIED: `report.mjs` sections (breaches, not yet reached, unmapped, hot spots) |
 | A7 | `defining-architecture` leaves `close_by` to `planning-features` and hands off to both skills by name | VERIFIED: `skills/defining-architecture/SKILL.md` |
-| A10 | `defining-architecture` owns `known-gap.json` and today excepts only `close_by`, so stale removal at close needs the Ownership sentence in Scope | VERIFIED: `skills/defining-architecture/SKILL.md`, Ownership |
 | A8 | Neither skill folder exists yet | VERIFIED: `ls skills/` |
 | A9 | The overlay keys `model`, `deps-command`, `deps-file` and `separator` are defined by `defining-architecture` | VERIFIED: `skills/defining-architecture/ARCH_STANDARDS.md` |
+| A10 | `defining-architecture` owns `known-gap.json` and today excepts only `close_by`, so stale removal at close needs the Ownership sentence in Scope | VERIFIED: `skills/defining-architecture/SKILL.md`, Ownership |
 
 ## Threat Model (CIA)
 
@@ -337,7 +339,9 @@ copies; the wiring edits in #25; any change to `writing-skills`.
   skill, and every rule of the skill maps to a baseline row or to the change plan.
 - **AC-3** Given each skill package, when it is read against this spec, then every gate, step,
   rule and review check in the skill's section is present in the package, and nothing in the
-  package contradicts this spec or the change plan.
+  package contradicts this spec or the change plan; and `defining-architecture`'s Ownership names
+  stale-entry removal at a feature's close as belonging to `specifying-features`, with nothing
+  else in that package changed.
 
 AC-2 and AC-3 are about an agent-facing text, so no automated test can verify them. They are
 checked by the final code review reading the packages, and from then on by the field log.
