@@ -179,3 +179,5 @@ It suggested a step "2c. Does the request stand?" after 2a, saying that a refuse
 Round 1's scenario B agent happened to run step 2 first. Round 2 shows the order was not enforced.
 
 Under the plan, a scenario that still fails in its second GREEN round goes to the owner instead of a third round.
+
+**Owner decision (2026-11-10):** accept the scenario B counter without a third GREEN round. The counter is untested by an eval; the spec's future-work row (rerun the scenarios when the skill changes) covers it.
