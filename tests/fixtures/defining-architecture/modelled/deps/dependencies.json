@@ -1,0 +1,17 @@
+{"edges": [
+  ["shop.api.routes", "shop.orders.service"],
+  ["shop.jobs.nightly", "shop.orders.service"],
+  ["shop.checkout.flow", "shop.orders.service"],
+  ["shop.checkout.flow", "shop.payments.card"],
+  ["shop.checkout.flow", "shop.inventory.stock"],
+  ["shop.returns.flow", "shop.orders.service"],
+  ["shop.returns.flow", "shop.payments.card"],
+  ["shop.reporting.daily", "shop.payments.ledger"],
+  ["shop.orders.service", "shop.orders.models"],
+  ["shop.orders.service", "shop.inventory.stock"],
+  ["shop.orders.service", "json"],
+  ["shop.orders.models", "dataclasses"],
+  ["shop.inventory.stock", "shop.orders.models"],
+  ["shop.payments.card", "shop.payments.ledger"],
+  ["shop.payments.ledger", "decimal"]
+]}
