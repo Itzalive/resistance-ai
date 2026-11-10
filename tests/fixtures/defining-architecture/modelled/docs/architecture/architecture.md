@@ -6,14 +6,33 @@
 
 - Asked by: specifying-epics (step 2b, empty folder).
 - Diff: one component per group for the eight groups, a relationship per current element pair, and the `inventory -> orders` edge of the `orders`–`inventory` cycle gapped with `cycle in current code`.
-- Check output: 0 new, 0 stale, 1 known.
+- Check output:
+
+  ```
+  Known breaches
+    shop.inventory -> shop.orders (1 edges)
+
+  0 new, 0 stale, 1 known (likec4 1.60.0 from plugin)
+  ```
+
+- Reviews: self-review and independent audit passed. Owner: [ARCH-APPROVED].
 
 ### 2026-11-02 — epic run (order events)
 
 - Asked by: specifying-epics.
-- Diff: `events` (not yet built), `orders -> events` and `reporting -> events` added, and `reporting -> payments` removed and gapped (BR-3).
+- Diff: the `shop` system around the eight components; `events` (not yet built), `orders -> events` and `reporting -> events` added; `reporting -> payments` removed and gapped (BR-3); rules BR-1 to BR-5 assigned.
 - Rejected alternative: each capability defines its own event shape.
-- Check output: 0 new, 0 stale, 2 known.
+- Check output:
+
+  ```
+  Known breaches
+    shop.inventory -> shop.orders (1 edges)
+    shop.reporting -> shop.payments (1 edges)
+
+  0 new, 0 stale, 2 known (likec4 1.60.0 from plugin)
+  ```
+
+- Reviews: self-review and independent audit passed. Owner: [ARCH-APPROVED].
 
 ## Rule map
 

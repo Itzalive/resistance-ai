@@ -535,7 +535,7 @@ Content rules (`writing-skills`: GREEN is written to the RED failures):
   - Review-log calls are written as full CLI commands (`python <skills-dir>/shared/scripts/review-log.py append --skill defining-architecture --phase ARCH_REVIEW ...`), so Task 8 can check their names.
 - **Size:** no fixed word limit (most shipped skills are over `writing-skills`' 500-word guide), but keep it limited: `SKILL.md` stays under the smaller of the two workflow skills it sits between, `specifying-epics/SKILL.md` (3,297 words at plan time). If it grows past that, move detail into a supporting file rather than cut a rule.
 - **`baseline-run.md`:** the spec's "Baseline run" section as instructions: folder creation and the `c4.c4` copy; one component per group plus edge nodes; no containers or systems; relationships per element pair; cycles with the fewest-edges recommendation; Baseline coverage entries; an edge node becoming its group's component; the baseline going through steps 3–6 with reason `baseline`.
-- No claude-assistant or other repository specifics; examples use the made-up shop or neutral names.
+- No downstream repository specifics; examples use the made-up shop or neutral names.
 
 - [ ] **Step 1: RED check.** Run `test -f skills/defining-architecture/SKILL.md && echo exists`. Expected: no output.
 - [ ] **Step 2: write both files.**

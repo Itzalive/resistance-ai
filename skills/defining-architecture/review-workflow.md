@@ -15,7 +15,7 @@ The review is not optional and may not be abbreviated.
 Log every round:
 
 ```bash
-python <skills-dir>/shared/scripts/review-log.py append --item-id <id> --skill defining-architecture --phase ARCH_REVIEW --round <n> --verdict APPROVED|REJECTED --orchestrator <model> --reviewer-model <model> --independence self --reason "<epic|later-stage: <stage>|baseline> ..." [--finding <severity>:<kind>:<text> ...]
+python <skills-dir>/shared/scripts/review-log.py append --item-id <id> --skill defining-architecture --phase ARCH_REVIEW --round <n> --verdict APPROVED|REJECTED --orchestrator <model> --reviewer-model <model> --independence self --reason "<reason>" [--finding <severity>:<kind>:<text> ...]
 ```
 
 The `--reason` starts `epic`, `later-stage: <stage>` (the stage that asked) or `baseline`. Use `--log <path>` only when the caller names a different review log.
@@ -36,7 +36,7 @@ Never give it this conversation or your drafting notes. Round 2 and later go bac
 Log every round:
 
 ```bash
-python <skills-dir>/shared/scripts/review-log.py append --item-id <id> --skill defining-architecture --phase INDEPENDENT_AUDIT --round <n> --verdict APPROVED|REJECTED --orchestrator <model> --reviewer-model <reviewer model> --independence fresh-context --reason "<epic|later-stage: <stage>|baseline> ..." [--finding <severity>:<kind>:<text> ...]
+python <skills-dir>/shared/scripts/review-log.py append --item-id <id> --skill defining-architecture --phase INDEPENDENT_AUDIT --round <n> --verdict APPROVED|REJECTED --orchestrator <model> --reviewer-model <reviewer model> --independence fresh-context --reason "<reason>" [--finding <severity>:<kind>:<text> ...]
 ```
 
 Use `--independence cross-family` when the reviewer is from another model family.

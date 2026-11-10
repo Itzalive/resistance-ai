@@ -14,7 +14,7 @@ Load this file only at step 2b, once the owner has answered the coverage questio
 
 ## An edge node's group gets baselined
 
-When a later run baselines a group that is an edge node, the edge node becomes that group's `component`: move its entry from the edge-node list to the baselined groups. From then on it may have children and `rules`. Extending coverage can turn up breaches an edge node hid; they appear as new `check` breaches and go through step 5.
+When a run's diff needs an edge node's inside, it comes back here (step 2b) for that area; that baseline is approved on its own, then the run returns to step 3. When a run baselines a group that is an edge node, the edge node becomes that group's `component`: move its entry from the edge-node list to the baselined groups. From then on it may have children and `rules`. Extending coverage can turn up breaches an edge node hid; they appear as new `check` breaches and go through step 5.
 
 ## Then
 

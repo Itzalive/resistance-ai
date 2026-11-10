@@ -23,4 +23,3 @@ All three capabilities depend on one order-event format: checkout, refunds and r
 - BR-5 (all three): every order event carries the order id and a sequence number, and a consumer ignores an event it has already seen.
 
 ## Decision log
-- 2026-11-02: architecture approved ([ARCH-APPROVED]); see docs/architecture/architecture.md

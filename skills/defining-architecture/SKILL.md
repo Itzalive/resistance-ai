@@ -29,7 +29,7 @@ This skill keeps a target C4 model of the repository (LikeC4 `.c4` files, plus `
 
 ## Ownership
 
-This skill owns the model folder's content: the `.c4` files, `architecture.md` and `known-gap.json`. It owns no code and changes none. It does not write the architecture into the overlay file, the epic or any other document; the epic's decision log gets one line pointing at `architecture.md`. Filling `close_by` on gap entries belongs to `planning-features`. Merging, branching and feature planning belong to the stages after this one.
+This skill owns the model folder's content: the `.c4` files, `architecture.md` and `known-gap.json`. It owns no code and changes none. It does not write the architecture into the overlay file, the epic or any other document. Outside the model folder it writes only a waiver entry in the epic's decision log (when an epic run is waived) and the append-only work-item notes. Filling `close_by` on gap entries belongs to `planning-features`. Merging, branching and feature planning belong to the stages after this one.
 
 ## Files and tools
 
@@ -40,15 +40,21 @@ This skill owns the model folder's content: the `.c4` files, `architecture.md` a
 
 ## Quick Reference
 
-One step at a time. Each step is presented, and the owner approves it before the next starts. An approval covers the step it answers, nothing more.
+One step at a time. Each step is presented, and the owner approves it before the next starts. An approval covers the step it answers, nothing more. Each step covers only what the diff touches, except the checks `ARCH_RUBRIC.md` marks `[whole]`.
 
 1. **Assumptions surface** (load `ARCH_STANDARDS.md`). Your first output is this and nothing else: the trigger and its entry gate; required or waived (epic run); the overlay's values or their defaults; the `deps-command`; for an epic run, the epic's capabilities. No options, no design, no recommendation for the architecture yet. Anything missing stops the run.
-2. **Baseline check.** Run the `deps-command`, then `export` and `check` (both skipped while the model folder is empty). Exit 2 stops the run with the tool's error. Propose the groups the run touches; the owner approves the list.
-   - **2a. Is the affected model current?** Each finding gets its own recommendation, and the owner decides each. Change nothing before that.
+2. **Baseline check.** Run the `deps-command`, then `export` and `check` (both skipped while the model folder is empty). A `check` exit 1 (a breach not in the gap file, or a stale entry) is a finding for 2a; exit 2 stops the run with the tool's error. Propose the groups the run touches; the owner approves the list.
+   - **2a. Is the affected model current?** For every modelled element the run touches, its relationships and its gap entries, look for:
+     - an invalid model: it doesn't load, `c4.c4` differs from the shipped spec, or the relationships have a cycle;
+     - a `code` value that matches no module;
+     - a breach not in the gap file (drift);
+     - a gap entry that no longer matches (its breach was fixed);
+     - a relationship reported "not yet reached" that the code now has (note it only).
+     Each finding gets its own recommendation (see "Drift is a finding" below), and the owner decides each. Change nothing before that.
    - **2b. How much to baseline?** Only when touched groups are not yet modelled: one question with a recommendation and the counts behind it, then load `baseline-run.md`. The baseline is its own diff through steps 3 to 6, approved with its own `[ARCH-APPROVED]`, before the run resumes.
 3. **Cross-cutting decisions** in scope, each with options and a recommendation, approved separately.
-4. **The diff:** elements with `code` and `rules`, tags, relationships, before and after, with the rule map.
-5. **The known gap:** `check` against the amended model; every breach gets a gap entry with a reason, accepted or rejected by the owner one by one.
+4. **The diff:** elements with `code` and `rules`, tags (`#protected`, `#layer`, `#generic`, `#eval`), relationships and invariants expressed as relationships, before and after, with the rule map. If the diff needs an edge node's inside, go back to 2b for that area; its baseline is approved on its own, then the run returns to step 3.
+5. **The known gap:** `check` against the amended model. Each breach the diff adds gets a proposed entry with a reason; entries the diff closes are removed; entries naming an element the diff renames or removes are re-keyed or removed. The owner accepts or rejects each one.
 6. **Write, review, approve** (load `review-workflow.md`): write the files, self-review, independent audit, the owner's `[ARCH-APPROVED]`, then the work-item note.
 
 ## Rules
@@ -87,8 +93,10 @@ Adding a relationship just because the code now has the import makes the drift l
 Each review round is logged with the append CLI, to the repository's review log unless told otherwise:
 
 ```bash
-python <skills-dir>/shared/scripts/review-log.py append --item-id <id> --skill defining-architecture --phase ARCH_REVIEW --round <n> --verdict APPROVED|REJECTED --orchestrator <model> --reviewer-model <model> --independence self --reason "epic|later-stage: <stage>|baseline ..."
+python <skills-dir>/shared/scripts/review-log.py append --item-id <id> --skill defining-architecture --phase ARCH_REVIEW --round <n> --verdict APPROVED|REJECTED --orchestrator <model> --reviewer-model <model> --independence self --reason "<reason>" [--finding <severity>:<kind>:<text> ...]
 ```
+
+`<reason>` starts `epic`, `later-stage: <stage>` or `baseline`. A `REJECTED` entry needs at least one `--finding`.
 
 The audit uses `--phase INDEPENDENT_AUDIT`. `review-workflow.md` gives the full loop.
 

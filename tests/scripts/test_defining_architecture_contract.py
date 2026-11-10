@@ -56,8 +56,8 @@ def test_description_starts_use_when_and_fits() -> None:
 def test_review_log_names_are_accepted_by_the_cli() -> None:
     cli = load_cli()
     text = package_text()
-    skills = set(re.findall(r"--skill[ ]+`?([a-z-]+)", text))
-    phases = set(re.findall(r"--phase[ ]+`?([A-Z_]+)", text))
+    skills = set(re.findall(r"--skill[ ]+`?([A-Za-z0-9_-]+)", text))
+    phases = set(re.findall(r"--phase[ ]+`?([A-Za-z0-9_-]+)", text))
     assert "defining-architecture" in skills
     assert {"ARCH_REVIEW", "INDEPENDENT_AUDIT"} <= phases
     assert skills <= set(cli.SKILLS)
@@ -66,7 +66,7 @@ def test_review_log_names_are_accepted_by_the_cli() -> None:
 
 def test_empty_fixture_has_no_model_and_ten_modules(tmp_path) -> None:
     require_node()
-    assert not (EMPTY / "docs" / "architecture").exists()
+    assert list(EMPTY.rglob("*.c4")) == []
     repo = tmp_path / unique("empty")
     shutil.copytree(EMPTY, repo, ignore=shutil.ignore_patterns("build"))
     overlay = (repo / "ARCHITECTURE_DESIGN.md").read_text(encoding="utf-8")
@@ -80,12 +80,14 @@ def test_empty_fixture_has_no_model_and_ten_modules(tmp_path) -> None:
 
 def test_modelled_fixture_exports(tmp_path) -> None:
     require_node()
-    proc = run_tool("export", "--repo", MODELLED, "--model", "docs/architecture")
+    repo = tmp_path / unique("modelled")
+    shutil.copytree(MODELLED, repo, ignore=shutil.ignore_patterns("build"))
+    proc = run_tool("export", "--repo", repo, "--model", "docs/architecture")
     assert proc.returncode == 0, proc.stderr
     ids = {element["id"] for element in json.loads(proc.stdout)["elements"]}
     assert {"shop.events", "shop.refunds", "shop.payments"} <= ids
-    assert (MODELLED / "docs" / "architecture" / "architecture.md").is_file()
-    assert (MODELLED / "docs" / "architecture" / "known-gap.json").is_file()
+    assert (repo / "docs" / "architecture" / "architecture.md").is_file()
+    assert (repo / "docs" / "architecture" / "known-gap.json").is_file()
 
 
 def test_modelled_fixture_check_shows_the_drift(tmp_path) -> None:
