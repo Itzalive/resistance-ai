@@ -4,7 +4,7 @@ Load this file only for a close run: the feature's last shard has merged, and th
 
 ## Steps
 
-1. **Run the delta on the whole model.** Run the overlay's `deps-command`, then `check` with no `--scope`. Quote the output.
+1. **Run the delta on the whole model.** Run the overlay's `deps-command`, then `check` with no `--scope` and no `--shards` (the command is in `FEATURE_STANDARDS.md`, "Running the delta"). Quote the output.
 2. **Remove stale entries.** Remove from `<model>/known-gap.json` each entry the tool reports stale. Change nothing else in the model folder.
 3. **Write the Close record** in the feature design:
    - each gap entry removed;

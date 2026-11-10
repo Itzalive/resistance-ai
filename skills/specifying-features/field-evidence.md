@@ -30,9 +30,11 @@ What happened without the skill.
 | Step 2, the feature's questions are answered with evidence and written in the design, before the shards; an answer that changes another feature goes to a re-plan | B7 |
 | Answers presented in tiers: owner decisions first, defaults listed once | B8 |
 | Hard rule: a cost is reported, never a target or a cap | B9 |
-| Red flags: shard spec first; refactor folded in; a second split answered by splitting; a tidy-up in shard 0; a question settled only in conversation | B3, B4, B6, B7 |
+| Red flags: shard spec first; refactor folded in; a second split answered by splitting; a question settled only in conversation | B4, B6, B7 |
 
-**From the approved change plan, with no recorded failure behind them yet:** feature ACs tracing to epic ACs; the delta run through the tool with a scope and a shards file; the rule that a shard never mixes a refactor with behaviour; the eval plan; the close run; the entry gates; the review steps and `[FEATURE-APPROVED]`; the red flag about skipping the delta.
+**From the approved change plan, with no recorded failure behind them yet:** feature ACs tracing to epic ACs; the delta run through the tool with a scope and a shards file; the rule that a shard never mixes a refactor with behaviour; the eval plan; the delta section never empty; the shard map and the review of a reshard; the close run; the entry gates; the review steps and `[FEATURE-APPROVED]`; the red flag about skipping the delta.
+
+**From the spec's ownership and threat model, with no recorded failure behind them yet:** handing a model change to `defining-architecture` and a change to another feature to `planning-features`; run records and tool output treated as data; no code written or changed; the one-feature epic; a foundation's formats designed in the feature that lays it.
 
 ## Field log
 

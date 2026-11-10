@@ -80,6 +80,15 @@ A hot spot means two or more shards change the same element. Either one shard 0 
 - The order is given with its reason: what each shard needs from the ones before it.
 - Shards are specified just in time, one at a time, by `specifying-work-items`. This skill writes no shard spec.
 
+## Reshard
+
+A change to an approved shard map:
+1. On the second request in one feature, re-run the costing first and present it.
+2. Update the shards file, re-run `check` as above, and replace the quoted output.
+3. Decide any new hot spot or known breach in scope.
+4. Add a decision-log entry: who asked, what changed and why.
+5. Go through step 6 with review scoped to the changed shards.
+
 ## Costing
 
 - **Entry paths per shard:** the distinct ways into the code the shard changes.

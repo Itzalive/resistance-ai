@@ -2,6 +2,16 @@
 
 Load this file at step 1.
 
+## Running the gate check
+
+The overlay (`ARCHITECTURE_DESIGN.md`) and its keys are defined in `defining-architecture`'s `ARCH_STANDARDS.md`. Run the overlay's `deps-command`, then:
+
+```bash
+node <skills-dir>/shared/scripts/architecture-delta.mjs check --repo . --model <model> --deps <deps-file> --separator <separator>
+```
+
+Exit 0 passes the gate. Exit 1 (a new breach or a stale gap entry) or exit 2 sends the run to `defining-architecture`.
+
 ## Where the map lives
 
 One file per epic: `docs/features/<epic>/feature-map.md`. The owner may name another folder at step 1. Feature designs from `specifying-features` sit beside it.

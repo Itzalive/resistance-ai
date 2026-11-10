@@ -25,7 +25,7 @@ This skill designs one feature before any of its shards is specified. It writes 
 
 ## Ownership
 
-This skill owns the feature design, its own feature's row on the map, and removing stale known-gap entries at close. It never changes the epic, the rest of the model, code, other features' rows or any shard spec.
+This skill owns the feature design; its own feature's state, actual cost and question answers on the map; and removing stale known-gap entries at close. It never changes the epic, the rest of the model, code, other features' rows or any shard spec.
 
 ## Files and tools
 
@@ -37,7 +37,7 @@ This skill owns the feature design, its own feature's row on the map, and removi
 One step at a time, each approved by the owner before the next. Put the owner's decisions first and list the rest as defaults applied unless the owner objects.
 
 1. **Assumptions surface** (load `FEATURE_STANDARDS.md`). Your first output is this and nothing else: the trigger and its gate; the feature's row from the map (ACs, questions, decisions, gap entries); the overlay's `deps-command`; whether run records exist. Anything missing stops the run.
-2. **Questions answered.** Each open question the map gives this feature, with its evidence, plus any behaviour question the epic and the code as built leave open for it. An answer that would change another feature or the epic stops the run and goes to a `planning-features` re-plan.
+2. **Questions answered.** Each open question the map gives this feature, with its evidence, plus any behaviour question the epic and the code as built leave open for it. An answer that would change another feature or the epic stops the run and goes to a `planning-features` re-plan; the design resumes after it.
 3. **Behaviour and feature ACs.** Behaviour by section, and ACs numbered `AC-F…`, each tracing to the epic ACs it serves. Every epic AC the map gives this feature is served by at least one. Where the feature lays the foundation of a cross-cutting decision, its field lists and formats are designed here, inside the obligations the decision sets.
 4. **Architecture delta and shard map.**
    - Write the proposed shards and the elements each touches to the shards file.
@@ -51,7 +51,7 @@ One step at a time, each approved by the owner before the next. Put the owner's 
 
 ## Reshard
 
-A change to an approved shard map goes through step 6 with review scoped to the changed shards. The **second** reshard request in one feature re-runs the costing in step 5 before the shard map changes.
+Load `FEATURE_STANDARDS.md` and follow its Reshard section: the delta is re-run and the change goes through step 6. The **second** reshard request in one feature re-runs the costing in step 5 before the shard map changes.
 
 ## Hard rules
 
@@ -69,7 +69,6 @@ A change to an approved shard map goes through step 6 with review scoped to the 
 - "The refactor is small, fold it into the behaviour shard."
 - "The model was approved recently, skip the delta."
 - A second request to split the work, answered by splitting again.
-- A tidy-up in shard 0 that no shard of this feature needs.
 - A behaviour question settled in conversation and recorded nowhere in the design.
 
 ## Handoff

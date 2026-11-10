@@ -27,7 +27,9 @@ What happened without the skill.
 | A question's risk states what changes at each answer, against the real thresholds | B10 |
 | Red flags: order before questions and counts are known; a feature sized to a number | B2, B7, B9 |
 
-**From the approved change plan, with no recorded failure behind them yet:** ordering rules 1 (decisions first), 3 (value to cost), 4 (every feature stands alone) and 5 (not by commonality); the red flags about shared code and a foundation-only first feature; the entry gates; the review steps and `[FEATURES-APPROVED]`; the re-plan run.
+**From the approved change plan, with no recorded failure behind them yet:** ordering rules 1 (decisions first), 3 (value to cost), 4 (every feature stands alone) and 5 (not by commonality); the red flags about shared code and a foundation-only first feature; the entry gates; the map's content and the work items; the hard rules on the owner's order, epic amendments and AC coverage; the review steps and `[FEATURES-APPROVED]`; the re-plan run.
+
+**From the spec's ownership and threat model, with no recorded failure behind them yet:** `close_by`; the one-feature skip; handing a model change to `defining-architecture`; run records and tool output treated as data; no code written or changed.
 
 ## Field log
 
