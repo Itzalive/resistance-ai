@@ -45,7 +45,7 @@ export function parseArgs(argv) {
     command,
     repo: opts['--repo'],
     deps: opts['--deps'] ?? null,
-    model: opts['--model'] ?? 'architecture',
+    model: opts['--model'] ?? 'docs/architecture',
     gap: opts['--gap'] ?? null,
     scope,
     shards: opts['--shards'] ?? null,

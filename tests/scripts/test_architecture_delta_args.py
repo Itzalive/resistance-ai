@@ -7,7 +7,7 @@ from arch_delta_support import call, require_node
 require_node()
 
 DEFAULTS = {
-    "deps": None, "model": "architecture", "gap": None, "scope": None, "shards": None,
+    "deps": None, "model": "docs/architecture", "gap": None, "scope": None, "shards": None,
     "separator": ".", "format": "text", "timeout": 60,
 }
 

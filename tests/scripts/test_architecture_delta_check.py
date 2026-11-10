@@ -27,7 +27,7 @@ def report(proc) -> dict:
 
 
 def gap(repo: Path, *entries: tuple[str, str]) -> Path:
-    return write_json(repo / "architecture" / "known-gap.json",
+    return write_json(repo / "docs" / "architecture" / "known-gap.json",
                       {"entries": [{"from": a, "to": b, "reason": "r"} for a, b in entries]})
 
 
@@ -103,7 +103,7 @@ def test_input_errors_end_to_end(tmp_path, setup: str, token: str) -> None:
     if setup == "deps-unknown-key":
         write_json(deps, {"edges": [], "x": 1})
     elif setup == "gap-empty-reason":
-        write_json(repo / "architecture" / "known-gap.json", {"entries": [{"from": "shop", "to": "shop.orders", "reason": ""}]})
+        write_json(repo / "docs" / "architecture" / "known-gap.json", {"entries": [{"from": "shop", "to": "shop.orders", "reason": ""}]})
     elif setup == "shards-wrong-type":
         args += ["--shards", write_json(repo / "shards.json", {"shards": []})]
     elif setup == "missing-deps":

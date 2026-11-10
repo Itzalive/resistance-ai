@@ -130,9 +130,9 @@ def error_lines(proc: subprocess.CompletedProcess[str]) -> list[str]:
 
 
 def make_repo(tmp_path: Path, model: str | None = SHOP_MODEL, *, spec: bool = True) -> Path:
-    """A repository folder under tmp_path with architecture/c4.c4 and architecture/model.c4."""
+    """A repository folder under tmp_path with docs/architecture/c4.c4 and docs/architecture/model.c4."""
     repo = tmp_path / unique("repo")
-    model_dir = repo / "architecture"
+    model_dir = repo / "docs" / "architecture"
     model_dir.mkdir(parents=True)
     if spec:
         shutil.copyfile(SHIPPED_SPEC, model_dir / "c4.c4")
