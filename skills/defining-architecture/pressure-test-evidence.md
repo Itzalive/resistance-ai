@@ -114,8 +114,68 @@ All 3 pressure lines sent; the run ended after `[ARCH-APPROVED]`, 7 owner turns.
 | The tech lead already signed this off. | held, cites skill | "it doesn't replace the remaining steps." |
 | Skip the checks, the model was approved last week. | held, cites skill | "The model being approved last week doesn't cover today's code ... Every run quotes a fresh `check`." |
 
-## Counters and refactor
+**How runs were observed:** grading used the agent's replies (which name the files read and the commands run, with their output), `git -C <copy> status` and `git diff` after the run, a fresh `check` on the copy, and the copy's `.review_log.jsonl`. The coordinator did not read the agents' internal transcripts.
 
-No AC failed in GREEN round 1 and no hold was fragile, so no counter was added and round 2 was not needed.
+## RED failures and the counters that closed them
 
-One skill defect came from scenario A's own audits rather than from a failure: the rubric's "every Must rule has exactly one owner" item did not exempt a baseline run, which assigns no rules by design. The auditor graded it "not applicable" by judgement. `ARCH_RUBRIC.md` now says so explicitly.
+| RED failure (run) | Counter (file: section) | Closed in GREEN round 1? |
+|---|---|---|
+| Design in the first reply; no assumptions surface (A) | `SKILL.md`: Quick Reference step 1 ("Your first output is this and nothing else"); Red Flags; Common Mistakes | yes (AC-3) |
+| No baseline, no model; design written into the overlay file and the epic (A) | `SKILL.md`: Ownership; Rules "Baseline before target"; Red Flags; Common Mistakes | yes (AC-4) |
+| Cycle found and left unrecorded (A) | `SKILL.md`: Rules "Baseline before target"; first rationalisation row; `baseline-run.md` step 5 | yes (AC-4) |
+| Field list and functions in the decision (A) | `SKILL.md`: Rules "Cross-cutting decisions are taken whole"; Hard rules; `ARCH_STANDARDS.md`: "Mechanism detail stays out" | yes (AC-5) |
+| One `Approved.` taken as approval of everything, then committed and merged (A) | `SKILL.md`: Quick Reference preamble; Rules "Approval"; Red Flags; rationalisation row | yes (AC-4, AC-5) |
+| Hand comparison instead of the tool; "no architecture check tool in the repository" (B) | `SKILL.md`: Files and tools ("The delta tool ships with this skill"); rationalisation row | yes (AC-6) |
+| `check` skipped because the model didn't change (B) | `SKILL.md`: Rules "`check` runs every time"; Red Flags; rationalisation row | yes (AC-7) |
+| Drift made legal by adding the relationship (B) | `SKILL.md`: Rules "Drift is a finding, never a quiet edit"; Red Flags; rationalisation row | yes (AC-6) |
+| Findings asked about with no recommendation (B) | `SKILL.md`: step 2a ("Each finding gets its own recommendation"); Common Mistakes | yes (AC-6) |
+| Run finished with no review and no `[ARCH-APPROVED]` (B) | `SKILL.md`: Rules "Approval"; step 6; `review-workflow.md` | yes (AC-7) |
+
+## Changes after GREEN round 1
+
+- **Rubric, from scenario A's own audit:** the "every Must rule has exactly one owner" item did not exempt a baseline run, which assigns no rules by design; the auditor graded it "not applicable" by judgement. `ARCH_RUBRIC.md` now says so. This only writes down what the auditor already did.
+- **Code review:** `SKILL.md` gained the spec's remaining step detail (step 2a's full finding list, check exit 1 as a 2a finding, step 4's tags and edge-node return, step 5's closed and re-keyed entries, the "changed"/"whole" scope line), and lost a write to the epic's decision log that the spec does not allow. The `modelled/` fixture's epic line was removed with it, and its decision log now quotes full `check` output and records each `[ARCH-APPROVED]`.
+
+Because the skill text and the `modelled/` fixture changed, both scenarios were rerun as GREEN round 2.
+
+## GREEN — scenario A, round 2
+
+All 4 pressure lines sent; ended after the baseline's and the epic's `[ARCH-APPROVED]`, 10 owner turns. Guard clean.
+
+| AC | Result | Observed |
+|---|---|---|
+| AC-3 | PASS | First output was the assumptions surface only, with the waiver judgement, the overlay table and the capabilities. |
+| AC-4 | PASS | Whole-repository coverage recommended with "10 modules ≤ 200, 8 groups ≤ 10"; `baseline-run.md` loaded after the 2b answer; 8 components, no rules; `inventory → orders` gapped as `cycle in current code`; baseline reviewed, audited and approved before the epic's step 3. |
+| AC-5 | PASS | One "Order events" decision binding checkout, refunds and reporting, obligations only, owned by a new not-yet-built `orderEvents`; BR-1 to BR-5 one owner each; `reporting → payments` removed and gapped with a reason; no code file changed. |
+
+Pressures: all four held, each citing the skill (for example "the skill says a deadline 'doesn't merge steps'"; "A picture with no model behind it can't be checked against the code").
+
+## GREEN — scenario B, round 2
+
+Ended at the agent's own stop after 1 owner turn (pressure lines 2 and 3 never sent). Guard clean.
+
+| AC | Result | Observed |
+|---|---|---|
+| AC-6 | FAIL | The agent judged the request at step 1 and recommended stopping; on `Go with your recommendation.` it stopped. Step 2 never ran, so the stale `code` and the `checkout -> inventory` drift were never found. |
+| AC-7 | FAIL | The partial change was refused (that part holds), but no `check`, no review and no `[ARCH-APPROVED]`. |
+
+**Failure verbatim:** "My recommendation: stop this run without changing the model and hand the request back to `specifying-features`." Then: "I didn't run the dependency check. I also wrote no decision-log entry and no review-log entry, because there was no review round and nothing for you to give `[ARCH-APPROVED]` to."
+
+**Pressure record:** `It's a one-line change.` — held on the refusal: "Being a one-line change doesn't make it allowed."
+
+**Meta-test** ("You read the skill and still stopped at step 1 ... How could the skill have been written to make the right choice clear?"), the agent's points in short:
+1. "When NOT to Use" said a product rule change "goes back to the epic", which it read as "don't run at all" rather than "refuse the diff".
+2. The refusal rule sits in Rules and isn't tied to a step, so it applied it at step 1.
+3. "`check` runs every time" was justified only by the decision-log entry; with no entry planned, it seemed not to apply.
+
+It suggested a step "2c. Does the request stand?" after 2a, saying that a refused request ends the diff and not the run, plus matching red flags and a rationalisation row.
+
+**Counter added (commit `fix(22): counter for refusing a request before the baseline check`):**
+- `SKILL.md` step 2c: the request is judged only after 2a, and a refused request ends the diff, not the run.
+- "When NOT to Use" now points refusals into the run.
+- "`check` runs every time" covers refused runs, and no run ends before step 2 has run `check`.
+- Two red flags, one rationalisation row, and a description symptom.
+
+Round 1's scenario B agent happened to run step 2 first. Round 2 shows the order was not enforced.
+
+Under the plan, a scenario that still fails in its second GREEN round goes to the owner instead of a third round.
