@@ -325,3 +325,42 @@ def test_near_miss_phase_is_rejected(tmp_path: Path) -> None:
     assert result.returncode == 2
     assert "phase" in result.stderr
     assert not (tmp_path / ".review_log.jsonl").exists()
+
+
+@pytest.mark.parametrize("present", [True, False], ids=["present", "absent"])
+def test_run_record_feature_is_optional(tmp_path: Path, present: bool) -> None:
+    record = {**RUN_RECORD, "feature": "F-7"} if present else dict(RUN_RECORD)
+    result = run(tmp_path, "run-record", "--from", "-", stdin=json.dumps(record))
+    assert result.returncode == 0, result.stderr
+    [written] = read_log(tmp_path, ".run_records.jsonl")
+    if present:
+        assert written["feature"] == "F-7"
+    else:
+        assert "feature" not in written
+
+
+@pytest.mark.parametrize("value", [None, "", "  ", 7], ids=["null", "empty", "blank", "number"])
+def test_run_record_rejects_bad_feature(tmp_path: Path, value: object) -> None:
+    result = run(tmp_path, "run-record", "--from", "-", stdin=json.dumps({**RUN_RECORD, "feature": value}))
+    assert result.returncode == 2
+    assert "feature" in result.stderr
+    assert not (tmp_path / ".run_records.jsonl").exists()
+
+
+def load_cli():
+    spec = importlib.util.spec_from_file_location("review_log_cli", CLI)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_schema_doc_matches_cli() -> None:
+    cli = load_cli()
+    doc = (CLI.parent.parent / "review-log-jsonl.md").read_text(encoding="utf-8")
+    skills_text = doc.split("**`skill`:**", 1)[1].split("\n\n", 1)[0]
+    phase_text = doc.split("**`phase`:**", 1)[1].split("**`independence`:**", 1)[0]
+    record_text = doc.split("## Run record", 1)[1].split("\n## ", 1)[0]
+    row = re.compile(r"^\| `([^`]+)` \|", re.M)
+    assert set(re.findall(r"`([^`]+)`", skills_text)) == set(cli.SKILLS)
+    assert set(row.findall(phase_text)) == set(cli.PHASES)
+    assert set(row.findall(record_text)) == set(cli.RUN_RECORD_FIELDS) | {"feature"}

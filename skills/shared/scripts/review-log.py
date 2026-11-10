@@ -56,6 +56,7 @@ RUN_RECORD_FIELDS = (
     "plan_changes",
     "slips",
 )
+OPTIONAL_RUN_RECORD_FIELDS = ("feature",)
 
 
 class InvalidEntry(Exception):
@@ -179,10 +180,13 @@ def validate_run_record(record: object) -> dict[str, object]:
     require(isinstance(record, dict), "run record must be a JSON object")
     missing = [field for field in RUN_RECORD_FIELDS if field not in record]  # type: ignore[operator]
     require(missing == [], f"run record is missing: {', '.join(missing)}")
-    unknown = [field for field in record if field not in RUN_RECORD_FIELDS]  # type: ignore[union-attr]
+    allowed = RUN_RECORD_FIELDS + OPTIONAL_RUN_RECORD_FIELDS
+    unknown = [field for field in record if field not in allowed]  # type: ignore[union-attr]
     require(unknown == [], f"run record has unknown fields: {', '.join(unknown)}")
     non_empty("item_id", record["item_id"])  # type: ignore[index]
     non_empty("plan", record["plan"])  # type: ignore[index]
+    if "feature" in record:  # type: ignore[operator]
+        non_empty("feature", record["feature"])  # type: ignore[index]
     count("tasks", record["tasks"])  # type: ignore[index]
     counts_map("tiers", record["tiers"])  # type: ignore[index]
     counts_map("attempts", record["attempts"])  # type: ignore[index]

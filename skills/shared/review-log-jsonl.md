@@ -121,11 +121,12 @@ normalising free text. Write the record as a JSON file (or pipe it), then:
 python <skills-dir>/shared/scripts/review-log.py run-record --from run-record.json
 ```
 
-All fields are required; use `0`, `{}` or `[]` when there is nothing to report.
+All fields except `feature` are required; use `0`, `{}` or `[]` when there is nothing to report.
 
 | Field | Shape | Meaning |
 |---|---|---|
 | `item_id` | string | Work item the plan implements |
+| `feature` | string, optional | Feature the plan's work item belongs to; omit when the work item is not part of a feature |
 | `plan` | string | Path to the plan file |
 | `tasks` | integer | Number of tasks executed |
 | `tiers` | `{tier: count}` | Tasks per executor tier or model, e.g. `{"haiku": 3, "sonnet": 2}` |
