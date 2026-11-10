@@ -30,7 +30,7 @@ node skills/shared/scripts/architecture-delta.mjs export --repo <dir> [--model a
 
 Relative paths resolve against `--repo`. The shipped C4 specification is found relative to the script
 (`../architecture/c4.c4`). `--timeout` takes a whole number of seconds from 0 to 600 (default 60).
-An unknown subcommand or flag, a missing `--repo` (or `--deps` for `check`), a `--format` other than
+An unknown subcommand or flag, a missing or empty `--repo` (or `--deps` for `check`), a `--format` other than
 `text` or `json`, a `--timeout` outside 0 to 600 or not a whole number, or an empty `--separator` is a
 usage error. A flag with no value (a value starting with `--` counts as missing), a flag given twice, or an
 empty or blank item in `--scope` (items are trimmed; `--scope ""` counts) is also a usage error. An unknown `--scope` id is an input error.
