@@ -40,12 +40,15 @@ plan's work item belongs to, written to the record unchanged. When present it mu
 with at least one non-blank character; `null`, `""`, a blank string or a non-string is exit 2 with
 a message naming `feature`, and nothing is written. When absent, the record is valid and carries
 no `feature` key, so existing callers and records are unaffected. Every other field stays
-required, unknown fields are still rejected, and the finding layers are unchanged: run records
-count findings from plan execution, and architecture and feature reviews happen before a plan.
+required, unknown fields are still rejected, and the finding layers are unchanged: a run record
+counts findings for one plan's own work item (its spec self-review, spec audit, plan review,
+execution and survivability); architecture, feature-plan and feature reviews span many work items,
+so no single plan's record counts them.
 
 **Schema doc.** `skills/shared/review-log-jsonl.md` lists the three skills, adds the three phase
-rows with `self` independence, widens the `INDEPENDENT_AUDIT` row as above, adds a `feature` row
-(string, optional) to the run-record table, and changes "All fields are required" to "All fields
+rows with `self` independence, widens the `INDEPENDENT_AUDIT` row as above, adds this row to the
+run-record table (columns Field | Shape | Meaning):
+`` | `feature` | string, optional | Feature the plan's work item belongs to; omit when the work item is not part of a feature | ``, and changes "All fields are required" to "All fields
 except `feature` are required".
 
 ## Scope
@@ -55,10 +58,11 @@ except `feature` are required".
 - `skills/shared/review-log-jsonl.md`: the edits above.
 - `tests/scripts/test_review_log_cli.py`: tests for each criterion, using its existing `run` and
   log-reading helpers and its `RUN_RECORD` fixture; plus a test that the doc's skill list, phase
-  table and run-record table name exactly the CLI's `SKILLS`, `PHASES` and run-record fields
-  (with `feature`), so the two cannot drift.
-- `docs/superpowers/specs/2026-11-09-architecture-and-releases-plan.md`: `FEATURES_REVIEW`
-  renamed to `FEATURES_PLAN_REVIEW` (owner decision, 2026-11-10).
+  table and run-record table name, as sets, exactly the CLI's `SKILLS`, its `PHASES`, and
+  `RUN_RECORD_FIELDS` plus the optional `feature`, so the two cannot drift.
+- Already done with this spec (922e473), not a plan task: `FEATURES_REVIEW` renamed to
+  `FEATURES_PLAN_REVIEW` in `docs/superpowers/specs/2026-11-09-architecture-and-releases-plan.md`
+  (owner decision, 2026-11-10).
 
 **Out of scope:** the skills that log these phases (#22, #23, #24); a skill-to-phase check.
 
@@ -92,10 +96,10 @@ except `feature` are required".
   `--independence self`, when `append` runs, then it exits 0 and the written entry's `phase` is
   that name.
 - **AC-3** Given each of those three phases with `--independence fresh-context`, when `append`
-  runs, then it exits 2, stderr says independence must be `self` for that phase, and no log file
-  is written.
-- **AC-4** Given `--phase FEATURES_REVIEW`, when `append` runs, then it exits 2 and no log file is
-  written.
+  runs, then it exits 2, stderr contains `independence must be 'self' for <phase>`, and no log
+  file is written.
+- **AC-4** Given `--phase FEATURES_REVIEW`, when `append` runs, then it exits 2, stderr names
+  `phase`, and no log file is written.
 - **AC-5** Given a valid run record with `"feature": "F-7"`, when `run-record` runs, then it exits
   0 and the written record's `feature` is `"F-7"`; given the same record without `feature`, then
   it exits 0 and the written record has no `feature` key.
