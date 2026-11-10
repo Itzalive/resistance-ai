@@ -32,8 +32,8 @@ Relative paths resolve against `--repo`. The shipped C4 specification is found r
 (`../architecture/c4.c4`). `--timeout` takes a whole number of seconds from 0 to 600 (default 60).
 An unknown subcommand or flag, a missing `--repo` (or `--deps` for `check`), a `--format` other than
 `text` or `json`, a `--timeout` outside 0 to 600 or not a whole number, or an empty `--separator` is a
-usage error. A flag with no value, a flag given twice, or an empty item in `--scope` is also a usage
-error. An unknown `--scope` id is an input error.
+usage error. A flag with no value (a value starting with `--` counts as missing), a flag given twice, or an
+empty or blank item in `--scope` (items are trimmed; `--scope ""` counts) is also a usage error. An unknown `--scope` id is an input error.
 
 ## Inputs
 
@@ -403,8 +403,9 @@ path never imports. `@likec4/language-services` alone was rejected: it fails to 
 - **AC-24** Given a model folder containing a `likec4.config.mjs` (at any depth) or a symbolic link, when
   `check` or `export` runs, then it exits 2 with `error: model-config:` or `error: model-symlink:`, and
   the config file has not run.
-- **AC-25** Given an unknown subcommand, an unknown flag, `--format xml` or `--timeout 601`, when the tool
-  runs, then it exits 2 with `error: usage:` and empty stdout.
+- **AC-25** Given an unknown subcommand, an unknown flag, `--format xml`, `--timeout 601`, a flag with no
+  value, `--format json --format text`, or `--scope a,,b`, when the tool runs, then it exits 2 with
+  `error: usage:` and empty stdout.
 - **AC-26** Given a fixture preload that makes the first `process.stdout.write` call throw, when
   `check` runs on a fixture with a new breach, then it exits 2 with `error: internal:`, never 1.
 - **AC-27** Given `--format text` with one new breach, one stale entry and one known breach, when `check`

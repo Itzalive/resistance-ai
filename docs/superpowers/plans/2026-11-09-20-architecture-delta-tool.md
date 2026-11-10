@@ -12,7 +12,7 @@
 
 **Open decisions:** none
 
-**Size:** 12 tasks, 2 entry paths (`check`, `export`), 2,891 lines (reported, not a target). The owner chose one plan over the proposed two-plan split.
+**Size:** 12 tasks, 2 entry paths (`check`, `export`), 2898 lines (reported, not a target). The owner chose one plan over the proposed two-plan split.
 
 **Trust boundary:** changed — see Trust-boundary table
 
@@ -69,7 +69,7 @@ Untrusted source throughout: the content of the repository under `--repo` (its f
 
 | Checkpoint | After task | Tasks covered | Reviewer looks at |
 |---|---|---|---|
-| C1 | 3 | 1–3 | Task 1 items 1–2, Task 2 items 1–3, Task 3 items 1–3; focused tests |
+| C1 | 3 | 1–3 | Task 1 items 1–2, Task 2 items 1–3, Task 3 items 1–4; focused tests |
 | C2 | 6 | 4–6 | Task 4 items 1–4 (strong), Task 5 items 1–3 (strong), Task 6 items 1–3; trust-boundary rows 1, 2, 5; focused tests |
 | C3 | 9 | 7–9 | Task 7 items 1–3 (strong), Task 8 items 1–4, Task 9 items 1–5; trust-boundary rows 3, 4, 7; full suite (Task 8 is the first end-to-end task) |
 | C4 | 12 | 10–12 | Task 10 items 1–3, Task 11 items 1–4, Task 12 items 1–3; trust-boundary row 6; full suite |
@@ -567,6 +567,7 @@ git commit -m "feat(20): error type, output cleaning and error lines"
 - `--timeout` upper bound — mutation: `> 600` to `> 601` — killed by: `test_usage_errors[timeout-601]`
 - whole-number check — mutation: regex `^\d+$` to `^[\d.]+$` — killed by: `test_usage_errors[timeout-1.5]`
 - flag sets per command — mutation: allow `--deps` for `export` — killed by: `test_usage_errors[deps-on-export]`
+- a value that is a flag — mutation: drop `value.startsWith('--')` — killed by: `test_usage_errors[value-is-a-flag]`
 
 - Satisfies Spec AC: AC-25 (parse level; end-to-end in Task 8)
 - Decisions applied: none
@@ -628,6 +629,9 @@ def test_timeout_zero_is_valid() -> None:
         pytest.param(["export", "--repo", "r", "--deps", "d"], id="deps-on-export"),
         pytest.param(["export", "--repo", "r", "--bogus", "x"], id="unknown-flag"),
         pytest.param(["export", "--repo"], id="flag-without-value"),
+        pytest.param(["check", "--repo", "r", "--scope", "--deps", "d"], id="value-is-a-flag"),
+        pytest.param(["check", "--repo", "r", "--deps", "d", "--scope", ""], id="scope-empty-string"),
+        pytest.param(["check", "--repo", "r", "--deps", "d", "--scope", "a, ,b"], id="scope-blank-item"),
         pytest.param(["export", "--repo", "a", "--repo", "b"], id="repeated-flag"),
         pytest.param(["check", "--repo", "r", "--deps", "d", "--format", "xml"], id="format-xml"),
         pytest.param(["export", "--repo", "r", "--timeout", "601"], id="timeout-601"),
@@ -672,7 +676,7 @@ export function parseArgs(argv) {
     const flag = rest[i];
     const value = rest[i + 1];
     if (!FLAGS[command].includes(flag)) throw usage(`unknown flag for ${command}: ${flag}`);
-    if (value === undefined) throw usage(`${flag} needs a value`);
+    if (value === undefined || value.startsWith('--')) throw usage(`${flag} needs a value`);
     if (Object.hasOwn(opts, flag)) throw usage(`${flag} given twice`);
     opts[flag] = value;
   }
@@ -706,7 +710,7 @@ export function parseArgs(argv) {
 }
 ```
 
-- [ ] **Step 4: run GREEN.** `uv run pytest tests/scripts/test_architecture_delta_args.py -q` — Expected: PASS (19)
+- [ ] **Step 4: run GREEN.** `uv run pytest tests/scripts/test_architecture_delta_args.py -q` — Expected: PASS (22)
 - [ ] **Step 5: refactor — none.**
 - [ ] **Step 6: commit.**
 
@@ -1818,6 +1822,9 @@ def test_export_refuses_duplicate_prefixes(tmp_path) -> None:
         pytest.param(["export", "--repo", ".", "--bogus", "1"], id="unknown-flag"),
         pytest.param(["check", "--repo", ".", "--deps", "d.json", "--format", "xml"], id="format-xml"),
         pytest.param(["export", "--repo", ".", "--timeout", "601"], id="timeout-601"),
+        pytest.param(["export", "--repo"], id="flag-without-value"),
+        pytest.param(["check", "--repo", ".", "--deps", "d.json", "--format", "json", "--format", "text"], id="repeated-flag"),
+        pytest.param(["check", "--repo", ".", "--deps", "d.json", "--scope", "a,,b"], id="empty-scope-item"),
     ],
 )
 def test_usage_errors_end_to_end(args: list[str]) -> None:
