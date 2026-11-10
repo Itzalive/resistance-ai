@@ -79,7 +79,7 @@ The architecture model is LikeC4 DSL (`.c4` files, MIT), written as C4.
 - **The model is the target.** A `uses` relationship means "may depend on". `#protected` means "only
   elements with a `uses` relationship to it may depend on it". An element with `code` metadata maps to
   code; one without is conceptual.
-- **Default location** `architecture/` at the repo root, overridable in the repo's overlay
+- **Default location** `docs/architecture/`, overridable in the repo's overlay
   (`ARCHITECTURE_DESIGN.md`, same overlay rules as `SPEC_DESIGN.md`).
 
 ## Shared tool: architecture delta
@@ -105,7 +105,7 @@ language; it only compares the model with a list of dependencies the repo suppli
   - **not yet reached:** relationships in the model that the code does not have yet;
   - **unmapped code:** modules no element's `code` covers;
   - **shared hot spots:** with `--shards <file>`, model elements inside two or more shards' scopes.
-- **Known gap file** `architecture/known-gap.json`: today's accepted breaches. The check fails on a
+- **Known gap file** `docs/architecture/known-gap.json`: today's accepted breaches. The check fails on a
   breach not in the file and on an entry that no longer matches anything, so the gap only shrinks.
 - **Model export for repo checkers:** `architecture-delta.mjs export` writes the model's elements
   (kind, tags, `code`) and its allowed relationships (any kind) as plain JSON, so a repo can generate its own
@@ -129,7 +129,7 @@ its failures recorded in the skill's evidence file, then the skill, then the sce
   Also when an approved model must change (amendment mode, below).
 - **Reads:** the approved epic, the repository, the delta tool's output for today's code.
 - **Writes:**
-  - the target model in `architecture/`: systems, containers and components with `code` and `rules`
+  - the target model in `docs/architecture/`: systems, containers and components with `code` and `rules`
     metadata, allowed relationships, `#protected` and `#layer` tags, and invariants as
     relationship rules (for example "only the orders module uses the payments library"; "evals use
     production builders, never copies");
@@ -141,7 +141,7 @@ its failures recorded in the skill's evidence file, then the skill, then the sce
     including those built in later features. Each is written up as its own design (one model spec
     covering all its users, not a piece per feature), and the model records which elements it binds.
     A feature may build part of it; no feature may redesign part of it except through amendment mode;
-  - `architecture/known-gap.json` from the first delta run, each entry with the feature expected to
+  - `docs/architecture/known-gap.json` from the first delta run, each entry with the feature expected to
     close it (filled in by `planning-features`).
 - **Hard rules:** no new product rules (a rule gap goes back to the epic); every Must business rule
   has an owning element; every breach in the gap is listed, none silently allowed; mechanism detail

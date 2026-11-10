@@ -20,11 +20,11 @@ overlay text (each repository's), any language's dependency command, or the skil
 
 ```
 node skills/shared/scripts/architecture-delta.mjs check  --repo <dir> --deps <file>
-        [--model architecture] [--gap architecture/known-gap.json]
+        [--model docs/architecture] [--gap docs/architecture/known-gap.json]
         [--scope <element,…>] [--shards <file>] [--separator .]
         [--format text|json] [--timeout 60]
 
-node skills/shared/scripts/architecture-delta.mjs export --repo <dir> [--model architecture]
+node skills/shared/scripts/architecture-delta.mjs export --repo <dir> [--model docs/architecture]
         [--timeout 60]
 ```
 
@@ -71,7 +71,7 @@ All inputs are read-only. `--model`, `--deps`, `--gap` and `--shards` are resolv
     are each a string or absent, and every relationship has a string `source.id` and `target.id`. Any
     mismatch exits 2 with `internal`, so a copy whose API differs can never give a clean result by
     checking nothing.
-- **Model:** the directory `--model` (default `<repo>/architecture`), loaded with
+- **Model:** the directory `--model` (default `<repo>/docs/architecture`), loaded with
   `LikeC4.fromWorkspace`. Any entry from `getErrors()`, or an exception from `likec4`: exit 2, listing
   each error's message, file and line where known.
 - **C4 specification copy:** `<model>/c4.c4` must equal the shipped `skills/shared/architecture/c4.c4`
