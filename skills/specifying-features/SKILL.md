@@ -21,7 +21,7 @@ This skill designs one feature before any of its shards is specified. It writes 
 | The feature's last shard has merged (close run) | The feature design has `[FEATURE-APPROVED]` |
 | The owner or a shard asks for the shard map to change (reshard) | The feature design has `[FEATURE-APPROVED]` |
 
-**One-feature epic** (it skipped `planning-features`): the gate is `[EPIC-APPROVED]` and `[ARCH-APPROVED]` or its logged waiver. See `FEATURE_STANDARDS.md` for what changes.
+**One-feature epic** (it skipped `planning-features`): the gate is `[EPIC-APPROVED]` and `[ARCH-APPROVED]` or its logged waiver. See `FEATURE_STANDARDS.md`.
 
 ## Ownership
 
@@ -65,10 +65,10 @@ A change to an approved shard map goes through step 6 with review scoped to the 
 
 ## Red Flags
 
-- "Write the first shard spec now; the feature design can follow."
+- "Write the first shard spec now; the design can follow."
 - "The refactor is small, fold it into the behaviour shard."
 - "The model was approved recently, skip the delta."
-- A second request to split the work, answered by just splitting again.
+- A second request to split the work, answered by splitting again.
 - A tidy-up in shard 0 that no shard of this feature needs.
 - A behaviour question settled in conversation and recorded nowhere in the design.
 
