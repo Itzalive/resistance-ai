@@ -110,5 +110,6 @@ except `feature` are required".
 
 | Item | Priority | Effort | Why |
 |---|---|---|---|
-| Skills #22–#24 log these phases and the `feature` field | P1 | in those items | This item only makes the CLI accept them |
+| Skills #22–#24 log these phases | P1 | in those items | This item only makes the CLI accept them |
+| `finishing-a-development-branch` Step 1b sets `feature` when the work item belongs to a feature (#25) | P1 | S | That step writes run records |
 | A skill-to-phase check in the CLI | P3 | S | Would catch a skill logging another skill's phase |

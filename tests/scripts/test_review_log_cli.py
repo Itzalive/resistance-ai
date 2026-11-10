@@ -343,7 +343,7 @@ def test_run_record_feature_is_optional(tmp_path: Path, present: bool) -> None:
 def test_run_record_rejects_bad_feature(tmp_path: Path, value: object) -> None:
     result = run(tmp_path, "run-record", "--from", "-", stdin=json.dumps({**RUN_RECORD, "feature": value}))
     assert result.returncode == 2
-    assert "feature" in result.stderr
+    assert "feature must be a non-empty string" in result.stderr
     assert not (tmp_path / ".run_records.jsonl").exists()
 
 
@@ -364,3 +364,11 @@ def test_schema_doc_matches_cli() -> None:
     assert set(re.findall(r"`([^`]+)`", skills_text)) == set(cli.SKILLS)
     assert set(row.findall(phase_text)) == set(cli.PHASES)
     assert set(row.findall(record_text)) == set(cli.RUN_RECORD_FIELDS) | {"feature"}
+
+
+def test_schema_doc_independence_matches_cli() -> None:
+    cli = load_cli()
+    doc = (CLI.parent.parent / "review-log-jsonl.md").read_text(encoding="utf-8")
+    phase_text = doc.split("**`phase`:**", 1)[1].split("**`independence`:**", 1)[0]
+    self_rows = set(re.findall(r"^\| `([^`]+)` \|[^|]*\| `self` \|$", phase_text, re.M))
+    assert self_rows == set(cli.SELF_PHASES)

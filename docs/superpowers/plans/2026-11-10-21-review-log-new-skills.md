@@ -166,3 +166,10 @@ def test_schema_doc_matches_cli() -> None:
 - [ ] **Step 3: GREEN** — in `validate_run_record`, compute `unknown` against `RUN_RECORD_FIELDS + ("feature",)`, and after the required checks add `if "feature" in record: non_empty("feature", record["feature"])`. Doc: change "All fields are required" to "All fields except `feature` are required" and add `` | `feature` | string, optional | Feature the plan's work item belongs to; omit when the work item is not part of a feature | `` after `item_id`.
 - [ ] **Step 4: run** `uv run pytest tests/scripts/test_review_log_cli.py tests/scripts/test_run_record_contract.py -q` — Expected: PASS; then `uv run pytest -q` — Expected: PASS
 - [ ] **Step 5: commit** `feat(21): optional feature field on run records; schema doc drift test`
+
+
+## Changes during execution
+
+- Task 1 Step 2: the wrong-independence tests failed at RED rather than passing, because an unknown phase is rejected before the independence rule; the tests are correct as written.
+- Checkpoint C1: `test_run_record_rejects_bad_feature` asserts the exact `feature must be a non-empty string` message, so it separates the value check from the unknown-key check; `test_schema_doc_independence_matches_cli` added; `SELF_PHASES` wrapped one item per line.
+- Spec future work: `finishing-a-development-branch` (#25), not the new skills, sets `feature` on run records.
