@@ -1,0 +1,4 @@
+{"entries": [
+  {"from": "shop.reporting", "to": "shop.payments", "reason": "reporting reads payment totals directly; BR-3 moves it to order events"},
+  {"from": "shop.inventory", "to": "shop.orders", "reason": "cycle in current code"}
+]}

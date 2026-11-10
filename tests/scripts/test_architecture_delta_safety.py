@@ -31,7 +31,7 @@ def test_limits_end_to_end(tmp_path, case: str) -> None:
         deps.write_text('{"edges":[]}' + " " * (50 * MB), encoding="utf-8")
     elif case == "model-size":
         for i in range(2001):
-            (repo / "architecture" / f"f{i}.txt").write_text("x", encoding="utf-8")
+            (repo / "docs" / "architecture" / f"f{i}.txt").write_text("x", encoding="utf-8")
     elif case == "timeout":
         extra = ["--timeout", "0"]
     proc = run_tool("check", "--repo", repo, "--deps", deps, *extra)
@@ -113,7 +113,7 @@ def test_deadline_is_checked_after_each_input_file(tmp_path, monkeypatch, name: 
     monkeypatch.setenv("JUMP_AFTER", name)
     repo = make_repo(tmp_path)
     deps = write_json(repo / "deps.json", {"edges": CLEAN_EDGES})
-    write_json(repo / "architecture" / "known-gap.json", {"entries": []})
+    write_json(repo / "docs" / "architecture" / "known-gap.json", {"entries": []})
     shards = write_json(repo / "shards.json", {"shards": {}})
     proc = run_tool("check", "--repo", repo, "--deps", deps, "--shards", shards, preload=preload)
     assert proc.returncode == 2

@@ -47,7 +47,7 @@ def test_export_of_a_spec_only_folder_is_empty(tmp_path) -> None:
 def test_export_refuses_config_and_never_runs_it(tmp_path) -> None:
     repo = make_repo(tmp_path)
     marker = repo / "ran.txt"
-    nested = repo / "architecture" / "nested"
+    nested = repo / "docs" / "architecture" / "nested"
     nested.mkdir()
     (nested / "likec4.config.mjs").write_text(
         "import fs from 'node:fs';\n"
@@ -66,7 +66,7 @@ def test_export_refuses_a_link_in_the_model(tmp_path) -> None:
     repo = make_repo(tmp_path)
     target = tmp_path / unique("t")
     target.mkdir()
-    link_dir(target, repo / "architecture" / "link")
+    link_dir(target, repo / "docs" / "architecture" / "link")
     proc = run_tool("export", "--repo", repo)
     assert proc.returncode == 2
     assert error_lines(proc)[0].startswith("error: model-symlink: ")
@@ -76,7 +76,7 @@ def test_export_checks_the_spec_copy(tmp_path) -> None:
     missing = make_repo(tmp_path, spec=False)
     assert error_lines(run_tool("export", "--repo", missing))[0].startswith("error: spec-copy: ")
     crlf = make_repo(tmp_path)
-    (crlf / "architecture" / "c4.c4").write_bytes(SHIPPED_SPEC.read_text(encoding="utf-8").replace("\n", "\r\n").encode())
+    (crlf / "docs" / "architecture" / "c4.c4").write_bytes(SHIPPED_SPEC.read_text(encoding="utf-8").replace("\n", "\r\n").encode())
     assert run_tool("export", "--repo", crlf).returncode == 0
 
 
@@ -158,9 +158,19 @@ def test_missing_likec4_from_a_copied_engine(tmp_path) -> None:
 
 def test_model_that_is_a_file_is_bad_input(tmp_path) -> None:
     repo = make_repo(tmp_path)
-    proc = run_tool("export", "--repo", repo, "--model", "architecture/c4.c4")
+    proc = run_tool("export", "--repo", repo, "--model", "docs/architecture/c4.c4")
     assert proc.returncode == 2
     assert error_lines(proc)[0].startswith("error: bad-input: ")
+
+
+def test_model_only_in_the_old_folder_is_not_found(tmp_path) -> None:
+    repo = make_repo(tmp_path)
+    (repo / "docs" / "architecture").rename(repo / "architecture")
+    proc = run_tool("export", "--repo", repo)
+    assert proc.returncode == 2
+    assert proc.stdout == ""
+    assert error_lines(proc)[0].startswith("error: bad-input: ")
+    assert run_tool("export", "--repo", repo, "--model", "architecture").returncode == 0
 
 
 def test_repo_given_through_a_link_exports(tmp_path) -> None:
