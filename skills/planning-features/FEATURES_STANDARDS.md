@@ -39,6 +39,8 @@ A split-out question also names its kind (spike, measurement or prototype), what
 
 ## The split-out test
 
+A direction-changing question is one whose answer could change the plan: an unproven technique, a cost or quality unknown, a dependency on another party. The epic's direction is its capabilities, its value order and its cross-cutting decisions.
+
 Ask of each question: if the answer goes the other way, what has to be redone?
 
 - **Only this feature's own design:** it stays with the feature.
