@@ -76,6 +76,29 @@ There is no public VS Code Marketplace install flow for this repository yet. If
 that changes later, document the Marketplace install path separately instead of
 changing the local/submodule flow described above.
 
+## Workflow
+
+```
+specifying-epics -> defining-architecture -> planning-features -> specifying-features
+  -> specifying-work-items (per shard) -> writing-plans -> execution -> code review -> finishing
+```
+
+| Stage | What it decides | Approval tag |
+|---|---|---|
+| `specifying-epics` | Product scope: users, rules, ACs, metrics, capabilities | `[EPIC-APPROVED]` |
+| `defining-architecture` | The target architecture model across the epic, cross-cutting decisions, the known gap | `[ARCH-APPROVED]` |
+| `planning-features` | The features and their order: decisions first, risky questions early, then value to cost | `[FEATURES-APPROVED]` |
+| `specifying-features` | One feature: questions answered, feature ACs, architecture delta, shard map, eval plan, costing | `[FEATURE-APPROVED]` |
+| `specifying-work-items` | One work item (a shard of a feature), specified just in time | `[SPEC-APPROVED]` |
+| `writing-plans` and execution | The plan, its tasks, reviews and survivability | plan alignment check |
+
+Short paths: one clear work item goes straight to `specifying-work-items`; an epic that
+ships as one feature skips `planning-features`.
+
+The architecture model is LikeC4 (`.c4` files). The delta tool that compares it with the
+code, `skills/shared/scripts/architecture-delta.mjs`, needs Node. Every architecture step
+is skipped in a repository that has no model.
+
 ## Authoring defaults
 
 - `skills/specifying-work-items/SKILL.md` is self-sufficient by default

@@ -30,13 +30,13 @@ The review is not optional and may not be abbreviated.
 - **Circuit Breaker:** If you fail self-review five consecutive times, you are strictly
   forbidden from attempting a sixth fix. Halt, output the exact rubric failure, and ask
   the human for product guidance and whether to continue.
-- A rejected epic spec may **not** proceed to work item decomposition or
-  `specifying-work-items`. No exceptions.
+- A rejected epic spec may **not** proceed to the handoff (`defining-architecture`).
+  No exceptions.
 
 ## Independent Audit
 
 After the epic spec passes self-review, an independent reviewer must audit it
-before work item decomposition begins. What the audit needs is independence: fresh
+before the handoff begins. What the audit needs is independence: fresh
 context and no stake in the draft. A different model family helps but is not
 required. Load `EPIC_REVIEW_MANIFEST.md` to create the audit context and ensure the
 auditor applies the same standards.
@@ -81,4 +81,4 @@ new reviewer only after a rewrite of the epic spec.
 - Commit the updated spec before returning to the self-review loop.
   `git commit -m "epic(<epic_id>): cr<N> fixes..."`
 - Re-run the full review loop from the self-review step.
-- The epic spec may not proceed to work item decomposition until both reviews pass.
+- The epic spec may not proceed to the handoff until both reviews pass.

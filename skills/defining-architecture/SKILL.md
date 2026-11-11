@@ -18,7 +18,7 @@ This skill keeps a target C4 model of the repository (LikeC4 `.c4` files, plus `
 | Trigger | Entry gate |
 |---|---|
 | An epic needs its architecture (epic run) | The epic has `[EPIC-APPROVED]` |
-| A later stage (`planning-features`, `specifying-features`, `specifying-work-items`) needs the model changed (later-stage run) | The model has `[ARCH-APPROVED]` and the asking stage has written a diff request (what to change and why) |
+| A later stage (`planning-features`, `specifying-features`, `specifying-work-items`, `writing-plans`, the code review before a merge, or `finishing-a-development-branch`) needs the model changed (later-stage run) | The model has `[ARCH-APPROVED]` and the asking stage has written a diff request (what to change and why) |
 | A repository is onboarded with no model (baseline run) | None |
 
 ## When NOT to Use
@@ -29,7 +29,7 @@ This skill keeps a target C4 model of the repository (LikeC4 `.c4` files, plus `
 
 ## Ownership
 
-This skill owns the model folder's content: the `.c4` files, `architecture.md` and `known-gap.json`. It owns no code and changes none. It does not write the architecture into the overlay file, the epic or any other document. Outside the model folder it writes only a waiver entry in the epic's decision log (when an epic run is waived) and the append-only work-item notes. Filling `close_by` on gap entries belongs to `planning-features`. Removing the gap entries `check` reports stale at a feature's close belongs to `specifying-features`. Merging, branching and feature planning belong to the stages after this one.
+This skill owns the model folder's content: the `.c4` files, `architecture.md` and `known-gap.json`. It owns no code and changes none. It does not write the architecture into the overlay file, the epic or any other document. Outside the model folder it writes only a waiver entry in the epic's decision log (when an epic run is waived) and the append-only work-item notes. Filling `close_by` on gap entries belongs to `planning-features`. Removing a gap entry `check` reports stale belongs to the branch whose check at `finishing-a-development-branch` reports it stale (normally the branch that fixed the breach), and to `specifying-features` at a feature's close for any entry still stale. Merging, branching and feature planning belong to the stages after this one.
 
 ## Files and tools
 

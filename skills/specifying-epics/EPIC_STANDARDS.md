@@ -100,7 +100,8 @@ level:
   — not about infrastructure topology or retry budgets.
 
 The mechanism that addresses a CIA concern is an architecture decision that belongs in
-`specifying-work-items`. The concern itself, and its product-level rules, belong here.
+`defining-architecture` (across the epic) or `specifying-work-items` (inside one item). The
+concern itself, and its product-level rules, belong here.
 
 Leaving the CIA section empty because "that's an engineering concern" is a failure mode.
 Product decisions about data sensitivity, permitted access, and acceptable degradation

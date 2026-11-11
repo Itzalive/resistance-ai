@@ -63,8 +63,10 @@ Your job is to find:
   concern."
 - Verify the future work section names downstream product features and user expectations
   this epic will create.
-- Verify the proposed work item breakdown is a product-level decomposition, not a
-  technical task list.
+- Verify the capabilities are a product-level breakdown: each names the rules and ACs it
+  owns, its value, its MoSCoW, its risks and its dependencies; every epic AC is in exactly
+  one capability; none is a technical task or a stage of delivery; each is understandable
+  without reading the others.
 - Verify the spec is atomic at the epic level, or that shard evaluation result is
   recorded.
 - Verify the main body is human-readable without requiring dense supporting sections.

@@ -30,6 +30,9 @@ sub-agent.
    - Config template verification when new env/config values appear
    - MCP `inputSchema` argument verification when applicable
    - Naming-collision checks
+   - Where the repository has an architecture model: the mapping of each planned
+     dependency onto model elements, and the full `check` output on the planned copy of
+     the dependency file. Where it has none, one line saying so
 
 5. **Tabula Rasa / spec-ingestion proof**
    - Shell history or captured output showing the spec was physically ingested
