@@ -75,7 +75,7 @@ node <skills-dir>/shared/scripts/architecture-delta.mjs check --repo . --model <
 - **A stale gap entry is removed in this branch.** It means this branch fixed the breach,
   or an earlier branch did and finished without this check. Remove the entry from
   `<model>/known-gap.json`, change nothing else in the model folder, commit, and re-run
-  `check`: it must exit 0. List each removed entry when you present the options, and in
+  `check`: it must report no stale entry (and exit 0 unless a new breach remains). List each removed entry when you present the options, and in
   the PR body when one is made.
 - **Exit 2** blocks Options 1 and 2 with the tool's error.
 
@@ -105,7 +105,8 @@ Implementation complete. What would you like to do?
 Which option?
 ```
 
-**Don't add explanation** - keep options concise.
+**Don't add explanation** - keep options concise, apart from a Step 1c breach or removed
+gap entries, shown above the options.
 
 ### Step 4: Execute Choice
 
@@ -140,6 +141,9 @@ git push -u origin <feature-branch>
 gh pr create --title "<title>" --body "$(cat <<'EOF'
 ## Summary
 <2-3 bullets of what changed>
+
+## Architecture
+<known-gap entries removed in Step 1c, if any; otherwise omit this section>
 
 ## Test Plan
 - [ ] <verification steps>

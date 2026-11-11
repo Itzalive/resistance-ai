@@ -193,9 +193,9 @@ Then check the plan against the model (the overlay keys and the tool's flags are
 
 1. Run the overlay's `deps-command`.
 2. Map each end of each planned dependency onto a model element, by the longest `code`
-   prefix in `export`'s output. `check` reports nothing for an edge whose source or
-   target maps to no element, so this step is what catches a dependency on unmodelled
-   code.
+   prefix in `export`'s output. `check` reports no breach for an edge whose source or
+   target maps to no element (an unmapped source is only listed under "Unmapped code"),
+   so this step is what catches a dependency on unmodelled code.
    - An end that is a repository module (a source in the dependency file, or a module
      the plan creates) and maps to no element **stops the plan**: write a diff request
      and hand it to `defining-architecture`.

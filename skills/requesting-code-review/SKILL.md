@@ -60,7 +60,7 @@ Use Task tool with resistance-engine:code-reviewer type, fill template at `code-
 - `{BASE_SHA}` - Starting commit
 - `{HEAD_SHA}` - Ending commit
 - `{DESCRIPTION}` - Brief summary
-- `{ARCH_CHECK_OUTPUT}` - The architecture check's output from step 1b, or "no architecture model"
+- `{ARCH_CHECK_OUTPUT}` - The architecture check's output from step 1b, "no architecture model", or "not run for this review"
 
 **3. Act on feedback:**
 - Fix Critical issues immediately

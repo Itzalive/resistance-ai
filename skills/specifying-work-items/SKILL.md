@@ -367,8 +367,13 @@ shard map. Find this from the work item (it names its feature) or from the calle
 
 **Not a shard, but the repository has an architecture model:** `## Assumptions surface`
 still names the elements the work item touches, and a dependency the model does not allow
-goes to `defining-architecture` the same way. (A repository has an architecture model when its model folder (`docs/architecture` unless the overlay `ARCHITECTURE_DESIGN.md` names another) holds a `.c4` file other than `c4.c4`.) With no
-model, this section changes nothing.
+goes to `defining-architecture` the same way.
+
+A repository has an architecture model when its model folder (`docs/architecture` unless
+the overlay `ARCHITECTURE_DESIGN.md` names another) holds a `.c4` file other than `c4.c4`.
+With no model, skip only the model parts of this section (reading the model, naming
+elements, checking dependencies against it); the shard table and the other shard rules
+still apply.
 
 ---
 

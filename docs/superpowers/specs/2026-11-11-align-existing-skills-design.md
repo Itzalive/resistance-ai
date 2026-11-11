@@ -126,8 +126,9 @@ procedure is unchanged.
 - **The delta check on the plan.** Pre-plan verification:
   1. runs the overlay's `deps-command`;
   2. maps each end of each planned dependency onto a model element, by the longest `code` prefix
-     in `export`'s output. `check` reports nothing for an edge whose source or target maps to no
-     element, so this step is what catches a dependency on unmodelled code. An end that is a
+     in `export`'s output. `check` reports no breach for an edge whose source or target maps to no
+     element (an unmapped source is only listed under "Unmapped code"), so this step is what
+     catches a dependency on unmodelled code. An end that is a
      repository module (a source in the dependency file, or a module the plan creates) and maps
      to no element stops the plan, and a diff request goes to `defining-architecture`. An end
      outside the repository (a standard library or third-party package with no element) is listed
