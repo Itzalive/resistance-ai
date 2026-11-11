@@ -96,6 +96,17 @@ These thoughts mean STOP—you're rationalizing:
 | "This feels productive" | Undisciplined action wastes time. Skills prevent this. |
 | "I know what that means" | Knowing the concept ≠ using the skill. Invoke it. |
 
+## The Flow
+
+```
+specifying-epics -> defining-architecture -> planning-features -> specifying-features
+  -> specifying-work-items (per shard) -> writing-plans -> execution -> code review -> finishing
+```
+
+- Epic-sized or unclear scope starts at `specifying-epics`.
+- An epic that ships as one feature skips `planning-features`.
+- One clear work item starts at `specifying-work-items`.
+
 ## Skill Priority
 
 When multiple skills could apply, use this order:
@@ -104,6 +115,7 @@ When multiple skills could apply, use this order:
 2. **Implementation skills second** (frontend-design, mcp-builder) - these guide execution
 
 "Let's build X" → specifying-work-items first, then implementation skills.
+"Let's build X" where X is epic-sized or its scope is unclear → specifying-epics first.
 "Fix this bug" → debugging first, then domain-specific skills.
 
 ## Skill Types

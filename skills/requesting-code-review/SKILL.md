@@ -29,6 +29,27 @@ BASE_SHA=$(git rev-parse HEAD~1)  # or origin/main
 HEAD_SHA=$(git rev-parse HEAD)
 ```
 
+**1b. Run the architecture check (before the whole-branch review at plan end, and before
+any review that precedes a merge; not before per-task or batch reviews):**
+
+Only where the repository has an architecture model: its model folder (`docs/architecture`
+unless the overlay `ARCHITECTURE_DESIGN.md` names another) holds a `.c4` file other than
+`c4.c4`. With no model, skip this step.
+
+Run the overlay's `deps-command`, then:
+
+```bash
+node <skills-dir>/shared/scripts/architecture-delta.mjs check --repo . --model <model> --deps <deps-file> --separator <separator>
+```
+
+Give the reviewer the whole output as `{ARCH_CHECK_OUTPUT}`.
+- **A breach not in the known gap is a Critical issue.** Fix it in code, or hold the merge
+  and hand a diff request to `defining-architecture`. Never resolve it by adding a
+  known-gap entry in the branch.
+- **Exit 2** stops the request with the tool's error.
+- **A stale entry** is not an issue. Note it for `finishing-a-development-branch`, which
+  removes it.
+
 **2. Dispatch code-reviewer subagent:**
 
 Use Task tool with resistance-engine:code-reviewer type, fill template at `code-reviewer.md`
@@ -39,6 +60,7 @@ Use Task tool with resistance-engine:code-reviewer type, fill template at `code-
 - `{BASE_SHA}` - Starting commit
 - `{HEAD_SHA}` - Ending commit
 - `{DESCRIPTION}` - Brief summary
+- `{ARCH_CHECK_OUTPUT}` - The architecture check's output from step 1b, "no architecture model", or "not run for this review"
 
 **3. Act on feedback:**
 - Fix Critical issues immediately

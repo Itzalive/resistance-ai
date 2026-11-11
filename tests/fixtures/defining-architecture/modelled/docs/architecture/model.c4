@@ -1,0 +1,63 @@
+model {
+  shop = system 'Shop' {
+    api = component 'Orders API' {
+      metadata {
+        code 'shop.api'
+      }
+    }
+    jobs = component 'Nightly jobs' {
+      metadata {
+        code 'shop.jobs'
+      }
+    }
+    checkout = component 'Checkout' {
+      metadata {
+        code 'shop.checkout'
+        rules 'BR-1'
+      }
+    }
+    refunds = component 'Refunds' {
+      metadata {
+        code 'shop.refunds'
+        rules 'BR-2'
+      }
+    }
+    reporting = component 'Reporting' {
+      metadata {
+        code 'shop.reporting'
+        rules 'BR-3'
+      }
+    }
+    orders = component 'Orders' {
+      metadata {
+        code 'shop.orders'
+        rules 'BR-4'
+      }
+    }
+    inventory = component 'Inventory' {
+      metadata {
+        code 'shop.inventory'
+      }
+    }
+    payments = component 'Payments' {
+      #protected
+      metadata {
+        code 'shop.payments'
+      }
+    }
+    events = component 'Order events' {
+      metadata {
+        rules 'BR-5'
+      }
+    }
+    api -> orders
+    jobs -> orders
+    checkout -> orders
+    checkout -> payments
+    refunds -> orders
+    refunds -> payments
+    orders -> inventory
+    orders -> events
+    reporting -> events
+  }
+}

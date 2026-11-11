@@ -1,0 +1,246 @@
+from __future__ import annotations
+
+import json
+
+from arch_delta_support import lib_url, require_node, run_module
+
+require_node()
+
+
+def element(id_: str, code: str | None = None, tags: list[str] | None = None) -> dict:
+    return {"id": id_, "kind": "component", "tags": tags or [], "code": [code] if code else [], "rules": []}
+
+
+def compare(elements: list[dict], relationships: list[tuple[str, str]], edges: list[list[str]], **options) -> dict:
+    model = {"elements": elements, "relationships": [{"from": a, "to": b} for a, b in relationships]}
+    opts = {"separator": ".", **options}
+    code = (
+        f"import {{ compare }} from {json.dumps(lib_url('match.mjs'))};\n"
+        f"const out = compare({json.dumps(model)}, {json.dumps(edges)}, {json.dumps(opts)});\n"
+        "process.stdout.write(JSON.stringify(out));\n"
+    )
+    proc = run_module(code)
+    assert proc.returncode == 0, proc.stderr
+    return json.loads(proc.stdout)
+
+
+def pairs(items: list[dict]) -> list[tuple[str, str]]:
+    return sorted((item["from"], item["to"]) for item in items)
+
+
+def test_longest_prefix_wins_and_separator_counts() -> None:
+    out = compare(
+        [element("shop", "shop"), element("shop.orders", "shop.orders"), element("c", "cat")],
+        [],
+        [["shop.orders.api", "cat"], ["shop.ordersx", "cat"]],
+    )
+    assert pairs(out["breaches"]) == [("shop", "c"), ("shop.orders", "c")]
+
+
+def test_other_separator() -> None:
+    out = compare([element("a", "src/a"), element("b", "src/b")], [], [["src/a/x", "src/b"]], separator="/")
+    assert pairs(out["breaches"]) == [("a", "b")]
+
+
+def test_ignored_edges_and_unmapped_sources() -> None:
+    out = compare(
+        [element("a", "a"), element("a.b", "a.b")],
+        [],
+        [["a.x", "a.y"], ["a.b.x", "a.y"], ["a.x", "ext.lib"], ["zz.q", "a.x"]],
+    )
+    assert out["breaches"] == []
+    assert out["unmapped"] == ["zz.q"]
+
+
+def test_container_relationship_allows_its_components() -> None:
+    elements = [element("A"), element("A.c", "A.c"), element("B"), element("B.d", "B.d")]
+    assert compare(elements, [("A", "B")], [["A.c.x", "B.d.y"]])["breaches"] == []
+    assert pairs(compare(elements, [], [["A.c.x", "B.d.y"]])["breaches"]) == [("A.c", "B.d")]
+
+
+PROTECTED = [
+    element("o", "o"),
+    element("s"),
+    element("s.p", "s.p", ["protected"]),
+    element("s.p.a", "s.p.a"),
+    element("s.p.b", "s.p.b"),
+]
+
+
+def test_protected_needs_a_relationship_into_it() -> None:
+    edge = [["o.x", "s.p.a.y"]]
+    assert pairs(compare(PROTECTED, [("o", "s")], edge)["breaches"]) == [("o", "s.p.a")]
+    assert compare(PROTECTED, [("o", "s.p")], edge)["breaches"] == []
+    assert pairs(compare(PROTECTED, [("o", "s.p.b")], edge)["breaches"]) == [("o", "s.p.a")]
+
+
+def test_children_of_a_protected_element_follow_the_ordinary_rule() -> None:
+    edge = [["s.p.a.x", "s.p.b.y"]]
+    assert pairs(compare(PROTECTED, [], edge)["breaches"]) == [("s.p.a", "s.p.b")]
+    assert compare(PROTECTED, [("s.p.a", "s.p.b")], edge)["breaches"] == []
+    assert compare(PROTECTED, [("s.p.a", "s")], edge)["breaches"] == []
+
+
+def test_breach_carries_its_module_edges() -> None:
+    out = compare([element("a", "a"), element("b", "b")], [], [["a.one", "b.x"], ["a.two", "b.x"]])
+    assert sorted(map(tuple, out["breaches"][0]["edges"])) == [("a.one", "b.x"), ("a.two", "b.x")]
+
+
+def test_not_yet_reached_and_exit_code() -> None:
+    out = compare(PROTECTED, [("o", "s.p"), ("o", "s")], [])
+    assert pairs(out["notYetReached"]) == [("o", "s.p")]
+    assert out["exitCode"] == 0
+    reached = compare(PROTECTED, [("o", "s.p")], [["o.x", "s.p.a.y"]])
+    assert reached["notYetReached"] == []
+
+
+def test_new_breach_sets_exit_code_one() -> None:
+    assert compare([element("a", "a"), element("b", "b")], [], [["a", "b"]])["exitCode"] == 1
+
+
+def test_tick_runs_after_every_10000_edges() -> None:
+    model = {"elements": [element("a", "a")], "relationships": []}
+    for count, ticks in ((10_000, 0), (10_001, 1), (20_000, 1), (20_001, 2)):
+        edges = [[f"a.m{i}", "a"] for i in range(count)]
+        code = (
+            f"import {{ compare }} from {json.dumps(lib_url('match.mjs'))};\n"
+            "let ticks = 0;\n"
+            f"compare({json.dumps(model)}, {json.dumps(edges)}, {{ separator: '.', tick: () => {{ ticks += 1; }} }});\n"
+            "process.stdout.write(String(ticks));\n"
+        )
+        proc = run_module(code)
+        assert proc.returncode == 0, proc.stderr
+        assert int(proc.stdout) == ticks, count
+
+
+def test_nearest_protected_ancestor_is_the_guard() -> None:
+    elements = [
+        element("s", "s", ["protected"]),
+        element("s.q", "s.q"),
+        element("s.p", "s.p", ["protected"]),
+        element("s.p.a", "s.p.a"),
+    ]
+    edge = [["s.q.x", "s.p.a.y"]]
+    assert pairs(compare(elements, [("s.q", "s")], edge)["breaches"]) == [("s.q", "s.p.a")]
+    assert compare(elements, [("s.q", "s.p")], edge)["breaches"] == []
+
+
+def test_allowed_is_decided_per_pair_not_per_source() -> None:
+    elements = [element("a", "a"), element("b", "b"), element("c", "c")]
+    for edges in ([["a.x", "b"], ["a.x", "c"]], [["a.x", "c"], ["a.x", "b"]]):
+        assert pairs(compare(elements, [("a", "b")], edges)["breaches"]) == [("a", "c")]
+
+
+def test_edge_from_an_element_into_its_descendant_is_ignored() -> None:
+    out = compare([element("a", "a"), element("a.b", "a.b")], [], [["a.x", "a.b.x"]])
+    assert out["breaches"] == []
+
+
+def test_not_yet_reached_needs_code_at_the_source() -> None:
+    assert compare(PROTECTED, [("s", "o")], [])["notYetReached"] == []
+
+
+def test_not_yet_reached_needs_an_edge_into_the_target() -> None:
+    out = compare(PROTECTED, [("o", "s.p.b")], [["o.x", "s.p.a.y"]])
+    assert pairs(out["notYetReached"]) == [("o", "s.p.b")]
+
+
+def test_duplicate_relationships_are_reported_once() -> None:
+    out = compare(PROTECTED, [("o", "s.p"), ("o", "s.p")], [])
+    assert pairs(out["notYetReached"]) == [("o", "s.p")]
+
+
+def test_sibling_whose_id_starts_with_another_is_not_inside_it() -> None:
+    out = compare([element("a", "a"), element("ab", "ab")], [], [["ab.x", "a.x"], ["a.x", "ab.x"]])
+    assert pairs(out["breaches"]) == [("a", "ab"), ("ab", "a")]
+
+
+GAP_MODEL = [element("a", "a"), element("b", "b"), element("c", "c"), element("x"), element("x.y", "x.y")]
+
+
+def entry(a: str, b: str) -> dict:
+    return {"from": a, "to": b, "reason": "r", "close_by": None}
+
+
+def test_known_breach_exits_zero() -> None:
+    out = compare(GAP_MODEL, [], [["a", "b"]], gap=[entry("a", "b")])
+    assert out["breaches"][0]["gap"] == "known"
+    assert pairs(out["gap"]["known"]) == [("a", "b")]
+    assert out["exitCode"] == 0
+
+
+def test_new_breach_exits_one() -> None:
+    out = compare(GAP_MODEL, [], [["a", "b"], ["a", "c"]], gap=[entry("a", "b")])
+    assert pairs(out["gap"]["new"]) == [("a", "c")]
+    assert out["exitCode"] == 1
+
+
+def test_stale_entry_exits_one() -> None:
+    out = compare(GAP_MODEL, [], [], gap=[entry("a", "b")])
+    assert pairs(out["gap"]["stale"]) == [("a", "b")]
+    assert out["exitCode"] == 1
+
+
+def test_scope_decides_listing_and_exit_code() -> None:
+    outside_only = compare(GAP_MODEL, [], [["a", "b"]], scope=["x"])
+    assert outside_only["breaches"] == [] and outside_only["gap"]["new"] == []
+    assert outside_only["exitCode"] == 0
+    live = compare(GAP_MODEL, [], [["a", "x.y.z"]], scope=["x"], gap=[entry("a", "x.y")])
+    assert pairs(live["gap"]["known"]) == [("a", "x.y")]
+    assert live["gap"]["stale"] == []
+    assert live["exitCode"] == 0
+    stale_in = compare(GAP_MODEL, [], [], scope=["x"], gap=[entry("a", "x.y")])
+    assert pairs(stale_in["gap"]["stale"]) == [("a", "x.y")]
+    assert stale_in["exitCode"] == 1
+    stale_out = compare(GAP_MODEL, [], [], scope=["x"], gap=[entry("a", "b")])
+    assert stale_out["gap"]["stale"] == []
+    assert stale_out["exitCode"] == 0
+
+
+def test_hot_spots() -> None:
+    out = compare(PROTECTED, [], [], shards={"one": ["s.p"], "two": ["s.p.a"], "three": []})
+    assert [(h["element"], sorted(h["shards"])) for h in out["hotSpots"]] == [("s.p.a", ["one", "two"])]
+    assert compare(PROTECTED, [], [])["hotSpots"] == []
+
+
+def test_scope_leaves_out_known_breaches_and_not_yet_reached_outside_it() -> None:
+    out = compare(GAP_MODEL, [("a", "c"), ("a", "x.y")], [["a", "b"]], scope=["x"], gap=[entry("a", "b")])
+    assert out["breaches"] == []
+    assert out["gap"] == {"known": [], "new": [], "stale": []}
+    assert pairs(out["notYetReached"]) == [("a", "x.y")]
+    assert out["exitCode"] == 0
+
+
+def test_protected_relationship_to_one_part_allows_only_that_part() -> None:
+    elements = PROTECTED + [element("s.p.a.k", "s.p.a.k")]
+    edges = [["o.x", "s.p.b.y"], ["o.x", "s.p.a.k.z"]]
+    assert pairs(compare(elements, [("o", "s.p.a")], edges)["breaches"]) == [("o", "s.p.b")]
+
+
+def test_protected_never_allows_what_the_ordinary_rule_refuses() -> None:
+    elements = PROTECTED + [element("s.p.a.k", "s.p.a.k")]
+    edge = [["o.x", "s.p.a.y"]]
+    assert pairs(compare(elements, [("o", "s.p.a.k")], edge)["breaches"]) == [("o", "s.p.a")]
+
+
+def test_compare_at_the_limits_is_fast() -> None:
+    # 5,000 elements with code, 5,000 relationships, 1,000,000 edges between distinct modules.
+    code = (
+        f"import {{ compare }} from {json.dumps(lib_url('match.mjs'))};\n"
+        "const elements = [];\n"
+        "for (let i = 0; i < 50; i++) {\n"
+        "  elements.push({ id: `g${i}`, kind: 'container', tags: i % 2 ? ['protected'] : [], code: [`g${i}`], rules: [] });\n"
+        "  for (let j = 0; j < 99; j++) elements.push({ id: `g${i}.c${j}`, kind: 'component', tags: [], code: [`g${i}.c${j}`], rules: [] });\n"
+        "}\n"
+        "const ids = elements.map((e) => e.id);\n"
+        "const relationships = [];\n"
+        "for (let i = 0; i < 5000; i++) relationships.push({ from: ids[(i * 7) % ids.length], to: ids[(i * 13 + 5) % ids.length] });\n"
+        "const edges = [];\n"
+        "for (let i = 0; i < 1000000; i++) edges.push([`${ids[i % ids.length]}.m${i}`, `${ids[(i * 31 + 17) % ids.length]}.n${i}`]);\n"
+        "const start = Date.now();\n"
+        "compare({ elements, relationships }, edges, { separator: '.' });\n"
+        "process.stdout.write(String(Date.now() - start));\n"
+    )
+    proc = run_module(code)
+    assert proc.returncode == 0, proc.stderr
+    assert int(proc.stdout) < 15000

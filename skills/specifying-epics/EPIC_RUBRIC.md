@@ -8,8 +8,8 @@ strictness_level: "absolute"
 
 # Epic Grading Rubric
 
-Every epic spec must pass every item below before work item decomposition and
-`specifying-work-items` begin.
+Every epic spec must pass every item below before the handoff to
+`defining-architecture` begins.
 
 ## 1. Scope and Sharding
 
@@ -76,11 +76,15 @@ Every epic spec must pass every item below before work item decomposition and
 - [ ] Has the Greenfield Exception been explicitly stated if this epic introduces a
       net-new data or access surface with no prior constraints?
 
-## 9. Work Item Breakdown
+## 9. Capabilities
 
-- [ ] Does the proposed breakdown decompose the epic into product-level work items (not
-      technical tasks)?
-- [ ] Is each proposed work item independently understandable without reading the others?
+- [ ] Does each capability name the business rules and ACs it owns, the value it brings
+      (the success metric or MVP criterion it moves), its MoSCoW, its known product risks
+      and its product dependencies on other capabilities?
+- [ ] Is every epic AC in exactly one capability?
+- [ ] Is no capability a technical task or a stage of delivery, and is none sized to a spec
+      session?
+- [ ] Is each capability independently understandable without reading the others?
 
 ## 10. Future Work
 

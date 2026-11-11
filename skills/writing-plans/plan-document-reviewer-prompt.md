@@ -74,6 +74,16 @@ Task tool (general-purpose):
     - Does any row use a replacement rule ("update every caller") instead of an edit?
     - Does any fixture or default change meaning without a row?
 
+    **5b. Planned dependencies** (only where the evidence says the repository has an
+    architecture model)
+    - Does the **Planned dependencies** list name every new module-to-module dependency
+      the tasks add, or say `none`? Read the tasks' code for imports the list misses.
+    - Does every end of every planned dependency map to a model element, or is it listed
+      as outside the repository and not checked?
+    - Does the `check` output on the planned copy show any breach that is not in the
+      known gap? If so, reject as PLAN DRIFT. The plan may not add a known-gap entry or
+      edit the model.
+
     **6. Every commit green**
     - Does each task list the callers that move with it, and does its verification
       run those callers' tests?

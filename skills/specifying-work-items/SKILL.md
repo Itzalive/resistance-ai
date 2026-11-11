@@ -37,6 +37,9 @@ If the work item is part of an epic whose product scope has not yet been defined
 use `specifying-epics` first to establish the product-level requirements, then return
 here for architecture and design.
 
+If the work item belongs to a feature that has no approved feature design, use
+`specifying-features` first (see `## Shard of a feature`).
+
 Do not use this as a shortcut around repository inspection, review, or user approval.
 
 ## Quick Reference
@@ -335,10 +338,52 @@ This includes:
 
 ---
 
+## Shard of a feature
+
+A work item is a **shard of a feature** when an approved feature design names it in its
+shard map. Find this from the work item (it names its feature) or from the caller.
+
+| The work item… | Then |
+|---|---|
+| names a feature whose design has `[FEATURE-APPROVED]` and lists it | It is a shard. The rules below apply. |
+| names a feature (a row on a feature map, or its epic took the one-feature path: `[EPIC-APPROVED]`, no feature map, and the item belongs to that epic) with no approved design, or a design that does not list it | Stop. Go to `specifying-features`. |
+| names no feature | It is not a shard. |
+
+**For a shard:**
+
+- **Read first:** its entry in the feature design's shard map (its `AC-F`s, its place in
+  the order, any shard 0 decision that applies to it), the feature's answered questions,
+  and the architecture model: the elements the shard touches, their allowed
+  relationships, and the cross-cutting decisions that bind them.
+- **`## Assumptions surface`** names those elements and says, for each new dependency the
+  shard needs, whether the model allows it.
+- **Do not re-decide** architecture, the shard's scope or an answered question. The spec
+  stays inside the shard's `AC-F`s.
+- **A needed model change** (a dependency the model does not allow, a changed decision)
+  stops the spec. Write a diff request (what to change and why), hand it to
+  `defining-architecture`, and resume after `[ARCH-APPROVED]`.
+- **A needed change to the shard map or to another shard** goes to `specifying-features`
+  as a reshard.
+
+**Not a shard, but the repository has an architecture model:** `## Assumptions surface`
+still names the elements the work item touches, and a dependency the model does not allow
+goes to `defining-architecture` the same way.
+
+A repository has an architecture model when its model folder (`docs/architecture` unless
+the overlay `ARCHITECTURE_DESIGN.md` names another) holds a `.c4` file other than `c4.c4`.
+With no model, skip only the model parts of this section (reading the model, naming
+elements, checking dependencies against it); the shard table and the other shard rules
+still apply.
+
+---
+
 ## Spec sharding and refactor isolation
 
 Before writing the spec body, evaluate whether this request describes multiple
 independent subsystems or mixes a refactor with a feature.
+
+**For a shard of a feature**, a fired trigger below is a reshard: stop and take the split
+to `specifying-features`. Do not create parent or child work items here.
 
 **Sharding trigger conditions:**
 
@@ -418,6 +463,7 @@ adversarial scrutiny before proceeding.
 |---|---|
 | "This is obviously simple" | Simplicity framing suppresses assumption hunting. |
 | "Just wire it up" | Implies the architecture is already decided; skips design. |
+| "Just import it, we'll update the diagram later" | Adds a dependency the model doesn't allow. A model change goes to `defining-architecture` first. |
 | "This already exists, just expose it" | Asserts a claim that must be verified. |
 | "We don't need a threat model for this" | CIA is mandatory. Always. |
 | "Skip the work item sync, the conversation is the source of truth" | Conversation scope is ephemeral. Work item is canonical. |

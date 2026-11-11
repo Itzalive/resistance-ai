@@ -10,8 +10,8 @@ description: "Use when a feature, initiative, or capability needs product-level 
 This skill surfaces the product problem space at the epic level before architecture begins.
 It does not produce implementation decisions, threat models, or code references. It
 produces a product artifact that a product manager, designer, or engineer can read to
-understand exactly who is affected, what they need, what success looks like, and how the
-epic decomposes into work items.
+understand exactly who is affected, what they need, what success looks like, and which
+capabilities the epic is made of.
 
 **Role:** You are a product-focused collaborator, not an interrogator. Your job is to get
 what is stuck in the user's head onto the table — through conversation, not cross-examination.
@@ -40,9 +40,8 @@ Use this skill when:
 - a piece of work needs product scope to be bounded and agreed before involving an architect
 - the ask is at the epic or initiative level rather than at the individual work item level
 
-After `[EPIC-APPROVED]`, decompose the epic into individual work items. Each work item
-with meaningful technical complexity then proceeds through `specifying-work-items` for
-architecture and design.
+After `[EPIC-APPROVED]`, the epic goes to `defining-architecture` and then
+`planning-features` (see `## Handoff`). This skill does not break the epic into work items.
 
 Do not use this skill to produce architecture decisions. It ends at the product boundary.
 
@@ -66,7 +65,7 @@ Do not use this skill to produce architecture decisions. It ends at the product 
 6. After a written epic spec exists, load `review-workflow.md`. Run self-review and
    independent audit, record each outcome in `.review_log.jsonl` using
    `../shared/review-log-jsonl.md`, and treat `[EPIC-APPROVED]` as the only valid
-   transition into work item decomposition and `specifying-work-items`.
+   transition into the handoff.
 7. Sync the source-of-truth epic before handing off.
 
 ---
@@ -100,7 +99,7 @@ Before the epic body, return only `## Assumptions surface` plus blockers or bloc
 questions.
 
 Do not emit downstream sections such as user stories, business rules, acceptance
-criteria, or work item breakdown before the first approved section.
+criteria, or capabilities before the first approved section.
 
 ## Core Premise
 
@@ -116,12 +115,13 @@ conversation first — then interrogate the assumptions that remain.
 4. Assumption hunting before drafting. Every implicit assumption is named before the spec is written.
 5. Scope is a constraint, not a target. The epic defines the minimum verifiable value, not everything that could be built.
 6. Blocking constraints block. A business rule without a clear owner or verification path is a blocker, not advice.
-7. Product gate. Only epic specs with `APPROVED - INDEPENDENT AUDIT` may proceed to work item decomposition and `specifying-work-items`. No exceptions.
+7. Product gate. Only epic specs with `APPROVED - INDEPENDENT AUDIT` may proceed to the handoff. No exceptions.
 
 <HARD-GATE>
-Do NOT decompose this epic into work items, invoke specifying-work-items, writing-plans,
-or take any implementation action until the epic spec exists and has passed its audit gate
-with [EPIC-APPROVED]. This applies regardless of perceived simplicity.
+Do NOT invoke defining-architecture, planning-features, specifying-features,
+specifying-work-items or writing-plans, or take any implementation action, until the epic
+spec exists and has passed its audit gate with [EPIC-APPROVED]. This applies regardless of
+perceived simplicity.
 </HARD-GATE>
 
 ---
@@ -144,7 +144,7 @@ instead. If the scope is uncertain, use this skill first.
 5. Evaluate whether the epic should be split before drafting.
 6. Present epic spec sections one at a time. **CRITICAL:** Halt after each section. Do not generate the next until the user explicitly approves.
 7. Write the epic spec using `## Writing the Epic Body` and `## Deliverable Artifact`.
-8. Load `review-workflow.md`, complete review and audit loop. Do not invoke work item decomposition until `APPROVED - INDEPENDENT AUDIT`.
+8. Load `review-workflow.md`, complete review and audit loop. Do not start the handoff until `APPROVED - INDEPENDENT AUDIT`.
 
 ---
 
@@ -195,8 +195,8 @@ digraph specifying_epics {
     "User review" -> "Revise (post-review)" [label="changes requested"];
     "User review" -> "Checklist Retrospective" [label="approved"];
     "Checklist Retrospective" -> "Sync source-of-truth epic";
-    "Sync source-of-truth epic" -> "Decompose into work items";
-    "Decompose into work items" -> "specifying-work-items (per item)";
+    "Sync source-of-truth epic" -> "defining-architecture";
+    "defining-architecture" -> "planning-features";
 }
 ```
 
@@ -204,7 +204,7 @@ digraph specifying_epics {
 
 ## Deliverable Artifact and Workflow Obligations
 
-Every epic spec workflow must establish the following before work item decomposition:
+Every epic spec workflow must establish the following before the handoff:
 
 **Deliverable artifact must contain:**
 
@@ -243,9 +243,20 @@ Every epic spec workflow must establish the following before work item decomposi
     technical mitigations.
 12. **Future work (Downstream Product Cost)** — anticipated follow-on epics, user
     expectations this will create, and product debt this introduces.
-13. **Proposed work item breakdown** — a suggested decomposition into individual work items,
-    each small enough for one `specifying-work-items` session. Product-level decomposition;
-    architecture will further refine it.
+13. **Capabilities** — the epic broken down into units of meaning, not of delivery. Each
+    capability has:
+    - a name;
+    - the business rules and acceptance criteria it owns (every epic AC in exactly one
+      capability);
+    - the value it brings: the success metric or MVP criterion it moves;
+    - its MoSCoW;
+    - its known product risks;
+    - its product dependencies on other capabilities.
+
+    No technical tasks, no delivery order, and no sizing to one `specifying-work-items`
+    session: features are formed in `planning-features` and shards in `specifying-features`.
+    The epic may state a **product value order**; `planning-features` treats it as the value
+    input, not as the feature order.
 14. **Threat surface (CIA — product level)** — see `## Product-Level CIA Threat Surface`.
 
 **Workflow must record / enforce:**
@@ -259,14 +270,17 @@ Every epic spec workflow must establish the following before work item decomposi
    alternatives rejected and why. This is the memory of the session for future epics that
    build on this one.
 4. **Source-of-truth sync completion** — the epic work item is updated using the
-   append-only procedure before work item decomposition begins.
+   append-only procedure before the handoff begins.
 5. **Review and audit gate completion** — self-review, independent audit, user approval,
    and required logging must all complete before handoff.
 
 **This epic spec must NOT contain:**
 
 - Implementation details, code references, or file paths
-- Architecture decisions (those belong in `specifying-work-items`)
+- Architecture decisions (those belong in `defining-architecture` across the epic, or
+  `specifying-work-items` inside one item)
+- Technical tasks, delivery stages or a feature order (features are formed in
+  `planning-features`)
 - Repository verification or code-level security patterns (those belong in
   `specifying-work-items`)
 - Performance, deployment, or infrastructure constraints (those belong in
@@ -282,7 +296,8 @@ understand, it does not belong in the epic body.
 This section is mandatory in every epic spec. Its purpose is to surface confidentiality,
 integrity, and availability concerns at the product and business level — before
 architecture is chosen. The mechanisms that address these concerns belong in
-`specifying-work-items`, not here.
+`defining-architecture` (across the epic) and `specifying-work-items` (inside one item),
+not here.
 
 **The question at each pillar is not "how will we protect this?" — it is "what is the
 risk and who does it affect?"**
@@ -290,7 +305,7 @@ risk and who does it affect?"**
 Load `EPIC_STANDARDS.md` for the full framing of what belongs at epic vs. work-item level
 for each pillar.
 
-| Epic level (here) | Work item level (`specifying-work-items`) |
+| Epic level (here) | Later stages (`defining-architecture`, `specifying-work-items`) |
 |---|---|
 | Who can see this data? What categories? | Which auth mechanism enforces this? (grep-confirmed) |
 | What happens if this input is wrong or corrupted? | What sanitisation and validation intercept it? |
@@ -314,7 +329,7 @@ value streams or mixes a policy change with a new capability.
 - The epic delivers value to ≥2 independent user groups with different success metrics.
 - The epic combines a product policy change with a net-new capability.
 - Any one part of the epic cannot be shipped, measured, or reverted independently.
-- The proposed work item breakdown exceeds what a single team can reasonably own.
+- The capabilities exceed what a single team can reasonably own.
 
 **If sharding is required:**
 
@@ -342,7 +357,7 @@ from the epic without updating it is producing orphaned scope.
 Load `review-workflow.md` after a written epic spec exists. Do not load review or audit
 companions for first-turn gate decisions.
 
-An epic spec may not proceed to work item decomposition or `specifying-work-items` until:
+An epic spec may not proceed to the handoff until:
 - self-review passes
 - independent audit returns `APPROVED - INDEPENDENT AUDIT`
 - user approves the written spec with `[EPIC-APPROVED]`
@@ -352,15 +367,19 @@ An epic spec may not proceed to work item decomposition or `specifying-work-item
 
 ## Handoff
 
-After `[EPIC-APPROVED]` and source-of-truth sync, decompose the epic into individual work
-items using the proposed breakdown as a starting point. For each work item:
+After `[EPIC-APPROVED]` and source-of-truth sync, hand the epic to
+`defining-architecture`, which decides the architecture across the whole epic (or logs the
+owner's waiver). From there:
 
-- If the work item has meaningful technical complexity (auth, data models, integrations,
-  security surface, or novel architecture), invoke `specifying-work-items`.
-- If the work item is straightforward with no meaningful technical design needed, proceed
-  directly to `writing-plans`.
+- `planning-features` forms and orders the features from the capabilities;
+- an epic the owner agrees ships as one feature skips `planning-features` and goes to
+  `specifying-features`.
 
-Do not make the complexity judgment unilaterally. Discuss it with the user.
+This skill does not break the epic into work items, and never hands a capability straight
+to `specifying-work-items` or `writing-plans`. Work items (shards) are specified one at a
+time, inside a feature, after `specifying-features`.
+
+Do not make the one-feature judgment unilaterally. Discuss it with the user.
 
 ---
 
@@ -392,8 +411,9 @@ reusable — they must apply across epics, not just to the one that surfaced the
 | "The acceptance criteria are obvious" | Obvious criteria are the ones that have never been written down. Write them. |
 | "We don't need a threat model for this" | CIA at product level is mandatory. Scope is not a bypass condition. Mechanism is left to architecture; the concern and its business rules are not. |
 | "Security is an engineering concern" | Data sensitivity, permitted access, and acceptable degradation are product decisions. Architecture cannot make them silently on your behalf. |
-| "We'll sort out the work item breakdown in the sprint" | Decomposition is a product decision. Leaving it to sprint planning hides scope risk. |
-| "Let's add a technical approach section" | Technical direction belongs in specifying-work-items, not in the product spec. |
+| "We'll sort out the capabilities in the sprint" | Which capabilities the epic has, and what each is worth, is a product decision. Leaving it to sprint planning hides scope risk. |
+| "Let's list them in the order we'll build them" | Delivery order is decided in planning-features, from value, cost and open questions. A capability is a unit of meaning, not a stage. |
+| "Let's add a technical approach section" | Technical direction belongs in defining-architecture and specifying-work-items, not in the product spec. |
 | "The NFRs are: API response < 200ms, 99.999% uptime" | Specific engineering targets are architecture decisions. The product-level statement is the contractual or user-experience obligation — e.g. "SLA requires 99.9% availability" or "users must not experience perceptible lag during checkout". Engineering targets come later. |
 
 ---
@@ -409,8 +429,9 @@ reusable — they must apply across epics, not just to the one that surfaced the
 - Moving to architecture before product ambiguities are resolved.
 - Stating success metrics as features ("users can export data") rather than outcomes
   ("export adoption reaches X% within 30 days of launch").
-- Producing a work item breakdown that is really a technical task list rather than a
-  product decomposition.
+- Producing a capability list that is really a technical task list or a delivery plan
+  rather than a product breakdown.
+- Leaving an acceptance criterion in no capability, or in two.
 
 ---
 
@@ -423,4 +444,5 @@ reusable — they must apply across epics, not just to the one that surfaced the
 | "The business rules are obvious from context." | Obvious rules are the ones most often violated in implementation. Write them. |
 | "We can sort out product edge cases in specifying-work-items." | Architecture cannot invent product rules. Product rules must exist before architecture begins. |
 | "[EPIC-APPROVED] is just a formality here." | The gate exists precisely because every spec looks complete to the person who wrote it. |
-| "The work item breakdown is an engineering decision." | Decomposition determines what gets built first and what gets cut. That is a product decision. |
+| "The capabilities are an engineering decision." | The capabilities and their value decide what can be staged and what can be cut. That is a product decision. |
+| "Each capability should fit one spec session." | Sizing work is not this skill's job. Features are formed in planning-features and shards in specifying-features. |

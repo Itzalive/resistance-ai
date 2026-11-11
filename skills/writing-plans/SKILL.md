@@ -169,6 +169,52 @@ Rules:
 - If the sweep finds nothing, keep the table with one line saying what was searched
   and that nothing was found.
 
+## Planned dependencies
+
+This section applies only where the repository has an architecture model: its model
+folder (`docs/architecture` unless the overlay `ARCHITECTURE_DESIGN.md` names another)
+holds a `.c4` file other than `c4.c4`. With no model, skip it.
+
+After the sweep table, list every **new** module-to-module dependency the tasks add:
+from, to, and the task that adds it; or `none`. A dependency is new when its edge is not
+in the dependency file the overlay's `deps-command` writes today. Write module names as
+that file writes them.
+
+```markdown
+## Planned dependencies
+
+| From | To | Task |
+|---|---|---|
+| `shop.reporting.daily` | `shop.events.reader` | 3 |
+```
+
+Then check the plan against the model (the overlay keys and the tool's flags are in
+`defining-architecture`'s `ARCH_STANDARDS.md`):
+
+1. Run the overlay's `deps-command`.
+2. Map each end of each planned dependency onto a model element, by the longest `code`
+   prefix in `export`'s output. `check` reports no breach for an edge whose source or
+   target maps to no element (an unmapped source is only listed under "Unmapped code"),
+   so this step is what catches a dependency on unmodelled code.
+   - An end that is a repository module (a source in the dependency file, or a module
+     the plan creates) and maps to no element **stops the plan**: write a diff request
+     and hand it to `defining-architecture`.
+   - An end outside the repository (a standard library or third-party package with no
+     element) is listed as not checked.
+3. Write a copy of the dependency file with the planned dependencies added as edges,
+   named as `<deps-file>` with `.planned.json` in place of `.json`, beside the
+   dependency file. Do not commit it.
+4. Run `check` with `--deps` set to the copy, put the output in the alignment check's
+   evidence, and delete the copy.
+
+Reading the result:
+- **A breach that is not in the known gap rejects the plan.** Change the plan to respect
+  the model, or stop and hand a diff request to `defining-architecture`. A plan never
+  adds a known-gap entry and never edits the model.
+- **Exit 2** stops with the tool's error.
+- **A stale entry** was already stale before this plan (the copy holds today's edges
+  plus the planned ones). Note it; it is removed at finishing.
+
 ## Every commit green
 
 Each task ends in a commit with the full affected suite passing. For that:
@@ -198,7 +244,7 @@ Each task ends in a commit with the full affected suite passing. For that:
 
 **Goal:** [One sentence describing what this builds]
 
-**Architecture:** [2-3 sentences about approach]
+**Architecture:** [the architecture-model elements this plan touches, where the repository has a model; then 2-3 sentences about approach]
 
 **Tech Stack:** [Key technologies/libraries]
 
@@ -239,6 +285,7 @@ Rules:
   assumption explicitly before proceeding.
 
 After the header come, in order: the **Caller and test sweep** table, the
+**Planned dependencies** list (where the repository has an architecture model), the
 **Trust-boundary table** (when required), the **Checkpoints** table, then the tasks.
 
 ## Task Structure
@@ -551,6 +598,9 @@ Before review, physically execute shell commands to verify:
 7. **Config templates** — if new env/config values appear, update the relevant example/template file.
 8. **MCP inputSchema args** — verify tool argument names against the real schema.
 9. **Naming collisions** — confirm no existing file already serves the planned purpose.
+10. **Planned dependencies** — where the repository has an architecture model, the mapping
+    of each planned dependency onto model elements and the `check` output on the planned
+    copy (see `## Planned dependencies`).
 
 ---
 
@@ -612,6 +662,7 @@ the alignment check:
 13. **Test retention audit** — confirm every new test is marked Permanent or Temporary, and no Temporary test survives the final REFACTOR step unless it protects a deliberate contract.
 14. **Convention sync** — if planned work changes a repository-wide convention, include updates to contributor instruction files (for example
 `.github/copilot-instructions.md`, `AGENTS.md`, and `CLAUDE.md`) in the same plan.
+15. **Planned dependencies** — where the repository has an architecture model, the list matches the tasks, every end maps to an element or is listed as not checked, and the `check` output shows no new breach.
 
 Record the result with the append CLI (`--phase PLAN_SELF_REVIEW`, `--independence self`).
 
@@ -657,6 +708,9 @@ The reviewer must confirm:
 - **Reality:** file paths, signatures and commands match the repository evidence.
 - **Decisions and trust:** no decision is made in the plan; the trust-boundary table
   is present and complete when it applies.
+- **Architecture** (where the repository has a model): the planned dependencies list
+  matches what the tasks add, and the `check` output on the planned copy shows no breach
+  outside the known gap. A new breach is `[REJECTED - PLAN DRIFT]`.
 
 **Decision logic:** Do not proceed to execution until `[APPROVED]` is reached.
 - `[APPROVED - READY FOR EXECUTION]` — complete, and every task meets the per-task rule.
