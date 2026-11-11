@@ -54,6 +54,11 @@ should block planning.
   synchronization, projection, event-driven, or state-driven work, that means
   the main body names the source, target, trigger, mapping rules, state rules,
   and replay/retry/failure behavior.
+- Verify every term that a rule, gate or acceptance criterion depends on is defined
+  once, in terms an agent can apply to the repository (a path, a prefix, a count, a
+  state). For each such term, test its edge cases against the definition: empty,
+  overlapping, and outside the scope. A term whose edge case the definition does not
+  settle is a rejection.
 - Grade the spec against every checkbox in `SPEC_RUBRIC.md`.
 
 ## Audit and workflow prerequisites

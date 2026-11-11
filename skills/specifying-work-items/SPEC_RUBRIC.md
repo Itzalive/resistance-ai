@@ -52,6 +52,9 @@ Every spec must pass every item below before planning.
 - [ ] Does the spec preserve enough detail for RED tests to be written mechanically?
 - [ ] Are abstract terms unpacked immediately with concrete meaning instead of
       standing in for missing mechanics?
+- [ ] Is every term that a rule, gate or acceptance criterion depends on defined once, in
+      terms an agent can apply to the repository (a path, a prefix, a count, a state),
+      including its edge cases: empty, overlapping, and outside the scope?
 
 ## 5. Constraint integrity
 

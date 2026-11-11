@@ -54,6 +54,31 @@ python <skills-dir>/shared/scripts/review-log.py run-record --from <run-record.j
 If the CLI rejects the record (exit code 2), fix the field it names and rerun. Do not
 present options until the record is written.
 
+Continue to Step 1c.
+
+### Step 1c: Architecture Check
+
+Only where the repository has an architecture model: its model folder (`docs/architecture`
+unless the overlay `ARCHITECTURE_DESIGN.md` names another) holds a `.c4` file other than
+`c4.c4`. With no model, skip this step.
+
+Run the overlay's `deps-command`, then `check` on the whole model:
+
+```bash
+node <skills-dir>/shared/scripts/architecture-delta.mjs check --repo . --model <model> --deps <deps-file> --separator <separator>
+```
+
+- **A new breach blocks merging.** Do not offer Option 1 or Option 2 until the breach is
+  fixed in code, or the model is amended through `defining-architecture` (hand it a diff
+  request: what to change and why). Never add a known-gap entry here. Options 3 and 4 stay
+  available; show the breach with them.
+- **A stale gap entry is removed in this branch.** It means this branch fixed the breach,
+  or an earlier branch did and finished without this check. Remove the entry from
+  `<model>/known-gap.json`, change nothing else in the model folder, commit, and re-run
+  `check`: it must exit 0. List each removed entry when you present the options, and in
+  the PR body when one is made.
+- **Exit 2** blocks Options 1 and 2 with the tool's error.
+
 Continue to Step 2.
 
 ### Step 2: Determine Base Branch
@@ -67,7 +92,7 @@ Or ask: "This branch split from main - is that correct?"
 
 ### Step 3: Present Options
 
-Present exactly these 4 options:
+Present exactly these 4 options (only Options 3 and 4 while Step 1c blocks merging):
 
 ```
 Implementation complete. What would you like to do?
@@ -200,13 +225,16 @@ git worktree remove <worktree-path>
 **Never:**
 - Proceed with failing tests
 - Merge without verifying tests on result
+- Offer merge or a PR while the architecture check reports a new breach
+- Add a known-gap entry to get a branch through
 - Delete work without confirmation
 - Force-push without explicit request
 
 **Always:**
 - Verify tests before offering options
 - Write the run record before offering options when a plan was executed
-- Present exactly 4 options
+- Run the architecture check before offering options, where the repository has a model
+- Present exactly 4 options (Options 1 and 2 are withheld while the architecture check blocks them)
 - Get typed confirmation for Option 4
 - Clean up worktree for Options 1 & 4 only
 

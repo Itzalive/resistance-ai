@@ -25,7 +25,7 @@ This skill designs one feature before any of its shards is specified. It writes 
 
 ## Ownership
 
-This skill owns the feature design; its own feature's state, actual cost and question answers on the map; and removing stale known-gap entries at close. It never changes the epic, the rest of the model, code, other features' rows or any shard spec.
+This skill owns the feature design; its own feature's state, actual cost and question answers on the map; and removing any still-stale known-gap entries at close. It never changes the epic, the rest of the model, code, other features' rows or any shard spec.
 
 ## Files and tools
 

@@ -27,6 +27,14 @@ git diff --stat {BASE_SHA}..{HEAD_SHA}
 git diff {BASE_SHA}..{HEAD_SHA}
 ```
 
+## Architecture Check
+
+{ARCH_CHECK_OUTPUT}
+
+A breach listed under "New breaches" is a Critical issue. It is fixed in code or the merge
+waits for the model to be amended; adding a known-gap entry in this branch is not a fix.
+A stale gap entry is not an issue.
+
 ## Review Checklist
 
 **Code Quality:**
