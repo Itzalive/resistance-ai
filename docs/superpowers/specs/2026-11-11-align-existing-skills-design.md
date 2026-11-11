@@ -48,13 +48,16 @@ The epic no longer decomposes itself into work items and never hands a capabilit
 `specifying-work-items` or `writing-plans`.
 
 **Where architecture belongs.** The epic stays product-only. Architecture decisions belong to
-`defining-architecture` (across the epic) or `specifying-work-items` (inside one item).
+`defining-architecture` (across the epic) or `specifying-work-items` (inside one item). The
+"Product-Level CIA Threat Surface" section (its prose and the right-hand column of its table) and
+`EPIC_STANDARDS.md` section 7 say so too: the mechanism that answers a CIA concern is chosen in
+those two later stages, not only in `specifying-work-items`.
 
 **Every mention follows.** The Overview, When to Use, Quick Reference, Initial Gate, hard rule 7,
 the hard gate, the Checklist, the Process Flow (its last two steps become the handoff above), the
 Deliverable intro and must-not list, the sharding trigger (it fires when the capabilities exceed
 what one team can own), Source-of-Truth Sync, the Review and Audit Gate, the Handoff section, the
-red flags, common mistakes and rationalizations, `review-workflow.md`, and the manifest and rubric
+CIA section, the red flags, common mistakes and rationalizations, `review-workflow.md`, and the manifest and rubric
 checks all speak of capabilities and the handoff, not a work item breakdown. Red flags and
 rationalizations about the breakdown are reworded for capabilities: the capability list is a
 product decision, it is not a technical task list, and it is not a delivery plan.
@@ -70,9 +73,16 @@ rewritten. `defining-architecture` already reads such an epic through its MoSCoW
 
 ## specifying-work-items: a shard reads the feature design and the model
 
-**When the work item is a shard of a feature:**
-- **Gate:** the feature design has `[FEATURE-APPROVED]`. With none, the run stops and goes to
-  `specifying-features`.
+**A work item is a shard of a feature** when an approved feature design names it in its shard
+map. The agent finds this from the work item (it names its feature) or from the caller. Three
+cases follow:
+- the work item names a feature and that feature's design has `[FEATURE-APPROVED]` and lists it:
+  it is a shard, and the rules below apply;
+- the work item names a feature (it has a row on a feature map) but there is no approved design,
+  or the design's shard map does not list it: the run stops and goes to `specifying-features`;
+- the work item names no feature: it is not a shard.
+
+**When the work item is a shard:**
 - **Reads:** the shard's entry in the feature design's shard map (its `AC-F`s, its place in the
   order, any shard 0 decision that applies to it), the feature's answered questions, and the
   model: the elements the shard touches, their allowed relationships, and the cross-cutting
@@ -85,7 +95,9 @@ rewritten. `defining-architecture` already reads such an epic through its MoSCoW
   spec. The run writes a diff request (what to change and why) and hands it to
   `defining-architecture`; the spec resumes after `[ARCH-APPROVED]`.
 - **A needed change to the shard map or to another shard** goes to `specifying-features` as a
-  reshard.
+  reshard. This includes the skill's own sharding triggers: when one fires for a shard (two
+  independent subsystems, or a refactor mixed with a behaviour change), the split is a reshard
+  decided in `specifying-features`, and no parent or child work items are created here.
 
 **When the work item is not a shard** but the repository has a model, the Assumptions surface
 still names the elements it touches, and a dependency the model does not allow goes to
@@ -98,60 +110,94 @@ still names the elements it touches, and a dependency the model does not allow g
 depends on is defined once, in terms an agent can apply to the repository (a path, a prefix, a
 count, a state), including its edge cases: empty, overlapping, and outside the scope.
 
-The refactor-isolation rule and everything else in the skill are unchanged.
+The refactor-isolation rule is unchanged, and for a work item that is not a shard the sharding
+procedure is unchanged.
 
 ## writing-plans: model elements and planned dependencies
 
 - **Header.** The plan's Architecture line names the model elements the plan touches, then the
   approach.
 - **Planned dependencies.** After the caller and test sweep, the plan lists every new
-  module-to-module dependency its tasks add: from, to, and the task that adds it; or `none`.
-  Module names are written as the repository's dependency file writes them.
-- **The delta check on the plan.** Pre-plan verification runs the overlay's `deps-command`, writes a
-  copy of the dependency file with the planned dependencies added as edges (beside the dependency
-  file, not committed), and runs `check` with `--deps` set to the copy. The output goes in the
-  alignment check's evidence.
+  module-to-module dependency its tasks add: from, to, and the task that adds it; or `none`. A
+  dependency is new when its edge is not in the dependency file `deps-command` writes today.
+  Module names are written as that file writes them.
+- **The delta check on the plan.** Pre-plan verification:
+  1. runs the overlay's `deps-command`;
+  2. maps each end of each planned dependency onto a model element, by the longest `code` prefix
+     in `export`'s output. `check` reports nothing for an edge whose source or target maps to no
+     element, so this step is what catches a dependency on unmodelled code. An end that is a
+     repository module (a source in the dependency file, or a module the plan creates) and maps
+     to no element stops the plan, and a diff request goes to `defining-architecture`. An end
+     outside the repository (a standard library or third-party package with no element) is listed
+     as not checked;
+  3. writes a copy of the dependency file with the planned dependencies added as edges, named
+     `<deps-file>` with `.planned.json` in place of `.json`, beside the dependency file and not
+     committed;
+  4. runs `check` with `--deps` set to the copy, puts the output in the alignment check's
+     evidence, and deletes the copy.
   - A breach that is not in the known gap rejects the plan. The plan is changed to respect the
     model, or the work stops and a diff request goes to `defining-architecture`. A plan never adds
     a known-gap entry and never edits the model.
   - Exit 2 stops with the tool's error.
-  - A stale entry in this output is expected when the branch will fix a breach; it is noted and
-    handled at finishing.
+  - A stale entry in this output was already stale before this plan (the copy holds today's
+    edges plus the planned ones). It is noted, and removed at finishing.
 - **Self-review and alignment check** each gain one item: the planned dependencies list matches the
   tasks, and the `check` output shows no new breach.
 
 ## requesting-code-review and finishing-a-development-branch: the delta before merge
 
-**requesting-code-review.** Before a review that precedes a merge, the requester runs
-`deps-command` and `check` on the branch and gives the reviewer the output. A breach not in the
-known gap is a Critical issue: it is fixed in code, or the merge waits for a diff request to
-`defining-architecture`. It is never resolved by adding a gap entry in the branch.
+**requesting-code-review.** Before the whole-branch review at plan end and before any review that
+precedes a merge (not before per-task or batch reviews), the requester runs `deps-command` and
+`check` on the branch and gives the reviewer the output.
+- A breach not in the known gap is a Critical issue: it is fixed in code, or the merge waits for
+  a diff request to `defining-architecture`. It is never resolved by adding a gap entry in the
+  branch.
+- Exit 2 stops the request with the tool's error.
+- A stale entry is noted for finishing and is not an issue.
 
-**finishing-a-development-branch** gains an architecture check after the tests pass and before
-the options are presented:
+**finishing-a-development-branch** gains a named step, "Architecture check", after the run record
+(its Step 1b) and before the base branch is determined:
 - `deps-command`, then `check` on the whole model.
-- **A new breach blocks finishing.** The options are not presented until it is fixed in code or
-  the model is amended through `defining-architecture`.
-- **A stale gap entry is removed in this branch.** A stale entry means this branch fixed the
-  breach. The entry is removed from `known-gap.json`, committed, and listed in the summary (and the
-  PR body when one is made). `check` is re-run and must exit 0.
-- Exit 2 blocks finishing with the tool's error.
+- **A new breach blocks merging.** Option 1 (merge locally) and option 2 (push and create a PR)
+  are not offered until the breach is fixed in code or the model is amended through
+  `defining-architecture`. Option 3 (keep as is) and option 4 (discard) stay available, and the
+  breach is shown with them.
+- **A stale gap entry is removed in this branch.** It means this branch fixed the breach, or an
+  earlier branch did and finished without this check. The entry is removed from `known-gap.json`,
+  committed, and listed in the summary (and the PR body when one is made). `check` is re-run and
+  must exit 0.
+- Exit 2 blocks options 1 and 2 with the tool's error.
 
 **Ownership of stale entries** changes to match. The branch that fixes a breach removes its entry
-at finishing. `specifying-features`' close run still runs `check` on the whole model and removes
-any entry still stale, as a safety net, and its Close record lists the entries removed during the
-feature, by shards and by the close. One sentence changes in each of
-`skills/defining-architecture/SKILL.md` (Ownership), `skills/specifying-features/SKILL.md`
-(Ownership) and `skills/specifying-features/close-run.md`. A stale entry found in scope by a
-feature design run still stops that run and goes to `defining-architecture`, since it means a
-branch finished without the check.
+at finishing. The Ownership sentences of `skills/defining-architecture/SKILL.md` and
+`skills/specifying-features/SKILL.md` say so. A stale entry found in scope by a feature design run
+still stops that run and goes to `defining-architecture`, since it means a branch finished without
+the check.
+
+**The close run** (`skills/specifying-features/close-run.md`, its steps 2 and 3 and its first
+rule) changes with it:
+- it still runs `check` on the whole model and removes any entry the tool reports stale, as a
+  safety net;
+- a gap entry counts as **closed** when it is absent from `known-gap.json` and `check` reports no
+  breach for its pair. "The shards have merged" is still not evidence;
+- the Close record lists the entries closed during the feature, whoever removed them. The source
+  is the `git log` of `known-gap.json` since the design's `[FEATURE-APPROVED]`, plus this run's
+  own removals;
+- an entry the map says this feature closes that is still in the file, or whose pair `check`
+  still reports, is recorded as not closed.
+
+**Who may ask for a model change.** `defining-architecture`'s "When to Use" names the later stages
+that may bring a diff request. `writing-plans`, the code review before merge and
+`finishing-a-development-branch` are added to that list.
 
 ## using-resistance-engine and README
 
 - `using-resistance-engine` gains a short section giving the flow above, the two short paths, and
   which skill to start from: epic-sized or unclear scope starts at `specifying-epics`; one clear
-  work item starts at `specifying-work-items`. It stays short, since it loads in every
-  conversation.
+  work item starts at `specifying-work-items`. Its "Skill Priority" example gains the epic-sized
+  case. Its "The Rule" diagram, which sends unspecified work to `specifying-work-items` before
+  plan mode, is unchanged: that skill already sends work with no product scope to
+  `specifying-epics`. The addition stays short, since the skill loads in every conversation.
 - The README gains a "Workflow" section with the flow, one line per stage and its approval tag,
   and a note that the delta tool needs Node.
 
@@ -174,17 +220,20 @@ and the owner's decision of 2026-11-11, with no recorded failure behind them yet
 ## Scope
 
 - `skills/specifying-epics/`: `SKILL.md`, `EPIC_REVIEW_MANIFEST.md`, `EPIC_RUBRIC.md`,
-  `review-workflow.md`. `EPIC_STANDARDS.md` changes only where it names the handoff.
+  `review-workflow.md`, and `EPIC_STANDARDS.md` section 7 (where the mechanism for a CIA concern
+  is chosen).
 - `skills/specifying-work-items/`: `SKILL.md` (a "Shard of a feature" section, the pointer in When
-  to Use, the red flag), `SPEC_RUBRIC.md` and `SPEC_REVIEW_MANIFEST.md` (the terms item).
+  to Use, one paragraph in "Spec sharding and refactor isolation", the red flag), `SPEC_RUBRIC.md`
+  and `SPEC_REVIEW_MANIFEST.md` (the terms item).
 - `skills/writing-plans/`: `SKILL.md` (header, Planned dependencies, pre-plan verification,
   self-review and alignment-check items), `plan-document-reviewer-prompt.md`,
   `alignment-check-evidence.md`.
 - `skills/requesting-code-review/`: `SKILL.md`, `code-reviewer.md` (a place for the `check`
   output).
 - `skills/finishing-a-development-branch/SKILL.md`.
-- `skills/defining-architecture/SKILL.md`, `skills/specifying-features/SKILL.md` and
-  `skills/specifying-features/close-run.md`: the stale-entry ownership sentences.
+- `skills/defining-architecture/SKILL.md` (the Ownership sentence, and the later-stage row of
+  "When to Use"), `skills/specifying-features/SKILL.md` (the Ownership sentence) and
+  `skills/specifying-features/close-run.md` (steps 2 and 3 and the first rule).
   `skills/specifying-features/SKILL.md` stays within its 1,000-word cap.
 - `skills/using-resistance-engine/SKILL.md` and `README.md`.
 - No new test. The existing suite must pass unchanged; two existing contract tests assert exact
@@ -206,7 +255,7 @@ pressure runs.
 | A5 | `specifying-epics` names the work item breakdown in its `SKILL.md`, manifest, rubric and review workflow | VERIFIED: `grep -n -i "work item\|breakdown\|decompos" skills/specifying-epics/*.md` |
 | A6 | `defining-architecture` reads an older epic through its MoSCoW scope | VERIFIED: `ARCH_STANDARDS.md`, "Must rule" |
 | A7 | Existing contract tests assert phrases only in `specifying-work-items` and `writing-plans`, plus one line of `finishing-a-development-branch` about the run record | VERIFIED: `tests/scripts/test_specifying_work_items_response_contract.py`, `test_writing_plans_contract.py`, `test_run_record_contract.py` |
-| A8 | `using-resistance-engine` and the README have no flow or skill list today | VERIFIED: read of both files |
+| A8 | `using-resistance-engine` routes unspecified work to `specifying-work-items` in "The Rule" and "Skill Priority" and names no other stage; the README has no flow or skill list | VERIFIED: read of both files |
 | A9 | The word cap on the two feature skills is enforced by a test | VERIFIED: `tests/scripts/test_feature_skills_contract.py` |
 
 ## Threat Model (CIA)
@@ -236,8 +285,9 @@ pressure runs.
   every rule in that section is present, each model or delta rule says it applies only where the
   repository has a model, and nothing contradicts `defining-architecture`, `planning-features` or
   `specifying-features`.
-- **AC-4** Given the three stale-entry sentences, when they are read together with
-  `finishing-a-development-branch`, then they agree on who removes a stale entry and when.
+- **AC-4** Given `defining-architecture`'s Ownership, `specifying-features`' Ownership and its
+  close run, when they are read together with `finishing-a-development-branch`, then they agree
+  on who removes a stale entry and when, and on what counts as an entry closed.
 
 AC-2 to AC-4 are about agent-facing text, so no automated test can verify them. They are checked
 by the final code review reading the files.
