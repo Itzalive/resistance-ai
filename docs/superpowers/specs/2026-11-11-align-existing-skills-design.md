@@ -19,8 +19,8 @@ delta tool applies **only where the repository has a model** (a model folder hol
 other than `c4.c4`). Where it has none, the step is skipped without comment and the skill behaves
 as it does today.
 
-**Ownership.** This work edits skill text and one line of ownership. It adds no skill and no tool
-behaviour. The step-file restructure of `specifying-epics` stays on #16.
+**Ownership.** This work edits skill text only, including who removes a stale gap entry and who
+may ask for a model change. It adds no skill and no tool behaviour. The step-file restructure of `specifying-epics` stays on #16.
 
 ## specifying-epics: capabilities, not work items
 
@@ -78,8 +78,10 @@ map. The agent finds this from the work item (it names its feature) or from the 
 cases follow:
 - the work item names a feature and that feature's design has `[FEATURE-APPROVED]` and lists it:
   it is a shard, and the rules below apply;
-- the work item names a feature (it has a row on a feature map) but there is no approved design,
-  or the design's shard map does not list it: the run stops and goes to `specifying-features`;
+- the work item names a feature (it has a row on a feature map, or its epic took the one-feature
+  path: `[EPIC-APPROVED]`, no feature map, and the item belongs to that epic) but there is no
+  approved design, or the design's shard map does not list it: the run stops and goes to
+  `specifying-features`;
 - the work item names no feature: it is not a shard.
 
 **When the work item is a shard:**
@@ -164,9 +166,11 @@ precedes a merge (not before per-task or batch reviews), the requester runs `dep
   breach is shown with them.
 - **A stale gap entry is removed in this branch.** It means this branch fixed the breach, or an
   earlier branch did and finished without this check. The entry is removed from `known-gap.json`,
-  committed, and listed in the summary (and the PR body when one is made). `check` is re-run and
-  must exit 0.
+  committed, and listed when the options are presented, and in the PR body when one is made.
+  `check` is re-run and must exit 0.
 - Exit 2 blocks options 1 and 2 with the tool's error.
+- The skill's two "present exactly 4 options" lines gain the exception: options 1 and 2 are
+  withheld while the architecture check blocks them.
 
 **Ownership of stale entries** changes to match. The branch that fixes a breach removes its entry
 at finishing. The Ownership sentences of `skills/defining-architecture/SKILL.md` and
@@ -182,7 +186,8 @@ rule) changes with it:
   breach for its pair. "The shards have merged" is still not evidence;
 - the Close record lists the entries closed during the feature, whoever removed them. The source
   is the `git log` of `known-gap.json` since the design's `[FEATURE-APPROVED]`, plus this run's
-  own removals;
+  own removals. Each is listed with the commit that removed it. An entry removed or re-keyed by a
+  `defining-architecture` run is not listed as closed;
 - an entry the map says this feature closes that is still in the file, or whose pair `check`
   still reports, is recorded as not closed.
 
