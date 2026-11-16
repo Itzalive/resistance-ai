@@ -78,7 +78,7 @@ These are wording changes that describe the tool. They change no step of the ski
 | Integrity | A runtime link wrongly permitting an import would hide a breach. | Rule 2 is tested directly (AC-1, AC-6). The comparison builds its permission set from relationships (`match.mjs`, `relationshipKeys`); the change filters that set to import relationships. |
 | Integrity | A misspelt kind reclassifies a relationship. | An undeclared kind fails to load: existing model-error path, exit 2 (`model.mjs`, `getErrors`). A declared misspelling is the risk stated under Risk. |
 | Integrity | LikeC4 returns a `kind` that is not a string. | The loader's existing shape check on what LikeC4 returns is extended to `kind` (`model.mjs`, `shapeError`): exit 2, `internal`. AC-11. |
-| Availability | More relationships to walk. | Runtime links are separated once at load; no new loop over modules. The model-folder limits (2,000 files, 50 MB: `walk.mjs`), the element limit (5,000: `model.mjs`) and `--timeout` are unchanged and bound the input. |
+| Availability | More relationships to walk. | The permission set is filtered once per run; no new loop over modules. The model-folder limits (2,000 files, 50 MB: `walk.mjs`), the element limit (5,000: `model.mjs`) and `--timeout` are unchanged and bound the input. |
 | Least privilege | None added. | The source test (no `child_process`, no `worker_threads`, no `fs` write) and the no-network test must pass unchanged (`tests/scripts/test_architecture_delta_safety.py`). |
 | Supply chain | None added. | No new dependency; the `likec4` pin does not move (`package.json`, `package-lock.json`). |
 
@@ -94,7 +94,6 @@ These are wording changes that describe the tool. They change no step of the ski
 - **AC-8** Given a runtime link from A to B and another from B to A, when `export` runs, then both are in `runtime` and neither is in `allowed`.
 - **AC-9** Given a declared kind of 201 ASCII letters on a runtime link, when `export` runs, then the printed `kind` is its first 199 letters followed by `…`.
 - **AC-10** Given a model with no runtime link, when `export` runs, then `runtime` is present and empty.
-
 - **AC-11** Given a LikeC4 copy that returns a relationship whose `kind` is the number 5, when `export` runs, then it exits 2 with a line starting `error: internal:`; and given one that returns a relationship with no `kind` key, when `export` runs, then that relationship is in `allowed`.
 - **AC-12** Given a model that declares a relationship kind `Uses` and joins A to B only by a relationship of that kind, and the code imports from A to B, when `check` runs, then a new breach from A to B is reported.
 
@@ -114,7 +113,7 @@ These are wording changes that describe the tool. They change no step of the ski
 |---|---|---|
 | A1 | Any relationship permits imports today, whatever its kind. | VERIFIED: delta tool spec, "Allowed"; `match.mjs` builds `relationshipKeys` from every relationship. |
 | A2 | "Not yet reached" lists any relationship whose two ends have code and no checked code edge. | VERIFIED: delta tool spec, "Reported"; `match.mjs`, `notYetReached`. |
-| A3 | LikeC4 returns each relationship's kind, and none for a relationship written without one. | VERIFIED: scratch run on likec4 1.60.0 against a model with `uses`, `http`, `push`, `calls` (kinds returned as written) and a two-element model with `a -> b` (kind `null`) and `a -[uses]-> b` (kind `uses`). |
+| A3 | LikeC4 returns each relationship's kind, and none for a relationship written without one. | VERIFIED: scratch run on likec4 1.60.0 against a model with `uses`, `http`, `push`, `calls` (kinds returned as written) and a two-element model with `a -> b` (kind `null`) and `a -[uses]-> b` (kind `uses`). A kind name with a non-ASCII letter fails to parse; a kind of more than 200 ASCII letters loads. |
 | A4 | The loader does not read the kind today, and the existing tests' LikeC4 stand-ins return relationships with no `kind` key. | VERIFIED: `model.mjs` keeps `source.id` and `target.id` only; `tests/scripts/test_architecture_delta_model.py` and `test_architecture_delta_check.py` stand-ins. This is why an absent `kind` must mean no kind. |
 | A5 | The shipped `c4.c4` declares one relationship kind, `uses`, and a model folder's copy must match it. | VERIFIED: `skills/shared/architecture/c4.c4`; `walk.mjs`, `checkSpecCopy`. |
 | A6 | `export` lists relationships under `allowed` with `format` 1. | VERIFIED: `report.mjs`, `exportJson`. |
