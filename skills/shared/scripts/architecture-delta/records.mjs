@@ -102,6 +102,7 @@ function idPass(file, add, firstSeen) {
     const elementList = name === 'contracts' ? 'bound' : 'binds';
     list(record[elementList]).forEach((item, index) => emptyElement(item, `${at}.${elementList}[${index}]`));
     if (name === 'decisions') referenceForm(record.superseded_by, `${at}.superseded_by`);
+    if (name === 'decisions') emptyElement(record.owner, `${at}.owner`);
     if (name === 'contracts') list(record.decisions).forEach((item, index) => referenceForm(item, `${at}.decisions[${index}]`));
   });
   const { data } = file;
@@ -161,6 +162,7 @@ function linkPass(file, add, elements, decisions, changes) {
       if (record.superseded_by === record.id) add(`${at}.superseded_by`, 'names its own id');
       else if (!decisions.has(record.superseded_by)) add(`${at}.superseded_by`, `${record.superseded_by} names no decision`);
     }
+    if (name === 'decisions') element(record.owner, `${at}.owner`);
   });
   if (file.kind === 'coverage') {
     list(file.data.baselined).forEach((entry, index) => {
@@ -193,6 +195,7 @@ function valuePass(file, add) {
           if (record.status !== 'superseded' && has(record, 'superseded_by')) add(`${at}.superseded_by`, 'only allowed when status is superseded');
         }
         fixed(record, 'evidence', DECISION_EVIDENCE, `${at}.evidence`);
+        if (isString(record.owner) && !has(record, 'obligations')) add(`${at}.obligations`, 'required when owner is set');
       }
       if (name === 'holes') fixed(record, 'evidence', HOLE_EVIDENCE, `${at}.evidence`);
     }

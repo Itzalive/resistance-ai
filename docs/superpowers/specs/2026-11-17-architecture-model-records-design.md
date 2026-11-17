@@ -1,10 +1,10 @@
 # Architecture model records
 
-Work item: #31, part A3a (A3 of #37). Amends `2026-11-09-architecture-delta-tool-design.md` and `2026-11-16-architecture-delta-runtime-links-design.md`.
+Work item: #31, part A3a (A3 of #37). Amended for #31 part A3c: decisions carry obligations ("Decisions, cross-cutting decisions and principles" below). Amends `2026-11-09-architecture-delta-tool-design.md` and `2026-11-16-architecture-delta-runtime-links-design.md`.
 
 ## Why
 
-A run of `defining-architecture` records decisions, open questions, shared contracts and what the run changed. Today they go into a hand-written `architecture.md` that nothing validates, so a reason can go on naming an element that no longer exists and nobody is told. Only a person can read the file reliably, and its sections are parsed by pattern when a document is generated from it (`docs/field-reports/2026-11-16-defining-architecture-first-run.md`, F2, F9, F12).
+A run of `defining-architecture` records decisions, open questions, contracts with other systems and what the run changed. Today they go into a hand-written `architecture.md` that nothing validates, so a reason can go on naming an element that no longer exists and nobody is told. Only a person can read the file reliably, and its sections are parsed by pattern when a document is generated from it (`docs/field-reports/2026-11-16-defining-architecture-first-run.md`, F2, F9, F12).
 
 ## What this work item owns
 
@@ -15,7 +15,7 @@ The data files that hold those records in the model folder, and the delta tool r
 | Path in the model folder | Holds |
 |---|---|
 | `decisions/<group>.json` | The decisions and the holes (open questions, unexplained structure, contradictions) for one subject |
-| `contracts/<group>.json` | The shared contracts for one boundary or subject |
+| `contracts/<group>.json` | The contracts for one interface with another system |
 | `changes/<date>-<name>.json` | One run: what it changed, choices not taken, its check result, its approval |
 | `coverage.json` | What a baseline covered and which modules are deliberately unmapped |
 
@@ -46,6 +46,10 @@ Every file is one JSON object. Every field below is required unless marked optio
 | `superseded_by` | the id of a decision; present exactly when `status` is `superseded` |
 | `evidence` | `checked` (against the code), `code` (stated in a code comment) or `spec` (stated in a document, not re-checked) |
 | `sources` | list of text: paths or references |
+| `owner` | optional: the element id of the part that defines it |
+| `obligations` | optional list of text, at least one: what every bound part must keep to |
+| `compatibility` | optional text: how it may change; absent means no rule is stated |
+| `capabilities` | optional list of text: the epic capabilities that depend on it |
 | `note` | optional text |
 
 | Hole field | Value |
@@ -89,6 +93,18 @@ Ids in a change file are history. They are checked for form only (rule 3 for rec
 
 **Coverage file:** `answer` (text); `baselined` (list of objects: `prefix`, text, and `run`, a change id); `edge_nodes` (list of objects: `element`, an element id, and `run`, a change id); `counts` (object: `modules` and `groups`, each a whole number of 0 or more); `unmapped` (list of objects: `module` and `reason`, both text). `run` names the change file of the run that added the entry: it equals the name, without `.json`, of a file in `changes/` that passes pass 1.
 
+## Decisions, cross-cutting decisions and principles
+
+A **contract** is the interface between this system and another: a server and its app, a public API, an event sent to an outside system. Another system holds the other side, so its compatibility rule is about versions and release order.
+
+A **decision** records why something is the way it is. All decisions share one record. A decision is **cross-cutting** exactly when it has an `obligations` field:
+
+- **A plain decision** has no `obligations`: a reason and the parts it explains (`binds`). If it changes, the parts it binds change and nothing else has to agree.
+- **A cross-cutting decision** has `obligations`, stated so every bound part can check itself against them. One that settles something several parts must agree on, such as a data format, a vocabulary or an id scheme, usually also has an `owner`, the part that defines it, and a `compatibility` rule.
+- **A principle** is a cross-cutting decision with empty `binds` and no `owner`: it binds the whole system, such as "family data stays in the UK or EU".
+
+The tool checks only the shape that follows from this: a decision with an `owner` needs `obligations` (pass 5). It does not check whether a decision should have been a contract or the other way round.
+
 ## What the tool checks
 
 `export` and `check` both read and validate the records immediately after the model has loaded, before any other input (`--deps`, the gap file, `--scope`, `--shards`) is read. When the records have any problem the command stops there with exit 2, whatever `check` would otherwise have found, and no other input is read. A plan or review never runs on a model whose records point at something that is not there. The deadline is checked after reading each record file, as it is after each input file.
@@ -100,10 +116,12 @@ The tool reads only `decisions/*.json`, `contracts/*.json`, `changes/*.json` and
 1. **Layout.** A file in `decisions/`, `contracts/` or `changes/` whose name breaks layout rule 1 or 2; a folder inside one of them; a `decisions`, `contracts` or `changes` path that is a file; a `coverage.json` that is a folder. A misnamed file is reported and not read, so its ids never enter the id space.
 2. **Shape.** (a) The file is not valid JSON, or not an object. (b) A required field is missing, a field is not in the tables, a value has the wrong type, or a list that needs at least one item has none.
 3. **Ids.** A record id that breaks layout rule 3; the same value in the `id` field of two decision, hole or contract records anywhere in the folder; a change file whose `id` is not its file name; an element id that is an empty string.
-4. **Links.** An element id in `binds`, `owner`, `bound` or `edge_nodes` that is not an element; a `superseded_by`, or an entry in a contract's `decisions`, that names no decision; `superseded_by` naming the record's own id; a coverage `run` that names no change file; the same id twice in one `binds` or `bound` list, or in a contract's `decisions` list.
-5. **Order and values.** A list not sorted by id; `superseded_by` present when `status` is not `superseded`, or missing when it is; a `status`, `evidence` or `run` value outside its list; a `date` that is not a real `YYYY-MM-DD` date; a change file whose `date` is not the start of its name; a `check.exit` other than 0 or 1.
+4. **Links.** An element id in `binds`, `owner` (on a decision or a contract), `bound` or `edge_nodes` that is not an element; a `superseded_by`, or an entry in a contract's `decisions`, that names no decision; `superseded_by` naming the record's own id; a coverage `run` that names no change file; the same id twice in one `binds` or `bound` list, or in a contract's `decisions` list.
+5. **Order and values.** A list not sorted by id; `superseded_by` present when `status` is not `superseded`, or missing when it is; a decision that has an `owner` field and no `obligations` field (message `required when owner is set`, at the `obligations` path); a `status`, `evidence` or `run` value outside its list; a `date` that is not a real `YYYY-MM-DD` date; a change file whose `date` is not the start of its name; a `check.exit` other than 0 or 1.
 
 **References are not ids.** Record ids in a change file's lists, in `superseded_by` and in a contract's `decisions` are references to records, not records. They are checked for form, and `superseded_by` and a contract's `decisions` for links, but they never count as a second occurrence of an id.
+
+**The obligations rule and wrong types.** The rule applies only when `owner` is a string; an `obligations` field of any type counts as present, so a wrong-typed one gives only its shape line.
 
 **What a shape problem leaves in.** A record whose `id` is missing, not a string or breaks rule 3 is left out of the id, link and order checks. Any other shape problem leaves the record in. A field whose value has the wrong type is skipped by passes 3 to 5 (it is not form-checked, link-checked or value-checked); the items of a list that have the right type are checked. An element id or a record-id reference reported in pass 3 is not link-checked. A chain of `superseded_by` links may form a cycle; that is allowed.
 
@@ -143,6 +161,7 @@ A model folder with none of the new files exports and checks as before, apart fr
 - The 2026-11-09 delta tool spec: a note pointing here for the inputs, the `export` shape, the exception to its Cleaning rule for record text, and `record-error` added to its list of exit-2 tokens. The runtime-links spec: a note that `format` is now 3.
 - `ARCH_STANDARDS.md`, delta tool flags: one line saying `export` also prints the records and that a record problem is `record-error`. The rest of the skill's text is A3b.
 - Required check that is not an acceptance criterion: every existing delta tool test passes, and the only edits to them are in the `export` tests, for `format` 3 and the new keys.
+- A3c: the four optional decision fields and the obligations rule, in the existing record modules and their tests; every existing record test passes unedited.
 
 **Out of scope:** writing or converting records; generating documents; the skill's steps, standards and rubric beyond the one line; the other skills that name `architecture.md`; a check that sources exist.
 
@@ -179,12 +198,16 @@ A model folder with none of the new files exports and checks as before, apart fr
 - **AC-16** Given a decision whose `superseded_by` is its own id, a decision whose `binds` lists one element twice, and two superseded decisions that name each other, when `export` runs, then the first two are reported and the cycle is not.
 - **AC-17** Given a misnamed file `decisions/Memory.json` that holds a decision with id `M-1`, a well-named file holding another decision `M-1`, and a `decisions/.gitkeep`, when `export` runs, then the misnamed file is reported once with field path `-`, no duplicate id is reported, and `.gitkeep` is not mentioned.
 - **AC-18** Given a model whose records are invalid and a `--deps` path that does not exist, when `check` runs, then the error lines are `record-error` lines and none is `bad-input`.
+- **AC-19** Given a decision with `owner`, `obligations`, `compatibility` and `capabilities`, and a principle with `obligations` and empty `binds`, when `export` runs, then it exits 0 and both appear with every field as written.
+- **AC-20** Given a decision with an `evidence` value outside its list and an `owner` but no `obligations` field, when `export` runs, then the lines are, in order, its `evidence` line and `required when owner is set` at its `obligations` path.
+- **AC-21** Given a decision whose `owner` names no element, one whose `owner` is an empty string (both with `obligations`), and one with an `owner` and an empty `obligations` list, when `export` runs, then they give exactly `… is not a model element`, `must not be empty` and `needs at least one item`, one line each.
+- **AC-22** Given a decision with `owner: 5` and no `obligations`, one with `obligations: "x"` and an `owner`, and one with `compatibility` and no `owner` or `obligations`, when `export` runs, then the first gives only `must be a string`, the second only `must be a list`, and the third nothing.
 
 ## Future work (downstream cost)
 
 | Item | Priority | Effort | Where |
 |---|---|---|---|
-| The skill writes and reads these files; its steps are rewritten; the other skills stop naming `architecture.md` | P1 | L | #31 A3b |
+| The skill writes and reads these files; its steps are rewritten; the other skills stop naming `architecture.md`; a decision with `obligations` is changed whole, and that test replaces ARCH_STANDARDS' "two or more capabilities" test for a cross-cutting decision | P1 | L | #31 A3b |
 | Model pack and architecture book generated from `export` | P1 | M | #32, #33 |
 | Change document generated from a change file | P1 | S | #34 |
 | A writer tool that creates records and change files, so a run need not hand-write JSON | P2 | M | #34 or later |
@@ -203,3 +226,4 @@ A model folder with none of the new files exports and checks as before, apart fr
 | A6 | Exactly one model exists in the old layout. | VERIFIED by the owner (2026-11-16). |
 | A7 | The owner chose JSON, several files grouped by subject, one file per run, and no converter in the engine. | VERIFIED: owner decisions of 2026-11-17, recorded on #31. |
 | A8 | The owner accepts two fields added after the record design was approved: a `run` on each coverage entry, and an optional `capabilities` list on a contract. | VERIFIED: owner confirmed on 2026-11-17. |
+| A9 | The owner chose one decision record with optional `owner`, `obligations`, `compatibility` and `capabilities`; cross-cutting means it has obligations; a principle has obligations and no owner; the tool requires obligations whenever an owner is given; a contract is the interface with another system. | VERIFIED: owner decisions of 2026-11-17, recorded on #37 and #31. |
