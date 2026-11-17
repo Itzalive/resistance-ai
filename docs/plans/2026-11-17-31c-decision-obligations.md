@@ -161,3 +161,7 @@ def test_obligations_rule_and_wrong_types(tmp_path) -> None:  # AC-22
 - [ ] **Step 4:** `uv run pytest -q`. Expected: PASS.
 - [ ] **Step 5:** No refactor.
 - [ ] **Step 6:** `git add skills/shared/scripts/architecture-delta/records.mjs tests/scripts/test_architecture_delta_records.py && git commit -m "feat(#31): a decision with an owner needs obligations"`
+
+## Execution note
+
+Task 1 also added `test_decision_compatibility_and_capabilities_are_text` and `test_decision_owner_comes_after_superseded_by_in_pass_3`, from the alignment check's advisories: they pin the decision `compatibility` and `capabilities` types and the pass 3 field order, which no AC test covered.

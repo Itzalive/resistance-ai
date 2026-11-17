@@ -480,6 +480,7 @@ def test_decision_owner_problems(tmp_path) -> None:  # AC-21
         "error: record-error: decisions/a.json: decisions[0].owner: ghost is not a model element",
     ]
 
+
 def test_decision_compatibility_and_capabilities_are_text() -> None:
     assert shape("decisions", dfile(decision("D-1", compatibility=None, capabilities=[""]))) == [
         "decisions[0].compatibility: must be a non-empty string",
