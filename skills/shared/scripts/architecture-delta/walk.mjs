@@ -7,9 +7,12 @@ export const MODEL_FILE_LIMIT = 2000;
 export const MODEL_BYTES_LIMIT = 50 * 1024 * 1024;
 const CONFIG_NAME = /likec4\.config|likec4rc/i;
 
+const GENERATED = 'generated';
+const SOURCE = /\.(c4|likec4)$/i;
+
+// Spec (docs): the `generated` folder at the model folder's root counts toward its own limits, and holds no LikeC4 source.
 export function walkModelDir(dir) {
-  let files = 0;
-  let bytes = 0;
+  const zones = { model: { files: 0, bytes: 0, label: '' }, generated: { files: 0, bytes: 0, label: `${GENERATED}: ` } };
   const pending = [dir];
   while (pending.length > 0) {
     const current = pending.pop();
@@ -22,10 +25,15 @@ export function walkModelDir(dir) {
         pending.push(full);
         continue;
       }
-      files += 1;
-      if (files > MODEL_FILE_LIMIT) throw new ToolError('model-size', `more than ${MODEL_FILE_LIMIT} files`);
-      bytes += fs.statSync(full).size;
-      if (bytes > MODEL_BYTES_LIMIT) throw new ToolError('model-size', 'more than 50 MB in total');
+      const parts = rel.split(path.sep);
+      const zone = parts.length > 1 && parts[0] === GENERATED ? zones.generated : zones.model;
+      if (zone === zones.generated && SOURCE.test(entry.name)) {
+        throw new ToolError('model-error', `${parts.join('/')} is a LikeC4 source file in the generated folder`);
+      }
+      zone.files += 1;
+      if (zone.files > MODEL_FILE_LIMIT) throw new ToolError('model-size', `${zone.label}more than ${MODEL_FILE_LIMIT} files`);
+      zone.bytes += fs.statSync(full).size;
+      if (zone.bytes > MODEL_BYTES_LIMIT) throw new ToolError('model-size', `${zone.label}more than 50 MB in total`);
     }
   }
 }

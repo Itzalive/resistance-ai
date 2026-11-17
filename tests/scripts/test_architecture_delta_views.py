@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from arch_delta_support import error_lines, make_repo, require_node, run_tool, write_json
+from arch_delta_support import call, error_lines, make_repo, require_node, run_tool, write_json
 
 require_node()
 
@@ -221,3 +221,39 @@ views {
 """
     data = export(make_repo(tmp_path, model))
     assert data["capabilities"][0]["steps"] == [{"from": "a", "to": "b", "label": None, "reply": False, "kinds": ["event", "http"]}]
+
+
+MB = 1024 * 1024
+
+
+def test_generated_folder_counts_apart(tmp_path) -> None:  # AC-7
+    repo = make_repo(tmp_path)
+    folder = repo / "docs" / "architecture"
+    for i in range(600):
+        (folder / f"f{i}.txt").write_text("x", encoding="utf-8")
+    generated = folder / "generated"
+    generated.mkdir()
+    for i in range(1500):
+        (generated / f"g{i}.md").write_text("x", encoding="utf-8")
+    assert run_tool("export", "--repo", repo).returncode == 0
+    for i in range(1500, 2001):
+        (generated / f"g{i}.md").write_text("x", encoding="utf-8")
+    assert error_lines(run_tool("export", "--repo", repo)) == ["error: model-size: generated: more than 2000 files"]
+
+
+def test_generated_bytes_count_apart(tmp_path) -> None:
+    folder = tmp_path / "m"
+    (folder / "generated").mkdir(parents=True)
+    (folder / "big.bin").write_bytes(b"\0" * (30 * MB))
+    (folder / "generated" / "big.bin").write_bytes(b"\0" * (30 * MB))
+    assert call("walk.mjs", "walkModelDir", str(folder))["ok"] is True
+
+
+def test_likec4_source_in_generated_is_refused(tmp_path) -> None:  # AC-7
+    repo = make_repo(tmp_path)
+    areas = repo / "docs" / "architecture" / "generated" / "areas"
+    areas.mkdir(parents=True)
+    (areas / "x.c4").write_text("model {\n}\n", encoding="utf-8")
+    assert error_lines(run_tool("export", "--repo", repo)) == [
+        "error: model-error: generated/areas/x.c4 is a LikeC4 source file in the generated folder",
+    ]
