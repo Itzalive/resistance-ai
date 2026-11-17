@@ -8,11 +8,11 @@
 
 **Tech Stack:** Node ESM, LikeC4 1.60.0, pytest.
 
-**Spec:** `docs/superpowers/specs/2026-11-17-architecture-docs-design.md`, "The tool" (commands, output folder, write rules 1–5, layout), "AI pack" (`pack/model.json` only), AC-8, AC-10, AC-11, AC-13 (JSON marker part), AC-14, AC-15, AC-16, AC-17 — decisions applied: none. Plan 2 of the spec's four is split in three (2a this plan; 2b writers and the overview; 2c the rest of the pack) to keep each plan within the sizing rule. AC-9 is covered here with a stale marked file in place of a removed area document; plan 3 adds the area case.
+**Spec:** `docs/superpowers/specs/2026-11-17-architecture-docs-design.md`, "The tool" (commands, output folder, write rules 1–5, layout), "AI pack" (`pack/model.json` only), AC-8, AC-10, AC-11, AC-13 (JSON marker part), AC-14, AC-15, AC-16, AC-17 — decisions applied: none. Plan 2 of the spec's four is split in three (2a this plan; 2b writers and the overview; 2c the rest of the pack) to keep each plan within the sizing rule. AC-9 is covered here with a stale marked file in place of a removed area document; plan 3 adds the area case. Known-gap cleaning (`readGap`) is read here for error parity and first used, and tested, in plan 2b.
 
 **Open decisions:** none
 
-**Size:** 6 tasks, 2 entry paths (`build`, `check`), 1036 lines (reported, not a target)
+**Size:** 6 tasks, 2 entry paths (`build`, `check`), 1100 lines (reported, not a target)
 
 **Trust boundary:** changed — see Trust-boundary table. The new tool writes files; the delta tool stays read-only.
 
@@ -47,7 +47,7 @@ Searched: `skills/`, `tests/` with `rg -n "loadRepoModel|startDeadline|readOptio
 
 | Boundary | Rule | Mechanism | Task | Test |
 |---|---|---|---|---|
-| Where the tool may write | write rule 1 | `out.mjs` `resolveOut`: lexical target inside the real `--repo`; every existing part of the path below `--repo` checked with `lstat` (no link, no file); not holding the model folder; inside the model folder only as `generated`, in any case | 3 | `test_resolve_out_*`, `test_build_refuses_bad_out` |
+| Where the tool may write | write rule 1 | `out.mjs` `resolveOut`: every existing part of the path below `--repo` checked with `lstat` (no link, no file); then, on native real paths (short names and case settled), inside `--repo`, not holding the model folder, inside the model folder only as `generated` in any case | 3 | `test_resolve_out_*`, `test_build_refuses_bad_out` |
 | What may be overwritten or deleted | write rule 2 | `out.mjs` `listOut`: every file marked by type, or a temporary or operating-system file; every folder a named one; no link; no file over 50 MB; checked before the model loads | 4 | `test_list_out_*`, `test_build_and_check_refuse_an_unmarked_file` |
 | How files change | write rule 3 | `writer.mjs` `writeOutput`: write to a temporary name, rename into place, then delete stale marked files, then empty named folders; every failure `out-error` naming the path | 5 | `test_write_output_*` |
 | Which code may change files | threat model, least privilege | only `writer.mjs` calls a file-changing function; files are opened only for reading elsewhere | 5 | `test_only_the_writer_changes_files`, `test_files_are_opened_only_for_reading` |
@@ -275,6 +275,7 @@ export function parseArgs(argv) {
 - holding the model folder — mutation: `isInside(target, modelDir)` instead of `isInside(modelDir, target)` — killed by: `test_resolve_out_refuses[repo-root]`, `[docs]`
 - inside the model folder only as `generated` — mutation: compare without `toLowerCase()` — killed by: `test_resolve_out_accepts_generated_in_any_case`; mutation: drop the rule — killed by: `[decisions]`, `[docs-out]`
 - a nested path under `generated` — mutation: test `startsWith('generated')` — killed by: `test_resolve_out_refuses[generated-child]`
+- real paths, not lexical — mutation: run the three checks on `lexical`, `repo` and `modelDir` — killed by: `test_resolve_out_refuses_another_spelling_of_the_model_folder` (Windows short name; skipped where the volume has no short names and the file system is case-sensitive)
 
 - Satisfies Spec AC: AC-14 (with Task 6's end-to-end test)
 - **Test retention:** **Permanent**
@@ -287,6 +288,7 @@ export function parseArgs(argv) {
 from __future__ import annotations
 
 import os
+import sys
 from pathlib import Path
 
 import pytest
@@ -347,6 +349,27 @@ def test_resolve_out_refuses_a_link_on_the_way(tmp_path) -> None:
     assert (result["token"], result["details"]) == ("out-error", ["--out passes through a link: site/via"])
 
 
+def other_spelling(target: Path) -> str | None:
+    """Another spelling of an existing folder that names the same folder: its Windows short name, or its upper case."""
+    if sys.platform == "win32":
+        import ctypes
+        buffer = ctypes.create_unicode_buffer(1024)
+        if ctypes.windll.kernel32.GetShortPathNameW(str(target), buffer, 1024) and buffer.value.lower() != str(target).lower():
+            return buffer.value
+        return None
+    upper = str(target).upper()
+    return upper if os.path.exists(upper) and os.path.samefile(upper, target) else None
+
+
+def test_resolve_out_refuses_another_spelling_of_the_model_folder(tmp_path) -> None:
+    repo, model = layout(tmp_path)
+    alternate = other_spelling(model)
+    if alternate is None:
+        pytest.skip("no other spelling of the model folder on this file system")
+    result = resolve(repo, model, str(Path(alternate) / "notes"))
+    assert (result["token"], result["details"]) == ("out-error", ["--out inside the model folder must be its generated folder"])
+
+
 def test_resolve_out_refuses_a_file_on_the_way_or_as_the_folder(tmp_path) -> None:
     repo, model = layout(tmp_path)
     (repo / "f").write_text("x", encoding="utf-8")
@@ -379,27 +402,42 @@ function lstatOrNull(target) {
   }
 }
 
-// Spec, write rule 1. `repo` and `modelDir` are real paths; returns the output folder's path.
+// Spec, write rule 1, through real paths: every existing part of the path below `--repo` is checked with `lstat`, then
+// the checks run on the native real path (which settles Windows short names and letter case), and that path is returned.
 export function resolveOut(repo, modelDir, value) {
-  const target = value === null ? path.join(modelDir, GENERATED) : path.resolve(repo, value);
-  if (!isInside(target, repo)) throw outError('--out lies outside --repo');
+  const lexical = value === null ? path.join(modelDir, GENERATED) : path.resolve(repo, value);
+  if (!isInside(lexical, repo)) throw outError('--out lies outside --repo');
   let current = repo;
-  for (const part of path.relative(repo, target).split(path.sep).filter((item) => item !== '')) {
+  let deepest = repo;
+  const rest = [];
+  for (const part of path.relative(repo, lexical).split(path.sep).filter((item) => item !== '')) {
+    if (rest.length > 0) {
+      rest.push(part);
+      continue;
+    }
     current = path.join(current, part);
     const stat = lstatOrNull(current);
-    if (stat === null) break;
+    if (stat === null) {
+      rest.push(part);
+      continue;
+    }
     if (stat.isSymbolicLink()) throw outError(`--out passes through a link: ${shown(repo, current)}`);
     if (!stat.isDirectory()) {
-      if (current === target) throw outError('--out is not a folder');
+      if (current === lexical) throw outError('--out is not a folder');
       throw outError(`--out passes through a file: ${shown(repo, current)}`);
     }
+    deepest = current;
   }
-  if (isInside(modelDir, target)) throw outError('--out must not hold the model folder');
+  const real = path.join(fs.realpathSync.native(deepest), ...rest);
+  const repoReal = fs.realpathSync.native(repo);
+  const modelReal = fs.existsSync(modelDir) ? fs.realpathSync.native(modelDir) : modelDir;
+  if (!isInside(real, repoReal)) throw outError('--out lies outside --repo');
+  if (isInside(modelReal, real)) throw outError('--out must not hold the model folder');
   // Spec: inside the model folder only its `generated` folder, matched in any case as the model walk matches it.
-  if (isInside(target, modelDir) && path.relative(modelDir, target).toLowerCase() !== GENERATED) {
+  if (isInside(real, modelReal) && path.relative(modelReal, real).toLowerCase() !== GENERATED) {
     throw outError(`--out inside the model folder must be its ${GENERATED} folder`);
   }
-  return target;
+  return real;
 }
 ```
 
@@ -422,7 +460,7 @@ export function resolveOut(repo, modelDir, value) {
 - the byte-order mark and CR — mutation: drop the BOM strip — killed by: `test_list_out_accepts_a_marker_after_a_bom_and_before_cr`
 - the JSON marker is the first key — mutation: accept `generated` anywhere — killed by: `test_list_out_refuses[json-second-key]`
 - named folders only — mutation: accept any folder — killed by: `test_list_out_refuses[unknown-folder]`, `[unknown-nested]`
-- links and size — mutation: drop the link check, or the size check — killed by: `test_list_out_refuses_a_link`, `test_list_out_refuses_a_file_over_50_mb`
+- links and size — mutation: drop the link check, or the size check, or check size only for marked files — killed by: `test_list_out_refuses_a_link`, `test_list_out_refuses_a_file_over_50_mb[big.md]`, `[.architecture-docs-1]`
 
 - Satisfies Spec AC: AC-11 (with Task 6), AC-13 (JSON marker)
 - **Test retention:** **Permanent**
@@ -494,11 +532,12 @@ def test_list_out_refuses_a_link(tmp_path) -> None:
     assert (result["token"], result["details"]) == ("out-error", ["areas is a link"])
 
 
-def test_list_out_refuses_a_file_over_50_mb(tmp_path) -> None:
+@pytest.mark.parametrize("name", ["big.md", ".architecture-docs-1"])
+def test_list_out_refuses_a_file_over_50_mb(tmp_path, name: str) -> None:
     folder = tmp_path / "out"
-    put(folder, "big.md", MARKER.encode("utf-8") + b"\n" + b"x" * (50 * MB))
+    put(folder, name, MARKER.encode("utf-8") + b"\n" + b"x" * (50 * MB))
     result = listing(folder)
-    assert (result["token"], result["details"]) == ("out-error", ["big.md is over 50 MB"])
+    assert (result["token"], result["details"]) == ("out-error", [f"{name} is over 50 MB"])
 ```
 
 - [ ] **Step 2:** `uv run pytest -q tests/scripts/test_architecture_docs_out.py -k list_out`. Expected: FAIL (`listOut` is not a function).
@@ -559,12 +598,12 @@ export function listOut(outDir) {
         pending.push(child);
         continue;
       }
+      if (fs.statSync(full).size > FILE_LIMIT) throw outError(`${child} is over 50 MB`);
       if (entry.name.startsWith(TEMP_PREFIX)) {
         result.temps.push(child);
         continue;
       }
       if (OS_FILES.has(entry.name)) continue;
-      if (fs.statSync(full).size > FILE_LIMIT) throw outError(`${child} is over 50 MB`);
       if (!isMarked(full, entry.name)) throw outError(`${child} was not written by architecture-docs`);
       result.files.push(child);
     }
@@ -715,10 +754,12 @@ function attempt(what, rel, action) {
 }
 
 // Spec, write rule 3: every file of `files` ({ path with '/': text }) is written to a temporary name and renamed into
-// place; then the listed marked files no longer produced and the left-over temporary files are deleted; then named
+// place (left-over temporary files are deleted first); then the listed marked files no longer produced are deleted; then named
 // folders left empty are removed, deepest first. `listed` is `listOut`'s result. Returns the counts.
 export function writeOutput(outDir, files, listed) {
   attempt('create', '.', () => fs.mkdirSync(outDir, { recursive: true }));
+  // Left-over temporary files go first, so a new temporary name can never meet an old one.
+  for (const rel of listed.temps) attempt('delete', rel, () => fs.unlinkSync(path.join(outDir, rel)));
   const names = Object.keys(files).sort();
   names.forEach((rel, index) => {
     const final = path.join(outDir, rel);
@@ -727,7 +768,6 @@ export function writeOutput(outDir, files, listed) {
     attempt('write', rel, () => fs.writeFileSync(temp, files[rel], 'utf8'));
     attempt('replace', rel, () => fs.renameSync(temp, final));
   });
-  for (const rel of listed.temps) attempt('delete', rel, () => fs.unlinkSync(path.join(outDir, rel)));
   const produced = new Set(names);
   const stale = listed.files.filter((rel) => !produced.has(rel));
   for (const rel of stale) attempt('delete', rel, () => fs.unlinkSync(path.join(outDir, rel)));
@@ -751,6 +791,7 @@ export function writeOutput(outDir, files, listed) {
 
 **Files:**
 - Create: `skills/shared/scripts/architecture-docs.mjs`, `skills/shared/scripts/architecture-docs/build.mjs`
+- Modify: `skills/defining-architecture/ARCH_STANDARDS.md` (one line: the tool's commands)
 - Test: `tests/scripts/test_architecture_docs_tool.py` (create)
 
 **Callers that move with this task:** none.
@@ -760,7 +801,7 @@ export function writeOutput(outDir, files, listed) {
 - `check` compares after CRLF → LF — mutation: compare raw — killed by: `test_check_accepts_crlf_line_endings`
 - `extra` only for marked files no longer produced — mutation: report every listed file as extra — killed by: `test_check_reports_missing_changed_and_extra` (the produced file is `changed`, not `extra`)
 - limits — mutation: `>=` instead of `>` on the file limit — killed by: `test_output_limits` (exactly 2,000 files pass)
-- nothing written on an error — mutation: write before `checkLimits` — killed by: `test_build_writes_nothing_on_invalid_records`
+- nothing written over the limits — mutation: write before `checkLimits` — killed by: `test_build_over_the_limits_writes_nothing`
 
 - Satisfies Spec AC: AC-8, AC-9 (stale marked file), AC-10, AC-11, AC-13 (JSON marker), AC-14, AC-15, AC-16, AC-17
 - **Test retention:** **Permanent**
@@ -879,6 +920,7 @@ def test_build_writes_nothing_on_invalid_records(tmp_path) -> None:  # AC-15
     (decisions / "a.json").write_text('{"title": "A", "decisions": [{"id": "D-1"}], "holes": []}', encoding="utf-8")
     built = docs("build", "--repo", repo)
     assert built.returncode == 2
+    assert error_lines(built)[0].startswith("error: record-error: ")
     assert error_lines(built) == error_lines(run_tool("export", "--repo", repo))
     assert not out_of(repo).exists()
 
@@ -907,6 +949,22 @@ def test_build_usage_and_timeout(tmp_path) -> None:
     timed = docs("build", "--repo", repo, "--timeout", "0")
     assert (timed.returncode, timed.stdout) == (2, "")
     assert error_lines(timed)[0].startswith("error: timeout: ")
+    assert not out_of(repo).exists()
+
+
+BIG_OUTPUT = (
+    "const byteLength = Buffer.byteLength;\n"
+    "Buffer.byteLength = (...args) => (new Error().stack.includes('build.mjs') ? 60 * 1024 * 1024 : byteLength(...args));\n"
+)
+
+
+def test_build_over_the_limits_writes_nothing(tmp_path) -> None:  # AC-16
+    preload = tmp_path / "big-output.mjs"
+    preload.write_text(BIG_OUTPUT, encoding="utf-8")
+    repo = make_repo(tmp_path)
+    proc = run_tool("build", "--repo", repo, script=DOCS_SCRIPT, preload=preload)
+    assert proc.returncode == 2
+    assert error_lines(proc) == ["error: out-error: the output would be more than 50 MB"]
     assert not out_of(repo).exists()
 
 
@@ -1031,6 +1089,12 @@ async function main(argv) {
 runCli(main);
 ```
 
+In `skills/defining-architecture/ARCH_STANDARDS.md`, after the line starting "- An area is an element view", add:
+
+```markdown
+- `node <skills-dir>/shared/scripts/architecture-docs.mjs build|check --repo . [--model <model>] [--gap <gap-file>] [--out <folder>]` builds the generated documents into `<model>/generated` (or `--out`), or reports which are missing, changed or extra. `build` exits 0 or 2; `check` exits 0 when current, 1 when stale, 2 on an error. It overwrites or deletes only files it marked, and `out-error` names any problem with the output folder.
+```
+
 - [ ] **Step 4:** `uv run pytest -q tests/scripts -k "architecture_delta or architecture_docs or defining_architecture"`. Expected: PASS.
 - [ ] **Step 5:** No refactor.
-- [ ] **Step 6:** `git add skills/shared/scripts/architecture-docs.mjs skills/shared/scripts/architecture-docs/build.mjs tests/scripts/test_architecture_docs_tool.py && git commit -m "feat(#32): architecture-docs build and check, with pack/model.json"`
+- [ ] **Step 6:** `git add skills/shared/scripts/architecture-docs.mjs skills/shared/scripts/architecture-docs/build.mjs tests/scripts/test_architecture_docs_tool.py skills/defining-architecture/ARCH_STANDARDS.md && git commit -m "feat(#32): architecture-docs build and check, with pack/model.json"`
