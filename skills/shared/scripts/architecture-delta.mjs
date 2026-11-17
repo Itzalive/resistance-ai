@@ -51,7 +51,8 @@ async function loadRepoModel(args, deadline) {
   const loaded = await loadModel(LikeC4, model.path);
   deadline.check();
   // Spec (records): validated right after the model loads, before any other input is read.
-  const records = readRecords(model.path, loaded.elements.map((element) => element.id), deadline.check);
+  const records = readRecords(model.path, loaded.elements.map((element) => element.id), deadline.check,
+    loaded.capabilities.map((capability) => capability.name));
   return { repo, modelDir: model.path, located, model: loaded, records };
 }
 

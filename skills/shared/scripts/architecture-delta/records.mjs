@@ -127,7 +127,7 @@ function idPass(file, add, firstSeen) {
 }
 
 // Pass 4 for one file: element ids, decision references and coverage runs that name something real.
-function linkPass(file, add, elements, decisions, changes) {
+function linkPass(file, add, elements, decisions, changes, capabilities) {
   const element = (value, at) => {
     if (isString(value) && value !== '' && !elements.has(value)) add(at, `${value} is not a model element`);
   };
@@ -143,6 +143,15 @@ function linkPass(file, add, elements, decisions, changes) {
   const run = (value, at) => {
     if (isString(value) && !changes.has(value)) add(at, `${value} names no change file`);
   };
+  const capabilityList = (values, at) => {
+    const seen = new Set();
+    list(values).forEach((value, index) => {
+      if (!isString(value) || value === '') return;
+      if (!capabilities.has(value)) add(`${at}[${index}]`, `${value} is not a capability`);
+      if (seen.has(value)) add(`${at}[${index}]`, `${value} is listed twice`);
+      seen.add(value);
+    });
+  };
   eachRecord(file, (record, at, name) => {
     if (!isRecordId(record.id)) return;
     if (name === 'contracts') {
@@ -155,6 +164,7 @@ function linkPass(file, add, elements, decisions, changes) {
         if (seen.has(value)) add(`${at}.decisions[${index}]`, `${value} is listed twice`);
         seen.add(value);
       });
+      capabilityList(record.capabilities, `${at}.capabilities`);
       return;
     }
     elementList(record.binds, `${at}.binds`);
@@ -163,6 +173,7 @@ function linkPass(file, add, elements, decisions, changes) {
       else if (!decisions.has(record.superseded_by)) add(`${at}.superseded_by`, `${record.superseded_by} names no decision`);
     }
     if (name === 'decisions') element(record.owner, `${at}.owner`);
+    if (name === 'decisions') capabilityList(record.capabilities, `${at}.capabilities`);
   });
   if (file.kind === 'coverage') {
     list(file.data.baselined).forEach((entry, index) => {
@@ -217,7 +228,7 @@ function valuePass(file, add) {
 }
 
 // Passes 3 to 5, file by file in folder order; a duplicate id is reported where it occurs second.
-function laterPasses(files, elements, changes) {
+function laterPasses(files, elements, changes, capabilities) {
   const out = [];
   const decisions = new Set();
   for (const file of files) {
@@ -228,7 +239,7 @@ function laterPasses(files, elements, changes) {
   for (const file of files) {
     const add = (field, message) => out.push(problem(file.at, field, message));
     idPass(file, add, firstSeen);
-    linkPass(file, add, elements, decisions, changes);
+    linkPass(file, add, elements, decisions, changes, capabilities);
     valuePass(file, add);
   }
   return out;
@@ -250,7 +261,7 @@ function result(files) {
 }
 
 // Every record in the folder, or one `record-error` naming every problem, sorted by path then pass and position.
-export function readRecords(modelDir, elementIds, tick = () => {}) {
+export function readRecords(modelDir, elementIds, tick = () => {}, capabilityNames = []) {
   const problems = [];
   const files = [];
   for (const spec of FOLDERS) listFolder(modelDir, spec, problems, files);
@@ -268,7 +279,7 @@ export function readRecords(modelDir, elementIds, tick = () => {}) {
     for (const found of shapeProblems(file.kind, data)) problems.push(problem(file.at, found.field, found.message));
     read.push({ ...file, data });
   }
-  problems.push(...laterPasses(read, new Set(elementIds), new Set(files.filter((f) => f.kind === 'change').map((f) => f.name))));
+  problems.push(...laterPasses(read, new Set(elementIds), new Set(files.filter((f) => f.kind === 'change').map((f) => f.name)), new Set(capabilityNames)));
   if (problems.length > 0) {
     const sorted = problems.map((item, index) => ({ ...item, index })).sort((x, y) => cmp(x.at, y.at) || x.index - y.index);
     throw new ToolError('record-error', sorted.map((item) => item.line));
