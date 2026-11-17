@@ -14,11 +14,24 @@ export function uniquePairs(list) {
   });
 }
 
+const byLink = (x, y) => byPair(x, y) || cmp(x.kind, y.kind);
+
+// One entry per pair and kind. Links are compared raw, before cleaning.
+function uniqueLinks(list) {
+  const seen = new Set();
+  return list.filter((link) => {
+    const key = `${link.from}\u0000${link.to}\u0000${link.kind}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 const cleanPair = (pair) => ({ from: clean(pair.from), to: clean(pair.to) });
 
 export function exportJson(model) {
   return {
-    format: 1,
+    format: 2,
     elements: [...model.elements].sort((a, b) => cmp(a.id, b.id)).map((element) => ({
       id: clean(element.id),
       kind: clean(element.kind),
@@ -27,6 +40,7 @@ export function exportJson(model) {
       rules: element.rules.map(clean),
     })),
     allowed: uniquePairs(model.relationships).sort(byPair).map(cleanPair),
+    runtime: uniqueLinks(model.runtime).sort(byLink).map((link) => ({ ...cleanPair(link), kind: clean(link.kind) })),
   };
 }
 

@@ -1,8 +1,10 @@
-// Loads a model folder with likec4, checks the shape of what likec4 returns, validates code prefixes.
+// Loads a model folder with likec4, checks the shape of what likec4 returns, validates code prefixes, and splits relationships into import relationships and runtime links.
 import path from 'node:path';
 import { ToolError } from './errors.mjs';
 
 export const ELEMENT_LIMIT = 5000;
+// A relationship of this kind, or with no kind, permits imports. Any other kind is a runtime link.
+export const IMPORT_KIND = 'uses';
 
 function shapeError(detail) {
   return new ToolError('internal', `likec4 returned ${detail}`);
@@ -66,12 +68,19 @@ export async function loadModel(LikeC4, modelDir) {
     if (elements.length > ELEMENT_LIMIT) throw new ToolError('element-cap', `more than ${ELEMENT_LIMIT} elements`);
   }
   const relationships = [];
+  const runtime = [];
   for (const relationship of computed.relationships()) {
     if (typeof relationship?.source?.id !== 'string' || typeof relationship?.target?.id !== 'string') {
       throw shapeError('a relationship without string source and target ids');
     }
-    relationships.push({ from: relationship.source.id, to: relationship.target.id });
+    const kind = relationship.kind ?? null;
+    if (kind !== null && (typeof kind !== 'string' || kind === '')) {
+      throw shapeError('a relationship whose kind is not a non-empty string');
+    }
+    const pair = { from: relationship.source.id, to: relationship.target.id };
+    if (kind === null || kind === IMPORT_KIND) relationships.push(pair);
+    else runtime.push({ ...pair, kind });
   }
   validatePrefixes(elements);
-  return { elements, relationships };
+  return { elements, relationships, runtime };
 }
