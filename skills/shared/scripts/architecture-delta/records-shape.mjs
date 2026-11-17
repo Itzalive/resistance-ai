@@ -20,6 +20,10 @@ export const DECISION = [
   optional('superseded_by', 'string', { id: 'record' }),
   field('evidence', 'string'),
   field('sources', 'list', { of: TEXT }),
+  optional('owner', 'string', { id: 'element' }),
+  optional('obligations', 'list', { of: TEXT, minOne: true }),
+  optional('compatibility', 'text'),
+  optional('capabilities', 'list', { of: TEXT }),
   optional('note', 'text'),
 ];
 

@@ -459,3 +459,36 @@ def test_gap_pairs_are_cut_like_other_ids(tmp_path) -> None:
     files = {"changes/2026-11-16-baseline.json": change(gap={"added": [["g" * 250, "x"]], "removed": []})}
     data = export(model_folder(tmp_path, files)[0])
     assert data["changes"][0]["gap"]["added"][0] == ["g" * 199 + "…", "x"]
+
+
+def test_decisions_carry_obligations(tmp_path) -> None:  # AC-19
+    cross = decision("D-1", owner="shop.orders", obligations=["Every order has an id."], compatibility="Additive only.",
+                     capabilities=["Pay"])
+    principle = decision("P-1", binds=[], obligations=["Data stays in the EU."])
+    data = export(model_folder(tmp_path, {"decisions/a.json": dfile(cross, principle)})[0])
+    assert data["decisions"] == [{**cross, "group": "a"}, {**principle, "group": "a"}]
+
+
+def test_decision_owner_problems(tmp_path) -> None:  # AC-21
+    files = {"decisions/a.json": dfile(decision("D-1", owner="ghost", obligations=["x"]),
+                                       decision("D-2", owner="", obligations=["x"]),
+                                       decision("D-3", owner="shop", obligations=[]))}
+    repo, _ = model_folder(tmp_path, files)
+    assert error_lines(run_tool("export", "--repo", repo)) == [
+        "error: record-error: decisions/a.json: decisions[2].obligations: needs at least one item",
+        "error: record-error: decisions/a.json: decisions[1].owner: must not be empty",
+        "error: record-error: decisions/a.json: decisions[0].owner: ghost is not a model element",
+    ]
+
+def test_decision_compatibility_and_capabilities_are_text() -> None:
+    assert shape("decisions", dfile(decision("D-1", compatibility=None, capabilities=[""]))) == [
+        "decisions[0].compatibility: must be a non-empty string",
+        "decisions[0].capabilities[0]: must be a non-empty string",
+    ]
+
+
+def test_decision_owner_comes_after_superseded_by_in_pass_3(tmp_path) -> None:
+    files = {"decisions/a.json": dfile(decision("D-1", status="superseded", superseded_by="_x", owner="", obligations=["o"]))}
+    _, folder = model_folder(tmp_path, files)
+    assert problems(read(folder)) == ["decisions/a.json: decisions[0].superseded_by: not a valid record id",
+                                      "decisions/a.json: decisions[0].owner: must not be empty"]
