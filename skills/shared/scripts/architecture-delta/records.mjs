@@ -48,9 +48,187 @@ function parseFile(file, problems) {
   return data;
 }
 
-// Passes 3 to 5 over every file that passed 2a. Filled in by the id, link, order and value checks.
-function laterPasses() {
-  return [];
+const RECORD_ID = /^[A-Za-z0-9][A-Za-z0-9.-]*$/;
+const DATE = /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/;
+const STATUS = ['current', 'partly-built', 'planned', 'superseded'];
+const DECISION_EVIDENCE = ['checked', 'code', 'spec'];
+const HOLE_EVIDENCE = ['checked', 'code', 'spec', 'search'];
+const RUNS = ['baseline', 'epic', 'later-stage'];
+
+const isString = (value) => typeof value === 'string';
+const isRecordId = (value) => isString(value) && RECORD_ID.test(value);
+const oneOf = (values) => `must be one of ${values.join(', ')}`;
+const list = (value) => (Array.isArray(value) ? value : []);
+const has = (record, key) => Object.hasOwn(record, key);
+
+function isRealDate(value) {
+  if (!DATE.test(value)) return false;
+  const [year, month, day] = value.split('-').map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
+}
+
+// The record lists of a decisions or contracts file, as [list name, records] with object records only.
+function recordLists(file) {
+  const names = file.kind === 'decisions' ? ['decisions', 'holes'] : file.kind === 'contracts' ? ['contracts'] : [];
+  return names.map((name) => [name, list(file.data[name]).map((record, index) => ({ record, index }))
+    .filter(({ record }) => isObject(record))]);
+}
+
+// Each object record of a file, with its path and list name, in file position order.
+function eachRecord(file, visit) {
+  for (const [name, records] of recordLists(file)) {
+    for (const { record, index } of records) visit(record, `${name}[${index}]`, name);
+  }
+}
+
+// Pass 3 for one file: record id forms and duplicates, change ids, empty element ids, reference forms.
+function idPass(file, add, firstSeen) {
+  const emptyElement = (value, at) => {
+    if (value === '') add(at, 'must not be empty');
+  };
+  const referenceForm = (value, at) => {
+    if (isString(value) && !RECORD_ID.test(value)) add(at, 'not a valid record id');
+  };
+  eachRecord(file, (record, at, name) => {
+    if (!isString(record.id)) return;
+    if (!RECORD_ID.test(record.id)) {
+      add(`${at}.id`, 'not a valid record id');
+      return;
+    }
+    if (firstSeen.has(record.id)) add(`${at}.id`, `duplicate id ${record.id}, first in ${firstSeen.get(record.id)}`);
+    else firstSeen.set(record.id, file.at);
+    if (name === 'contracts') emptyElement(record.owner, `${at}.owner`);
+    const elementList = name === 'contracts' ? 'bound' : 'binds';
+    list(record[elementList]).forEach((item, index) => emptyElement(item, `${at}.${elementList}[${index}]`));
+    if (name === 'decisions') referenceForm(record.superseded_by, `${at}.superseded_by`);
+    if (name === 'contracts') list(record.decisions).forEach((item, index) => referenceForm(item, `${at}.decisions[${index}]`));
+  });
+  const { data } = file;
+  if (file.kind === 'change') {
+    if (isString(data.id) && data.id !== file.name) add('id', `must equal the file name ${file.name}`);
+    for (const key of ['elements', 'decisions', 'holes', 'contracts']) {
+      if (!isObject(data[key])) continue;
+      for (const part of ['added', 'changed', 'removed']) {
+        list(data[key][part]).forEach((item, index) => {
+          const at = `${key}.${part}[${index}]`;
+          if (key === 'elements') emptyElement(item, at);
+          else referenceForm(item, at);
+        });
+      }
+    }
+  }
+  if (file.kind === 'coverage') {
+    list(data.edge_nodes).forEach((node, index) => {
+      if (isObject(node)) emptyElement(node.element, `edge_nodes[${index}].element`);
+    });
+  }
+}
+
+// Pass 4 for one file: element ids, decision references and coverage runs that name something real.
+function linkPass(file, add, elements, decisions, changes) {
+  const element = (value, at) => {
+    if (isString(value) && value !== '' && !elements.has(value)) add(at, `${value} is not a model element`);
+  };
+  const elementList = (values, at) => {
+    const seen = new Set();
+    list(values).forEach((value, index) => {
+      element(value, `${at}[${index}]`);
+      if (!isString(value) || value === '') return;
+      if (seen.has(value)) add(`${at}[${index}]`, `${value} is listed twice`);
+      seen.add(value);
+    });
+  };
+  const run = (value, at) => {
+    if (isString(value) && !changes.has(value)) add(at, `${value} names no change file`);
+  };
+  eachRecord(file, (record, at, name) => {
+    if (!isRecordId(record.id)) return;
+    if (name === 'contracts') {
+      element(record.owner, `${at}.owner`);
+      elementList(record.bound, `${at}.bound`);
+      const seen = new Set();
+      list(record.decisions).forEach((value, index) => {
+        if (!isRecordId(value)) return;
+        if (!decisions.has(value)) add(`${at}.decisions[${index}]`, `${value} names no decision`);
+        if (seen.has(value)) add(`${at}.decisions[${index}]`, `${value} is listed twice`);
+        seen.add(value);
+      });
+      return;
+    }
+    elementList(record.binds, `${at}.binds`);
+    if (name === 'decisions' && isRecordId(record.superseded_by)) {
+      if (record.superseded_by === record.id) add(`${at}.superseded_by`, 'names its own id');
+      else if (!decisions.has(record.superseded_by)) add(`${at}.superseded_by`, `${record.superseded_by} names no decision`);
+    }
+  });
+  if (file.kind === 'coverage') {
+    list(file.data.baselined).forEach((entry, index) => {
+      if (isObject(entry)) run(entry.run, `baselined[${index}].run`);
+    });
+    list(file.data.edge_nodes).forEach((node, index) => {
+      if (!isObject(node)) return;
+      element(node.element, `edge_nodes[${index}].element`);
+      run(node.run, `edge_nodes[${index}].run`);
+    });
+  }
+}
+
+// Pass 5 for one file: list order, the supersession rule, fixed values and dates.
+function valuePass(file, add) {
+  const fixed = (record, key, values, at) => {
+    if (isString(record[key]) && !values.includes(record[key])) add(at, oneOf(values));
+  };
+  for (const [name, records] of recordLists(file)) {
+    const kept = records.filter(({ record }) => isRecordId(record.id));
+    const outOfOrder = kept.findIndex(({ record }, k) => k > 0 && cmp(record.id, kept[k - 1].record.id) < 0);
+    for (const { record, index } of records) {
+      const at = `${name}[${index}]`;
+      const k = kept.findIndex((item) => item.index === index);
+      if (k !== -1 && k === outOfOrder) add(`${at}.id`, `not sorted by id: ${record.id} comes after ${kept[k - 1].record.id}`);
+      if (name === 'decisions') {
+        fixed(record, 'status', STATUS, `${at}.status`);
+        if (isString(record.status) && (!has(record, 'superseded_by') || isString(record.superseded_by))) {
+          if (record.status === 'superseded' && !has(record, 'superseded_by')) add(`${at}.superseded_by`, 'required when status is superseded');
+          if (record.status !== 'superseded' && has(record, 'superseded_by')) add(`${at}.superseded_by`, 'only allowed when status is superseded');
+        }
+        fixed(record, 'evidence', DECISION_EVIDENCE, `${at}.evidence`);
+      }
+      if (name === 'holes') fixed(record, 'evidence', HOLE_EVIDENCE, `${at}.evidence`);
+    }
+  }
+  if (file.kind === 'change') {
+    const { data } = file;
+    if (isString(data.date)) {
+      if (!isRealDate(data.date)) add('date', 'not a real date');
+      if (data.date !== file.name.slice(0, 10)) add('date', 'must be the start of the file name');
+    }
+    fixed(data, 'run', RUNS, 'run');
+    if (isObject(data.check) && Number.isInteger(data.check.exit) && data.check.exit !== 0 && data.check.exit !== 1) {
+      add('check.exit', 'must be 0 or 1');
+    }
+    if (isObject(data.approved) && isString(data.approved.date) && !isRealDate(data.approved.date)) {
+      add('approved.date', 'not a real date');
+    }
+  }
+}
+
+// Passes 3 to 5, file by file in folder order; a duplicate id is reported where it occurs second.
+function laterPasses(files, elements, changes) {
+  const out = [];
+  const decisions = new Set();
+  for (const file of files) {
+    if (file.kind !== 'decisions') continue;
+    for (const record of list(file.data.decisions)) if (isObject(record) && isRecordId(record.id)) decisions.add(record.id);
+  }
+  const firstSeen = new Map();
+  for (const file of files) {
+    const add = (field, message) => out.push(problem(file.at, field, message));
+    idPass(file, add, firstSeen);
+    linkPass(file, add, elements, decisions, changes);
+    valuePass(file, add);
+  }
+  return out;
 }
 
 function result(files) {

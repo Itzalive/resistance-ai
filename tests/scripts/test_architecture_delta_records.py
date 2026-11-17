@@ -182,3 +182,126 @@ def test_problems_are_listed_by_path(tmp_path) -> None:
                                         "decisions/alpha.json": dfile(decision("D-2", evidence=[]))})
     assert problems(read(folder)) == ["decisions/alpha.json: decisions[0].evidence: must be a string",
                                       "decisions/zeta.json: decisions[0].status: must be a string"]
+
+
+def test_binds_naming_no_element(tmp_path) -> None:  # AC-3
+    _, folder = model_folder(tmp_path, {"decisions/a.json": dfile(decision("D-1", binds=["shop.orders", "shop.nope"]))})
+    assert problems(read(folder)) == ["decisions/a.json: decisions[0].binds[1]: shop.nope is not a model element"]
+
+
+def test_contract_owner_and_bound_problems_in_one_run(tmp_path) -> None:  # AC-4
+    _, folder = model_folder(tmp_path, {"contracts/a.json": cfile(contract("C-1", owner="ghost"), contract("C-2", bound=[]))})
+    assert problems(read(folder)) == ["contracts/a.json: contracts[1].bound: needs at least one item",
+                                      "contracts/a.json: contracts[0].owner: ghost is not a model element"]
+
+
+def test_duplicate_id_across_files(tmp_path) -> None:  # AC-5
+    _, folder = model_folder(tmp_path, {"decisions/a.json": dfile(decision("X-1")), "contracts/b.json": cfile(contract("X-1"))})
+    assert problems(read(folder)) == ["decisions/a.json: decisions[0].id: duplicate id X-1, first in contracts/b.json"]
+
+
+def test_order_problem_is_at_the_first_record_out_of_order(tmp_path) -> None:  # AC-6
+    _, folder = model_folder(tmp_path, {"decisions/a.json": dfile(decision("D-2"), decision("D-1"), decision("D-3"))})
+    assert problems(read(folder)) == ["decisions/a.json: decisions[1].id: not sorted by id: D-1 comes after D-2"]
+
+
+def test_supersession_rules(tmp_path) -> None:  # AC-7
+    files = {"decisions/a.json": dfile(decision("D-1", status="superseded"), decision("D-2", superseded_by="D-1"),
+                                       decision("D-3", status="superseded", superseded_by="D-9"), holes=(hole("H-1"),)),
+             "contracts/b.json": cfile(contract("C-1", decisions=["H-1"]))}
+    _, folder = model_folder(tmp_path, files)
+    assert problems(read(folder)) == [
+        "contracts/b.json: contracts[0].decisions[0]: H-1 names no decision",
+        "decisions/a.json: decisions[2].superseded_by: D-9 names no decision",
+        "decisions/a.json: decisions[0].superseded_by: required when status is superseded",
+        "decisions/a.json: decisions[1].superseded_by: only allowed when status is superseded",
+    ]
+
+
+def test_values_outside_their_lists(tmp_path) -> None:  # AC-9, AC-10
+    files = {"decisions/a.json": dfile(decision("D-1", status="done", evidence="memory")),
+             "changes/2026-02-30-x.json": change("2026-02-30-x", run="nightly", check={"exit": 2, "summary": "s", "output": "o"}),
+             "changes/2026-11-16-y.json": change("2026-11-16-y", date="2026-11-15")}
+    _, folder = model_folder(tmp_path, files)
+    assert problems(read(folder)) == [
+        "changes/2026-02-30-x.json: date: not a real date",
+        "changes/2026-02-30-x.json: run: must be one of baseline, epic, later-stage",
+        "changes/2026-02-30-x.json: check.exit: must be 0 or 1",
+        "changes/2026-11-16-y.json: date: must be the start of the file name",
+        "decisions/a.json: decisions[0].status: must be one of current, partly-built, planned, superseded",
+        "decisions/a.json: decisions[0].evidence: must be one of checked, code, spec",
+    ]
+
+
+def test_change_history_is_not_looked_up(tmp_path) -> None:  # AC-11
+    _, folder = model_folder(tmp_path, {"changes/2026-11-16-baseline.json": change(
+        elements={"added": [], "changed": [], "removed": ["gone.element"]}, gap={"added": [["gone.a", "gone.b"]], "removed": []})})
+    assert read(folder)["ok"] is True
+
+
+def test_coverage_links(tmp_path) -> None:  # AC-15
+    _, folder = model_folder(tmp_path, {"coverage.json": coverage(edge_nodes=[{"element": "ghost", "run": "2026-11-16-baseline"}])})
+    assert problems(read(folder)) == ["coverage.json: baselined[0].run: 2026-11-16-baseline names no change file",
+                                      "coverage.json: edge_nodes[0].element: ghost is not a model element",
+                                      "coverage.json: edge_nodes[0].run: 2026-11-16-baseline names no change file"]
+
+
+def test_self_supersession_and_duplicates_but_not_cycles(tmp_path) -> None:  # AC-16
+    files = {"decisions/a.json": dfile(decision("D-1", status="superseded", superseded_by="D-1"),
+                                       decision("D-2", binds=["shop", "shop"]),
+                                       decision("D-3", status="superseded", superseded_by="D-4"),
+                                       decision("D-4", status="superseded", superseded_by="D-3"))}
+    _, folder = model_folder(tmp_path, files)
+    assert problems(read(folder)) == ["decisions/a.json: decisions[0].superseded_by: names its own id",
+                                      "decisions/a.json: decisions[1].binds[1]: shop is listed twice"]
+
+
+def test_misnamed_file_does_not_create_a_duplicate(tmp_path) -> None:  # AC-17
+    _, folder = model_folder(tmp_path, {"decisions/Memory.json": dfile(decision("M-1")), "decisions/orders.json": dfile(decision("M-1")),
+                                        "decisions/.gitkeep": ""})
+    assert problems(read(folder)) == ["decisions/Memory.json: -: not a valid file name here"]
+
+
+def test_references_are_not_ids(tmp_path) -> None:
+    files = {"decisions/a.json": dfile(decision("D-1"), decision("D-2", status="superseded", superseded_by="D-1")),
+             "contracts/b.json": cfile(contract("C-1", decisions=["D-1"])),
+             "changes/2026-11-16-baseline.json": change(decisions={"added": ["D-1", "D-2"], "changed": [], "removed": []})}
+    _, folder = model_folder(tmp_path, files)
+    assert read(folder)["ok"] is True
+
+
+def test_record_id_forms_and_change_id(tmp_path) -> None:
+    files = {"decisions/a.json": dfile(decision("_bad"), decision("D-1", binds=[""])),
+             "changes/2026-11-16-baseline.json": change(id_="2026-11-16-other", date="2026-11-16")}
+    _, folder = model_folder(tmp_path, files)
+    assert problems(read(folder)) == ["changes/2026-11-16-baseline.json: id: must equal the file name 2026-11-16-baseline",
+                                      "decisions/a.json: decisions[0].id: not a valid record id",
+                                      "decisions/a.json: decisions[1].binds[0]: must not be empty"]
+
+
+def test_ids_that_are_object_property_names(tmp_path) -> None:
+    files = {"decisions/a.json": dfile(decision("toString"), decision("valueOf", status="superseded", superseded_by="constructor"))}
+    _, folder = model_folder(tmp_path, files)
+    assert problems(read(folder)) == ["decisions/a.json: decisions[1].superseded_by: constructor names no decision"]
+
+
+def test_wrong_typed_values_are_not_checked_again(tmp_path) -> None:
+    files = {"decisions/a.json": dfile(decision("D-1", status=5, superseded_by=7, binds=["shop", 3])),
+             "changes/2026-11-16-baseline.json": change(date=20261116, check={"exit": "0", "summary": "s", "output": "o"})}
+    _, folder = model_folder(tmp_path, files)
+    assert problems(read(folder)) == [
+        "changes/2026-11-16-baseline.json: date: must be a string",
+        "changes/2026-11-16-baseline.json: check.exit: must be a whole number",
+        "decisions/a.json: decisions[0].binds[1]: must be a string",
+        "decisions/a.json: decisions[0].status: must be a string",
+        "decisions/a.json: decisions[0].superseded_by: must be a string",
+    ]
+
+
+def test_underscored_element_ids_are_accepted(tmp_path) -> None:
+    model = "model {\n  my_part = component 'P'\n}\n"
+    repo = make_repo(tmp_path, model)
+    folder = repo / "docs" / "architecture"
+    (folder / "decisions").mkdir()
+    (folder / "decisions" / "a.json").write_text(json.dumps(dfile(decision("D-1", binds=["my_part"]))), encoding="utf-8")
+    assert read(folder, ["my_part"])["ok"] is True
