@@ -154,3 +154,70 @@ def test_a_step_with_no_relationship_is_a_model_error(tmp_path) -> None:  # AC-3
         "error: model-error: view capability-bad: step 5: shop.api.db -> shop.web follows no relationship",
     ]
     assert both_commands(repo_with(tmp_path, views)) == [expected, expected]
+
+
+def test_view_text_is_not_cut(tmp_path) -> None:  # spec, format 4: text values are not cut
+    long = "t" * 250
+    views = f"""  view area-long {{
+    title '{long}'
+    description '{long}'
+    include pay
+  }}
+  dynamic view capability-long {{
+    title '{long}'
+    description '{long}'
+    shop.web -> shop.api '{long}'
+  }}
+"""
+    data = export(repo_with(tmp_path, views))
+    area, capability = data["areas"][0], data["capabilities"][0]
+    assert [area["title"], area["description"], capability["title"], capability["description"]] == [long] * 4
+    assert capability["steps"][0]["label"] == long
+
+
+def test_view_ids_are_cut(tmp_path) -> None:  # spec, format 4: id values are cut at 200
+    name, kind = "e" * 201, "k" * 201
+    model = f"""specification {{
+  relationship {kind}
+}}
+model {{
+  {name} = component 'E'
+  b = component 'B'
+  {name} -[{kind}]-> b
+}}
+views {{
+  view area-x {{
+    include {name}
+  }}
+  dynamic view capability-x {{
+    {name} -> b
+  }}
+}}
+"""
+    data = export(make_repo(tmp_path, model))
+    cut = lambda value: value[:199] + "…"
+    assert data["areas"][0]["elements"] == [cut(name)]
+    assert data["capabilities"][0]["steps"] == [{"from": cut(name), "to": "b", "label": None, "reply": False, "kinds": [cut(kind)]}]
+
+
+def test_step_kinds_are_those_of_its_own_direction_sorted(tmp_path) -> None:  # AC-2 (kinds)
+    model = """specification {
+  relationship http
+  relationship event
+  relationship push
+}
+model {
+  a = component 'A'
+  b = component 'B'
+  a -[http]-> b
+  a -[event]-> b
+  b -[push]-> a
+}
+views {
+  dynamic view capability-k {
+    a -> b
+  }
+}
+"""
+    data = export(make_repo(tmp_path, model))
+    assert data["capabilities"][0]["steps"] == [{"from": "a", "to": "b", "label": None, "reply": False, "kinds": ["event", "http"]}]

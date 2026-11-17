@@ -156,7 +156,7 @@ BAD_ELEMENT = """export class LikeC4 {
     return {
       getErrors() { return []; },
       async computedModel() {
-        return { elements() { return [ELEMENT]; }, relationships() { return [RELATIONSHIP]; } };
+        return { elements() { return [ELEMENT]; }, relationships() { return [RELATIONSHIP]; }, views() { return []; } };
       },
     };
   }
@@ -167,10 +167,10 @@ BAD_ELEMENT = """export class LikeC4 {
 @pytest.mark.parametrize(
     ("element", "relationship"),
     [
-        pytest.param("{ kind: 'component', tags: [], getMetadata() { return {}; } }", "{ source: { id: 'a' }, target: { id: 'a' } }", id="no-id"),
-        pytest.param("{ id: 'a', kind: 'component', tags: 'x', getMetadata() { return {}; } }", "{ source: { id: 'a' }, target: { id: 'a' } }", id="tags-not-array"),
-        pytest.param("{ id: 'a', kind: 'component', tags: [], getMetadata() { return { code: ['a'] }; } }", "{ source: { id: 'a' }, target: { id: 'a' } }", id="code-array"),
-        pytest.param("{ id: 'a', kind: 'component', tags: [], metadata: {} }", "{ source: { id: 'a' }, target: { id: 'a' } }", id="no-getmetadata"),
+        pytest.param("{ kind: 'component', title: 'A', tags: [], getMetadata() { return {}; } }", "{ source: { id: 'a' }, target: { id: 'a' } }", id="no-id"),
+        pytest.param("{ id: 'a', kind: 'component', title: 'A', tags: 'x', getMetadata() { return {}; } }", "{ source: { id: 'a' }, target: { id: 'a' } }", id="tags-not-array"),
+        pytest.param("{ id: 'a', kind: 'component', title: 'A', tags: [], getMetadata() { return { code: ['a'] }; } }", "{ source: { id: 'a' }, target: { id: 'a' } }", id="code-array"),
+        pytest.param("{ id: 'a', kind: 'component', title: 'A', tags: [], metadata: {} }", "{ source: { id: 'a' }, target: { id: 'a' } }", id="no-getmetadata"),
         pytest.param("{ id: 'a', kind: 'component', title: 'A', tags: [], getMetadata() { return {}; } }", "{ source: { id: 'a' } }", id="no-target"),
     ],
 )
@@ -249,18 +249,29 @@ def test_good_shim_loads(tmp_path) -> None:
     "changes",
     [
         pytest.param({"ERRORS": "'oops'"}, id="errors-not-a-list"),
-        pytest.param({"ELEMENT": "{ id: 'a', tags: [], getMetadata() { return {}; } }"}, id="no-kind"),
-        pytest.param({"ELEMENT": "{ id: 'a', kind: 'component', tags: [1], getMetadata() { return {}; } }"}, id="tag-not-string"),
-        pytest.param({"ELEMENT": "{ id: 'a', kind: 'component', tags: [], getMetadata() { return { rules: 1 }; } }"}, id="rules-number"),
+        pytest.param({"ELEMENT": "{ id: 'a', title: 'A', tags: [], getMetadata() { return {}; } }"}, id="no-kind"),
+        pytest.param({"ELEMENT": "{ id: 'a', kind: 'component', title: 'A', tags: [1], getMetadata() { return {}; } }"}, id="tag-not-string"),
+        pytest.param({"ELEMENT": "{ id: 'a', kind: 'component', title: 'A', tags: [], getMetadata() { return { rules: 1 }; } }"}, id="rules-number"),
         pytest.param({"RELATIONSHIP": "{ target: { id: 'a' } }"}, id="no-source"),
         pytest.param({"ELEMENT": "{ id: 'a', kind: 'component', tags: [], getMetadata() { return {}; } }"}, id="no-title"),
         pytest.param({"RELATIONSHIP": "{ source: { id: 'a' }, target: { id: 'a' }, title: 5 }"}, id="title-number"),
         pytest.param({"VIEWS": "[{ id: 'area-x' }]"}, id="view-shape"),
+        pytest.param({"VIEWS": "[{ id: 'area-x', $view: { _type: 'element', title: 5, nodes: [], edges: [] } }]"}, id="view-title-number"),
+        pytest.param({"VIEWS": "[{ id: 'capability-x', $view: { _type: 'dynamic', title: null, nodes: [{ id: 'n1', modelRef: 'a' }, { id: '@gr1' }], edges: [{ source: 'n1', target: '@gr1' }] } }]"}, id="step-to-non-element"),
     ],
 )
 
 def test_more_unexpected_api_shapes_are_internal(tmp_path, changes: dict) -> None:
     result = shim_load(tmp_path, **changes)
+    assert result["ok"] is False
+    assert result["token"] == "internal"
+
+
+def test_model_without_views_is_internal(tmp_path) -> None:
+    source = shim_source().replace(", views() { return []; }", "")
+    assert "views()" not in source
+    shim = make_shim(tmp_path / unique("nm"), source=source)
+    result = load_model(model_dir(tmp_path), entry=shim / "index.mjs")
     assert result["ok"] is False
     assert result["token"] == "internal"
 

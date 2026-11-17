@@ -282,3 +282,14 @@ def test_titles_are_not_cut(tmp_path) -> None:
     data = export(make_repo(tmp_path, model))
     assert data["elements"][0]["title"] == title
     assert data["allowed"][0]["titles"] == [title]
+
+
+def test_runtime_titles_and_descriptions_are_not_cut(tmp_path) -> None:
+    text = "t" * 250
+    model = (
+        "specification {\n  relationship http\n}\nmodel {\n  a = component 'A' {\n    description '" + text + "'\n  }\n"
+        "  b = component 'B'\n  a -[http]-> b '" + text + "'\n}\n"
+    )
+    data = export(make_repo(tmp_path, model))
+    assert data["elements"][0]["description"] == text
+    assert data["runtime"][0]["titles"] == [text]
