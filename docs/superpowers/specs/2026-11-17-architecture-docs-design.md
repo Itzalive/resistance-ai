@@ -34,7 +34,7 @@ A **capability** is a LikeC4 dynamic view whose id is `capability-<name>`. Its s
 
 - A relationship **matches** a step from A to B when its source is A or inside A, and its target is B or inside B.
 - A step is a **call** when some relationship matches it from A to B; it is a **reply** when none does but one matches it from B to A (a response to an earlier call). Any other step is an error.
-- The step carries its label and the kinds of the relationships that match it in its direction (a relationship with no kind counts as `uses`).
+- The step carries its label (LikeC4 gives an unlabelled step the title of the relationship it follows) and the kinds of the relationships it matched: for a call those from A to B, for a reply those from B to A (a relationship with no kind counts as `uses`).
 
 So a sequence diagram can never show an interaction the model does not have. Timing is expressed only through labels and relationship kinds (an "async" or "every 5 min" label, an `http` or `event` kind); durations and deadlines are mechanism detail and are not modelled.
 
@@ -68,7 +68,7 @@ A view's `title` is LikeC4's title for it when that is not `null`, otherwise the
 - pass 4 (links) reports `<value> is not a capability` at the entry's path for a name that is no capability's name, and `<value> is listed twice` at the second entry's path for a name repeated in one list;
 - `capabilities` joins the keys whose values are cleaned as ids.
 
-**Model-folder walk amendment.** The folder `generated` at the root of the model folder is walked as before for links and config files, and a LikeC4 source file (`.c4`, `.likec4`) in it is a `model-error`. Its files count toward their own limits (2,000 files, 50 MB), not the model folder's, so generated documents can never push the model over its limits; going over them is `model-size`, as for the model folder.
+**Model-folder walk amendment.** The folder `generated` at the root of the model folder is walked as before for links and config files, and a LikeC4 source file (`.c4`, `.likec4`, `.like-c4`) in it is a `model-error`. The folder's name is matched in any case, and walk errors name paths with `/` on every platform. Its files count toward their own limits (2,000 files, 50 MB), not the model folder's, so generated documents can never push the model over its limits; going over them is `model-size`, as for the model folder.
 
 ## The tool
 

@@ -51,7 +51,7 @@ Every file is one JSON object. Every field below is required unless marked optio
 | `owner` | optional: the element id of the part that defines it |
 | `obligations` | optional list of text, at least one: what every bound part must keep to |
 | `compatibility` | optional text: how it may change; absent means no rule is stated |
-| `capabilities` | optional list of text: the epic capabilities that depend on it |
+| `capabilities` | optional list of capability names (capability views; checked in pass 4): the capabilities that depend on it |
 | `note` | optional text |
 
 | Hole field | Value |
@@ -74,7 +74,7 @@ Every file is one JSON object. Every field below is required unless marked optio
 | `compatibility` | text, or `null` when none is stated |
 | `notes` | optional list of text |
 | `decisions` | optional list of decision ids |
-| `capabilities` | optional list of text: the epic capabilities that depend on it |
+| `capabilities` | optional list of capability names (capability views; checked in pass 4): the capabilities that depend on it |
 
 **Change file:**
 

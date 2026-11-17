@@ -293,3 +293,19 @@ def test_runtime_titles_and_descriptions_are_not_cut(tmp_path) -> None:
     data = export(make_repo(tmp_path, model))
     assert data["elements"][0]["description"] == text
     assert data["runtime"][0]["titles"] == [text]
+
+
+def test_new_text_fields_are_cleaned(tmp_path) -> None:  # spec, format 4: text is cleaned, line feeds kept
+    dirty = "A\x1b[31mB\u202eC"
+    model = (
+        "model {\n  a = component '" + dirty + "' {\n    description '''\n      one" + dirty + "\n      two\n    '''\n  }\n"
+        "  b = component 'B'\n  a -> b '" + dirty + "'\n}\n"
+        "views {\n  view area-x {\n    title '" + dirty + "'\n    description '" + dirty + "'\n    include a\n  }\n"
+        "  dynamic view capability-x {\n    a -> b '" + dirty + "'\n  }\n}\n"
+    )
+    data = export(make_repo(tmp_path, model))
+    assert data["elements"][0]["title"] == "ABC"
+    assert data["elements"][0]["description"] == "oneABC\ntwo"
+    assert data["allowed"][0]["titles"] == ["ABC"]
+    assert [data["areas"][0]["title"], data["areas"][0]["description"]] == ["ABC", "ABC"]
+    assert data["capabilities"][0]["steps"][0]["label"] == "ABC"

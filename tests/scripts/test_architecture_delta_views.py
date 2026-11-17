@@ -76,6 +76,9 @@ LONG = "a" * 65
 BAD_VIEWS = f"""  dynamic view area-flow {{
     shop.web -> shop.api
   }}
+  dynamic view capability-Bad {{
+    shop.web -> pay
+  }}
   view capability-Box {{
     include *
   }}
@@ -97,6 +100,7 @@ def test_bad_view_types_and_names_are_model_errors(tmp_path) -> None:  # AC-3 (t
         f"error: model-error: view area-{LONG}: {LONG} is not a valid name",
         "error: model-error: view area-con: con is not a valid name",
         "error: model-error: view area-flow: an area view must be an element view",
+        "error: model-error: view capability-Bad: Bad is not a valid name",
         "error: model-error: view capability-Box: a capability view must be a dynamic view",
     ]
     assert both_commands(repo_with(tmp_path, BAD_VIEWS)) == [expected, expected]
@@ -283,3 +287,21 @@ def test_a_root_file_named_generated_counts_with_the_model(tmp_path) -> None:
     (folder / "big.bin").write_bytes(b"\0" * (30 * MB))
     result = call("walk.mjs", "walkModelDir", str(folder))
     assert (result["token"], result["details"]) == ("model-size", ["more than 50 MB in total"])
+
+
+def test_like_c4_extension_in_generated_is_refused(tmp_path) -> None:  # AC-7: every LikeC4 source extension
+    folder = tmp_path / "m"
+    (folder / "generated").mkdir(parents=True)
+    (folder / "generated" / "x.like-c4").write_text("model {\n}\n", encoding="utf-8")
+    result = call("walk.mjs", "walkModelDir", str(folder))
+    assert (result["token"], result["details"]) == (
+        "model-error", ["generated/x.like-c4 is a LikeC4 source file in the generated folder"])
+
+
+def test_generated_folder_name_ignores_case(tmp_path) -> None:  # case-insensitive file systems
+    folder = tmp_path / "m"
+    (folder / "Generated").mkdir(parents=True)
+    (folder / "Generated" / "x.c4").write_text("model {\n}\n", encoding="utf-8")
+    result = call("walk.mjs", "walkModelDir", str(folder))
+    assert (result["token"], result["details"]) == (
+        "model-error", ["Generated/x.c4 is a LikeC4 source file in the generated folder"])
