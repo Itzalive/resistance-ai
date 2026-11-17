@@ -152,8 +152,8 @@ def test_export_lists_runtime_links_once_per_pair_and_kind(tmp_path) -> None:  #
         kinds=("http", "push", "calls"),
     )
     data = export(make_repo(tmp_path, text))
-    assert list(data) == ["format", "elements", "allowed", "runtime"]
-    assert data["format"] == 2
+    assert list(data)[:4] == ["format", "elements", "allowed", "runtime"]
+    assert data["format"] == 3
     assert data["allowed"] == [{"from": "a", "to": "b"}, {"from": "c", "to": "d"}]
     assert data["runtime"] == [
         {"from": "a", "to": "b", "kind": "calls"}, {"from": "a", "to": "b", "kind": "http"},

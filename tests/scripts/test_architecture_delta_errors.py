@@ -86,3 +86,20 @@ def test_check_json_cleans_every_id_after_sorting() -> None:
     assert data["hot_spots"] == [{"element": "z.a", "shards": ["r", "s"]}]
     assert data["gap"] == {"known": [{"from": "z.a", "to": "d"}], "new": [{"from": "z.a", "to": "b"}],
                            "stale": [{"from": "z.a", "to": "e"}]}
+
+
+def test_clean_text_keeps_line_feeds_and_length() -> None:
+    from arch_delta_support import call
+    text = "a" * 300 + "\n" + "\u001b[31mred\u001b[0m" + "\u0007"
+    assert call("errors.mjs", "cleanText", text)["value"] == "a" * 300 + "\nred"
+
+
+def test_clean_text_drops_carriage_returns_and_bidi_controls() -> None:
+    from arch_delta_support import call
+    assert call("errors.mjs", "cleanText", "x\r\ny\u202ez\t")["value"] == "x\nyz"
+
+
+def test_clean_still_cuts_at_200() -> None:
+    from arch_delta_support import call
+    out = call("errors.mjs", "clean", "a" * 300)["value"]
+    assert out == "a" * 199 + "…"

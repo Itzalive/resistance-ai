@@ -9,6 +9,7 @@ import { parseArgs } from './architecture-delta/args.mjs';
 import { locateLikeC4, importLikeC4, versionNote } from './architecture-delta/likec4.mjs';
 import { walkModelDir, checkSpecCopy } from './architecture-delta/walk.mjs';
 import { loadModel } from './architecture-delta/model.mjs';
+import { readRecords } from './architecture-delta/records.mjs';
 import { realRepo, resolveInside } from './architecture-delta/paths.mjs';
 import { readJson, parseDeps, parseGap, parseShards } from './architecture-delta/inputs.mjs';
 import { compare } from './architecture-delta/match.mjs';
@@ -49,7 +50,9 @@ async function loadRepoModel(args, deadline) {
   checkSpecCopy(model.path, SHIPPED_SPEC);
   const loaded = await loadModel(LikeC4, model.path);
   deadline.check();
-  return { repo, modelDir: model.path, located, model: loaded };
+  // Spec (records): validated right after the model loads, before any other input is read.
+  const records = readRecords(model.path, loaded.elements.map((element) => element.id), deadline.check);
+  return { repo, modelDir: model.path, located, model: loaded, records };
 }
 
 // Spec, Errors: a missing input file is `bad-input`; only the default gap file may be absent.
@@ -91,7 +94,7 @@ async function main(argv) {
   let output;
   let exitCode = 0;
   if (args.command === 'export') {
-    output = `${JSON.stringify(exportJson(loaded.model), null, 2)}\n`;
+    output = `${JSON.stringify(exportJson(loaded.model, loaded.records), null, 2)}\n`;
   } else {
     ({ output, exitCode } = await runCheck(args, deadline, loaded));
   }
