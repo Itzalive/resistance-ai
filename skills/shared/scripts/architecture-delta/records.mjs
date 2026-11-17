@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { ToolError } from './errors.mjs';
 import { isObject, shapeProblems } from './records-shape.mjs';
+import { cmp } from './report.mjs';
 
 const GROUP_FILE = /^[a-z0-9]+(-[a-z0-9]+)*\.json$/;
 const CHANGE_FILE = /^[0-9]{4}-[0-9]{2}-[0-9]{2}-[a-z0-9]+(-[a-z0-9]+)*\.json$/;
@@ -12,7 +13,6 @@ const FOLDERS = [
   { folder: 'decisions', kind: 'decisions', pattern: GROUP_FILE },
 ];
 
-const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 const problem = (at, field, message) => ({ at, line: `${at}: ${field}: ${message}` });
 
 // Pass 1 for one record folder: the well-named files in it, and a problem for anything else.
@@ -181,11 +181,11 @@ function valuePass(file, add) {
   };
   for (const [name, records] of recordLists(file)) {
     const kept = records.filter(({ record }) => isRecordId(record.id));
-    const outOfOrder = kept.findIndex(({ record }, k) => k > 0 && cmp(record.id, kept[k - 1].record.id) < 0);
+    const k = kept.findIndex(({ record }, j) => j > 0 && cmp(record.id, kept[j - 1].record.id) < 0);
+    const late = k === -1 ? null : { index: kept[k].index, after: kept[k - 1].record.id };
     for (const { record, index } of records) {
       const at = `${name}[${index}]`;
-      const k = kept.findIndex((item) => item.index === index);
-      if (k !== -1 && k === outOfOrder) add(`${at}.id`, `not sorted by id: ${record.id} comes after ${kept[k - 1].record.id}`);
+      if (late !== null && index === late.index) add(`${at}.id`, `not sorted by id: ${record.id} comes after ${late.after}`);
       if (name === 'decisions') {
         fixed(record, 'status', STATUS, `${at}.status`);
         if (isString(record.status) && (!has(record, 'superseded_by') || isString(record.superseded_by))) {
@@ -240,7 +240,7 @@ function result(files) {
     else {
       out.groups.push({ kind, group: name, title: data.title });
       const lists = kind === 'decisions' ? ['decisions', 'holes'] : ['contracts'];
-      for (const list of lists) for (const record of data[list]) out[list].push({ ...record, group: name });
+      for (const listName of lists) for (const record of data[listName]) out[listName].push({ ...record, group: name });
     }
   }
   return out;

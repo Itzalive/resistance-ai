@@ -396,3 +396,66 @@ def test_record_text_is_cleaned_without_a_cut(tmp_path) -> None:  # AC-12
     reason = "r" * 250 + "\u001b[31m" + "\n" + "s" * 250
     data = export(model_folder(tmp_path, {"decisions/a.json": dfile(decision("D-1", reason=reason))})[0])
     assert data["decisions"][0]["reason"] == "r" * 250 + "\n" + "s" * 250
+
+
+def test_malformed_references_get_only_the_form_line(tmp_path) -> None:
+    files = {"decisions/a.json": dfile(decision("D-1", status="superseded", superseded_by="_bad")),
+             "contracts/b.json": cfile(contract("C-1", decisions=["_bad"]))}
+    _, folder = model_folder(tmp_path, files)
+    assert problems(read(folder)) == ["contracts/b.json: contracts[0].decisions[0]: not a valid record id",
+                                      "decisions/a.json: decisions[0].superseded_by: not a valid record id"]
+
+
+def test_bad_id_record_skips_links_but_not_values(tmp_path) -> None:
+    _, folder = model_folder(tmp_path, {"decisions/a.json": dfile(decision("_bad", binds=["ghost"], status="nope"))})
+    assert problems(read(folder)) == [
+        "decisions/a.json: decisions[0].id: not a valid record id",
+        "decisions/a.json: decisions[0].status: must be one of current, partly-built, planned, superseded",
+    ]
+
+
+def test_change_lists_are_checked_for_form(tmp_path) -> None:
+    files = {"changes/2026-11-16-baseline.json": change(elements={"added": [], "changed": [], "removed": [""]},
+                                                        decisions={"added": ["_bad"], "changed": [], "removed": []})}
+    _, folder = model_folder(tmp_path, files)
+    assert problems(read(folder)) == ["changes/2026-11-16-baseline.json: elements.removed[0]: must not be empty",
+                                      "changes/2026-11-16-baseline.json: decisions.added[0]: not a valid record id"]
+
+
+def test_approval_date_and_double_date_problems(tmp_path) -> None:
+    files = {"changes/2026-11-16-a.json": change("2026-11-16-a", date="2026-02-30"),
+             "changes/2026-11-16-b.json": change("2026-11-16-b", approved={"by": "owner", "date": "2026-13-01"})}
+    _, folder = model_folder(tmp_path, files)
+    assert problems(read(folder)) == ["changes/2026-11-16-a.json: date: not a real date",
+                                      "changes/2026-11-16-a.json: date: must be the start of the file name",
+                                      "changes/2026-11-16-b.json: approved.date: not a real date"]
+
+
+def test_deadline_is_checked_after_each_record_file(tmp_path) -> None:
+    from arch_delta_support import lib_url, run_module
+    files = {"decisions/a.json": dfile(decision("D-1")), "decisions/b.json": dfile(decision("D-2")),
+             "changes/2026-11-16-baseline.json": change()}
+    _, folder = model_folder(tmp_path, files)
+    code = (f"import {{ readRecords }} from {json.dumps(lib_url('records.mjs'))};\n"
+            "let ticks = 0;\n"
+            f"readRecords({json.dumps(str(folder))}, {json.dumps(SHOP_IDS)}, () => {{ ticks += 1; }});\n"
+            "process.stdout.write(String(ticks));\n")
+    proc = run_module(code)
+    assert proc.returncode == 0, proc.stderr
+    assert proc.stdout == "3"
+
+
+def test_only_the_first_out_of_order_record_is_reported(tmp_path) -> None:
+    _, folder = model_folder(tmp_path, {"decisions/a.json": dfile(decision("D-2"), decision("D-1"), decision("D-4"), decision("D-3"))})
+    assert problems(read(folder)) == ["decisions/a.json: decisions[1].id: not sorted by id: D-1 comes after D-2"]
+
+
+def test_coverage_run_naming_an_unreadable_change_file_is_not_a_link_problem(tmp_path) -> None:
+    _, folder = model_folder(tmp_path, {"changes/2026-11-16-baseline.json": "{oops", "coverage.json": coverage()})
+    assert problems(read(folder)) == ["changes/2026-11-16-baseline.json: -: not valid JSON"]
+
+
+def test_gap_pairs_are_cut_like_other_ids(tmp_path) -> None:
+    files = {"changes/2026-11-16-baseline.json": change(gap={"added": [["g" * 250, "x"]], "removed": []})}
+    data = export(model_folder(tmp_path, files)[0])
+    assert data["changes"][0]["gap"]["added"][0] == ["g" * 199 + "…", "x"]
