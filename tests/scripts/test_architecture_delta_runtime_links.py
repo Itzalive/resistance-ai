@@ -100,16 +100,16 @@ def test_loader_returns_import_relationships_and_runtime_links_apart(tmp_path) -
     value = load_model(repo / "docs" / "architecture")["value"]
     assert sorted((r["from"], r["to"]) for r in value["relationships"]) == [("a", "b"), ("c", "d")]
     assert sorted((r["from"], r["to"], r["kind"]) for r in value["runtime"]) == [("a", "c", "http"), ("d", "a", "push")]
-    assert all(set(r) == {"from", "to"} for r in value["relationships"])
+    assert all(set(r) == {"from", "to", "title"} for r in value["relationships"])
 
 
-KIND_SHIM = """const E = (id) => ({ id, kind: 'component', tags: [], getMetadata() { return {}; } });
+KIND_SHIM = """const E = (id) => ({ id, kind: 'component', title: id, tags: [], getMetadata() { return {}; } });
 export class LikeC4 {
   static async fromWorkspace() {
     return {
       getErrors() { return []; },
       async computedModel() {
-        return { elements() { return [E('a'), E('b')]; }, relationships() { return [RELATIONSHIP]; } };
+        return { elements() { return [E('a'), E('b')]; }, relationships() { return [RELATIONSHIP]; }, views() { return []; } };
       },
     };
   }
@@ -139,7 +139,7 @@ def test_bad_kind_from_likec4_is_internal(tmp_path, kind: str) -> None:  # AC-11
 def test_missing_or_null_kind_is_an_import_relationship(tmp_path, relationship: str) -> None:  # AC-11, second half
     proc = export_with(tmp_path, relationship)
     assert proc.returncode == 0, proc.stderr
-    assert json.loads(proc.stdout)["allowed"] == [{"from": "a", "to": "b"}]
+    assert json.loads(proc.stdout)["allowed"] == [{"from": "a", "to": "b", "titles": []}]
 def export(repo: Path) -> dict:
     proc = run_tool("export", "--repo", repo)
     assert proc.returncode == 0, proc.stderr
@@ -153,24 +153,27 @@ def test_export_lists_runtime_links_once_per_pair_and_kind(tmp_path) -> None:  #
     )
     data = export(make_repo(tmp_path, text))
     assert list(data)[:4] == ["format", "elements", "allowed", "runtime"]
-    assert data["format"] == 3
-    assert data["allowed"] == [{"from": "a", "to": "b"}, {"from": "c", "to": "d"}]
+    assert data["format"] == 4
+    assert data["allowed"] == [{"from": "a", "to": "b", "titles": []}, {"from": "c", "to": "d", "titles": []}]
     assert data["runtime"] == [
-        {"from": "a", "to": "b", "kind": "calls"}, {"from": "a", "to": "b", "kind": "http"},
-        {"from": "c", "to": "a", "kind": "push"},
+        {"from": "a", "to": "b", "kind": "calls", "titles": []},
+        {"from": "a", "to": "b", "kind": "http", "titles": ["one", "two"]},
+        {"from": "c", "to": "a", "kind": "push", "titles": []},
     ]
 
 
 def test_runtime_links_in_both_directions_are_exported_and_not_allowed(tmp_path) -> None:  # AC-8
     data = export(make_repo(tmp_path, model("a -[http]-> b", "b -[http]-> a")))
-    assert data["runtime"] == [{"from": "a", "to": "b", "kind": "http"}, {"from": "b", "to": "a", "kind": "http"}]
+    assert data["runtime"] == [
+        {"from": "a", "to": "b", "kind": "http", "titles": []}, {"from": "b", "to": "a", "kind": "http", "titles": []},
+    ]
     assert data["allowed"] == []
 
 
 def test_long_kind_name_is_cleaned(tmp_path) -> None:  # AC-9
     kind = "k" * 201
     data = export(make_repo(tmp_path, model(f"a -[{kind}]-> b", kinds=(kind,))))
-    assert data["runtime"] == [{"from": "a", "to": "b", "kind": "k" * 199 + "…"}]
+    assert data["runtime"] == [{"from": "a", "to": "b", "kind": "k" * 199 + "…", "titles": []}]
 
 
 def test_export_without_runtime_links_has_an_empty_list(tmp_path) -> None:  # AC-10

@@ -1,6 +1,7 @@
 // Loads a model folder with likec4, checks the shape of what likec4 returns, validates code prefixes, and splits relationships into import relationships and runtime links.
 import path from 'node:path';
 import { ToolError } from './errors.mjs';
+import { readViews, richText } from './views.mjs';
 
 export const ELEMENT_LIMIT = 5000;
 // A relationship of this kind, or with no kind, permits imports. Any other kind is a runtime link.
@@ -58,12 +59,15 @@ export async function loadModel(LikeC4, modelDir) {
     for (const key of ['code', 'rules']) {
       if (meta[key] !== undefined && typeof meta[key] !== 'string') throw shapeError(`element ${element.id} with a non-string ${key}`);
     }
+    if (typeof element.title !== 'string') throw shapeError(`element ${element.id} without a string title`);
     elements.push({
       id: element.id,
       kind: element.kind,
       tags: [...element.tags],
       code: splitList(meta.code),
       rules: splitList(meta.rules).filter((rule) => rule !== ''),
+      title: element.title,
+      description: richText(element.description),
     });
     if (elements.length > ELEMENT_LIMIT) throw new ToolError('element-cap', `more than ${ELEMENT_LIMIT} elements`);
   }
@@ -77,10 +81,13 @@ export async function loadModel(LikeC4, modelDir) {
     if (kind !== null && (typeof kind !== 'string' || kind === '')) {
       throw shapeError('a relationship whose kind is not a non-empty string');
     }
-    const pair = { from: relationship.source.id, to: relationship.target.id };
+    const title = relationship.title ?? null;
+    if (title !== null && typeof title !== 'string') throw shapeError('a relationship whose title is not a string');
+    const pair = { from: relationship.source.id, to: relationship.target.id, title };
     if (kind === null || kind === IMPORT_KIND) relationships.push(pair);
     else runtime.push({ ...pair, kind });
   }
   validatePrefixes(elements);
-  return { elements, relationships, runtime };
+  const views = readViews(computed, elements.map((element) => element.id), relationships, runtime);
+  return { elements, relationships, runtime, ...views };
 }

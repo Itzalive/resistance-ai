@@ -360,7 +360,7 @@ def export(repo: Path) -> dict:
 
 def test_export_without_records(tmp_path) -> None:  # AC-1
     data = export(model_folder(tmp_path, {})[0])
-    assert data["format"] == 3
+    assert data["format"] == 4
     assert [data[k] for k in ("groups", "decisions", "holes", "contracts", "changes")] == [[], [], [], [], []]
     assert data["coverage"] is None
 
@@ -463,9 +463,9 @@ def test_gap_pairs_are_cut_like_other_ids(tmp_path) -> None:
 
 def test_decisions_carry_obligations(tmp_path) -> None:  # AC-19
     cross = decision("D-1", owner="shop.orders", obligations=["Every order has an id."], compatibility="Additive only.",
-                     capabilities=["Pay"])
+                     capabilities=["pay"])
     principle = decision("P-1", binds=[], obligations=["Data stays in the EU."])
-    data = export(model_folder(tmp_path, {"decisions/a.json": dfile(cross, principle)})[0])
+    data = export(model_folder(tmp_path, {"views.c4": CAPABILITY_VIEW, "decisions/a.json": dfile(cross, principle)})[0])
     assert data["decisions"] == [{**cross, "group": "a"}, {**principle, "group": "a"}]
 
 
@@ -510,4 +510,39 @@ def test_obligations_rule_and_wrong_types(tmp_path) -> None:  # AC-22
     assert error_lines(run_tool("export", "--repo", repo)) == [
         "error: record-error: decisions/a.json: decisions[0].owner: must be a string",
         "error: record-error: decisions/a.json: decisions[1].obligations: must be a list",
+    ]
+
+
+CAPABILITY_VIEW = "views {\n  dynamic view capability-pay {\n    shop.checkout -> shop.payments\n  }\n}\n"
+
+
+def test_capabilities_name_capability_views(tmp_path) -> None:  # AC-4
+    files = {"views.c4": CAPABILITY_VIEW,
+             "decisions/a.json": dfile(decision("D-1", capabilities=["pay"])),
+             "contracts/b.json": cfile(contract("C-1", capabilities=["ship", "pay", "pay"]))}
+    repo, _ = model_folder(tmp_path, files)
+    assert error_lines(run_tool("export", "--repo", repo)) == [
+        "error: record-error: contracts/b.json: contracts[0].capabilities[0]: ship is not a capability",
+        "error: record-error: contracts/b.json: contracts[0].capabilities[2]: pay is listed twice",
+    ]
+
+
+def test_capability_line_follows_the_owner_line(tmp_path) -> None:
+    files = {"decisions/a.json": dfile(decision("D-1", owner="ghost", obligations=["o"], capabilities=["x"]))}
+    repo, _ = model_folder(tmp_path, files)
+    assert error_lines(run_tool("export", "--repo", repo)) == [
+        "error: record-error: decisions/a.json: decisions[0].owner: ghost is not a model element",
+        "error: record-error: decisions/a.json: decisions[0].capabilities[0]: x is not a capability",
+    ]
+
+
+def test_capability_names_skip_wrong_types_and_unknown_comes_first(tmp_path) -> None:  # AC-4
+    files = {"contracts/b.json": cfile(contract("C-1", capabilities=[5, "", "ship", "ship"]))}
+    repo, _ = model_folder(tmp_path, files)
+    assert error_lines(run_tool("export", "--repo", repo)) == [
+        "error: record-error: contracts/b.json: contracts[0].capabilities[0]: must be a non-empty string",
+        "error: record-error: contracts/b.json: contracts[0].capabilities[1]: must be a non-empty string",
+        "error: record-error: contracts/b.json: contracts[0].capabilities[2]: ship is not a capability",
+        "error: record-error: contracts/b.json: contracts[0].capabilities[3]: ship is not a capability",
+        "error: record-error: contracts/b.json: contracts[0].capabilities[3]: ship is listed twice",
     ]

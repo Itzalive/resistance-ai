@@ -4,33 +4,25 @@ import { clean, cleanText } from './errors.mjs';
 export const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 export const byPair = (x, y) => cmp(x.from, y.from) || cmp(x.to, y.to);
 
-export function uniquePairs(list) {
-  const seen = new Set();
-  return list.filter((pair) => {
-    const key = `${pair.from}\u0000${pair.to}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
+// One entry per key, with the distinct non-empty titles of the relationships it stands for, sorted raw.
+function mergeTitles(list, keyOf) {
+  const byKey = new Map();
+  for (const item of list) {
+    const key = keyOf(item);
+    if (!byKey.has(key)) byKey.set(key, { item, titles: new Set() });
+    if (typeof item.title === 'string' && item.title !== '') byKey.get(key).titles.add(item.title);
+  }
+  return [...byKey.values()].map(({ item, titles }) => ({ ...item, titles: [...titles].sort(cmp) }));
 }
 
+const pairKey = (pair) => `${pair.from}\u0000${pair.to}`;
+const linkKey = (link) => `${pairKey(link)}\u0000${link.kind}`;
 const byLink = (x, y) => byPair(x, y) || cmp(x.kind, y.kind);
-
-// One entry per pair and kind. Links are compared raw, before cleaning.
-function uniqueLinks(list) {
-  const seen = new Set();
-  return list.filter((link) => {
-    const key = `${link.from}\u0000${link.to}\u0000${link.kind}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-}
 
 const cleanPair = (pair) => ({ from: clean(pair.from), to: clean(pair.to) });
 
 // Keys whose values (and everything under them) are ids: cut like every id. Every other string is record text.
-const ID_KEYS = new Set(['id', 'superseded_by', 'binds', 'owner', 'bound', 'decisions', 'elements', 'holes', 'contracts',
+const ID_KEYS = new Set(['id', 'superseded_by', 'binds', 'owner', 'bound', 'decisions', 'elements', 'holes', 'contracts', 'capabilities',
   'gap', 'element', 'run', 'group']);
 
 function cleanRecord(value, isId = false) {
@@ -46,16 +38,20 @@ const byId = (x, y) => cmp(x.id, y.id);
 
 export function exportJson(model, records) {
   return {
-    format: 3,
+    format: 4,
     elements: [...model.elements].sort((a, b) => cmp(a.id, b.id)).map((element) => ({
       id: clean(element.id),
       kind: clean(element.kind),
       tags: element.tags.map(clean),
       code: element.code.map(clean),
       rules: element.rules.map(clean),
+      title: cleanText(element.title),
+      description: element.description === null ? null : cleanText(element.description),
     })),
-    allowed: uniquePairs(model.relationships).sort(byPair).map(cleanPair),
-    runtime: uniqueLinks(model.runtime).sort(byLink).map((link) => ({ ...cleanPair(link), kind: clean(link.kind) })),
+    allowed: mergeTitles(model.relationships, pairKey).sort(byPair)
+      .map((entry) => ({ ...cleanPair(entry), titles: entry.titles.map(cleanText) })),
+    runtime: mergeTitles(model.runtime, linkKey).sort(byLink)
+      .map((link) => ({ ...cleanPair(link), kind: clean(link.kind), titles: link.titles.map(cleanText) })),
     groups: [...records.groups].sort((x, y) => cmp(x.kind, y.kind) || cmp(x.group, y.group))
       .map((entry) => ({ kind: entry.kind, group: clean(entry.group), title: cleanText(entry.title) })),
     decisions: [...records.decisions].sort(byId).map((record) => cleanRecord(record)),
@@ -63,6 +59,24 @@ export function exportJson(model, records) {
     contracts: [...records.contracts].sort(byId).map((record) => cleanRecord(record)),
     changes: [...records.changes].sort(byId).map((record) => cleanRecord(record)),
     coverage: records.coverage === null ? null : cleanRecord(records.coverage),
+    areas: model.areas.map((area) => ({
+      name: clean(area.name),
+      title: cleanText(area.title),
+      description: area.description === null ? null : cleanText(area.description),
+      elements: area.elements.map(clean),
+    })),
+    capabilities: model.capabilities.map((capability) => ({
+      name: clean(capability.name),
+      title: cleanText(capability.title),
+      description: capability.description === null ? null : cleanText(capability.description),
+      steps: capability.steps.map((step) => ({
+        from: clean(step.from),
+        to: clean(step.to),
+        label: step.label === null ? null : cleanText(step.label),
+        reply: step.reply,
+        kinds: step.kinds.map(clean),
+      })),
+    })),
   };
 }
 

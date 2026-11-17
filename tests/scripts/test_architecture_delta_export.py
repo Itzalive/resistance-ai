@@ -19,29 +19,31 @@ def test_export_is_stable_and_sorted(tmp_path) -> None:
     assert first.returncode == 0, first.stderr
     assert first.stdout == second.stdout
     data = json.loads(first.stdout)
-    assert list(data) == ["format", "elements", "allowed", "runtime", "groups", "decisions", "holes", "contracts", "changes", "coverage"]
-    assert data["format"] == 3
+    assert list(data) == ["format", "elements", "allowed", "runtime", "groups", "decisions", "holes", "contracts", "changes", "coverage", "areas", "capabilities"]
+    assert data["format"] == 4
     assert [e["id"] for e in data["elements"]] == [
         "shop", "shop.checkout", "shop.orders", "shop.orders.api", "shop.payments", "shop.payments.card",
     ]
     assert data["elements"][4] == {
         "id": "shop.payments", "kind": "container", "tags": ["protected"], "code": ["shop.payments"], "rules": [],
+        "title": "Payments", "description": None,
     }
     assert data["allowed"] == [
-        {"from": "shop.checkout", "to": "shop.payments"}, {"from": "shop.orders", "to": "shop.checkout"},
+        {"from": "shop.checkout", "to": "shop.payments", "titles": []},
+        {"from": "shop.orders", "to": "shop.checkout", "titles": []},
     ]
 
 
 def test_export_merges_duplicate_relationships(tmp_path) -> None:
     model = "model {\n  a = component 'A'\n  b = component 'B'\n  a -> b\n  a -[uses]-> b 'again'\n}\n"
     data = json.loads(run_tool("export", "--repo", make_repo(tmp_path, model)).stdout)
-    assert data["allowed"] == [{"from": "a", "to": "b"}]
+    assert data["allowed"] == [{"from": "a", "to": "b", "titles": ["again"]}]
 
 
 def test_export_of_a_spec_only_folder_is_empty(tmp_path) -> None:
     proc = run_tool("export", "--repo", make_repo(tmp_path, None))
     assert proc.returncode == 0, proc.stderr
-    assert json.loads(proc.stdout) == {"format": 3, "elements": [], "allowed": [], "runtime": [], "groups": [], "decisions": [], "holes": [], "contracts": [], "changes": [], "coverage": None}
+    assert json.loads(proc.stdout) == {"format": 4, "elements": [], "allowed": [], "runtime": [], "groups": [], "decisions": [], "holes": [], "contracts": [], "changes": [], "coverage": None, "areas": [], "capabilities": []}
 
 
 def test_export_refuses_config_and_never_runs_it(tmp_path) -> None:
@@ -179,7 +181,7 @@ def test_repo_given_through_a_link_exports(tmp_path) -> None:
     link_dir(repo, link)
     proc = run_tool("export", "--repo", link)
     assert proc.returncode == 0, proc.stderr
-    assert json.loads(proc.stdout)["format"] == 3
+    assert json.loads(proc.stdout)["format"] == 4
 
 
 def test_unexpected_error_is_internal_exit_2(tmp_path) -> None:
@@ -202,7 +204,7 @@ def test_export_sorts_by_code_unit_not_locale(tmp_path) -> None:
     model = "model {\n  a = component 'A'\n  B = component 'B'\n  a -> B\n  B -> a\n}\n"
     data = json.loads(run_tool("export", "--repo", make_repo(tmp_path, model)).stdout)
     assert [e["id"] for e in data["elements"]] == ["B", "a"]
-    assert data["allowed"] == [{"from": "B", "to": "a"}, {"from": "a", "to": "B"}]
+    assert data["allowed"] == [{"from": "B", "to": "a", "titles": []}, {"from": "a", "to": "B", "titles": []}]
 
 
 def test_deadline_check_fails_without_the_timer(tmp_path) -> None:
@@ -233,3 +235,77 @@ def test_timer_ends_a_slow_load_at_the_deadline(tmp_path) -> None:
     assert proc.returncode == 2
     assert proc.stdout == ""
     assert error_lines(proc) == ["error: timeout: run exceeded --timeout 1s"]
+
+
+def export(repo):
+    proc = run_tool("export", "--repo", repo)
+    assert proc.returncode == 0, proc.stderr
+    return json.loads(proc.stdout)
+
+
+TITLED = """specification {
+  relationship http
+}
+model {
+  a = component 'A' {
+    description '''
+      One
+      **Two**
+    '''
+  }
+  b = component
+  a -> b 'reads'
+  a -> b 'writes'
+  a -> b
+  a -[http]-> b 'calls'
+}
+"""
+
+
+def test_export_carries_titles_and_descriptions(tmp_path) -> None:  # AC-1 (titles)
+    data = export(make_repo(tmp_path, TITLED))
+    assert data["format"] == 4
+    assert data["elements"] == [
+        {"id": "a", "kind": "component", "tags": [], "code": [], "rules": [], "title": "A", "description": "One\n**Two**"},
+        {"id": "b", "kind": "component", "tags": [], "code": [], "rules": [], "title": "b", "description": None},
+    ]
+    assert data["allowed"] == [{"from": "a", "to": "b", "titles": ["reads", "writes"]}]
+    assert data["runtime"] == [{"from": "a", "to": "b", "kind": "http", "titles": ["calls"]}]
+    assert list(data["elements"][0]) == ["id", "kind", "tags", "code", "rules", "title", "description"]
+    assert list(data["allowed"][0]) == ["from", "to", "titles"]
+    assert list(data["runtime"][0]) == ["from", "to", "kind", "titles"]
+
+
+def test_titles_are_not_cut(tmp_path) -> None:
+    title = "t" * 250
+    model = "model {\n  a = component '" + title + "'\n  b = component 'B'\n  a -> b '" + title + "'\n}\n"
+    data = export(make_repo(tmp_path, model))
+    assert data["elements"][0]["title"] == title
+    assert data["allowed"][0]["titles"] == [title]
+
+
+def test_runtime_titles_and_descriptions_are_not_cut(tmp_path) -> None:
+    text = "t" * 250
+    model = (
+        "specification {\n  relationship http\n}\nmodel {\n  a = component 'A' {\n    description '" + text + "'\n  }\n"
+        "  b = component 'B'\n  a -[http]-> b '" + text + "'\n}\n"
+    )
+    data = export(make_repo(tmp_path, model))
+    assert data["elements"][0]["description"] == text
+    assert data["runtime"][0]["titles"] == [text]
+
+
+def test_new_text_fields_are_cleaned(tmp_path) -> None:  # spec, format 4: text is cleaned, line feeds kept
+    dirty = "A\x1b[31mB\u202eC"
+    model = (
+        "model {\n  a = component '" + dirty + "' {\n    description '''\n      one" + dirty + "\n      two\n    '''\n  }\n"
+        "  b = component 'B'\n  a -> b '" + dirty + "'\n}\n"
+        "views {\n  view area-x {\n    title '" + dirty + "'\n    description '" + dirty + "'\n    include a\n  }\n"
+        "  dynamic view capability-x {\n    a -> b '" + dirty + "'\n  }\n}\n"
+    )
+    data = export(make_repo(tmp_path, model))
+    assert data["elements"][0]["title"] == "ABC"
+    assert data["elements"][0]["description"] == "oneABC\ntwo"
+    assert data["allowed"][0]["titles"] == ["ABC"]
+    assert [data["areas"][0]["title"], data["areas"][0]["description"]] == ["ABC", "ABC"]
+    assert data["capabilities"][0]["steps"][0]["label"] == "ABC"

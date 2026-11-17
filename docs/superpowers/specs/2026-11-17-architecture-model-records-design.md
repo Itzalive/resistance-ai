@@ -2,6 +2,8 @@
 
 Work item: #31, part A3a (A3 of #37). Amended for #31 part A3c: decisions carry obligations ("Decisions, cross-cutting decisions and principles" below). Amends `2026-11-09-architecture-delta-tool-design.md` and `2026-11-16-architecture-delta-runtime-links-design.md`.
 
+> Amended by `2026-11-17-architecture-docs-design.md`: `capabilities` entries name capability views, checked in pass 4.
+
 ## Why
 
 A run of `defining-architecture` records decisions, open questions, contracts with other systems and what the run changed. Today they go into a hand-written `architecture.md` that nothing validates, so a reason can go on naming an element that no longer exists and nobody is told. Only a person can read the file reliably, and its sections are parsed by pattern when a document is generated from it (`docs/field-reports/2026-11-16-defining-architecture-first-run.md`, F2, F9, F12).
@@ -49,7 +51,7 @@ Every file is one JSON object. Every field below is required unless marked optio
 | `owner` | optional: the element id of the part that defines it |
 | `obligations` | optional list of text, at least one: what every bound part must keep to |
 | `compatibility` | optional text: how it may change; absent means no rule is stated |
-| `capabilities` | optional list of text: the epic capabilities that depend on it |
+| `capabilities` | optional list of capability names (capability views; checked in pass 4): the capabilities that depend on it |
 | `note` | optional text |
 
 | Hole field | Value |
@@ -72,7 +74,7 @@ Every file is one JSON object. Every field below is required unless marked optio
 | `compatibility` | text, or `null` when none is stated |
 | `notes` | optional list of text |
 | `decisions` | optional list of decision ids |
-| `capabilities` | optional list of text: the epic capabilities that depend on it |
+| `capabilities` | optional list of capability names (capability views; checked in pass 4): the capabilities that depend on it |
 
 **Change file:**
 
