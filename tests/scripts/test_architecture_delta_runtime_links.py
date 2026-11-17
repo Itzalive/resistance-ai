@@ -139,3 +139,38 @@ def test_missing_or_null_kind_is_an_import_relationship(tmp_path, relationship: 
     proc = export_with(tmp_path, relationship)
     assert proc.returncode == 0, proc.stderr
     assert json.loads(proc.stdout)["allowed"] == [{"from": "a", "to": "b"}]
+def export(repo: Path) -> dict:
+    proc = run_tool("export", "--repo", repo)
+    assert proc.returncode == 0, proc.stderr
+    return json.loads(proc.stdout)
+
+
+def test_export_lists_runtime_links_once_per_pair_and_kind(tmp_path) -> None:  # AC-7
+    text = model(
+        "a -> b", "c -[uses]-> d", "c -[push]-> a", "a -[http]-> b 'one'", "a -[http]-> b 'two'", "a -[calls]-> b",
+        kinds=("http", "push", "calls"),
+    )
+    data = export(make_repo(tmp_path, text))
+    assert list(data) == ["format", "elements", "allowed", "runtime"]
+    assert data["format"] == 2
+    assert data["allowed"] == [{"from": "a", "to": "b"}, {"from": "c", "to": "d"}]
+    assert data["runtime"] == [
+        {"from": "a", "to": "b", "kind": "calls"}, {"from": "a", "to": "b", "kind": "http"},
+        {"from": "c", "to": "a", "kind": "push"},
+    ]
+
+
+def test_runtime_links_in_both_directions_are_exported_and_not_allowed(tmp_path) -> None:  # AC-8
+    data = export(make_repo(tmp_path, model("a -[http]-> b", "b -[http]-> a")))
+    assert data["runtime"] == [{"from": "a", "to": "b", "kind": "http"}, {"from": "b", "to": "a", "kind": "http"}]
+    assert data["allowed"] == []
+
+
+def test_long_kind_name_is_cleaned(tmp_path) -> None:  # AC-9
+    kind = "k" * 201
+    data = export(make_repo(tmp_path, model(f"a -[{kind}]-> b", kinds=(kind,))))
+    assert data["runtime"] == [{"from": "a", "to": "b", "kind": "k" * 199 + "…"}]
+
+
+def test_export_without_runtime_links_has_an_empty_list(tmp_path) -> None:  # AC-10
+    assert export(make_repo(tmp_path, model("a -> b", kinds=())))["runtime"] == []

@@ -19,8 +19,8 @@ def test_export_is_stable_and_sorted(tmp_path) -> None:
     assert first.returncode == 0, first.stderr
     assert first.stdout == second.stdout
     data = json.loads(first.stdout)
-    assert list(data) == ["format", "elements", "allowed"]
-    assert data["format"] == 1
+    assert list(data) == ["format", "elements", "allowed", "runtime"]
+    assert data["format"] == 2
     assert [e["id"] for e in data["elements"]] == [
         "shop", "shop.checkout", "shop.orders", "shop.orders.api", "shop.payments", "shop.payments.card",
     ]
@@ -41,7 +41,7 @@ def test_export_merges_duplicate_relationships(tmp_path) -> None:
 def test_export_of_a_spec_only_folder_is_empty(tmp_path) -> None:
     proc = run_tool("export", "--repo", make_repo(tmp_path, None))
     assert proc.returncode == 0, proc.stderr
-    assert json.loads(proc.stdout) == {"format": 1, "elements": [], "allowed": []}
+    assert json.loads(proc.stdout) == {"format": 2, "elements": [], "allowed": [], "runtime": []}
 
 
 def test_export_refuses_config_and_never_runs_it(tmp_path) -> None:
@@ -179,7 +179,7 @@ def test_repo_given_through_a_link_exports(tmp_path) -> None:
     link_dir(repo, link)
     proc = run_tool("export", "--repo", link)
     assert proc.returncode == 0, proc.stderr
-    assert json.loads(proc.stdout)["format"] == 1
+    assert json.loads(proc.stdout)["format"] == 2
 
 
 def test_unexpected_error_is_internal_exit_2(tmp_path) -> None:
