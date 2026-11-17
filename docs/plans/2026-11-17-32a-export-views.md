@@ -227,6 +227,8 @@ Then make every Task 1 sweep edit.
 
 **Callers that move with this task:** the Task 2 rows of the sweep table (`SHIM`, `KIND_SHIM`, export key list and empty export).
 
+**Three core files, atomic:** the module that reads the views, the loader that returns them and the printer change together; without the printer the new field cannot be tested through `export`, and without the loader the module has no caller.
+
 **Reviewer looks at:**
 - a scoped area is its whole subtree — mutation: use the view's nodes for a scoped view too — killed by: `test_area_views_are_exported` (`shop.api.db` in, `pay` out)
 - group nodes ignored — mutation: keep nodes without `modelRef` — killed by: `test_area_views_are_exported`
@@ -467,6 +469,8 @@ Make the Task 2 sweep edits.
 
 **Callers that move with this task:** the Task 3 rows of the sweep table (export key list and empty export).
 
+**Three core files, atomic:** as Task 2: reader, loader argument and printer change together.
+
 **Reviewer looks at:**
 - a step matches a deeper relationship — mutation: require exact ends (`===` instead of `within`) — killed by: `test_capability_steps_are_calls_and_replies` (step 4)
 - direction of `within` — mutation: `within(step end, relationship end)` instead of `within(relationship end, step end)` — killed by: `test_capability_steps_are_calls_and_replies` (step 4) and `test_a_step_with_no_relationship_is_a_model_error` (step 3)
@@ -591,6 +595,8 @@ Make the Task 3 sweep edits.
 - Test: `tests/scripts/test_architecture_delta_records.py` (append; sweep edit)
 
 **Callers that move with this task:** `architecture-delta.mjs` `loadRepoModel`; `test_decisions_carry_obligations`.
+
+**Three files, atomic:** `records.mjs` and its one caller must change together; the `report.mjs` edit is one word in `ID_KEYS`.
 
 **Reviewer looks at:**
 - the names come from the model — mutation: pass `[]` instead of the capability names in `loadRepoModel` — killed by: `test_decisions_carry_obligations` and `test_capabilities_name_capability_views`
