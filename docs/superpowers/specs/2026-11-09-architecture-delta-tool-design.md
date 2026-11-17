@@ -4,6 +4,8 @@ Work item: #20 (part of #19). Status: approved by the owner on 2026-11-09.
 
 > Amended by `2026-11-16-architecture-delta-runtime-links-design.md` (#30): that spec replaces the "Allowed", "`#protected`" and "Reported" rules below where they say "any relationship", the API-shape rule for what LikeC4 returns (a relationship's `kind`), and the `export` shape. Only relationships of kind `uses`, or with no kind, permit imports; other kinds are runtime links.
 
+> Amended by `2026-11-17-architecture-model-records-design.md` (#31): the tool also reads and validates the record files in the model folder, `export` prints them (format 3), record text is cleaned without the 200-character cut, and `record-error` is an exit-2 token.
+
 ## What it is
 
 `skills/shared/scripts/architecture-delta.mjs` compares a repository's target architecture, written as
@@ -212,7 +214,7 @@ the caller's own timeout. The model folder limits keep that load small.
 `error: <token>: <detail>`, with the detail cleaned as above. The tokens are: `usage`,
 `likec4-missing`, `model-error`, `model-config`, `model-symlink`, `model-size`,
 `spec-copy`, `outside-repo`, `bad-input`, `unknown-scope`, `edge-cap`, `element-cap`, `file-size`,
-`timeout` and `internal`. A missing `--model` directory, a missing or unparseable input file, an input path that is not a
+`timeout`, `record-error` and `internal`. A missing `--model` directory, a missing or unparseable input file, an input path that is not a
 regular file (a folder or a pipe, say), an
 unknown id in a gap or shards file and a duplicate gap entry are `bad-input`; `getErrors()` entries and
 exceptions from `likec4` while loading are `model-error`. A top-level handler turns any other error into `internal` with exit 2, so an

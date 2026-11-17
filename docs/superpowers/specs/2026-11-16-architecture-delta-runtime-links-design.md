@@ -2,6 +2,8 @@
 
 Work item: #30 (A2 of #37). Amends `2026-11-09-architecture-delta-tool-design.md`.
 
+> `export` is now format 3: `2026-11-17-architecture-model-records-design.md` (#31) adds the record lists after `runtime`.
+
 ## Why
 
 A model author sometimes needs a relationship that is not an import: a client app calling a server over HTTP, a push path, a component calling an outside system. Today the delta tool has one sort of relationship. Any relationship permits imports between its two ends, and one whose ends both have code but no import between them is reported as "not yet reached" on every run. The first real model had 33 runtime links, and each one between two elements with code was reported as not yet reached on every run (`docs/field-reports/2026-11-16-defining-architecture-first-run.md`, F3).
