@@ -12,7 +12,7 @@
 
 **Open decisions:** none
 
-**Size:** 6 tasks, 2 entry paths (`export`, `check`), lines reported in the self-review commit (reported, not a target)
+**Size:** 6 tasks, 2 entry paths (`export`, `check`), 827 lines (reported, not a target)
 
 **Trust boundary:** unchanged. New values come from LikeC4's computed model, are shape-checked like the existing ones (`internal` on a wrong shape), and are printed through the existing cleaning. `views.mjs` reads only; the source test (`test_tool_source_never_spawns_or_writes`) covers it because it globs `architecture-delta/*.mjs`.
 
@@ -29,7 +29,7 @@
 **Unknown variables:**
 - Whether LikeC4 ever returns a view whose `$view.edges` entry has a `source` that is not a node id. The probes never did; `views.mjs` treats it as `internal`.
 
-Probe facts used (LikeC4 1.60.0, fixtures of Tasks 2 and 3): `view.$view._type` is `element` or `dynamic`; `$view.title` is `null` for an untitled unscoped or dynamic view, and the scope element's title for an untitled scoped view; `$view.viewOf` is the scope element id or absent; nodes carry `modelRef` (the element id), and a `group` node has none (id `@gr1`); an unscoped view that includes `shop.web` also draws its ancestor `shop`; dynamic edges come in order as `step-01`, `step-02:par.01`, `step-02:par.02`, `step-03`, with `source`, `target` (node ids) and `label` (string or `null`); `element.description` and `view.description` have `isEmpty` and `md` (source text, dedented); `element.title` is the element's name when untitled; `relationship.title` is a string or `null`.
+Probe facts used (LikeC4 1.60.0, fixtures of Tasks 2 and 3): `view.$view._type` is `element` or `dynamic`; `$view.title` is `null` for an untitled unscoped or dynamic view, and the scope element's title for an untitled scoped view; `$view.viewOf` is the scope element id or absent; nodes carry `modelRef` (the element id), and a `group` node has none (id `@gr1`); an unscoped view that includes `shop.web` also draws its ancestor `shop`; dynamic edges come in order as `step-01`, `step-02:par.01`, `step-02:par.02`, `step-03`, with `source`, `target` (node ids) and `label`: an unlabelled step takes the title of the relationship LikeC4 links to it, and a step with no linked relationship (a reply) and no label has `label: null`; `element.description` and `view.description` have `isEmpty` and `md` (source text, dedented); `element.title` is the element's name when untitled; `relationship.title` is a string or `null`.
 
 ---
 
@@ -59,7 +59,7 @@ Searched: `skills/`, `tests/` with `rg -n "\"format\"\]|== 3|\"allowed\"\] ==|\"
 | same | `tests/scripts/test_architecture_delta_model.py` param `no-target` element | fake | 1 | `"{ id: 'a', kind: 'component', title: 'A', tags: [], getMetadata() { return {}; } }"` |
 | same | `tests/scripts/test_architecture_delta_runtime_links.py` `KIND_SHIM` `E` | fake | 1 | `const E = (id) => ({ id, kind: 'component', title: id, tags: [], getMetadata() { return {}; } });` |
 | same | `tests/scripts/test_architecture_delta_check.py:64-73` shim | fake | — | none: both elements fail an earlier check (no id; array `code`), which runs before the title check |
-| loader calls `computed.views()` | `tests/scripts/test_architecture_delta_model.py` `SHIM` | fake | 2 | `return { elements() { return [ELEMENT]; }, relationships() { return [RELATIONSHIP]; }, views() { return []; } };` |
+| loader calls `computed.views()` | `tests/scripts/test_architecture_delta_model.py` `SHIM`, `GOOD` | fake | 2 | `SHIM`: `return { elements() { return [ELEMENT]; }, relationships() { return [RELATIONSHIP]; }, views() { return VIEWS; } };`; `GOOD` gains `"VIEWS": "[]"` |
 | same | `tests/scripts/test_architecture_delta_runtime_links.py` `KIND_SHIM` | fake | 2 | `return { elements() { return [E('a'), E('b')]; }, relationships() { return [RELATIONSHIP]; }, views() { return []; } };` |
 | same | `tests/scripts/test_architecture_delta_model.py` `BAD_ELEMENT` | fake | — | none: every case fails at the element or relationship stage, before views are read |
 | top-level keys gain `areas` | `tests/scripts/test_architecture_delta_export.py:22` | assert | 2 | append `"areas"` to the list |
@@ -70,6 +70,7 @@ Searched: `skills/`, `tests/` with `rg -n "\"format\"\]|== 3|\"allowed\"\] ==|\"
 | same | `tests/scripts/test_architecture_delta_records.py:127`, `:439-441` | caller | — | none: the new argument defaults to `[]`, and these calls pass no `capabilities` |
 | `capabilities` entries must name a capability | `tests/scripts/test_architecture_delta_records.py:465-469` `test_decisions_carry_obligations` | test | 4 | `capabilities=["pay"]`, and its `model_folder` files gain `"views.c4": CAPABILITY_VIEW` |
 | same | `tests/scripts/test_architecture_delta_records.py:83`, `:485` | test | — | none: shape-only, pass 4 not reached |
+| Note | The spec's Scope names format and exact-shape asserts; the fake-shim edits (`title`, `views()`) and the loader `set(r)` assert above are the same kind of change and are required to keep each commit green. | — | — | — |
 | `uniquePairs`, `uniqueLinks`, `byLink` replaced | `report.mjs` only | helper | 1 | deleted; no other caller (`rg` above) |
 
 ## Checkpoints
@@ -97,13 +98,20 @@ Searched: `skills/`, `tests/` with `rg -n "\"format\"\]|== 3|\"allowed\"\] ==|\"
 - titles merged per pair — mutation: keep only the first relationship's title — killed by: `test_export_carries_titles_and_descriptions` (`["reads", "writes"]`)
 - titles are text, not ids — mutation: `clean` instead of `cleanText` on titles — killed by: `test_titles_are_not_cut`
 - description is the source text — mutation: read `description.text` instead of `.md` — killed by: `test_export_carries_titles_and_descriptions` (`**Two**`)
+- shape checks — mutation: drop the element-title or relationship-title check — killed by: `test_more_unexpected_api_shapes_are_internal[no-title]`, `[title-number]`
 
 - Satisfies Spec AC: AC-1 (titles and descriptions)
 - **Test retention:** **Permanent**
 
-- [ ] **Step 1: RED.** Append to `tests/scripts/test_architecture_delta_export.py`:
+- [ ] **Step 1: RED.** Append to `tests/scripts/test_architecture_delta_export.py` (the file has no `export` helper yet):
 
 ```python
+def export(repo):
+    proc = run_tool("export", "--repo", repo)
+    assert proc.returncode == 0, proc.stderr
+    return json.loads(proc.stdout)
+
+
 TITLED = """specification {
   relationship http
 }
@@ -132,6 +140,9 @@ def test_export_carries_titles_and_descriptions(tmp_path) -> None:  # AC-1 (titl
     ]
     assert data["allowed"] == [{"from": "a", "to": "b", "titles": ["reads", "writes"]}]
     assert data["runtime"] == [{"from": "a", "to": "b", "kind": "http", "titles": ["calls"]}]
+    assert list(data["elements"][0]) == ["id", "kind", "tags", "code", "rules", "title", "description"]
+    assert list(data["allowed"][0]) == ["from", "to", "titles"]
+    assert list(data["runtime"][0]) == ["from", "to", "kind", "titles"]
 
 
 def test_titles_are_not_cut(tmp_path) -> None:
@@ -142,7 +153,14 @@ def test_titles_are_not_cut(tmp_path) -> None:
     assert data["allowed"][0]["titles"] == [title]
 ```
 
-- [ ] **Step 2:** `uv run pytest -q tests/scripts/test_architecture_delta_export.py -k "titles"`. Expected: FAIL (`format` is 3; no `title`).
+In `tests/scripts/test_architecture_delta_model.py`, add two params to `test_more_unexpected_api_shapes_are_internal`'s list:
+
+```python
+        pytest.param({"ELEMENT": "{ id: 'a', kind: 'component', tags: [], getMetadata() { return {}; } }"}, id="no-title"),
+        pytest.param({"RELATIONSHIP": "{ source: { id: 'a' }, target: { id: 'a' }, title: 5 }"}, id="title-number"),
+```
+
+- [ ] **Step 2:** `uv run pytest -q tests/scripts/test_architecture_delta_export.py tests/scripts/test_architecture_delta_model.py -k "titles or unexpected"`. Expected: the two export tests and the two new params FAIL (`format` is 3; no `title`; no shape check).
 - [ ] **Step 3: GREEN.** In `model.mjs` `loadModel`, inside the element loop after the `for (const key of ['code', 'rules'])` check, add:
 
 ```js
@@ -234,8 +252,10 @@ Then make every Task 1 sweep edit.
 - group nodes ignored — mutation: keep nodes without `modelRef` — killed by: `test_area_views_are_exported`
 - untitled view falls back to its id — mutation: drop `?? view.id` — killed by: `test_area_views_are_exported` (`area-plain`)
 - name rule — mutation: drop the reserved-name test, or the 64-character cap — killed by: `test_bad_view_types_and_names_are_model_errors` (`area-con`, the 65-character name)
+- type checked first — mutation: check the name before the type, or as well — killed by: `test_bad_view_types_and_names_are_model_errors` (`capability-Box` gives only its type line)
+- views shape — mutation: drop the view shape check — killed by: `test_more_unexpected_api_shapes_are_internal[view-shape]`
 
-- Satisfies Spec AC: AC-1 (areas), AC-3 (types and names), AC-6
+- Satisfies Spec AC: AC-1 (areas), AC-3 (types and names), AC-5 (with Task 3), AC-6
 - **Test retention:** **Permanent**
 
 - [ ] **Step 1: RED.** Create `tests/scripts/test_architecture_delta_views.py`:
@@ -319,7 +339,7 @@ LONG = "a" * 65
 BAD_VIEWS = f"""  dynamic view area-flow {{
     shop.web -> shop.api
   }}
-  view capability-box {{
+  view capability-Box {{
     include *
   }}
   view area-Shop {{
@@ -340,12 +360,18 @@ def test_bad_view_types_and_names_are_model_errors(tmp_path) -> None:  # AC-3 (t
         f"error: model-error: view area-{LONG}: {LONG} is not a valid name",
         "error: model-error: view area-con: con is not a valid name",
         "error: model-error: view area-flow: an area view must be an element view",
-        "error: model-error: view capability-box: a capability view must be a dynamic view",
+        "error: model-error: view capability-Box: a capability view must be a dynamic view",
     ]
     assert both_commands(repo_with(tmp_path, BAD_VIEWS)) == [expected, expected]
 ```
 
-- [ ] **Step 2:** `uv run pytest -q tests/scripts/test_architecture_delta_views.py`. Expected: FAIL (no `areas` key; exit 0 for the bad views).
+In `tests/scripts/test_architecture_delta_model.py`, add to `test_more_unexpected_api_shapes_are_internal`'s list (the `SHIM` gets a `VIEWS` placeholder in this task's sweep edit):
+
+```python
+        pytest.param({"VIEWS": "[{ id: 'area-x' }]"}, id="view-shape"),
+```
+
+- [ ] **Step 2:** `uv run pytest -q tests/scripts/test_architecture_delta_views.py tests/scripts/test_architecture_delta_model.py`. Expected: the views tests and `view-shape` FAIL (no `areas` key; exit 0 for the bad views; no views read).
 - [ ] **Step 3: GREEN.** Create `views.mjs`:
 
 ```js
@@ -453,7 +479,7 @@ In `report.mjs` `exportJson`, after `coverage`, add:
 ```
 
 Make the Task 2 sweep edits.
-- [ ] **Step 4:** `uv run pytest -q tests/scripts/test_architecture_delta_views.py tests/scripts/test_architecture_delta_export.py tests/scripts/test_architecture_delta_model.py tests/scripts/test_architecture_delta_runtime_links.py tests/scripts/test_architecture_delta_safety.py`. Expected: PASS.
+- [ ] **Step 4:** `uv run pytest -q tests/scripts -k "architecture_delta or defining_architecture"`. Expected: PASS.
 - [ ] **Step 5:** No refactor.
 - [ ] **Step 6:** `git add skills/shared/scripts/architecture-delta tests/scripts && git commit -m "feat(#32): export lists area views; view type and name rules"`
 
@@ -474,10 +500,12 @@ Make the Task 2 sweep edits.
 **Reviewer looks at:**
 - a step matches a deeper relationship — mutation: require exact ends (`===` instead of `within`) — killed by: `test_capability_steps_are_calls_and_replies` (step 4)
 - direction of `within` — mutation: `within(step end, relationship end)` instead of `within(relationship end, step end)` — killed by: `test_capability_steps_are_calls_and_replies` (step 4) and `test_a_step_with_no_relationship_is_a_model_error` (step 3)
-- reply only when no call matches — mutation: compute `reply` from the back match alone — killed by: `test_capability_steps_are_calls_and_replies` (step 1 stays a call)
+- reply only when no call matches — mutation: compute `reply` from the back match alone — killed by: `test_capability_steps_are_calls_and_replies` (step 2 stays a call, though it also matches back through `pay -> shop.api.db`)
 - problems sorted by view then step — mutation: drop the sort — killed by: `test_a_step_with_no_relationship_is_a_model_error`
+- steps numbered in order, through a `parallel` block — mutation: number by LikeC4's step id — killed by: `test_a_step_with_no_relationship_is_a_model_error` (steps 4 and 5)
+- steps checked only on right-typed views — mutation: check steps before the type — killed by: `test_a_step_with_no_relationship_is_a_model_error` (`area-x` gives only its type line)
 
-- Satisfies Spec AC: AC-1 (capabilities), AC-2, AC-3 (steps)
+- Satisfies Spec AC: AC-1 (capabilities), AC-2, AC-3 (steps), AC-5
 - **Test retention:** **Permanent**
 
 - [ ] **Step 1: RED.** Append:
@@ -494,6 +522,7 @@ CAPS = """  dynamic view capability-order {
   }
   dynamic view capability-quiet {
     shop.web -> shop.api
+    shop.api -> shop.web
   }
 """
 
@@ -505,10 +534,11 @@ def test_capability_steps_are_calls_and_replies(tmp_path) -> None:  # AC-1 (capa
             {"from": "shop.web", "to": "shop.api", "label": "sends order", "reply": False, "kinds": ["uses"]},
             {"from": "shop.api", "to": "pay", "label": "charges card", "reply": False, "kinds": ["http"]},
             {"from": "shop.api", "to": "shop.web", "label": "confirms", "reply": True, "kinds": ["uses"]},
-            {"from": "pay", "to": "shop.api", "label": None, "reply": False, "kinds": ["http"]},
+            {"from": "pay", "to": "shop.api", "label": "settles", "reply": False, "kinds": ["http"]},
         ]},
         {"name": "quiet", "title": "capability-quiet", "description": None, "steps": [
-            {"from": "shop.web", "to": "shop.api", "label": None, "reply": False, "kinds": ["uses"]},
+            {"from": "shop.web", "to": "shop.api", "label": "places order", "reply": False, "kinds": ["uses"]},
+            {"from": "shop.api", "to": "shop.web", "label": None, "reply": True, "kinds": ["uses"]},
         ]},
     ]
 
@@ -516,17 +546,21 @@ def test_capability_steps_are_calls_and_replies(tmp_path) -> None:  # AC-1 (capa
 def test_a_step_with_no_relationship_is_a_model_error(tmp_path) -> None:  # AC-3 (steps)
     views = CAPS + """  dynamic view capability-bad {
     shop.web -> shop.api
+    parallel {
+      shop.web -> shop.api
+      shop.api -> pay
+    }
     shop.web -> pay
     shop.api.db -> shop.web
   }
   dynamic view area-x {
-    shop.web -> shop.api
+    shop.web -> pay
   }
 """
     expected = [
         "error: model-error: view area-x: an area view must be an element view",
-        "error: model-error: view capability-bad: step 2: shop.web -> pay follows no relationship",
-        "error: model-error: view capability-bad: step 3: shop.api.db -> shop.web follows no relationship",
+        "error: model-error: view capability-bad: step 4: shop.web -> pay follows no relationship",
+        "error: model-error: view capability-bad: step 5: shop.api.db -> shop.web follows no relationship",
     ]
     assert both_commands(repo_with(tmp_path, views)) == [expected, expected]
 ```
@@ -580,7 +614,7 @@ In `report.mjs` `exportJson`, after `areas`, add:
 ```
 
 Make the Task 3 sweep edits.
-- [ ] **Step 4:** `uv run pytest -q tests/scripts/test_architecture_delta_views.py tests/scripts/test_architecture_delta_export.py tests/scripts/test_architecture_delta_model.py tests/scripts/test_architecture_delta_runtime_links.py`. Expected: PASS.
+- [ ] **Step 4:** `uv run pytest -q tests/scripts -k "architecture_delta or defining_architecture"`. Expected: PASS.
 - [ ] **Step 5:** No refactor.
 - [ ] **Step 6:** `git add skills/shared/scripts/architecture-delta tests/scripts && git commit -m "feat(#32): export lists capability views; every step follows a relationship"`
 
@@ -662,7 +696,7 @@ In `report.mjs` `ID_KEYS`, add `'capabilities'`. In `architecture-delta.mjs` `lo
     loaded.capabilities.map((capability) => capability.name));
 ```
 
-- [ ] **Step 4:** `uv run pytest -q tests/scripts/test_architecture_delta_records.py tests/scripts/test_architecture_delta_views.py tests/scripts/test_architecture_delta_export.py`. Expected: PASS.
+- [ ] **Step 4:** `uv run pytest -q tests/scripts -k "architecture_delta or defining_architecture"`. Expected: PASS.
 - [ ] **Step 5:** No refactor.
 - [ ] **Step 6:** `git add skills/shared/scripts tests/scripts/test_architecture_delta_records.py && git commit -m "feat(#32): record capabilities name capability views"`
 
@@ -759,7 +793,7 @@ export function walkModelDir(dir) {
 }
 ```
 
-- [ ] **Step 4:** `uv run pytest -q tests/scripts/test_architecture_delta_views.py tests/scripts/test_architecture_delta_model.py tests/scripts/test_architecture_delta_safety.py`. Expected: PASS.
+- [ ] **Step 4:** `uv run pytest -q tests/scripts -k "architecture_delta or defining_architecture"`. Expected: PASS.
 - [ ] **Step 5:** No refactor.
 - [ ] **Step 6:** `git add skills/shared/scripts/architecture-delta/walk.mjs tests/scripts/test_architecture_delta_views.py && git commit -m "feat(#32): the model walk counts the generated folder apart"`
 
@@ -779,12 +813,13 @@ export function walkModelDir(dir) {
 - [ ] **Step 1:** In `ARCH_STANDARDS.md`, after the line starting "- `export` also prints the model's records", add:
 
 ```markdown
-- `export` prints format 4: element and relationship titles, the area views (`view area-<name>`, an element view) and the capability views (`dynamic view capability-<name>`, each step following a relationship). A bad area or capability view is `model-error`, and a record's `capabilities` must name capability views.
+- `export` prints format 4: element and relationship titles, and the model's area and capability views. A record's `capabilities` must name capability views.
+- An area is an element view `view area-<name>`; a capability is a dynamic view `dynamic view capability-<name>` whose every step follows a relationship. `<name>` is lowercase letters, digits and `-`. A bad area or capability view is `model-error` from `export` and `check`.
 ```
 
 - [ ] **Step 2:** Add the notes:
   - records spec: `> Amended by \`2026-11-17-architecture-docs-design.md\`: \`capabilities\` entries name capability views, checked in pass 4.`
   - runtime-links spec: `> Amended by \`2026-11-17-architecture-docs-design.md\`: \`export\` is format 4, with titles on \`allowed\` and \`runtime\` entries.`
   - delta tool spec: `> Amended by \`2026-11-17-architecture-docs-design.md\`: the \`generated\` folder counts toward its own limits and may hold no LikeC4 source file.`
-- [ ] **Step 3: Verify.** `rg -n "format 4" skills/defining-architecture/ARCH_STANDARDS.md` and `rg -n "Amended by .2026-11-17-architecture-docs-design" docs/superpowers/specs`. Expected: one line, then three lines. Then `uv run pytest -q`. Expected: PASS.
+- [ ] **Step 3: Verify.** `rg -n "format 4|view area-<name>" skills/defining-architecture/ARCH_STANDARDS.md` and `rg -n "Amended by .2026-11-17-architecture-docs-design" docs/superpowers/specs`. Expected: two lines, then three lines. Then `uv run pytest -q`. Expected: PASS.
 - [ ] **Step 4:** `git add skills/defining-architecture/ARCH_STANDARDS.md docs/superpowers/specs && git commit -m "docs(#32): format 4 in the standards; amendment notes"`
