@@ -68,7 +68,7 @@ Every file is one JSON object. Every field below is required unless marked optio
 | `compatibility` | text, or `null` when none is stated |
 | `notes` | optional list of text |
 | `decisions` | optional list of decision ids |
-| `capabilities` | optional list of text: the epic capabilities that depend on it (pending the owner's confirmation, A8) |
+| `capabilities` | optional list of text: the epic capabilities that depend on it |
 
 **Change file:**
 
@@ -87,7 +87,7 @@ Every file is one JSON object. Every field below is required unless marked optio
 
 Ids in a change file are history. They are checked for form only (rule 3 for record ids, rule 4 for element ids), never looked up in today's model, because a run may have removed what it names.
 
-**Coverage file:** `answer` (text); `baselined` (list of objects: `prefix`, text, and `run`, a change id); `edge_nodes` (list of objects: `element`, an element id, and `run`, a change id); `counts` (object: `modules` and `groups`, each a whole number of 0 or more); `unmapped` (list of objects: `module` and `reason`, both text). `run` (pending the owner's confirmation, A8) names the change file of the run that added the entry: it equals the name, without `.json`, of a file in `changes/` that passes pass 1.
+**Coverage file:** `answer` (text); `baselined` (list of objects: `prefix`, text, and `run`, a change id); `edge_nodes` (list of objects: `element`, an element id, and `run`, a change id); `counts` (object: `modules` and `groups`, each a whole number of 0 or more); `unmapped` (list of objects: `module` and `reason`, both text). `run` names the change file of the run that added the entry: it equals the name, without `.json`, of a file in `changes/` that passes pass 1.
 
 ## What the tool checks
 
@@ -202,4 +202,4 @@ A model folder with none of the new files exports and checks as before, apart fr
 | A5 | `export` prints `format` 2 with `elements`, `allowed`, `runtime`; existing export tests pin that shape. | VERIFIED: `report.mjs` `exportJson`; `tests/scripts/test_architecture_delta_export.py` lines 22, 23, 44, 182. |
 | A6 | Exactly one model exists in the old layout. | VERIFIED by the owner (2026-11-16). |
 | A7 | The owner chose JSON, several files grouped by subject, one file per run, and no converter in the engine. | VERIFIED: owner decisions of 2026-11-17, recorded on #31. |
-| A8 | The owner accepts two fields added after the record design was approved: a `run` on each coverage entry, and an optional `capabilities` list on a contract. | UNVERIFIED: put to the owner on #31 on 2026-11-17; both come out cleanly if refused. |
+| A8 | The owner accepts two fields added after the record design was approved: a `run` on each coverage entry, and an optional `capabilities` list on a contract. | VERIFIED: owner confirmed on 2026-11-17. |
