@@ -2,6 +2,8 @@
 
 Work item: #31, part A3a (A3 of #37). Amended for #31 part A3c: decisions carry obligations ("Decisions, cross-cutting decisions and principles" below). Amends `2026-11-09-architecture-delta-tool-design.md` and `2026-11-16-architecture-delta-runtime-links-design.md`.
 
+> Amended by `2026-11-17-architecture-docs-design.md`: `capabilities` entries name capability views, checked in pass 4.
+
 ## Why
 
 A run of `defining-architecture` records decisions, open questions, contracts with other systems and what the run changed. Today they go into a hand-written `architecture.md` that nothing validates, so a reason can go on naming an element that no longer exists and nobody is told. Only a person can read the file reliably, and its sections are parsed by pattern when a document is generated from it (`docs/field-reports/2026-11-16-defining-architecture-first-run.md`, F2, F9, F12).

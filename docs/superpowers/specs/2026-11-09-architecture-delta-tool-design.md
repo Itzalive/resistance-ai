@@ -2,6 +2,8 @@
 
 Work item: #20 (part of #19). Status: approved by the owner on 2026-11-09.
 
+> Amended by `2026-11-17-architecture-docs-design.md`: the `generated` folder counts toward its own limits and may hold no LikeC4 source file.
+
 > Amended by `2026-11-16-architecture-delta-runtime-links-design.md` (#30): that spec replaces the "Allowed", "`#protected`" and "Reported" rules below where they say "any relationship", the API-shape rule for what LikeC4 returns (a relationship's `kind`), and the `export` shape. Only relationships of kind `uses`, or with no kind, permit imports; other kinds are runtime links.
 
 > Amended by `2026-11-17-architecture-model-records-design.md` (#31): the tool also reads and validates the record files in the model folder, `export` prints them (format 3), record text is cleaned without the 200-character cut, and `record-error` is an exit-2 token.

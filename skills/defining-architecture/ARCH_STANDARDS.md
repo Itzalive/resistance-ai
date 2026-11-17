@@ -27,6 +27,8 @@ The tool is `node <skills-dir>/shared/scripts/architecture-delta.mjs`, run from 
 - Never pass `--gap`: the gap file is always `<model>/known-gap.json`.
 - Only a relationship of kind `uses`, or with no kind, permits imports. A relationship of any other kind is a runtime link: `check` ignores it, and `export` lists it under `runtime`.
 - `export` also prints the model's records (decisions, holes, contracts, changes, coverage). A problem in a record file is `record-error`, exit 2, from both `export` and `check`.
+- `export` prints format 4: element and relationship titles, and the model's area and capability views. A record's `capabilities` must name capability views.
+- An area is an element view `view area-<name>`; a capability is a dynamic view `dynamic view capability-<name>` whose every step follows a relationship. `<name>` is lowercase letters, digits and `-`. A bad area or capability view is `model-error` from `export` and `check`.
 - The `check` sections: new breaches, known breaches, not yet reached (an import relationship the code doesn't have yet), unmapped code, and the summary line `N new, N stale, N known`. Quote the whole output in the decision log.
 
 ## Terms
