@@ -534,3 +534,15 @@ def test_capability_line_follows_the_owner_line(tmp_path) -> None:
         "error: record-error: decisions/a.json: decisions[0].owner: ghost is not a model element",
         "error: record-error: decisions/a.json: decisions[0].capabilities[0]: x is not a capability",
     ]
+
+
+def test_capability_names_skip_wrong_types_and_unknown_comes_first(tmp_path) -> None:  # AC-4
+    files = {"contracts/b.json": cfile(contract("C-1", capabilities=[5, "", "ship", "ship"]))}
+    repo, _ = model_folder(tmp_path, files)
+    assert error_lines(run_tool("export", "--repo", repo)) == [
+        "error: record-error: contracts/b.json: contracts[0].capabilities[0]: must be a non-empty string",
+        "error: record-error: contracts/b.json: contracts[0].capabilities[1]: must be a non-empty string",
+        "error: record-error: contracts/b.json: contracts[0].capabilities[2]: ship is not a capability",
+        "error: record-error: contracts/b.json: contracts[0].capabilities[3]: ship is not a capability",
+        "error: record-error: contracts/b.json: contracts[0].capabilities[3]: ship is listed twice",
+    ]

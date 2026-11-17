@@ -257,3 +257,29 @@ def test_likec4_source_in_generated_is_refused(tmp_path) -> None:  # AC-7
     assert error_lines(run_tool("export", "--repo", repo)) == [
         "error: model-error: generated/areas/x.c4 is a LikeC4 source file in the generated folder",
     ]
+
+
+def test_generated_byte_limit_names_the_folder(tmp_path) -> None:  # AC-7
+    folder = tmp_path / "m"
+    (folder / "generated").mkdir(parents=True)
+    (folder / "generated" / "big.bin").write_bytes(b"\0" * (50 * MB + 1))
+    result = call("walk.mjs", "walkModelDir", str(folder))
+    assert (result["token"], result["details"]) == ("model-size", ["generated: more than 50 MB in total"])
+
+
+def test_likec4_extension_in_generated_is_refused(tmp_path) -> None:  # AC-7
+    areas = tmp_path / "m" / "generated" / "areas"
+    areas.mkdir(parents=True)
+    (areas / "x.likec4").write_text("model {\n}\n", encoding="utf-8")
+    result = call("walk.mjs", "walkModelDir", str(tmp_path / "m"))
+    assert (result["token"], result["details"]) == (
+        "model-error", ["generated/areas/x.likec4 is a LikeC4 source file in the generated folder"])
+
+
+def test_a_root_file_named_generated_counts_with_the_model(tmp_path) -> None:
+    folder = tmp_path / "m"
+    folder.mkdir()
+    (folder / "generated").write_bytes(b"\0" * (30 * MB))
+    (folder / "big.bin").write_bytes(b"\0" * (30 * MB))
+    result = call("walk.mjs", "walkModelDir", str(folder))
+    assert (result["token"], result["details"]) == ("model-size", ["more than 50 MB in total"])
