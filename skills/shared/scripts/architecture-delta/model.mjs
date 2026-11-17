@@ -1,6 +1,7 @@
 // Loads a model folder with likec4, checks the shape of what likec4 returns, validates code prefixes, and splits relationships into import relationships and runtime links.
 import path from 'node:path';
 import { ToolError } from './errors.mjs';
+import { readViews, richText } from './views.mjs';
 
 export const ELEMENT_LIMIT = 5000;
 // A relationship of this kind, or with no kind, permits imports. Any other kind is a runtime link.
@@ -31,11 +32,6 @@ function validatePrefixes(elements) {
       seen.set(prefix, element.id);
     }
   }
-}
-
-// LikeC4 rich text (a description): its source text, or null when it is empty or absent.
-export function richText(value) {
-  return value && value.isEmpty === false && typeof value.md === 'string' ? value.md : null;
 }
 
 export async function loadModel(LikeC4, modelDir) {
@@ -92,5 +88,6 @@ export async function loadModel(LikeC4, modelDir) {
     else runtime.push({ ...pair, kind });
   }
   validatePrefixes(elements);
-  return { elements, relationships, runtime };
+  const views = readViews(computed, elements.map((element) => element.id));
+  return { elements, relationships, runtime, ...views };
 }

@@ -19,7 +19,7 @@ def test_export_is_stable_and_sorted(tmp_path) -> None:
     assert first.returncode == 0, first.stderr
     assert first.stdout == second.stdout
     data = json.loads(first.stdout)
-    assert list(data) == ["format", "elements", "allowed", "runtime", "groups", "decisions", "holes", "contracts", "changes", "coverage"]
+    assert list(data) == ["format", "elements", "allowed", "runtime", "groups", "decisions", "holes", "contracts", "changes", "coverage", "areas"]
     assert data["format"] == 4
     assert [e["id"] for e in data["elements"]] == [
         "shop", "shop.checkout", "shop.orders", "shop.orders.api", "shop.payments", "shop.payments.card",
@@ -43,7 +43,7 @@ def test_export_merges_duplicate_relationships(tmp_path) -> None:
 def test_export_of_a_spec_only_folder_is_empty(tmp_path) -> None:
     proc = run_tool("export", "--repo", make_repo(tmp_path, None))
     assert proc.returncode == 0, proc.stderr
-    assert json.loads(proc.stdout) == {"format": 4, "elements": [], "allowed": [], "runtime": [], "groups": [], "decisions": [], "holes": [], "contracts": [], "changes": [], "coverage": None}
+    assert json.loads(proc.stdout) == {"format": 4, "elements": [], "allowed": [], "runtime": [], "groups": [], "decisions": [], "holes": [], "contracts": [], "changes": [], "coverage": None, "areas": []}
 
 
 def test_export_refuses_config_and_never_runs_it(tmp_path) -> None:

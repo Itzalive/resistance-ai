@@ -109,7 +109,7 @@ export class LikeC4 {
     return {
       getErrors() { return []; },
       async computedModel() {
-        return { elements() { return [E('a'), E('b')]; }, relationships() { return [RELATIONSHIP]; } };
+        return { elements() { return [E('a'), E('b')]; }, relationships() { return [RELATIONSHIP]; }, views() { return []; } };
       },
     };
   }

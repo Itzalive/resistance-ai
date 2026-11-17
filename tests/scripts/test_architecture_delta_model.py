@@ -213,7 +213,7 @@ SHIM = """export class LikeC4 {
       getErrors() { return ERRORS; },
       async computedModel() {
         COMPUTED
-        return { elements() { return [ELEMENT]; }, relationships() { return [RELATIONSHIP]; } };
+        return { elements() { return [ELEMENT]; }, relationships() { return [RELATIONSHIP]; }, views() { return VIEWS; } };
       },
     };
   }
@@ -225,6 +225,7 @@ GOOD = {
     "FROM_WORKSPACE": "", "ERRORS": "[]", "COMPUTED": "",
     "ELEMENT": "{ id: 'a', kind: 'component', title: 'A', tags: [], getMetadata() { return {}; } }",
     "RELATIONSHIP": "{ source: { id: 'a' }, target: { id: 'a' } }",
+    "VIEWS": "[]",
 }
 
 
@@ -254,6 +255,7 @@ def test_good_shim_loads(tmp_path) -> None:
         pytest.param({"RELATIONSHIP": "{ target: { id: 'a' } }"}, id="no-source"),
         pytest.param({"ELEMENT": "{ id: 'a', kind: 'component', tags: [], getMetadata() { return {}; } }"}, id="no-title"),
         pytest.param({"RELATIONSHIP": "{ source: { id: 'a' }, target: { id: 'a' }, title: 5 }"}, id="title-number"),
+        pytest.param({"VIEWS": "[{ id: 'area-x' }]"}, id="view-shape"),
     ],
 )
 

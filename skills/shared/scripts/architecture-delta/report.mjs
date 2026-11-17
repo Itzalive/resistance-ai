@@ -59,6 +59,12 @@ export function exportJson(model, records) {
     contracts: [...records.contracts].sort(byId).map((record) => cleanRecord(record)),
     changes: [...records.changes].sort(byId).map((record) => cleanRecord(record)),
     coverage: records.coverage === null ? null : cleanRecord(records.coverage),
+    areas: model.areas.map((area) => ({
+      name: clean(area.name),
+      title: cleanText(area.title),
+      description: area.description === null ? null : cleanText(area.description),
+      elements: area.elements.map(clean),
+    })),
   };
 }
 
