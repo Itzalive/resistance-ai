@@ -111,6 +111,7 @@ def test_shop_model_loads_elements_and_relationships(tmp_path) -> None:
     assert set(elements) == {"shop", "shop.orders", "shop.orders.api", "shop.checkout", "shop.payments", "shop.payments.card"}
     assert elements["shop.payments"] == {
         "id": "shop.payments", "kind": "container", "tags": ["protected"], "code": ["shop.payments"], "rules": [],
+        "title": "Payments", "description": None,
     }
     assert elements["shop"]["code"] == []
     assert sorted((r["from"], r["to"]) for r in result["value"]["relationships"]) == [
@@ -170,7 +171,7 @@ BAD_ELEMENT = """export class LikeC4 {
         pytest.param("{ id: 'a', kind: 'component', tags: 'x', getMetadata() { return {}; } }", "{ source: { id: 'a' }, target: { id: 'a' } }", id="tags-not-array"),
         pytest.param("{ id: 'a', kind: 'component', tags: [], getMetadata() { return { code: ['a'] }; } }", "{ source: { id: 'a' }, target: { id: 'a' } }", id="code-array"),
         pytest.param("{ id: 'a', kind: 'component', tags: [], metadata: {} }", "{ source: { id: 'a' }, target: { id: 'a' } }", id="no-getmetadata"),
-        pytest.param("{ id: 'a', kind: 'component', tags: [], getMetadata() { return {}; } }", "{ source: { id: 'a' } }", id="no-target"),
+        pytest.param("{ id: 'a', kind: 'component', title: 'A', tags: [], getMetadata() { return {}; } }", "{ source: { id: 'a' } }", id="no-target"),
     ],
 )
 def test_unexpected_api_shapes_are_internal(tmp_path, element: str, relationship: str) -> None:
@@ -222,7 +223,7 @@ SHIM = """export class LikeC4 {
 
 GOOD = {
     "FROM_WORKSPACE": "", "ERRORS": "[]", "COMPUTED": "",
-    "ELEMENT": "{ id: 'a', kind: 'component', tags: [], getMetadata() { return {}; } }",
+    "ELEMENT": "{ id: 'a', kind: 'component', title: 'A', tags: [], getMetadata() { return {}; } }",
     "RELATIONSHIP": "{ source: { id: 'a' }, target: { id: 'a' } }",
 }
 
@@ -251,6 +252,8 @@ def test_good_shim_loads(tmp_path) -> None:
         pytest.param({"ELEMENT": "{ id: 'a', kind: 'component', tags: [1], getMetadata() { return {}; } }"}, id="tag-not-string"),
         pytest.param({"ELEMENT": "{ id: 'a', kind: 'component', tags: [], getMetadata() { return { rules: 1 }; } }"}, id="rules-number"),
         pytest.param({"RELATIONSHIP": "{ target: { id: 'a' } }"}, id="no-source"),
+        pytest.param({"ELEMENT": "{ id: 'a', kind: 'component', tags: [], getMetadata() { return {}; } }"}, id="no-title"),
+        pytest.param({"RELATIONSHIP": "{ source: { id: 'a' }, target: { id: 'a' }, title: 5 }"}, id="title-number"),
     ],
 )
 

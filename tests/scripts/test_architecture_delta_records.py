@@ -360,7 +360,7 @@ def export(repo: Path) -> dict:
 
 def test_export_without_records(tmp_path) -> None:  # AC-1
     data = export(model_folder(tmp_path, {})[0])
-    assert data["format"] == 3
+    assert data["format"] == 4
     assert [data[k] for k in ("groups", "decisions", "holes", "contracts", "changes")] == [[], [], [], [], []]
     assert data["coverage"] is None
 
