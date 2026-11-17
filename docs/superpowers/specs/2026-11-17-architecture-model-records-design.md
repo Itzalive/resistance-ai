@@ -68,7 +68,7 @@ Every file is one JSON object. Every field below is required unless marked optio
 | `compatibility` | text, or `null` when none is stated |
 | `notes` | optional list of text |
 | `decisions` | optional list of decision ids |
-| `capabilities` | optional list of text: the epic capabilities that depend on it |
+| `capabilities` | optional list of text: the epic capabilities that depend on it (pending the owner's confirmation, A8) |
 
 **Change file:**
 
@@ -87,7 +87,7 @@ Every file is one JSON object. Every field below is required unless marked optio
 
 Ids in a change file are history. They are checked for form only (rule 3 for record ids, rule 4 for element ids), never looked up in today's model, because a run may have removed what it names.
 
-**Coverage file:** `answer` (text); `baselined` (list of objects: `prefix`, text, and `run`, a change id); `edge_nodes` (list of objects: `element`, an element id, and `run`, a change id); `counts` (object: `modules` and `groups`, each a whole number of 0 or more); `unmapped` (list of objects: `module` and `reason`, both text). `run` names the change file of the run that added the entry: it equals the name, without `.json`, of a file in `changes/` that passes pass 1.
+**Coverage file:** `answer` (text); `baselined` (list of objects: `prefix`, text, and `run`, a change id); `edge_nodes` (list of objects: `element`, an element id, and `run`, a change id); `counts` (object: `modules` and `groups`, each a whole number of 0 or more); `unmapped` (list of objects: `module` and `reason`, both text). `run` (pending the owner's confirmation, A8) names the change file of the run that added the entry: it equals the name, without `.json`, of a file in `changes/` that passes pass 1.
 
 ## What the tool checks
 
@@ -100,7 +100,7 @@ The tool reads only `decisions/*.json`, `contracts/*.json`, `changes/*.json` and
 1. **Layout.** A file in `decisions/`, `contracts/` or `changes/` whose name breaks layout rule 1 or 2; a folder inside one of them; a `decisions`, `contracts` or `changes` path that is a file; a `coverage.json` that is a folder. A misnamed file is reported and not read, so its ids never enter the id space.
 2. **Shape.** (a) The file is not valid JSON, or not an object. (b) A required field is missing, a field is not in the tables, a value has the wrong type, or a list that needs at least one item has none.
 3. **Ids.** A record id that breaks layout rule 3; the same value in the `id` field of two decision, hole or contract records anywhere in the folder; a change file whose `id` is not its file name; an element id that is an empty string.
-4. **Links.** An element id in `binds`, `owner`, `bound` or `edge_nodes` that is not an element; a `superseded_by`, or an entry in a contract's `decisions`, that names no decision; `superseded_by` naming the record's own id; a coverage `run` that names no change file; the same id twice in one `binds`, `bound` or `decisions` list.
+4. **Links.** An element id in `binds`, `owner`, `bound` or `edge_nodes` that is not an element; a `superseded_by`, or an entry in a contract's `decisions`, that names no decision; `superseded_by` naming the record's own id; a coverage `run` that names no change file; the same id twice in one `binds` or `bound` list, or in a contract's `decisions` list.
 5. **Order and values.** A list not sorted by id; `superseded_by` present when `status` is not `superseded`, or missing when it is; a `status`, `evidence` or `run` value outside its list; a `date` that is not a real `YYYY-MM-DD` date; a change file whose `date` is not the start of its name; a `check.exit` other than 0 or 1.
 
 **References are not ids.** Record ids in a change file's lists, in `superseded_by` and in a contract's `decisions` are references to records, not records. They are checked for form, and `superseded_by` and a contract's `decisions` for links, but they never count as a second occurrence of an id.
