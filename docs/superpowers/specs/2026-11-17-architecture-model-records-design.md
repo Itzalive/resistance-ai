@@ -1,6 +1,6 @@
 # Architecture model records
 
-Work item: #31, part A3a (A3 of #37). Amends `2026-11-09-architecture-delta-tool-design.md` and `2026-11-16-architecture-delta-runtime-links-design.md`.
+Work item: #31, part A3a (A3 of #37). Amended for #31 part A3c: decisions carry obligations ("Decisions, cross-cutting decisions and principles" below). Amends `2026-11-09-architecture-delta-tool-design.md` and `2026-11-16-architecture-delta-runtime-links-design.md`.
 
 ## Why
 
@@ -46,6 +46,10 @@ Every file is one JSON object. Every field below is required unless marked optio
 | `superseded_by` | the id of a decision; present exactly when `status` is `superseded` |
 | `evidence` | `checked` (against the code), `code` (stated in a code comment) or `spec` (stated in a document, not re-checked) |
 | `sources` | list of text: paths or references |
+| `owner` | optional: the element id of the part that defines it |
+| `obligations` | optional list of text, at least one: what every bound part must keep to |
+| `compatibility` | optional: text, or `null` when no rule is stated |
+| `capabilities` | optional list of text: the epic capabilities that depend on it |
 | `note` | optional text |
 
 | Hole field | Value |
@@ -89,6 +93,20 @@ Ids in a change file are history. They are checked for form only (rule 3 for rec
 
 **Coverage file:** `answer` (text); `baselined` (list of objects: `prefix`, text, and `run`, a change id); `edge_nodes` (list of objects: `element`, an element id, and `run`, a change id); `counts` (object: `modules` and `groups`, each a whole number of 0 or more); `unmapped` (list of objects: `module` and `reason`, both text). `run` names the change file of the run that added the entry: it equals the name, without `.json`, of a file in `changes/` that passes pass 1.
 
+## Decisions, cross-cutting decisions and principles
+
+A **contract** is the interface between this system and another: a server and its app, a public API, an event sent to an outside system. Another system holds the other side, so its compatibility rule is about versions and release order.
+
+A **decision** records why something is the way it is. All decisions share one record, and its optional fields say how much depends on it:
+
+- **A plain decision** has a reason and the parts it explains (`binds`). If it changes, the parts it binds change and nothing else has to agree.
+- **A cross-cutting decision** settles something several parts must agree on, such as a data format, a vocabulary or an id scheme. It has an `owner`, the part that defines it, and `obligations`, stated so every bound part can check itself against them; usually also a `compatibility` rule for how it may change.
+- **A principle** binds the whole system (`binds` empty) and has `obligations` but no `owner`, such as "family data stays in the UK or EU".
+
+A decision with `obligations` is changed whole, for every part it binds; the skills that read the model use that test.
+
+The tool checks only the shape that follows from this: an `owner` or a `compatibility` field needs `obligations` beside it (pass 5). It does not check whether a decision should have been a contract or the other way round.
+
 ## What the tool checks
 
 `export` and `check` both read and validate the records immediately after the model has loaded, before any other input (`--deps`, the gap file, `--scope`, `--shards`) is read. When the records have any problem the command stops there with exit 2, whatever `check` would otherwise have found, and no other input is read. A plan or review never runs on a model whose records point at something that is not there. The deadline is checked after reading each record file, as it is after each input file.
@@ -99,9 +117,9 @@ The tool reads only `decisions/*.json`, `contracts/*.json`, `changes/*.json` and
 
 1. **Layout.** A file in `decisions/`, `contracts/` or `changes/` whose name breaks layout rule 1 or 2; a folder inside one of them; a `decisions`, `contracts` or `changes` path that is a file; a `coverage.json` that is a folder. A misnamed file is reported and not read, so its ids never enter the id space.
 2. **Shape.** (a) The file is not valid JSON, or not an object. (b) A required field is missing, a field is not in the tables, a value has the wrong type, or a list that needs at least one item has none.
-3. **Ids.** A record id that breaks layout rule 3; the same value in the `id` field of two decision, hole or contract records anywhere in the folder; a change file whose `id` is not its file name; an element id that is an empty string.
-4. **Links.** An element id in `binds`, `owner`, `bound` or `edge_nodes` that is not an element; a `superseded_by`, or an entry in a contract's `decisions`, that names no decision; `superseded_by` naming the record's own id; a coverage `run` that names no change file; the same id twice in one `binds` or `bound` list, or in a contract's `decisions` list.
-5. **Order and values.** A list not sorted by id; `superseded_by` present when `status` is not `superseded`, or missing when it is; a `status`, `evidence` or `run` value outside its list; a `date` that is not a real `YYYY-MM-DD` date; a change file whose `date` is not the start of its name; a `check.exit` other than 0 or 1.
+3. **Ids.** A record id that breaks layout rule 3; an empty `owner` on a decision; the same value in the `id` field of two decision, hole or contract records anywhere in the folder; a change file whose `id` is not its file name; an element id that is an empty string.
+4. **Links.** An element id in `binds`, `owner` (on a decision or a contract), `bound` or `edge_nodes` that is not an element; a `superseded_by`, or an entry in a contract's `decisions`, that names no decision; `superseded_by` naming the record's own id; a coverage `run` that names no change file; the same id twice in one `binds` or `bound` list, or in a contract's `decisions` list.
+5. **Order and values.** A list not sorted by id; `superseded_by` present when `status` is not `superseded`, or missing when it is; a decision with `owner` or `compatibility` and no `obligations`; a `status`, `evidence` or `run` value outside its list; a `date` that is not a real `YYYY-MM-DD` date; a change file whose `date` is not the start of its name; a `check.exit` other than 0 or 1.
 
 **References are not ids.** Record ids in a change file's lists, in `superseded_by` and in a contract's `decisions` are references to records, not records. They are checked for form, and `superseded_by` and a contract's `decisions` for links, but they never count as a second occurrence of an id.
 
@@ -179,6 +197,10 @@ A model folder with none of the new files exports and checks as before, apart fr
 - **AC-16** Given a decision whose `superseded_by` is its own id, a decision whose `binds` lists one element twice, and two superseded decisions that name each other, when `export` runs, then the first two are reported and the cycle is not.
 - **AC-17** Given a misnamed file `decisions/Memory.json` that holds a decision with id `M-1`, a well-named file holding another decision `M-1`, and a `decisions/.gitkeep`, when `export` runs, then the misnamed file is reported once with field path `-`, no duplicate id is reported, and `.gitkeep` is not mentioned.
 - **AC-18** Given a model whose records are invalid and a `--deps` path that does not exist, when `check` runs, then the error lines are `record-error` lines and none is `bad-input`.
+
+- **AC-19** Given a decision with `owner`, `obligations`, `compatibility` and `capabilities`, and a principle with `obligations` and empty `binds`, when `export` runs, then it exits 0 and both appear with every field as written.
+- **AC-20** Given a decision with `owner` and no `obligations`, and another with `compatibility` and no `obligations`, when `export` runs, then each gives `required when owner or compatibility is set` at its `obligations` path.
+- **AC-21** Given a decision whose `owner` names no element, one whose `owner` is an empty string, and one whose `obligations` is empty, when `export` runs, then each is reported: `is not a model element`, `must not be empty` and `needs at least one item`.
 
 ## Future work (downstream cost)
 
