@@ -2,6 +2,8 @@
 
 Work item: #20 (part of #19). Status: approved by the owner on 2026-11-09.
 
+> Amended by `2026-11-16-architecture-delta-runtime-links-design.md` (#30): that spec replaces the "Allowed", "`#protected`" and "Reported" rules below where they say "any relationship", the API-shape rule for what LikeC4 returns (a relationship's `kind`), and the `export` shape. Only relationships of kind `uses`, or with no kind, permit imports; other kinds are runtime links.
+
 ## What it is
 
 `skills/shared/scripts/architecture-delta.mjs` compares a repository's target architecture, written as
@@ -280,7 +282,7 @@ metadata has no schema.
     owner's decision.
 
 **Out of scope:** any language's dependency command; the overlay file; calling the tool from skills;
-relationship kinds that withhold permission; mutation tooling (#27).
+mutation tooling (#27).
 
 ## Threat Model (CIA)
 

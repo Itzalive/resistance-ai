@@ -17,7 +17,7 @@ Used by the self-review and by the independent auditor. Work out the scopes, run
 
 ## Cycle check
 
-Build the reachability graph from `export`'s relationships. Each relationship counts for its endpoints and for all their ancestors: `a.x -> b.y` means `a.x`, `a` and any parent above them reach `b.y`, `b` and any parent above them. Two siblings (elements with the same parent) form a cycle when each reaches the other, directly or through others. A relationship left out and recorded as `cycle in current code` in `known-gap.json` is not in the graph.
+Build the reachability graph from `export`'s `allowed` list (import relationships; runtime links are not part of it). Each relationship counts for its endpoints and for all their ancestors: `a.x -> b.y` means `a.x`, `a` and any parent above them reach `b.y`, `b` and any parent above them. Two siblings (elements with the same parent) form a cycle when each reaches the other, directly or through others. A relationship left out and recorded as `cycle in current code` in `known-gap.json` is not in the graph.
 
 ## Shared-prefix check
 

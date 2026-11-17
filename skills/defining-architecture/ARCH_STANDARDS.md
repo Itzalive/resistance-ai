@@ -25,7 +25,8 @@ The tool is `node <skills-dir>/shared/scripts/architecture-delta.mjs`, run from 
 - `export --repo . --model <model>`: loads the model and prints its elements and relationships as JSON. Exit 0, or exit 2 with `error: <kind>: ...` on stderr.
 - `check --repo . --model <model> --deps <deps-file> --separator <separator>`: compares the code's edges with the model. Exit 0 when every breach is in the gap file, 1 when a breach is new or a gap entry is stale, 2 on an error. Add `--format json` for machine output.
 - Never pass `--gap`: the gap file is always `<model>/known-gap.json`.
-- The `check` sections: new breaches, known breaches, not yet reached (a relationship the code doesn't have yet), unmapped code, and the summary line `N new, N stale, N known`. Quote the whole output in the decision log.
+- Only a relationship of kind `uses`, or with no kind, permits imports. A relationship of any other kind is a runtime link: `check` ignores it, and `export` lists it under `runtime`.
+- The `check` sections: new breaches, known breaches, not yet reached (an import relationship the code doesn't have yet), unmapped code, and the summary line `N new, N stale, N known`. Quote the whole output in the decision log.
 
 ## Terms
 
