@@ -45,13 +45,13 @@ Searched: `skills/`, `tests/`, `scripts/`, `docs/` with `grep -rn "exportJson\|l
 | same | `tests/scripts/test_architecture_delta_export.py:182` | assert | 2 | `assert json.loads(proc.stdout)["format"] == 2` |
 | same | `skills/defining-architecture/ARCH_REVIEW_MANIFEST.md:20` "from `export`'s relationships" | doc | 3 | see Task 3 |
 | same | `skills/writing-plans/SKILL.md:196` reads elements' `code` from `export` | doc | — | none: `elements` is unchanged |
-| "not yet reached" covers import relationships only | `skills/defining-architecture/ARCH_STANDARDS.md:27` | doc | 3 | see Task 3 |
+| "not yet reached" covers import relationships only | `skills/defining-architecture/ARCH_STANDARDS.md:28` | doc | 3 | see Task 3 |
 
 ## Checkpoints
 
 | Checkpoint | After task | Tasks covered | Reviewer looks at |
 |---|---|---|---|
-| C1 | 3 | 1–3 | Task 1 items 1–3, Task 2 items 1–2; full suite `uv run pytest -q tests/scripts` (Task 1 changes what every `check` run permits) |
+| C1 | 3 | 1–3 | Task 1 items 1–3, Task 2 items 1–2, Task 3 item 1; full suite `uv run pytest -q tests/scripts` (Task 1 changes what every `check` run permits) |
 
 ---
 
@@ -86,7 +86,7 @@ from pathlib import Path
 
 import pytest
 
-from arch_delta_support import error_lines, load_model, make_repo, make_shim, require_node, run_tool, unique, write_json
+from arch_delta_support import error_lines, load_model, make_repo, make_shim, require_node, run_tool, write_json
 
 require_node()
 
@@ -400,7 +400,7 @@ git commit -m "feat(#30): export lists runtime links; format 2"
 - [ ] **Step 1: RED — show the old wording is there.**
 
 Run: `grep -n "relationship kinds that withhold permission" docs/superpowers/specs/2026-11-09-architecture-delta-tool-design.md; grep -n "a relationship the code doesn't have yet" skills/defining-architecture/ARCH_STANDARDS.md; grep -n "from \`export\`'s relationships" skills/defining-architecture/ARCH_REVIEW_MANIFEST.md; grep -c "runtime link" skills/defining-architecture/ARCH_STANDARDS.md`
-Expected: one match for each of the first three (lines 283 and 437 for the first), and `0` for the last.
+Expected: one match for each of the first three (line 283 for the first; the future-work row at line 437 starts with a capital R and does not match), and `0` for the last.
 
 - [ ] **Step 2: GREEN — make the edits.**
 
@@ -431,7 +431,7 @@ In `skills/defining-architecture/ARCH_REVIEW_MANIFEST.md` line 20, replace `Buil
 - [ ] **Step 3: rerun the checks and the contract tests.**
 
 Run: `grep -c "relationship kinds that withhold permission" docs/superpowers/specs/2026-11-09-architecture-delta-tool-design.md; grep -c "runtime link" skills/defining-architecture/ARCH_STANDARDS.md; grep -c "allowed. list" skills/defining-architecture/ARCH_REVIEW_MANIFEST.md; uv run pytest -q tests/scripts/test_defining_architecture_contract.py tests/test_repo_layout.py`
-Expected: `1` (the future-work table row at line 437 stays, as history of the earlier spec), `1`, `1`, then PASS.
+Expected: `0` (the future-work table row at line 437 stays, as history of the earlier spec, and does not match the lower-case pattern), `1`, `1`, then PASS.
 
 - [ ] **Step 4: commit.**
 
