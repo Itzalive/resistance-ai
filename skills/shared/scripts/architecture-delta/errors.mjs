@@ -13,6 +13,13 @@ const ANSI = /\u001b\[[0-?]*[ -\/]*[@-~]|\u001b\][^\u0007\u001b]*(?:\u0007|\u001
 const CONTROLS = /[\u0000-\u001f\u007f-\u009f\u202a-\u202e\u2066-\u2069]/g;
 export const MAX_POINTS = 200;
 
+const TEXT_CONTROLS = /[\u0000-\u0009\u000b-\u001f\u007f-\u009f\u202a-\u202e\u2066-\u2069]/g;
+
+// Record text: escape sequences and control characters removed, line feeds kept, no length cut.
+export function cleanText(value) {
+  return String(value).replace(ANSI, '').replace(TEXT_CONTROLS, '');
+}
+
 export function clean(value) {
   const text = String(value).replace(ANSI, '').replace(CONTROLS, '');
   const points = Array.from(text);
