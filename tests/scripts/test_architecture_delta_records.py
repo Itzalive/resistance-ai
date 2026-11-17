@@ -121,3 +121,64 @@ def test_shape_reports_wrong_container_types() -> None:
         "decisions: must be a list",
         "holes[0]: must be an object",
     ]
+
+
+def read(folder: Path, ids: list[str] = SHOP_IDS) -> dict:
+    return call("records.mjs", "readRecords", str(folder), ids)
+
+
+def problems(result: dict) -> list[str]:
+    assert result["ok"] is False and result["token"] == "record-error", result
+    return result["details"]
+
+
+def test_absent_folders_are_empty(tmp_path) -> None:  # AC-1
+    _, folder = model_folder(tmp_path, {})
+    assert read(folder) == {"ok": True, "value": {"groups": [], "decisions": [], "holes": [], "contracts": [],
+                                                   "changes": [], "coverage": None}}
+
+
+def test_valid_records_are_returned_with_their_group(tmp_path) -> None:
+    _, folder = model_folder(tmp_path, {"decisions/orders.json": dfile(decision("D-1"), holes=(hole("H-1"),)),
+                                        "contracts/app.json": cfile(contract("C-1")),
+                                        "changes/2026-11-16-baseline.json": change(), "coverage.json": coverage()})
+    value = read(folder)["value"]
+    assert value["groups"] == [{"kind": "contracts", "group": "app", "title": "Boundaries"},
+                               {"kind": "decisions", "group": "orders", "title": "Orders"}]
+    assert value["decisions"] == [{**decision("D-1"), "group": "orders"}]
+    assert value["holes"] == [{**hole("H-1"), "group": "orders"}]
+    assert value["contracts"] == [{**contract("C-1"), "group": "app"}]
+    assert value["changes"] == [change()] and value["coverage"] == coverage()
+
+
+def test_misnamed_file_is_reported_once_and_not_read(tmp_path) -> None:  # AC-10, AC-17
+    _, folder = model_folder(tmp_path, {"decisions/Memory.json": "{not json", "decisions/.gitkeep": "",
+                                        "contracts/old/x.json": cfile(contract("C-1")),
+                                        "changes/2026-11-16.json": change()})
+    assert problems(read(folder)) == [
+        "changes/2026-11-16.json: -: not a valid file name here",
+        "contracts/old: -: folders are not allowed here",
+        "decisions/Memory.json: -: not a valid file name here",
+    ]
+
+
+def test_record_folder_that_is_a_file_and_coverage_that_is_a_folder(tmp_path) -> None:
+    _, folder = model_folder(tmp_path, {"decisions": "x", "coverage.json/x.json": "{}"})
+    assert problems(read(folder)) == ["coverage.json: -: must be a file", "decisions: -: must be a folder"]
+
+
+def test_bad_json_is_reported_once_and_others_still_checked(tmp_path) -> None:  # AC-14
+    _, folder = model_folder(tmp_path, {"decisions/a.json": "{oops", "decisions/b.json": dfile(decision("D-1", colour="x")),
+                                        "contracts/c.json": "[1]"})
+    assert problems(read(folder)) == [
+        "contracts/c.json: -: must be a JSON object",
+        "decisions/a.json: -: not valid JSON",
+        "decisions/b.json: decisions[0].colour: unknown field",
+    ]
+
+
+def test_problems_are_listed_by_path(tmp_path) -> None:
+    _, folder = model_folder(tmp_path, {"decisions/zeta.json": dfile(decision("D-1", status=5)),
+                                        "decisions/alpha.json": dfile(decision("D-2", evidence=[]))})
+    assert problems(read(folder)) == ["decisions/alpha.json: decisions[0].evidence: must be a string",
+                                      "decisions/zeta.json: decisions[0].status: must be a string"]
