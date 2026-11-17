@@ -92,6 +92,7 @@ def test_kind_name_is_compared_exactly(tmp_path) -> None:  # AC-12
     text = model("a -[Uses]-> b", kinds=("Uses",))
     code, data = check(make_repo(tmp_path, text), [["app.a.x", "app.b.y"]])
     assert breaches(data) == [("a", "b", "new")]
+    assert code == 1
 
 
 def test_loader_returns_import_relationships_and_runtime_links_apart(tmp_path) -> None:

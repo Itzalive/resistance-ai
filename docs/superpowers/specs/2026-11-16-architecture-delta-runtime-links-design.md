@@ -64,7 +64,7 @@ These are wording changes that describe the tool. They change no step of the ski
 ## Scope
 
 - The delta tool's model loading, comparison and report modules.
-- New fixture models under the existing architecture fixtures folder, and tests beside the existing delta tool tests.
+- Tests beside the existing delta tool tests, building their models in the test as the existing tests do.
 - The three documents above.
 - Required check that is not an acceptance criterion: the delta tool's existing tests, whose fixtures use only `uses` or no kind, all pass, and the only edits to them are in the `export` tests: the expected `format` value and the new `runtime` key in the expected key list and the expected empty export.
 
