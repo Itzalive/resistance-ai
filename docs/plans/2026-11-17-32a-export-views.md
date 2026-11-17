@@ -363,7 +363,7 @@ function shapeError(detail) {
   return new ToolError('internal', `likec4 returned ${detail}`);
 }
 
-function richText(value) {
+export function richText(value) {
   return value && value.isEmpty === false && typeof value.md === 'string' ? value.md : null;
 }
 
@@ -432,7 +432,7 @@ export function readViews(computed, elementIds) {
 }
 ```
 
-In `model.mjs`, import `readViews` from `./views.mjs`, use `views.mjs`'s copy of rich text by deleting `richText` from `model.mjs` and importing it instead (export it from `views.mjs`: change `function richText` to `export function richText`), and replace `return { elements, relationships, runtime };` with:
+In `model.mjs`, delete the `richText` function Task 1 added, add `import { readViews, richText } from './views.mjs';` (one copy of the rich-text rule, beside the views that also use it), and replace `return { elements, relationships, runtime };` with:
 
 ```js
   const views = readViews(computed, elements.map((element) => element.id));
@@ -627,7 +627,7 @@ def test_capability_line_follows_the_owner_line(tmp_path) -> None:
     ]
 ```
 
-Make the sweep edit to `test_decisions_carry_obligations`: `capabilities=["pay"]`, and `model_folder(tmp_path, {"views.c4": CAPABILITY_VIEW, "decisions/a.json": dfile(cross, principle)})` (move `CAPABILITY_VIEW` above that test).
+Make the sweep edit to `test_decisions_carry_obligations`: `capabilities=["pay"]`, and `model_folder(tmp_path, {"views.c4": CAPABILITY_VIEW, "decisions/a.json": dfile(cross, principle)})` (`CAPABILITY_VIEW` is a module global, so its place in the file does not matter).
 - [ ] **Step 2:** `uv run pytest -q tests/scripts/test_architecture_delta_records.py -k "capabilit or carry_obligations"`. Expected: the two new tests FAIL (exit 0); `test_decisions_carry_obligations` passes.
 - [ ] **Step 3: GREEN.** In `records.mjs`:
   - `linkPass(file, add, elements, decisions, changes)` becomes `linkPass(file, add, elements, decisions, changes, capabilities)`, and gains, after `run`:
