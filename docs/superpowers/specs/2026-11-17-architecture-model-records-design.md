@@ -161,7 +161,6 @@ A model folder with none of the new files exports and checks as before, apart fr
 - The 2026-11-09 delta tool spec: a note pointing here for the inputs, the `export` shape, the exception to its Cleaning rule for record text, and `record-error` added to its list of exit-2 tokens. The runtime-links spec: a note that `format` is now 3.
 - `ARCH_STANDARDS.md`, delta tool flags: one line saying `export` also prints the records and that a record problem is `record-error`. The rest of the skill's text is A3b.
 - Required check that is not an acceptance criterion: every existing delta tool test passes, and the only edits to them are in the `export` tests, for `format` 3 and the new keys.
-
 - A3c: the four optional decision fields and the obligations rule, in the existing record modules and their tests; every existing record test passes unedited.
 
 **Out of scope:** writing or converting records; generating documents; the skill's steps, standards and rubric beyond the one line; the other skills that name `architecture.md`; a check that sources exist.
@@ -226,5 +225,5 @@ A model folder with none of the new files exports and checks as before, apart fr
 | A5 | `export` prints `format` 2 with `elements`, `allowed`, `runtime`; existing export tests pin that shape. | VERIFIED: `report.mjs` `exportJson`; `tests/scripts/test_architecture_delta_export.py` lines 22, 23, 44, 182. |
 | A6 | Exactly one model exists in the old layout. | VERIFIED by the owner (2026-11-16). |
 | A7 | The owner chose JSON, several files grouped by subject, one file per run, and no converter in the engine. | VERIFIED: owner decisions of 2026-11-17, recorded on #31. |
-| A9 | The owner chose one decision record with optional `owner`, `obligations`, `compatibility` and `capabilities`; cross-cutting means it has obligations; a principle has obligations and no owner; the tool requires obligations whenever an owner is given; a contract is the interface with another system. | VERIFIED: owner decisions of 2026-11-17, recorded on #37 and #31. |
 | A8 | The owner accepts two fields added after the record design was approved: a `run` on each coverage entry, and an optional `capabilities` list on a contract. | VERIFIED: owner confirmed on 2026-11-17. |
+| A9 | The owner chose one decision record with optional `owner`, `obligations`, `compatibility` and `capabilities`; cross-cutting means it has obligations; a principle has obligations and no owner; the tool requires obligations whenever an owner is given; a contract is the interface with another system. | VERIFIED: owner decisions of 2026-11-17, recorded on #37 and #31. |
