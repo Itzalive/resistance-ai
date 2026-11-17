@@ -88,6 +88,6 @@ export async function loadModel(LikeC4, modelDir) {
     else runtime.push({ ...pair, kind });
   }
   validatePrefixes(elements);
-  const views = readViews(computed, elements.map((element) => element.id));
+  const views = readViews(computed, elements.map((element) => element.id), relationships, runtime);
   return { elements, relationships, runtime, ...views };
 }

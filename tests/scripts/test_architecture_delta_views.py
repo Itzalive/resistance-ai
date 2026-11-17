@@ -100,3 +100,57 @@ def test_bad_view_types_and_names_are_model_errors(tmp_path) -> None:  # AC-3 (t
         "error: model-error: view capability-Box: a capability view must be a dynamic view",
     ]
     assert both_commands(repo_with(tmp_path, BAD_VIEWS)) == [expected, expected]
+
+
+CAPS = """  dynamic view capability-order {
+    title 'Place an order'
+    shop.web -> shop.api 'sends order'
+    parallel {
+      shop.api -> pay 'charges card'
+      shop.api -> shop.web 'confirms'
+    }
+    pay -> shop.api
+  }
+  dynamic view capability-quiet {
+    shop.web -> shop.api
+    shop.api -> shop.web
+  }
+"""
+
+
+def test_capability_steps_are_calls_and_replies(tmp_path) -> None:  # AC-1 (capabilities), AC-2
+    data = export(repo_with(tmp_path, CAPS))
+    assert data["capabilities"] == [
+        {"name": "order", "title": "Place an order", "description": None, "steps": [
+            {"from": "shop.web", "to": "shop.api", "label": "sends order", "reply": False, "kinds": ["uses"]},
+            {"from": "shop.api", "to": "pay", "label": "charges card", "reply": False, "kinds": ["http"]},
+            {"from": "shop.api", "to": "shop.web", "label": "confirms", "reply": True, "kinds": ["uses"]},
+            {"from": "pay", "to": "shop.api", "label": "settles", "reply": False, "kinds": ["http"]},
+        ]},
+        {"name": "quiet", "title": "capability-quiet", "description": None, "steps": [
+            {"from": "shop.web", "to": "shop.api", "label": "places order", "reply": False, "kinds": ["uses"]},
+            {"from": "shop.api", "to": "shop.web", "label": None, "reply": True, "kinds": ["uses"]},
+        ]},
+    ]
+
+
+def test_a_step_with_no_relationship_is_a_model_error(tmp_path) -> None:  # AC-3 (steps)
+    views = CAPS + """  dynamic view capability-bad {
+    shop.web -> shop.api
+    parallel {
+      shop.web -> shop.api
+      shop.api -> pay
+    }
+    shop.web -> pay
+    shop.api.db -> shop.web
+  }
+  dynamic view area-x {
+    shop.web -> pay
+  }
+"""
+    expected = [
+        "error: model-error: view area-x: an area view must be an element view",
+        "error: model-error: view capability-bad: step 4: shop.web -> pay follows no relationship",
+        "error: model-error: view capability-bad: step 5: shop.api.db -> shop.web follows no relationship",
+    ]
+    assert both_commands(repo_with(tmp_path, views)) == [expected, expected]

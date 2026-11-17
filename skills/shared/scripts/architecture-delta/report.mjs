@@ -65,6 +65,18 @@ export function exportJson(model, records) {
       description: area.description === null ? null : cleanText(area.description),
       elements: area.elements.map(clean),
     })),
+    capabilities: model.capabilities.map((capability) => ({
+      name: clean(capability.name),
+      title: cleanText(capability.title),
+      description: capability.description === null ? null : cleanText(capability.description),
+      steps: capability.steps.map((step) => ({
+        from: clean(step.from),
+        to: clean(step.to),
+        label: step.label === null ? null : cleanText(step.label),
+        reply: step.reply,
+        kinds: step.kinds.map(clean),
+      })),
+    })),
   };
 }
 

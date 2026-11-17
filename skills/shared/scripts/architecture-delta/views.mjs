@@ -52,11 +52,29 @@ function typeProblem(view, prefix) {
   return prefix === AREA ? 'an area view must be an element view' : 'a capability view must be a dynamic view';
 }
 
+// Spec, Capabilities: a relationship matches a step from A to B when its source is A or inside A and its target is B or inside B.
+function readSteps(view, relationships, add) {
+  const refs = new Map(view.nodes.map((node) => [node?.id, node?.modelRef]));
+  return view.edges.map((edge, index) => {
+    const from = refs.get(edge?.source);
+    const to = refs.get(edge?.target);
+    if (typeof from !== 'string' || typeof to !== 'string') throw shapeError(`view ${view.id} with a step between non-elements`);
+    const forward = relationships.filter((r) => within(r.from, from) && within(r.to, to));
+    const back = forward.length > 0 ? [] : relationships.filter((r) => within(r.from, to) && within(r.to, from));
+    if (forward.length === 0 && back.length === 0) add(`step ${index + 1}: ${from} -> ${to} follows no relationship`, index + 1);
+    const kinds = [...new Set((forward.length > 0 ? forward : back).map((r) => r.kind ?? 'uses'))].sort(cmp);
+    const label = typeof edge.label === 'string' && edge.label !== '' ? edge.label : null;
+    return { from, to, label, reply: forward.length === 0, kinds };
+  });
+}
+
 // The area and capability views, or one `model-error` naming every problem, sorted by view id, then step.
-export function readViews(computed, elementIds) {
+export function readViews(computed, elementIds, relationships, runtime) {
   if (typeof computed.views !== 'function') throw shapeError('a model without views()');
+  const all = [...relationships.map((r) => ({ ...r, kind: null })), ...runtime];
   const problems = [];
   const areas = [];
+  const capabilities = [];
   for (const raw of computed.views()) {
     const view = readView(raw);
     const prefix = view.id.startsWith(AREA) ? AREA : view.id.startsWith(CAPABILITY) ? CAPABILITY : null;
@@ -74,10 +92,11 @@ export function readViews(computed, elementIds) {
     }
     const entry = { name, title: view.title, description: view.description };
     if (prefix === AREA) areas.push({ ...entry, elements: areaElements(view, elementIds).sort(cmp) });
+    else capabilities.push({ ...entry, steps: readSteps(view, all, add) });
   }
   if (problems.length > 0) {
     problems.sort((x, y) => cmp(x.view, y.view) || x.step - y.step);
     throw new ToolError('model-error', problems.map((item) => item.line));
   }
-  return { areas: areas.sort((x, y) => cmp(x.name, y.name)) };
+  return { areas: areas.sort((x, y) => cmp(x.name, y.name)), capabilities: capabilities.sort((x, y) => cmp(x.name, y.name)) };
 }
