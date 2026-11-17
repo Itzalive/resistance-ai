@@ -1,5 +1,5 @@
 // Renders the tool's JSON and text output. Strings are sorted raw, then cleaned.
-import { clean } from './errors.mjs';
+import { clean, cleanText } from './errors.mjs';
 
 export const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 export const byPair = (x, y) => cmp(x.from, y.from) || cmp(x.to, y.to);
@@ -29,9 +29,24 @@ function uniqueLinks(list) {
 
 const cleanPair = (pair) => ({ from: clean(pair.from), to: clean(pair.to) });
 
-export function exportJson(model) {
+// Keys whose values (and everything under them) are ids: cut like every id. Every other string is record text.
+const ID_KEYS = new Set(['id', 'superseded_by', 'binds', 'owner', 'bound', 'decisions', 'elements', 'holes', 'contracts',
+  'gap', 'element', 'run', 'group']);
+
+function cleanRecord(value, isId = false) {
+  if (typeof value === 'string') return isId ? clean(value) : cleanText(value);
+  if (Array.isArray(value)) return value.map((item) => cleanRecord(item, isId));
+  if (value !== null && typeof value === 'object') {
+    return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, cleanRecord(item, isId || ID_KEYS.has(key))]));
+  }
+  return value;
+}
+
+const byId = (x, y) => cmp(x.id, y.id);
+
+export function exportJson(model, records) {
   return {
-    format: 2,
+    format: 3,
     elements: [...model.elements].sort((a, b) => cmp(a.id, b.id)).map((element) => ({
       id: clean(element.id),
       kind: clean(element.kind),
@@ -41,6 +56,13 @@ export function exportJson(model) {
     })),
     allowed: uniquePairs(model.relationships).sort(byPair).map(cleanPair),
     runtime: uniqueLinks(model.runtime).sort(byLink).map((link) => ({ ...cleanPair(link), kind: clean(link.kind) })),
+    groups: [...records.groups].sort((x, y) => cmp(x.kind, y.kind) || cmp(x.group, y.group))
+      .map((entry) => ({ kind: entry.kind, group: clean(entry.group), title: cleanText(entry.title) })),
+    decisions: [...records.decisions].sort(byId).map((record) => cleanRecord(record)),
+    holes: [...records.holes].sort(byId).map((record) => cleanRecord(record)),
+    contracts: [...records.contracts].sort(byId).map((record) => cleanRecord(record)),
+    changes: [...records.changes].sort(byId).map((record) => cleanRecord(record)),
+    coverage: records.coverage === null ? null : cleanRecord(records.coverage),
   };
 }
 

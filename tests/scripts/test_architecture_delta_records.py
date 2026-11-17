@@ -350,3 +350,49 @@ def test_record_errors_come_before_other_inputs(tmp_path) -> None:  # AC-18
     proc = run_tool("check", "--repo", repo, "--deps", repo / "missing.json")
     assert proc.returncode == 2
     assert error_lines(proc) == [BAD_LINE]
+
+
+def export(repo: Path) -> dict:
+    proc = run_tool("export", "--repo", repo)
+    assert proc.returncode == 0, proc.stderr
+    return json.loads(proc.stdout)
+
+
+def test_export_without_records(tmp_path) -> None:  # AC-1
+    data = export(model_folder(tmp_path, {})[0])
+    assert data["format"] == 3
+    assert [data[k] for k in ("groups", "decisions", "holes", "contracts", "changes")] == [[], [], [], [], []]
+    assert data["coverage"] is None
+
+
+def test_export_prints_records_sorted_with_group_last(tmp_path) -> None:  # AC-2
+    files = {"decisions/orders.json": dfile(decision("D-1", note="n"), holes=(hole("H-1"),)),
+             "decisions/app.json": dfile(decision("D-3"), holes=(hole("H-2"),), title="App"),
+             "contracts/app.json": cfile(contract("C-2")), "contracts/zeta.json": cfile(contract("C-1"), title="Zeta"),
+             "contracts/app-and-server.json": cfile(contract("C-3"), title="App and server"),
+             "changes/2026-11-16-baseline.json": change(), "coverage.json": coverage()}
+    data = export(model_folder(tmp_path, files)[0])
+    assert data["groups"] == [{"kind": "contracts", "group": "app", "title": "Boundaries"},
+                              {"kind": "contracts", "group": "app-and-server", "title": "App and server"},
+                              {"kind": "contracts", "group": "zeta", "title": "Zeta"},
+                              {"kind": "decisions", "group": "app", "title": "App"},
+                              {"kind": "decisions", "group": "orders", "title": "Orders"}]
+    assert [(d["id"], d["group"]) for d in data["decisions"]] == [("D-1", "orders"), ("D-3", "app")]
+    assert list(data["decisions"][0]) == [*decision("D-1", note="n"), "group"]
+    assert "note" not in data["decisions"][1]
+    assert [(h["id"], h["group"]) for h in data["holes"]] == [("H-1", "orders"), ("H-2", "app")]
+    assert [(c["id"], c["group"]) for c in data["contracts"]] == [("C-1", "zeta"), ("C-2", "app"), ("C-3", "app-and-server")]
+    assert data["contracts"][0] == {**contract("C-1"), "group": "zeta"}
+    assert data["changes"] == [change()] and data["coverage"] == coverage()
+
+
+def test_record_ids_are_cut_like_other_ids(tmp_path) -> None:
+    long_id = "D-" + "1" * 250
+    data = export(model_folder(tmp_path, {"decisions/a.json": dfile(decision(long_id))})[0])
+    assert data["decisions"][0]["id"] == long_id[:199] + "…"
+
+
+def test_record_text_is_cleaned_without_a_cut(tmp_path) -> None:  # AC-12
+    reason = "r" * 250 + "\u001b[31m" + "\n" + "s" * 250
+    data = export(model_folder(tmp_path, {"decisions/a.json": dfile(decision("D-1", reason=reason))})[0])
+    assert data["decisions"][0]["reason"] == "r" * 250 + "\n" + "s" * 250

@@ -94,7 +94,7 @@ async function main(argv) {
   let output;
   let exitCode = 0;
   if (args.command === 'export') {
-    output = `${JSON.stringify(exportJson(loaded.model), null, 2)}\n`;
+    output = `${JSON.stringify(exportJson(loaded.model, loaded.records), null, 2)}\n`;
   } else {
     ({ output, exitCode } = await runCheck(args, deadline, loaded));
   }
