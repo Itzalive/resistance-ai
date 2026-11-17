@@ -27,7 +27,7 @@ The data files that hold those records in the model folder, and the delta tool r
 4. **Element ids are LikeC4's.** Wherever a record names an element (`binds`, `owner`, `bound`, `edge_nodes`, and a change's `elements` and `gap`), the value is any non-empty string; it is not held to rule 3, because LikeC4 allows other characters in its ids.
 5. **Links point from a record to elements.** Elements carry no list of their decisions; "which records bind this element" is answered by reading the records.
 6. **Each list is sorted by id on its own:** `decisions` and `holes` in a decisions file, `contracts` in a contracts file. Ids are compared as raw strings in UTF-16 code-unit order, the order the tool already uses for its output.
-7. **Absent means empty.** A missing `decisions`, `contracts` or `changes` folder, or a missing `coverage.json`, is valid. Files whose name starts with `.` (such as `.gitkeep`) are ignored everywhere in the model folder.
+7. **Absent means empty.** A missing `decisions`, `contracts` or `changes` folder, or a missing `coverage.json`, is valid. The record reader ignores any file or folder whose name starts with `.` (such as `.gitkeep`) inside `decisions/`, `contracts/` and `changes/`. The model-folder walk is unchanged and still counts and checks every file.
 
 ## Records
 
@@ -87,23 +87,25 @@ Every file is one JSON object. Every field below is required unless marked optio
 
 Ids in a change file are history. They are checked for form only (rule 3 for record ids, rule 4 for element ids), never looked up in today's model, because a run may have removed what it names.
 
-**Coverage file:** `answer` (text); `baselined` (list of objects: `prefix`, text, and `run`, a change id); `edge_nodes` (list of objects: `element`, an element id, and `run`, a change id); `counts` (object: `modules` and `groups`, each a whole number of 0 or more); `unmapped` (list of objects: `module` and `reason`, both text). `run` names the change file of the run that added the entry.
+**Coverage file:** `answer` (text); `baselined` (list of objects: `prefix`, text, and `run`, a change id); `edge_nodes` (list of objects: `element`, an element id, and `run`, a change id); `counts` (object: `modules` and `groups`, each a whole number of 0 or more); `unmapped` (list of objects: `module` and `reason`, both text). `run` names the change file of the run that added the entry: it equals the name, without `.json`, of a file in `changes/` that passes pass 1.
 
 ## What the tool checks
 
 `export` and `check` both read and validate the records immediately after the model has loaded, before any other input (`--deps`, the gap file, `--scope`, `--shards`) is read. When the records have any problem the command stops there with exit 2, whatever `check` would otherwise have found, and no other input is read. A plan or review never runs on a model whose records point at something that is not there. The deadline is checked after reading each record file, as it is after each input file.
 
-The tool reads only `decisions/*.json`, `contracts/*.json`, `changes/*.json` and `coverage.json`. Other files in the model folder are ignored, as today, and so is any file whose name starts with `.`.
+The tool reads only `decisions/*.json`, `contracts/*.json`, `changes/*.json` and `coverage.json`. Other files in the model folder are ignored by the record reader, as today, and so are files and folders inside the three record folders whose name starts with `.` (layout rule 7).
 
 **Passes.** Each file goes through five passes in this order. A file that fails pass 1 or 2a is not read further.
 
 1. **Layout.** A file in `decisions/`, `contracts/` or `changes/` whose name breaks layout rule 1 or 2; a folder inside one of them; a `decisions`, `contracts` or `changes` path that is a file; a `coverage.json` that is a folder. A misnamed file is reported and not read, so its ids never enter the id space.
 2. **Shape.** (a) The file is not valid JSON, or not an object. (b) A required field is missing, a field is not in the tables, a value has the wrong type, or a list that needs at least one item has none.
-3. **Ids.** A record id that breaks layout rule 3, or that appears twice anywhere in the folder; a change file whose `id` is not its file name; an element id that is an empty string.
+3. **Ids.** A record id that breaks layout rule 3; the same value in the `id` field of two decision, hole or contract records anywhere in the folder; a change file whose `id` is not its file name; an element id that is an empty string.
 4. **Links.** An element id in `binds`, `owner`, `bound` or `edge_nodes` that is not an element; a `superseded_by`, or an entry in a contract's `decisions`, that names no decision; `superseded_by` naming the record's own id; a coverage `run` that names no change file; the same id twice in one `binds`, `bound` or `decisions` list.
 5. **Order and values.** A list not sorted by id; `superseded_by` present when `status` is not `superseded`, or missing when it is; a `status`, `evidence` or `run` value outside its list; a `date` that is not a real `YYYY-MM-DD` date; a change file whose `date` is not the start of its name; a `check.exit` other than 0 or 1.
 
-**What a shape problem leaves in.** A record whose `id` is missing, not a string or breaks rule 3 is left out of the id, link and order checks. Any other shape problem leaves the record in. A field whose value has the wrong type is not link-checked; the items of a list that have the right type are. A chain of `superseded_by` links may form a cycle; that is allowed.
+**References are not ids.** Record ids in a change file's lists, in `superseded_by` and in a contract's `decisions` are references to records, not records. They are checked for form, and `superseded_by` and a contract's `decisions` for links, but they never count as a second occurrence of an id.
+
+**What a shape problem leaves in.** A record whose `id` is missing, not a string or breaks rule 3 is left out of the id, link and order checks. Any other shape problem leaves the record in. A field whose value has the wrong type is not link-checked; the items of a list that have the right type are. An element id reported in pass 3 is not link-checked. A chain of `superseded_by` links may form a cycle; that is allowed.
 
 The tool does not check that a reason is true, that a source exists, or that an element has any record.
 
@@ -112,9 +114,9 @@ The tool does not check that a reason is true, that a source exists, or that an 
 `error: record-error: <path>: <field path>: <what is wrong>`
 
 - `<path>` is relative to the model folder, with `/` as separator on every platform (`decisions/memory.json`). A folder problem uses the folder's path (`decisions`).
-- `<field path>` names where in the file: keys joined with `.`, list positions as `[i]` counted from 0 in the order the file holds them (`decisions[3].binds[0]`). A missing field gets the path it would have; an unknown key, its own path; a problem with the file or folder as a whole, `-`; an order problem, the `id` path of the first record that is out of order; a change file's id mismatch, `id`.
+- `<field path>` names where in the file: keys joined with `.`, list positions as `[i]` counted from 0 in the order the file holds them (`decisions[3].binds[0]`). A missing field gets the path it would have; an unknown key, its own path; a problem with the file or folder as a whole, `-`; an order problem, `<list>[i].id` for the smallest `i` whose id is less than the id at `i-1`, among the records left in; a change file's id mismatch, `id`.
 - A duplicate record id gives one line for each occurrence after the first, in folder order, at that occurrence's `id` path, naming the path of the first occurrence. Folder order is the files' paths sorted in UTF-16 code-unit order, then position in the file.
-- Lines are sorted by path in UTF-16 code-unit order. Within one file they come in pass order; within a pass, by record position, then in the order the fields appear in the tables above. Folder-level lines sort with their folder path.
+- Lines are sorted by path in UTF-16 code-unit order. Within one file they come in pass order; within a pass, by record position, then in the order the fields appear in the tables above, with unknown keys after the table fields in file order. Folder-level lines sort with their folder path.
 - Every problem is reported in one run. Lines are cleaned and cut as all error lines are.
 
 A record problem is always `record-error`, including a file that is not valid JSON; record files are not read with the gap file's reader, so they never give `bad-input` or `file-size`. `known-gap.json` keeps its own validation and its `bad-input` errors.
@@ -194,9 +196,10 @@ A model folder with none of the new files exports and checks as before, apart fr
 | # | Assumption | Status |
 |---|---|---|
 | A1 | LikeC4 ignores JSON files in the folder it loads, including invalid ones. | VERIFIED: scratch run, a model folder with a malformed `decisions/memory.json` and `coverage.json` exported with exit 0. |
-| A2 | The tool has a strict JSON reader with a size limit and an unknown-key check. | VERIFIED: `inputs.mjs` `readJson` (50 MB, `file-size`), `onlyKeys`. |
+| A2 | The gap file's reader refuses unknown keys, and the same pattern serves the record files, which get their own reader so a record problem is always `record-error`. | VERIFIED: `inputs.mjs` `onlyKeys`, `readJson`. |
 | A3 | Output cleaning removes escape sequences and control characters, including the line feed, and cuts at 200 code points. | VERIFIED: `errors.mjs` `ANSI`, `CONTROLS` (`\u0000-\u001f`), `MAX_POINTS`. |
 | A4 | The model folder is walked for links, config files and size before LikeC4 loads it. | VERIFIED: `walk.mjs` `walkModelDir`, called from `loadRepoModel` in `architecture-delta.mjs`. |
 | A5 | `export` prints `format` 2 with `elements`, `allowed`, `runtime`; existing export tests pin that shape. | VERIFIED: `report.mjs` `exportJson`; `tests/scripts/test_architecture_delta_export.py` lines 22, 23, 44, 182. |
 | A6 | Exactly one model exists in the old layout. | VERIFIED by the owner (2026-11-16). |
 | A7 | The owner chose JSON, several files grouped by subject, one file per run, and no converter in the engine. | VERIFIED: owner decisions of 2026-11-17, recorded on #31. |
+| A8 | The owner accepts two fields added after the record design was approved: a `run` on each coverage entry, and an optional `capabilities` list on a contract. | UNVERIFIED: put to the owner on #31 on 2026-11-17; both come out cleanly if refused. |
