@@ -12,7 +12,7 @@
 
 **Open decisions:** none
 
-**Size:** 6 tasks, 2 entry paths (`build`, `check`), 1100 lines (reported, not a target)
+**Size:** 6 tasks, 2 entry paths (`build`, `check`), 1104 lines (reported, not a target)
 
 **Trust boundary:** changed — see Trust-boundary table. The new tool writes files; the delta tool stays read-only.
 
@@ -349,21 +349,23 @@ def test_resolve_out_refuses_a_link_on_the_way(tmp_path) -> None:
     assert (result["token"], result["details"]) == ("out-error", ["--out passes through a link: site/via"])
 
 
-def other_spelling(target: Path) -> str | None:
-    """Another spelling of an existing folder that names the same folder: its Windows short name, or its upper case."""
+def other_spelling(repo: Path, model: Path) -> str | None:
+    """Another spelling of the model folder, relative to the repository: its Windows short name, or its upper case."""
+    rel = model.relative_to(repo)
     if sys.platform == "win32":
         import ctypes
         buffer = ctypes.create_unicode_buffer(1024)
-        if ctypes.windll.kernel32.GetShortPathNameW(str(target), buffer, 1024) and buffer.value.lower() != str(target).lower():
-            return buffer.value
-        return None
-    upper = str(target).upper()
-    return upper if os.path.exists(upper) and os.path.samefile(upper, target) else None
+        if not ctypes.windll.kernel32.GetShortPathNameW(str(model), buffer, 1024):
+            return None
+        short = Path(*Path(buffer.value).parts[-len(rel.parts):])
+        return None if str(short).lower() == str(rel).lower() else str(short)
+    upper = Path(str(rel).upper())
+    return str(upper) if (repo / upper).exists() and os.path.samefile(repo / upper, model) else None
 
 
 def test_resolve_out_refuses_another_spelling_of_the_model_folder(tmp_path) -> None:
     repo, model = layout(tmp_path)
-    alternate = other_spelling(model)
+    alternate = other_spelling(repo, model)
     if alternate is None:
         pytest.skip("no other spelling of the model folder on this file system")
     result = resolve(repo, model, str(Path(alternate) / "notes"))
@@ -406,6 +408,8 @@ function lstatOrNull(target) {
 // the checks run on the native real path (which settles Windows short names and letter case), and that path is returned.
 export function resolveOut(repo, modelDir, value) {
   const lexical = value === null ? path.join(modelDir, GENERATED) : path.resolve(repo, value);
+  // A lexical refusal first. It fails closed: it may also refuse an absolute short-name or other-case spelling of a
+  // folder that is inside the repository. The real-path checks below decide everything else.
   if (!isInside(lexical, repo)) throw outError('--out lies outside --repo');
   let current = repo;
   let deepest = repo;
