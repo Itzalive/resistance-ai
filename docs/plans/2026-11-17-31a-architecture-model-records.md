@@ -12,7 +12,7 @@
 
 **Open decisions:** none
 
-**Size:** 7 tasks, 2 entry paths (`export`, `check`), 758 lines (reported, not a target)
+**Size:** 7 tasks, 2 entry paths (`export`, `check`), 761 lines (reported, not a target)
 
 **Trust boundary:** changed — see Trust-boundary table. The record files are new untrusted input from the model folder, parsed by a new reader whose result decides the exit code and the `export` output.
 
@@ -101,7 +101,7 @@ Searched: `skills/`, `tests/`, `scripts/` with `grep -rn "exportJson\|loadRepoMo
 | Checkpoint | After task | Tasks covered | Reviewer looks at |
 |---|---|---|---|
 | C1 | 3 | 1–3 | Task 1 item 1, Task 2 items 1–3, Task 3 items 1–3, trust-boundary row 1; focused tests `uv run pytest -q tests/scripts/test_architecture_delta_records.py tests/scripts/test_architecture_delta_errors.py` |
-| C2 | 7 | 4–7 | Task 4 items 1–6, Task 5 items 1–2, Task 6 items 1–3, Task 7 item 1, trust-boundary rows 2–4; full suite `uv run pytest -q` (Task 5 changes every run) |
+| C2 | 7 | 4–7 | Task 4 items 1–6, Task 5 items 1–2, Task 6 items 1–4, Task 7 item 1, trust-boundary rows 2–4; full suite `uv run pytest -q` (Task 5 changes every run) |
 
 ---
 
@@ -425,7 +425,7 @@ def test_problems_are_listed_by_path(tmp_path) -> None:
 
 **Callers that move with this task:** none.
 
-**Interface.** Every lookup keyed by a record id or element id is a `Map` or `Set`, never a plain object (spec threat model). A value of the wrong type is skipped by passes 3–5, and a record-id reference reported in pass 3 is not link-checked (spec, "What a shape problem leaves in"). The `run` enum applies only to a change file's `run`, not to coverage `run` entries. After passes 1–2 for every file, build: the set of element ids (argument); the set of decision ids left in (string id matching `/^[A-Za-z0-9][A-Za-z0-9.-]*$/`); the set of change names (well-named files in `changes/`, without `.json`). Then for each file in path order run, pass by pass, over records by position and fields in table order:
+**Interface.** Every lookup keyed by a record id or element id is a `Map` or `Set`, never a plain object (spec threat model). A value of the wrong type is skipped by passes 3–5, and a record-id reference reported in pass 3 is not link-checked (spec, "What a shape problem leaves in"). The `run` enum applies only to a change file's `run`, not to coverage `run` entries. The supersession rule needs both `status` and `superseded_by` absent-or-the-right-type; if either is wrong-typed it is skipped. After passes 1–2 for every file, build: the set of element ids (argument); the set of decision ids left in (string id matching `/^[A-Za-z0-9][A-Za-z0-9.-]*$/`); the set of change names (well-named files in `changes/`, without `.json`). Then for each file in path order run, pass by pass, over records by position and fields in table order:
 - Pass 3: record id form; duplicate (a map from id to the first path, filled in this folder order; a later occurrence gives the duplicate line at its own `id` path); change `id` equals its name; element ids that are empty strings; record-id references (`superseded_by`, contract `decisions`, change `decisions`/`holes`/`contracts` lists) checked for form only.
 - Pass 4: element ids exist (skipping wrong types and ids reported in pass 3); `superseded_by` equal to own id gives `names its own id`, else must be in the decision set; contract `decisions` entries must be in the decision set; coverage `run` must be in the change names; the same id twice in `binds`, `bound` or a contract's `decisions` gives `<id> is listed twice` at the second occurrence.
 - Pass 5: list order (at record `i` among records left in, compared with the previous record left in, message at `<list>[i].id`, before that record's other pass 5 fields); `superseded_by` rule; enums (`status`: `current, partly-built, planned, superseded`; decision `evidence`: `checked, code, spec`; hole `evidence`: `checked, code, spec, search`; `run`: `baseline, epic, later-stage`); `date` and `approved.date` real dates (`YYYY-MM-DD` and the date round-trips through `Date.UTC`); change `date` equals the first 10 characters of its name; `check.exit` is 0 or 1.
@@ -629,7 +629,7 @@ def test_record_error_lines_are_cleaned(tmp_path) -> None:
     assert "\u001b" not in line and line.endswith("…")
 
 
-def test_export_reports_problems_of_every_pass_in_order(tmp_path) -> None:  # AC-4, AC-8 through export
+def test_export_reports_shape_and_link_problems_in_order(tmp_path) -> None:  # AC-4, AC-8 through export
     files = {"contracts/a.json": cfile(contract("C-1", owner="ghost"), contract("C-2", bound=[])),
              "decisions/b.json": dfile(decision("D-1", colour="x"))}
     repo, _ = model_folder(tmp_path, files)
@@ -665,12 +665,13 @@ def test_record_errors_come_before_other_inputs(tmp_path) -> None:  # AC-18
 
 **Callers that move with this task:** sweep rows 2–8.
 
-**Interface.** `exportJson(model, records)` returns `format: 3`, the existing three keys, then `groups` (sorted by `kind`, then `group`, with `clean` on `group`, `cleanText` on `title`), `decisions`, `holes`, `contracts` (each sorted by raw `id` with `cmp`), `changes` (sorted by `id`), `coverage` (object or `null`). Each record object keeps its own keys in file order, `group` last. Cleaning walks each record: a key in `id`, `superseded_by`, `binds`, `owner`, `bound`, `decisions`, `elements`, `holes`, `contracts`, `gap`, `element`, `run`, `group` makes every string under it cleaned with `clean`; every other string with `cleanText`. Numbers, `null` and booleans pass through. `coverage` goes through the same walk. Sorting `groups` by kind and group gives the same order as the reader's folder order, so it is kept for clarity and has no reviewer item.
+**Interface.** `exportJson(model, records)` returns `format: 3`, the existing three keys, then `groups` (sorted by `kind`, then `group`, with `clean` on `group`, `cleanText` on `title`), `decisions`, `holes`, `contracts` (each sorted by raw `id` with `cmp`), `changes` (sorted by `id`), `coverage` (object or `null`). Each record object keeps its own keys in file order, `group` last. Cleaning walks each record: a key in `id`, `superseded_by`, `binds`, `owner`, `bound`, `decisions`, `elements`, `holes`, `contracts`, `gap`, `element`, `run`, `group` makes every string under it cleaned with `clean`; every other string with `cleanText`. Numbers, `null` and booleans pass through. `coverage` goes through the same walk. Folder order can differ from group order: `contracts/app-and-server.json` comes before `contracts/app.json` because `-` sorts before `.`, while `app` sorts before `app-and-server`.
 
 **Reviewer looks at:**
 - record text not cut — mutation: use `clean` for text — killed by: `test_record_text_is_cleaned_without_a_cut`
 - records sorted by id across groups and `group` last — mutation: keep folder order — killed by: `test_export_prints_records_sorted_with_group_last`
 - ids cut, text not — mutation: use `cleanText` for ids — killed by: `test_record_ids_are_cut_like_other_ids`
+- `groups` sorted by kind and group — mutation: drop the `groups` sort — killed by: `test_export_prints_records_sorted_with_group_last` (`app` before `app-and-server`)
 
 - Satisfies Spec AC: AC-1, AC-2, AC-12
 - Decisions applied: none
@@ -696,9 +697,11 @@ def test_export_prints_records_sorted_with_group_last(tmp_path) -> None:  # AC-2
     files = {"decisions/orders.json": dfile(decision("D-1", note="n"), holes=(hole("H-1"),)),
              "decisions/app.json": dfile(decision("D-3"), holes=(hole("H-2"),), title="App"),
              "contracts/app.json": cfile(contract("C-2")), "contracts/zeta.json": cfile(contract("C-1"), title="Zeta"),
+             "contracts/app-and-server.json": cfile(contract("C-3"), title="App and server"),
              "changes/2026-11-16-baseline.json": change(), "coverage.json": coverage()}
     data = export(model_folder(tmp_path, files)[0])
     assert data["groups"] == [{"kind": "contracts", "group": "app", "title": "Boundaries"},
+                              {"kind": "contracts", "group": "app-and-server", "title": "App and server"},
                               {"kind": "contracts", "group": "zeta", "title": "Zeta"},
                               {"kind": "decisions", "group": "app", "title": "App"},
                               {"kind": "decisions", "group": "orders", "title": "Orders"}]
@@ -706,7 +709,7 @@ def test_export_prints_records_sorted_with_group_last(tmp_path) -> None:  # AC-2
     assert list(data["decisions"][0]) == [*decision("D-1", note="n"), "group"]
     assert "note" not in data["decisions"][1]
     assert [(h["id"], h["group"]) for h in data["holes"]] == [("H-1", "orders"), ("H-2", "app")]
-    assert [(c["id"], c["group"]) for c in data["contracts"]] == [("C-1", "zeta"), ("C-2", "app")]
+    assert [(c["id"], c["group"]) for c in data["contracts"]] == [("C-1", "zeta"), ("C-2", "app"), ("C-3", "app-and-server")]
     assert data["contracts"][0] == {**contract("C-1"), "group": "zeta"}
     assert data["changes"] == [change()] and data["coverage"] == coverage()
 
