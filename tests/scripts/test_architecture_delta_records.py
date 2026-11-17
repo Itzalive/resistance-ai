@@ -492,3 +492,21 @@ def test_decision_owner_comes_after_superseded_by_in_pass_3(tmp_path) -> None:
     _, folder = model_folder(tmp_path, files)
     assert problems(read(folder)) == ["decisions/a.json: decisions[0].superseded_by: not a valid record id",
                                       "decisions/a.json: decisions[0].owner: must not be empty"]
+
+
+def test_owner_needs_obligations_after_evidence(tmp_path) -> None:  # AC-20
+    repo, _ = model_folder(tmp_path, {"decisions/a.json": dfile(decision("D-1", evidence="memory", owner="shop.orders"))})
+    assert error_lines(run_tool("export", "--repo", repo)) == [
+        "error: record-error: decisions/a.json: decisions[0].evidence: must be one of checked, code, spec",
+        "error: record-error: decisions/a.json: decisions[0].obligations: required when owner is set",
+    ]
+
+
+def test_obligations_rule_and_wrong_types(tmp_path) -> None:  # AC-22
+    files = {"decisions/a.json": dfile(decision("D-1", owner=5), decision("D-2", owner="shop", obligations="x"),
+                                       decision("D-3", compatibility="Additive only."))}
+    repo, _ = model_folder(tmp_path, files)
+    assert error_lines(run_tool("export", "--repo", repo)) == [
+        "error: record-error: decisions/a.json: decisions[0].owner: must be a string",
+        "error: record-error: decisions/a.json: decisions[1].obligations: must be a list",
+    ]

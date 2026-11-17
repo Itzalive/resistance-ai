@@ -195,6 +195,7 @@ function valuePass(file, add) {
           if (record.status !== 'superseded' && has(record, 'superseded_by')) add(`${at}.superseded_by`, 'only allowed when status is superseded');
         }
         fixed(record, 'evidence', DECISION_EVIDENCE, `${at}.evidence`);
+        if (isString(record.owner) && !has(record, 'obligations')) add(`${at}.obligations`, 'required when owner is set');
       }
       if (name === 'holes') fixed(record, 'evidence', HOLE_EVIDENCE, `${at}.evidence`);
     }
