@@ -105,7 +105,7 @@ The tool reads only `decisions/*.json`, `contracts/*.json`, `changes/*.json` and
 
 **References are not ids.** Record ids in a change file's lists, in `superseded_by` and in a contract's `decisions` are references to records, not records. They are checked for form, and `superseded_by` and a contract's `decisions` for links, but they never count as a second occurrence of an id.
 
-**What a shape problem leaves in.** A record whose `id` is missing, not a string or breaks rule 3 is left out of the id, link and order checks. Any other shape problem leaves the record in. A field whose value has the wrong type is not link-checked; the items of a list that have the right type are. An element id reported in pass 3 is not link-checked. A chain of `superseded_by` links may form a cycle; that is allowed.
+**What a shape problem leaves in.** A record whose `id` is missing, not a string or breaks rule 3 is left out of the id, link and order checks. Any other shape problem leaves the record in. A field whose value has the wrong type is skipped by passes 3 to 5 (it is not form-checked, link-checked or value-checked); the items of a list that have the right type are checked. An element id or a record-id reference reported in pass 3 is not link-checked. A chain of `superseded_by` links may form a cycle; that is allowed.
 
 The tool does not check that a reason is true, that a source exists, or that an element has any record.
 

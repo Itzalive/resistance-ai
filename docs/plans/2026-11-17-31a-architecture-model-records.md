@@ -8,13 +8,13 @@
 
 **Tech Stack:** Node ESM (standard library only for the new code), pytest calling the tool and its modules as subprocesses.
 
-**Spec:** `docs/superpowers/specs/2026-11-17-architecture-model-records-design.md` — decisions applied: none (no decision register). AC-5 was corrected while planning: its example put the duplicate line on the wrong file for the spec's own folder order.
+**Spec:** `docs/superpowers/specs/2026-11-17-architecture-model-records-design.md` — decisions applied: none (no decision register). AC-5 was corrected while planning: its example put the duplicate line on the wrong file for the spec's own folder order. The spec's "What a shape problem leaves in" was amended while planning: a wrong-typed value is skipped by passes 3 to 5, and a record-id reference reported in pass 3 is not link-checked.
 
 **Open decisions:** none
 
-**Size:** 7 tasks, 2 entry paths (`export`, `check`), 702 lines (reported, not a target)
+**Size:** 7 tasks, 2 entry paths (`export`, `check`), 758 lines (reported, not a target)
 
-**Trust boundary:** unchanged in kind. The model folder is already read as untrusted input; the record files are new files read from it, printed only through the existing cleaning (`clean`) and the new `cleanText`, and interpreted nowhere else.
+**Trust boundary:** changed — see Trust-boundary table. The record files are new untrusted input from the model folder, parsed by a new reader whose result decides the exit code and the `export` output.
 
 ### Risk & Confidence Assessment
 
@@ -87,12 +87,21 @@ Searched: `skills/`, `tests/`, `scripts/` with `grep -rn "exportJson\|loadRepoMo
 | same | `tests/scripts/test_architecture_delta_runtime_links.py:155` | assert | 6 | `assert list(data)[:4] == ["format", "elements", "allowed", "runtime"]` |
 | same | `tests/scripts/test_architecture_delta_runtime_links.py:156` | assert | 6 | `assert data["format"] == 3` |
 
+## Trust-boundary table
+
+| Producer or reader | Where it is used | Text it receives | Untrusted source | Task | Proving test |
+|---|---|---|---|---|---|
+| `readRecords` (`records.mjs`) | parser whose output drives the exit code and `export` | record file names and contents | repository content | 3, 4 | `test_misnamed_file_is_reported_once_and_not_read`, `test_bad_json_is_reported_once_and_others_still_checked`, `test_ids_that_are_object_property_names` |
+| id lookups in `readRecords` | duplicate map, decision set, change-name set, element set | record ids and references | repository content | 4 | `test_ids_that_are_object_property_names` (ids `toString` and `constructor` neither collide nor resolve) |
+| `errorLines` / `clean` | stderr | ids and messages in `record-error` lines | repository content | 5 | `test_record_error_lines_are_cleaned` (Task 5) |
+| `exportJson` with `clean` / `cleanText` | stdout | every record string | repository content | 6 | `test_record_text_is_cleaned_without_a_cut`, `test_record_ids_are_cut_like_other_ids` |
+
 ## Checkpoints
 
 | Checkpoint | After task | Tasks covered | Reviewer looks at |
 |---|---|---|---|
-| C1 | 3 | 1–3 | Task 1 item 1, Task 2 items 1–3, Task 3 items 1–3; focused tests `uv run pytest -q tests/scripts/test_architecture_delta_records.py tests/scripts/test_architecture_delta_errors.py` |
-| C2 | 7 | 4–7 | Task 4 items 1–4, Task 5 items 1–2, Task 6 items 1–2, Task 7 item 1; full suite `uv run pytest -q` (Task 5 changes every run) |
+| C1 | 3 | 1–3 | Task 1 item 1, Task 2 items 1–3, Task 3 items 1–3, trust-boundary row 1; focused tests `uv run pytest -q tests/scripts/test_architecture_delta_records.py tests/scripts/test_architecture_delta_errors.py` |
+| C2 | 7 | 4–7 | Task 4 items 1–6, Task 5 items 1–2, Task 6 items 1–3, Task 7 item 1, trust-boundary rows 2–4; full suite `uv run pytest -q` (Task 5 changes every run) |
 
 ---
 
@@ -124,7 +133,7 @@ def test_clean_text_keeps_line_feeds_and_length() -> None:
 
 def test_clean_text_drops_carriage_returns_and_bidi_controls() -> None:
     from arch_delta_support import call
-    assert call("errors.mjs", "cleanText", "x\r\ny‮z\t")["value"] == "x\nyz"
+    assert call("errors.mjs", "cleanText", "x\r\ny\u202ez\t")["value"] == "x\nyz"
 
 
 def test_clean_still_cuts_at_200() -> None:
@@ -138,7 +147,7 @@ def test_clean_still_cuts_at_200() -> None:
 - [ ] **Step 3: GREEN.** In `errors.mjs`, after `MAX_POINTS`, add:
 
 ```js
-const TEXT_CONTROLS = /[\u0000-\u0009\u000b-\u001f\u007f-\u009f‪-‮⁦-⁩]/g;
+const TEXT_CONTROLS = /[\u0000-\u0009\u000b-\u001f\u007f-\u009f\u202a-\u202e\u2066-\u2069]/g;
 
 // Record text: escape sequences and control characters removed, line feeds kept, no length cut.
 export function cleanText(value) {
@@ -329,7 +338,7 @@ def test_shape_reports_wrong_container_types() -> None:
 
 **Reviewer looks at:**
 - misnamed file not read — mutation: parse misnamed files too — killed by: `test_misnamed_file_is_reported_once_and_not_read`
-- line order across files is by path — mutation: report in readdir order without sorting — killed by: `test_problems_are_listed_by_path`
+- line order across files is by path — mutation: report in folder-walk order without sorting — killed by: `test_bad_json_is_reported_once_and_others_still_checked` (contracts before decisions) and `test_record_folder_that_is_a_file_and_coverage_that_is_a_folder` (`coverage.json` between folders)
 - folder-level problems — mutation: treat `decisions` as a file as absent — killed by: `test_record_folder_that_is_a_file_and_coverage_that_is_a_folder`
 
 - Satisfies Spec AC: AC-1 (reader half), AC-10 (layout half), AC-14, AC-17 (layout half)
@@ -416,7 +425,7 @@ def test_problems_are_listed_by_path(tmp_path) -> None:
 
 **Callers that move with this task:** none.
 
-**Interface.** After passes 1–2 for every file, build: the set of element ids (argument); the set of decision ids left in (string id matching `/^[A-Za-z0-9][A-Za-z0-9.-]*$/`); the set of change names (well-named files in `changes/`, without `.json`). Then for each file in path order run, pass by pass, over records by position and fields in table order:
+**Interface.** Every lookup keyed by a record id or element id is a `Map` or `Set`, never a plain object (spec threat model). A value of the wrong type is skipped by passes 3–5, and a record-id reference reported in pass 3 is not link-checked (spec, "What a shape problem leaves in"). The `run` enum applies only to a change file's `run`, not to coverage `run` entries. After passes 1–2 for every file, build: the set of element ids (argument); the set of decision ids left in (string id matching `/^[A-Za-z0-9][A-Za-z0-9.-]*$/`); the set of change names (well-named files in `changes/`, without `.json`). Then for each file in path order run, pass by pass, over records by position and fields in table order:
 - Pass 3: record id form; duplicate (a map from id to the first path, filled in this folder order; a later occurrence gives the duplicate line at its own `id` path); change `id` equals its name; element ids that are empty strings; record-id references (`superseded_by`, contract `decisions`, change `decisions`/`holes`/`contracts` lists) checked for form only.
 - Pass 4: element ids exist (skipping wrong types and ids reported in pass 3); `superseded_by` equal to own id gives `names its own id`, else must be in the decision set; contract `decisions` entries must be in the decision set; coverage `run` must be in the change names; the same id twice in `binds`, `bound` or a contract's `decisions` gives `<id> is listed twice` at the second occurrence.
 - Pass 5: list order (at record `i` among records left in, compared with the previous record left in, message at `<list>[i].id`, before that record's other pass 5 fields); `superseded_by` rule; enums (`status`: `current, partly-built, planned, superseded`; decision `evidence`: `checked, code, spec`; hole `evidence`: `checked, code, spec, search`; `run`: `baseline, epic, later-stage`); `date` and `approved.date` real dates (`YYYY-MM-DD` and the date round-trips through `Date.UTC`); change `date` equals the first 10 characters of its name; `check.exit` is 0 or 1.
@@ -424,6 +433,8 @@ def test_problems_are_listed_by_path(tmp_path) -> None:
 
 **Reviewer looks at:**
 - references are not duplicates — mutation: add `superseded_by` targets to the duplicate map — killed by: `test_references_are_not_ids`
+- lookups are `Map`/`Set` — mutation: use a plain object for the decision set — killed by: `test_ids_that_are_object_property_names`
+- wrong types skipped by later passes — mutation: run the enum check on a non-string `status` — killed by: `test_wrong_typed_values_are_not_checked_again`
 - duplicate line sits on the later occurrence in folder order — mutation: report at the first occurrence — killed by: `test_duplicate_id_across_files`
 - a misnamed file's ids stay out of the id space — mutation: build the id map before pass 1 filtering — killed by: `test_misnamed_file_does_not_create_a_duplicate`
 - order position — mutation: compare with `list[i+1]` — killed by: `test_order_problem_is_at_the_first_record_out_of_order`
@@ -508,7 +519,7 @@ def test_self_supersession_and_duplicates_but_not_cycles(tmp_path) -> None:  # A
 
 
 def test_misnamed_file_does_not_create_a_duplicate(tmp_path) -> None:  # AC-17
-    _, folder = model_folder(tmp_path, {"decisions/Memory.json": dfile(decision("M-1")), "decisions/memory.json": dfile(decision("M-1")),
+    _, folder = model_folder(tmp_path, {"decisions/Memory.json": dfile(decision("M-1")), "decisions/orders.json": dfile(decision("M-1")),
                                         "decisions/.gitkeep": ""})
     assert problems(read(folder)) == ["decisions/Memory.json: -: not a valid file name here"]
 
@@ -530,6 +541,25 @@ def test_record_id_forms_and_change_id(tmp_path) -> None:
                                       "decisions/a.json: decisions[1].binds[0]: must not be empty"]
 
 
+def test_ids_that_are_object_property_names(tmp_path) -> None:
+    files = {"decisions/a.json": dfile(decision("toString"), decision("valueOf", status="superseded", superseded_by="constructor"))}
+    _, folder = model_folder(tmp_path, files)
+    assert problems(read(folder)) == ["decisions/a.json: decisions[1].superseded_by: constructor names no decision"]
+
+
+def test_wrong_typed_values_are_not_checked_again(tmp_path) -> None:
+    files = {"decisions/a.json": dfile(decision("D-1", status=5, superseded_by=7, binds=["shop", 3])),
+             "changes/2026-11-16-baseline.json": change(date=20261116, check={"exit": "0", "summary": "s", "output": "o"})}
+    _, folder = model_folder(tmp_path, files)
+    assert problems(read(folder)) == [
+        "changes/2026-11-16-baseline.json: date: must be a string",
+        "changes/2026-11-16-baseline.json: check.exit: must be a whole number",
+        "decisions/a.json: decisions[0].binds[1]: must be a string",
+        "decisions/a.json: decisions[0].status: must be a string",
+        "decisions/a.json: decisions[0].superseded_by: must be a string",
+    ]
+
+
 def test_underscored_element_ids_are_accepted(tmp_path) -> None:
     model = "model {\n  my_part = component 'P'\n}\n"
     repo = make_repo(tmp_path, model)
@@ -543,9 +573,9 @@ Note for `test_supersession_rules`: in folder order, `contracts/b.json` sorts be
 
 Note for `test_values_outside_their_lists`: change `2026-02-30-x` is well-named (pass 1 checks digits only), so its date fails pass 5; within that file pass 5 follows the table order `date`, `run`, `check`.
 
-- [ ] **Step 2:** Run `uv run pytest -q tests/scripts/test_architecture_delta_records.py`. Expected: FAIL for the tests that need passes 3–5; `test_change_history_is_not_looked_up`, `test_references_are_not_ids`, `test_underscored_element_ids_are_accepted` and `test_misnamed_file_does_not_create_a_duplicate` already pass and pin behaviour that must still hold after.
+- [ ] **Step 2:** Run `uv run pytest -q tests/scripts/test_architecture_delta_records.py`. Expected: FAIL for the tests that need passes 3–5; `test_change_history_is_not_looked_up`, `test_references_are_not_ids`, `test_underscored_element_ids_are_accepted` and `test_misnamed_file_does_not_create_a_duplicate` and `test_wrong_typed_values_are_not_checked_again` already pass and pin behaviour that must still hold after.
 - [ ] **Step 3: GREEN.** Implement passes 3–5 to the interface.
-- [ ] **Step 4:** Run `uv run pytest -q tests/scripts/test_architecture_delta_records.py`. Expected: PASS.
+- [ ] **Step 4:** Run `uv run pytest -q tests/scripts/test_architecture_delta_records.py tests/scripts/test_architecture_delta_safety.py`. Expected: PASS.
 - [ ] **Step 5:** Refactor the three passes into one walker over table fields with a per-pass check function; rerun Step 4.
 - [ ] **Step 6:** `git add skills/shared/scripts/architecture-delta/records.mjs tests/scripts/test_architecture_delta_records.py && git commit -m "feat(#31): record ids, links, order and values"`
 
@@ -593,6 +623,23 @@ def test_check_exits_2_on_bad_records_even_when_clean(tmp_path) -> None:  # AC-1
     assert run_tool("check", "--repo", repo, "--deps", deps).returncode == 2
 
 
+def test_record_error_lines_are_cleaned(tmp_path) -> None:
+    repo, _ = model_folder(tmp_path, {"decisions/a.json": dfile(decision("D-1", binds=["\u001b[31mx" + "y" * 300]))})
+    line = error_lines(run_tool("export", "--repo", repo))[0]
+    assert "\u001b" not in line and line.endswith("…")
+
+
+def test_export_reports_problems_of_every_pass_in_order(tmp_path) -> None:  # AC-4, AC-8 through export
+    files = {"contracts/a.json": cfile(contract("C-1", owner="ghost"), contract("C-2", bound=[])),
+             "decisions/b.json": dfile(decision("D-1", colour="x"))}
+    repo, _ = model_folder(tmp_path, files)
+    assert error_lines(run_tool("export", "--repo", repo)) == [
+        "error: record-error: contracts/a.json: contracts[1].bound: needs at least one item",
+        "error: record-error: contracts/a.json: contracts[0].owner: ghost is not a model element",
+        "error: record-error: decisions/b.json: decisions[0].colour: unknown field",
+    ]
+
+
 def test_record_errors_come_before_other_inputs(tmp_path) -> None:  # AC-18
     repo, _ = model_folder(tmp_path, BAD)
     proc = run_tool("check", "--repo", repo, "--deps", repo / "missing.json")
@@ -618,11 +665,12 @@ def test_record_errors_come_before_other_inputs(tmp_path) -> None:  # AC-18
 
 **Callers that move with this task:** sweep rows 2–8.
 
-**Interface.** `exportJson(model, records)` returns `format: 3`, the existing three keys, then `groups` (sorted by `kind`, then `group`, with `clean` on `group`, `cleanText` on `title`), `decisions`, `holes`, `contracts` (each sorted by raw `id` with `cmp`), `changes` (sorted by `id`), `coverage` (object or `null`). Each record object keeps its own keys in file order, `group` last. Cleaning walks each record: a key in `id`, `superseded_by`, `binds`, `owner`, `bound`, `decisions`, `elements`, `holes`, `contracts`, `gap`, `element`, `run`, `group` makes every string under it cleaned with `clean`; every other string with `cleanText`. Numbers, `null` and booleans pass through.
+**Interface.** `exportJson(model, records)` returns `format: 3`, the existing three keys, then `groups` (sorted by `kind`, then `group`, with `clean` on `group`, `cleanText` on `title`), `decisions`, `holes`, `contracts` (each sorted by raw `id` with `cmp`), `changes` (sorted by `id`), `coverage` (object or `null`). Each record object keeps its own keys in file order, `group` last. Cleaning walks each record: a key in `id`, `superseded_by`, `binds`, `owner`, `bound`, `decisions`, `elements`, `holes`, `contracts`, `gap`, `element`, `run`, `group` makes every string under it cleaned with `clean`; every other string with `cleanText`. Numbers, `null` and booleans pass through. `coverage` goes through the same walk. Sorting `groups` by kind and group gives the same order as the reader's folder order, so it is kept for clarity and has no reviewer item.
 
 **Reviewer looks at:**
 - record text not cut — mutation: use `clean` for text — killed by: `test_record_text_is_cleaned_without_a_cut`
-- records sorted by id across groups and `group` last — mutation: keep file order — killed by: `test_export_prints_records_sorted_with_group_last`
+- records sorted by id across groups and `group` last — mutation: keep folder order — killed by: `test_export_prints_records_sorted_with_group_last`
+- ids cut, text not — mutation: use `cleanText` for ids — killed by: `test_record_ids_are_cut_like_other_ids`
 
 - Satisfies Spec AC: AC-1, AC-2, AC-12
 - Decisions applied: none
@@ -645,20 +693,28 @@ def test_export_without_records(tmp_path) -> None:  # AC-1
 
 
 def test_export_prints_records_sorted_with_group_last(tmp_path) -> None:  # AC-2
-    files = {"decisions/orders.json": dfile(decision("D-3"), holes=(hole("H-1"),)),
-             "decisions/app.json": dfile(decision("D-1", note="n"), title="App"),
-             "contracts/app.json": cfile(contract("C-1")),
+    files = {"decisions/orders.json": dfile(decision("D-1", note="n"), holes=(hole("H-1"),)),
+             "decisions/app.json": dfile(decision("D-3"), holes=(hole("H-2"),), title="App"),
+             "contracts/app.json": cfile(contract("C-2")), "contracts/zeta.json": cfile(contract("C-1"), title="Zeta"),
              "changes/2026-11-16-baseline.json": change(), "coverage.json": coverage()}
     data = export(model_folder(tmp_path, files)[0])
     assert data["groups"] == [{"kind": "contracts", "group": "app", "title": "Boundaries"},
+                              {"kind": "contracts", "group": "zeta", "title": "Zeta"},
                               {"kind": "decisions", "group": "app", "title": "App"},
                               {"kind": "decisions", "group": "orders", "title": "Orders"}]
-    assert [d["id"] for d in data["decisions"]] == ["D-1", "D-3"]
+    assert [(d["id"], d["group"]) for d in data["decisions"]] == [("D-1", "orders"), ("D-3", "app")]
     assert list(data["decisions"][0]) == [*decision("D-1", note="n"), "group"]
-    assert "note" not in data["decisions"][1] and data["decisions"][1]["group"] == "orders"
-    assert data["holes"] == [{**hole("H-1"), "group": "orders"}]
-    assert data["contracts"] == [{**contract("C-1"), "group": "app"}]
+    assert "note" not in data["decisions"][1]
+    assert [(h["id"], h["group"]) for h in data["holes"]] == [("H-1", "orders"), ("H-2", "app")]
+    assert [(c["id"], c["group"]) for c in data["contracts"]] == [("C-1", "zeta"), ("C-2", "app")]
+    assert data["contracts"][0] == {**contract("C-1"), "group": "zeta"}
     assert data["changes"] == [change()] and data["coverage"] == coverage()
+
+
+def test_record_ids_are_cut_like_other_ids(tmp_path) -> None:
+    long_id = "D-" + "1" * 250
+    data = export(model_folder(tmp_path, {"decisions/a.json": dfile(decision(long_id))})[0])
+    assert data["decisions"][0]["id"] == long_id[:199] + "…"
 
 
 def test_record_text_is_cleaned_without_a_cut(tmp_path) -> None:  # AC-12
@@ -692,7 +748,7 @@ def test_record_text_is_cleaned_without_a_cut(tmp_path) -> None:  # AC-12
 - Satisfies Spec AC: none (the spec's Scope)
 - **Test retention:** no new test (docs-only branch)
 
-- [ ] **Step 1: RED.** `grep -c "record-error" docs/superpowers/specs/2026-11-09-architecture-delta-tool-design.md skills/defining-architecture/ARCH_STANDARDS.md; grep -c "format. is now 3\|records-design" docs/superpowers/specs/2026-11-16-architecture-delta-runtime-links-design.md` Expected: `0`, `0`, `0`.
+- [ ] **Step 1: RED.** `grep -c "record-error" docs/superpowers/specs/2026-11-09-architecture-delta-tool-design.md skills/defining-architecture/ARCH_STANDARDS.md; grep -c "format 3" docs/superpowers/specs/2026-11-16-architecture-delta-runtime-links-design.md` Expected: `0`, `0`, `0`.
 - [ ] **Step 2: GREEN.**
   - In the 2026-11-09 spec, add after the existing amendment note: `> Amended by \`2026-11-17-architecture-model-records-design.md\` (#31): the tool also reads and validates the record files in the model folder, \`export\` prints them (format 3), record text is cleaned without the 200-character cut, and \`record-error\` is an exit-2 token.` In its "Errors" paragraph change `` `timeout` and `internal`. `` to `` `timeout`, `record-error` and `internal`. ``
   - In the runtime-links spec, add after its `Work item:` line: `> \`export\` is now format 3: \`2026-11-17-architecture-model-records-design.md\` (#31) adds the record lists after \`runtime\`.`
