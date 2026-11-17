@@ -57,7 +57,7 @@ Other views (the default index view and any other views) are not exported and do
 
 A view's `title` is LikeC4's title for it when that is not `null`, otherwise the view id. (LikeC4 gives a scoped view with no title its scope element's title.)
 
-**New `model-error` lines (exit 2)**, reported after LikeC4 loads the model and before the records are read, all in one run, sorted by view id, then step. A view of the wrong type gets only its type line; the name and steps are checked only on views of the right type.
+**New `model-error` lines (exit 2)**, reported after LikeC4 loads the model and before the records are read, all in one run, sorted by view id, then step. A view of the wrong type gets only its type line; the name is checked only on views of the right type, and the steps only on capability views of the right type with a valid name.
 
 - `view <id>: an area view must be an element view` and `view <id>: a capability view must be a dynamic view`;
 - `view <id>: <name> is not a valid name`;
