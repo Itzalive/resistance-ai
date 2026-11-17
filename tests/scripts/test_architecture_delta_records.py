@@ -305,3 +305,48 @@ def test_underscored_element_ids_are_accepted(tmp_path) -> None:
     (folder / "decisions").mkdir()
     (folder / "decisions" / "a.json").write_text(json.dumps(dfile(decision("D-1", binds=["my_part"]))), encoding="utf-8")
     assert read(folder, ["my_part"])["ok"] is True
+
+
+BAD = {"decisions/a.json": dfile(decision("D-1", binds=["shop.nope"]))}
+BAD_LINE = "error: record-error: decisions/a.json: decisions[0].binds[0]: shop.nope is not a model element"
+
+
+def test_export_and_check_report_record_errors(tmp_path) -> None:  # AC-3
+    repo, _ = model_folder(tmp_path, BAD)
+    deps = repo / "deps.json"
+    deps.write_text(json.dumps({"edges": []}), encoding="utf-8")
+    for args in (("export", "--repo", repo), ("check", "--repo", repo, "--deps", deps)):
+        proc = run_tool(*args)
+        assert proc.returncode == 2 and proc.stdout == ""
+        assert error_lines(proc) == [BAD_LINE]
+
+
+def test_check_exits_2_on_bad_records_even_when_clean(tmp_path) -> None:  # AC-13
+    repo, _ = model_folder(tmp_path, BAD)
+    deps = repo / "deps.json"
+    deps.write_text(json.dumps({"edges": [["shop.orders.x", "shop.checkout.y"]]}), encoding="utf-8")
+    assert run_tool("check", "--repo", repo, "--deps", deps).returncode == 2
+
+
+def test_record_error_lines_are_cleaned(tmp_path) -> None:
+    repo, _ = model_folder(tmp_path, {"decisions/a.json": dfile(decision("D-1", binds=["\u001b[31mx" + "y" * 300]))})
+    line = error_lines(run_tool("export", "--repo", repo))[0]
+    assert "\u001b" not in line and line.endswith("…")
+
+
+def test_export_reports_shape_and_link_problems_in_order(tmp_path) -> None:  # AC-4, AC-8 through export
+    files = {"contracts/a.json": cfile(contract("C-1", owner="ghost"), contract("C-2", bound=[])),
+             "decisions/b.json": dfile(decision("D-1", colour="x"))}
+    repo, _ = model_folder(tmp_path, files)
+    assert error_lines(run_tool("export", "--repo", repo)) == [
+        "error: record-error: contracts/a.json: contracts[1].bound: needs at least one item",
+        "error: record-error: contracts/a.json: contracts[0].owner: ghost is not a model element",
+        "error: record-error: decisions/b.json: decisions[0].colour: unknown field",
+    ]
+
+
+def test_record_errors_come_before_other_inputs(tmp_path) -> None:  # AC-18
+    repo, _ = model_folder(tmp_path, BAD)
+    proc = run_tool("check", "--repo", repo, "--deps", repo / "missing.json")
+    assert proc.returncode == 2
+    assert error_lines(proc) == [BAD_LINE]
