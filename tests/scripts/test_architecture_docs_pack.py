@@ -263,3 +263,66 @@ def test_step_lines() -> None:  # AI pack, step lines
         "2. shop.api -> pay (http)",
         "3. pay -> shop.api (reply): ok (event, http)",
     ]
+
+
+def pack(code: str) -> object:
+    snippet = (
+        f"import * as p from {json.dumps(lib_url('pack.mjs', DOCS_LIB))};\n"
+        f"import {{ packContext }} from {json.dumps(lib_url('pack-blocks.mjs', DOCS_LIB))};\n"
+        f"const data = {json.dumps(DATA)};\nconst gap = {json.dumps(GAP)};\nconst base = packContext(data);\n"
+        f"process.stdout.write(JSON.stringify({code}));\n"
+    )
+    proc = run_module(snippet)
+    assert proc.returncode == 0, proc.stderr
+    return json.loads(proc.stdout)
+
+
+def headings(text: str) -> list:
+    return [part for part in text.split("\n\n") if part.startswith("## ")]
+
+
+def test_area_slice() -> None:  # AI pack, area slice; Pack layout
+    assert pack("p.areaSlice(data, gap, data.areas[1], base)") == (
+        MARKER + "\n\n# money: Money\n\nPayments.\n\\# Money\n\n"
+        "## Elements\n\n"
+        "### pay: Pay\nkind system\nused by: shop.api [areas/front.md]\n"
+        "runtime: <- shop.api (event) [areas/front.md]\n"
+        "runtime: <- shop.api (http, \"charges card\") [areas/front.md]\n"
+        "bound by: D-2 (cross-cutting)\n\n"
+        "## Decisions\n\n"
+        "### D-2\nDecide D-2.\nreason: Because.\n\\# not a heading\nobligations: Log calls.\n"
+        "owner: shop.api [areas/front.md]\ncompatibility: Additive. # x\nstatus: current\nevidence: code\n"
+        "binds: shop.api [areas/front.md], pay\n\n"
+        "## Contracts\n\n"
+        "### C-1: Card API\nowner: pay\nbound: shop.web [areas/front.md]\nobligations: Ids; Two lines\n"
+        "compatibility: no rule stated\nnotes: n1 # n\ndecisions: D-2, D-3 [README.md]\ncapabilities: buy [capabilities/buy.md]\n"
+    )
+
+
+def test_area_slice_sections_and_order() -> None:  # Pack layout: cross-cutting decisions first; known gap sorted
+    text = pack("p.areaSlice(data, gap, data.areas[0], base)")
+    assert text.split("\n\n")[1:3] == ["# front: Front", "## Elements"]
+    assert headings(text) == ["## Elements", "## Decisions", "## Contracts", "## Open questions", "## Known gap"]
+    assert text.index("### D-2") < text.index("### D-1")
+    assert text.rstrip("\n").split("\n\n")[-1] == (
+        "- shop.api -> shop.web: two lines\n- shop.web -> bank [README.md]: cycle in current code (close by 2027-01 # z)"
+    )
+
+
+def test_capability_slice() -> None:  # AI pack, capability slice; AC-26 (holds the decisions naming it)
+    text = pack("p.capabilitySlice(data, data.capabilities[0], base)")
+    parts = text.rstrip("\n").split("\n\n")
+    assert parts[1] == "# buy: Buy"
+    assert headings(text) == ["## Steps", "## Elements", "## Decisions", "## Contracts"]
+    assert parts[parts.index("## Steps") + 1] == (
+        "1. shop.web -> shop.api: order now (uses)\n2. shop.api -> pay (http)\n3. pay -> shop.api (reply): ok (event, http)"
+    )
+    assert [part.split("\n")[0] for part in parts if part.startswith("### ")] == [
+        "### pay: Pay", "### shop.api: API", "### shop.web: Web front", "### D-1", "### C-1: Card API"]
+    assert "capabilities: buy\n" in text and "capabilities: buy [" not in text
+
+
+def test_capability_slice_with_nothing() -> None:  # Pack layout: empty sections are left out
+    assert pack("p.capabilitySlice(data, { name: 'refund', title: 'Refund', description: null, steps: [] }, base)") == (
+        MARKER + "\n\n# refund: Refund\n"
+    )
