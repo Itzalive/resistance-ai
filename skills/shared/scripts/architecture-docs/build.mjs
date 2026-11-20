@@ -1,15 +1,32 @@
 // The documents of one build, as { path with '/': text }, and the output limits (write rule 4).
-import { ToolError } from '../architecture-delta/errors.mjs';
+import { ToolError, clean, cleanText } from '../architecture-delta/errors.mjs';
 import { exportJson } from '../architecture-delta/report.mjs';
+import { buildOverview } from './overview.mjs';
+import { renderMarkdown } from './markdown.mjs';
+import { renderHtml } from './html.mjs';
 
 export const OUT_FILE_LIMIT = 2000;
 export const OUT_BYTES_LIMIT = 50 * 1024 * 1024;
 
-// Spec, AI pack: `pack/model.json` holds the format 4 export under `export`, marked by its first key.
-// Later plans add the other documents here; `gap` (cleaned known-gap entries) is for them.
+// Spec, The tool: known-gap entries are cleaned like `export` output before any document uses them.
+export function cleanGap(entries) {
+  return entries.map((entry) => ({
+    from: clean(entry.from),
+    to: clean(entry.to),
+    reason: cleanText(entry.reason),
+    close_by: entry.close_by === null ? null : cleanText(entry.close_by),
+  }));
+}
+
+// Spec, What each document holds: every document is built from the export (and the cleaned known-gap entries).
 export function buildFiles(model, records, gap, tick = () => {}) {
+  const data = exportJson(model, records);
   const files = {};
-  files['pack/model.json'] = `${JSON.stringify({ generated: 'architecture-docs', export: exportJson(model, records) }, null, 2)}\n`;
+  files['pack/model.json'] = `${JSON.stringify({ generated: 'architecture-docs', export: data }, null, 2)}\n`;
+  tick();
+  const overview = buildOverview(data, gap);
+  files['README.md'] = renderMarkdown(overview);
+  files['index.html'] = renderHtml(overview);
   tick();
   return files;
 }
