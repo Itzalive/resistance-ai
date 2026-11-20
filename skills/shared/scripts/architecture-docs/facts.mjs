@@ -59,7 +59,6 @@ export function relative(from, to) {
   return path.posix.relative(path.posix.dirname(from), to);
 }
 
-
 // Spec, Area: an area's records: the decisions binding an area element (cross-cutting first, then by id), the
 // contracts whose owner or bound elements are in the area, the open questions binding area elements, and the
 // known-gap entries with an end in the area, sorted by pair.
@@ -87,7 +86,6 @@ export function capabilityRecords(data, capability) {
     contracts: data.contracts.filter(names),
   };
 }
-
 
 // Spec, Overview and AI pack: the facts outside any area: the elements in no area, the principles, and the decisions
 // (other than principles), contracts and open questions that have no area.

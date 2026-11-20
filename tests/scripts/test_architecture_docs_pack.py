@@ -164,3 +164,26 @@ def test_element_block_outside_any_area() -> None:  # AC-26: an id outside any a
         "runtime: <- shop.api (event) [areas/front.md]\n"
         "bound by: D-3"
     )
+
+
+def test_pack_file_of_a_contract_and_an_open_question() -> None:  # AC-26: a record's pack file is its first area's
+    code = "[b.ref('contracts', 'C-1', ctx), b.ref('contracts', 'C-2', ctx), b.ref('holes', 'H-1', ctx)]"
+    assert blocks(code, INDEX) == ["C-1 [areas/front.md]", "C-2", "H-1 [areas/front.md]"]
+
+
+def test_pack_file_of_a_capability_and_another_slice() -> None:  # AC-26: a capability's pack file is its own slice
+    code = "[b.ref('capabilities', 'buy', ctx), b.ref('capabilities', 'buy', b.withHeld(ctx, {'capabilities': ['buy']})), b.ref('elements', 'shop', b.withHeld(ctx, {}))]"
+    assert blocks(code, FRONT) == ["buy [capabilities/buy.md]", "buy", "shop [areas/front.md]"]
+
+
+def test_element_block_separates_tags_and_code_entries() -> None:  # element block: tags by spaces, code by `, `
+    data = json.loads(json.dumps(DATA))
+    data["elements"][3].update(tags=["edge", "layer"], code=["src/api", "src/jobs"])
+    snippet = (
+        f"import * as b from {json.dumps(lib_url('pack-blocks.mjs', DOCS_LIB))};\n"
+        f"const ctx = b.packContext({json.dumps(data)}, {json.dumps(FRONT)});\n"
+        "process.stdout.write(JSON.stringify(b.elementBlock('shop.api', ctx).split('\\n')[1]));\n"
+    )
+    proc = run_module(snippet)
+    assert proc.returncode == 0, proc.stderr
+    assert json.loads(proc.stdout) == "kind container · tags #edge #layer · code src/api, src/jobs · rules BR-1, BR-4"
