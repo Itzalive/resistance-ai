@@ -88,6 +88,8 @@ Task tool (general-purpose):
     **Findings:** [severity:kind:text, one per line]
 
     **Tests run:** [commands and results]
+
+    **Scratch copy:** <path> — files changed: <list> | none built
 ```
 
 **Reviewer returns:** a status, the killed/survived table, verified test code for

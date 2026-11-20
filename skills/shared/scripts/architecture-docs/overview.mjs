@@ -2,12 +2,12 @@
 // everything in no area.
 import { cmp } from '../architecture-delta/report.mjs';
 import { doc, heading, paragraph, list, table, diagram, docLink } from './tree.mjs';
-import { flowchart } from './mermaid.mjs';
+import { ARROW_LIMIT, flowchart } from './mermaid.mjs';
 import {
-  OVERVIEW, IMPROVEMENTS, areaDoc, capabilityDoc, changeDoc, topLevel, areasByElement, areasOf, isPrinciple, recordElements,
+  OVERVIEW, IMPROVEMENTS, changeDoc, topLevel, areasByElement, areasOf, isPrinciple, recordElements,
   recordTarget, titlesOf,
 } from './facts.mjs';
-import { decisionBlocks, contractBlocks, holeBlocks, elementLinks, areaLinks } from './records-doc.mjs';
+import { decisionBlocks, contractBlocks, holeBlocks, elementLinks, areaLinks, capabilityLinks } from './records-doc.mjs';
 
 export const OVERVIEW_TITLE = 'Architecture';
 
@@ -33,7 +33,7 @@ function systemDiagram(data) {
     .sort((x, y) => cmp(x.from, y.from) || cmp(x.to, y.to))
     .map((pair) => ({ from: pair.from, to: pair.to, dashed: !pair.solid, text: pair.solid ? '' : [...pair.kinds].sort(cmp).join(', ') }));
   const text = flowchart(nodes, arrows);
-  return text === null ? paragraph('The system diagram has more than 80 arrows and is not drawn; the tables list every element.') : diagram(text);
+  return text === null ? paragraph(`The system diagram has more than ${ARROW_LIMIT} arrows and is not drawn; the tables list every element.`) : diagram(text);
 }
 
 const orNone = (parts) => (parts.length > 0 ? parts : ['None']);
@@ -46,12 +46,12 @@ export function buildOverview(data, gap) {
   blocks.push(heading(2, 'Areas'));
   blocks.push(data.areas.length === 0 ? paragraph('The model has no area views.')
     : table(['Area', 'Description', 'Elements'], data.areas.map((area) => [
-      [docLink(area.title, areaDoc(area.name))], [area.description ?? ''], [String(area.elements.length)]])));
+      areaLinks([area.name], ctx), [area.description ?? ''], [String(area.elements.length)]])));
 
   blocks.push(heading(2, 'Capabilities'));
   blocks.push(data.capabilities.length === 0 ? paragraph('The model has no capability views.')
     : table(['Capability', 'Description', 'Areas'], data.capabilities.map((capability) => [
-      [docLink(capability.title, capabilityDoc(capability.name))], [capability.description ?? ''],
+      capabilityLinks([capability.name], ctx), [capability.description ?? ''],
       orNone(areaLinks(areasOf(capability.steps.flatMap((step) => [step.from, step.to]), byElement), ctx))])));
 
   blocks.push(heading(2, 'Principles'));

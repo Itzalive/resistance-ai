@@ -47,6 +47,15 @@ def test_markdown_escapes_model_text() -> None:  # AC-12
     )
 
 
+def test_markdown_escapes_a_dollar() -> None:
+    assert body([para("$x$")])[0] == r"\$x\$"
+
+
+def test_markdown_leading_spaces_cannot_open_a_code_block() -> None:
+    assert body([para("    Use a.b\n  next")])[0] == "&#32;&#32;&#32;&#32;Use a\\.b\\\n&#32;&#32;next"
+    assert body([para(link("L", "a.md"), "  after")])[0] == "[L](a.md)  after"
+
+
 def test_markdown_keeps_line_feeds_as_hard_breaks() -> None:
     assert body([para("one\ntwo")])[0] == "one\\\ntwo"
     item = body([{"type": "list", "items": [["one\ntwo"], ["three"]]}])[0]
@@ -76,7 +85,7 @@ def test_markdown_diagram_is_a_mermaid_fence() -> None:
     assert body([{"type": "diagram", "text": "flowchart LR\n  n1[\"A\"]"}])[0] == "```mermaid\nflowchart LR\n  n1[\"A\"]\n```"
 
 
-@pytest.mark.parametrize("href", ["javascript:alert(1)", "a b.md", "https://x.example/a.md", "a.md#x", "//x.example/a.md", "/a.md"])
+@pytest.mark.parametrize("href", ["javascript:alert(1)", "a b.md", "https://x.example/a.md", "a.md#x", "//x.example/a.md", "/a.md", "a.html"])
 def test_markdown_refuses_an_unsafe_link_target(href: str) -> None:
     result = render("markdown.mjs", "renderMarkdown", {"title": "T", "blocks": [para(link("x", href))]})
     assert result["ok"] is False

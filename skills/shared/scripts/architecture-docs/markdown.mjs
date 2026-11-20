@@ -3,7 +3,7 @@
 import { MARKER } from './out.mjs';
 import { SAFE_HREF } from './tree.mjs';
 
-const PUNCTUATION = /[\\`*_{}[\]()#+\-.!|=~]/g;
+const PUNCTUATION = /[\\`*_{}[\]()#+\-.!|=~$]/g;
 const FENCE = '`'.repeat(3);
 
 export function escapeText(text) {
@@ -15,16 +15,21 @@ export function escapeText(text) {
 }
 
 function target(href) {
-  if (typeof href !== 'string' || !SAFE_HREF.test(href)) throw new Error(`unsafe link target ${href}`);
+  if (typeof href !== 'string' || !SAFE_HREF.test(href) || !href.endsWith('.md')) throw new Error(`unsafe link target ${href}`);
   return href;
 }
 
+// A line's leading spaces are written as entities, so four of them cannot open an indented code block.
+const leadingSpaces = (line) => line.replace(/^ +/, (spaces) => '&#32;'.repeat(spaces.length));
+
 // Line feeds in text become hard breaks (a backslash at the end of the line), or spaces where the block is one line.
 function inline(parts, { indent = '', oneLine = false } = {}) {
-  return parts.map((part) => {
+  return parts.map((part, index) => {
     if (typeof part === 'string') {
-      const text = oneLine ? part.replace(/\n/g, ' ') : part;
-      return text.split('\n').map(escapeText).join(`\\\n${indent}`);
+      if (oneLine) return escapeText(part.replace(/\n/g, ' '));
+      return part.split('\n').map(escapeText)
+        .map((line, at) => (at > 0 || index === 0 ? leadingSpaces(line) : line))
+        .join(`\\\n${indent}`);
     }
     return `[${escapeText(String(part.text).replace(/\n/g, ' '))}](${target(part.href)})`;
   }).join('');

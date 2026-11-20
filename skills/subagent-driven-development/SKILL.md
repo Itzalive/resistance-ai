@@ -162,7 +162,7 @@ After the last task and its checkpoint:
 - **One executor at a time** in a shared checkout. Parallel executors conflict.
 - **Check the commit.** After DONE, confirm the commit exists and its tests pass before dispatching the next task.
 - **Carry deviations forward.** Every executor deviation from the plan goes to the next checkpoint reviewer to judge.
-- **Reuse a check's scratch work; never ask a check to build.** Reviewers keep any scratch copy they build and report its path. When one holds applied plan work or verified tests, start from it: the executor copies the task's tests in, sees them fail, copies its code in, sees them pass, and commits. Never brief a reviewer to delete its copy or to build the plan.
+- **Reuse a check's scratch work; never ask a check to build.** Reviewers keep any scratch copy they build and report its path. When one holds applied plan work, start from it: the executor copies the task's tests in from the scratch copy, sees them fail, copies the task's code in from the scratch copy, sees them pass, and commits. When it holds a checkpoint's verified tests, copy them in, see them pass, and commit (as under "Handling findings"). Never brief a reviewer to delete its copy or to build the plan.
 
 ## Inline fast path
 

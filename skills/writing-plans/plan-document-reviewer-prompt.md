@@ -188,6 +188,8 @@ Task tool (general-purpose):
 
     **Advisory (do not block approval):**
     - [suggestions that improve the plan but are not blocking]
+
+    **Scratch copy:** <path> — files changed: <list> | none built
 ```
 
 **Reviewer returns:** One of the three statuses above, gate failures with their kind (if any), and advisory notes.

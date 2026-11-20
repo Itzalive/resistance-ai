@@ -67,6 +67,13 @@ def test_relative_links() -> None:
     ]
 
 
+def test_relative_refuses_a_target_outside_the_output_folder() -> None:
+    for target in ("../x.md", "/x.md", "areas/../../x.md"):
+        result = call("facts.mjs", "relative", "areas/a.md", target, lib=DOCS_LIB)
+        assert result["ok"] is False
+        assert result["message"] == f"link target {target} leaves the output folder"
+
+
 def test_top_level() -> None:
     assert [facts("topLevel", "a"), facts("topLevel", "a.x.y")] == ["a", "a"]
 

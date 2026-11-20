@@ -55,6 +55,6 @@ export function titlesOf(data) {
 }
 
 export function relative(from, to) {
-  const rel = path.posix.relative(path.posix.dirname(from), to);
-  return rel === '' ? path.posix.basename(to) : rel;
+  if (to.startsWith('/') || path.posix.normalize(to).startsWith('..')) throw new Error(`link target ${to} leaves the output folder`);
+  return path.posix.relative(path.posix.dirname(from), to);
 }

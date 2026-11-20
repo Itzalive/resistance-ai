@@ -111,6 +111,8 @@ and the files you changed, so verified fixes can be reused.
 
 **Reasoning:** [Technical assessment in 1-2 sentences]
 
+**Scratch copy:** <path> — files changed: <list> | none built
+
 ## Critical Rules
 
 **DO:**

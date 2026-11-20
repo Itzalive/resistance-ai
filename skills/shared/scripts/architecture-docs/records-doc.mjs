@@ -14,7 +14,7 @@ export const elementLinks = (ids, ctx) => titled(ids.map((id) =>
   withTitle(id, relative(ctx.doc, elementTarget(id, ctx.byElement)), ctx.titles.elements.get(id))));
 export const areaLinks = (names, ctx) => titled(names.map((name) =>
   withTitle(name, relative(ctx.doc, areaDoc(name)), ctx.titles.areas.get(name))));
-const capabilityLinks = (names, ctx) => titled(names.map((name) =>
+export const capabilityLinks = (names, ctx) => titled(names.map((name) =>
   withTitle(name, relative(ctx.doc, capabilityDoc(name)), ctx.titles.capabilities.get(name))));
 
 function decisionLink(id, ctx) {
