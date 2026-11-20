@@ -63,6 +63,10 @@ def test_markdown_headings_and_links_are_escaped() -> None:
     assert body(blocks) == ["## A \\*b\\* c", "[D\\-1 \\[x\\]](../README.md) after"]
 
 
+def test_markdown_title_and_link_text_are_one_line() -> None:
+    assert md([para(link("a\nb", "a.md"))], title="T\nU") == MARKER + "\n\n# T U\n\n[a b](a.md)\n"
+
+
 def test_markdown_code_fence_is_longer_than_any_backtick_run() -> None:
     assert body([{"type": "code", "text": "a ``` b\nc <d>\n"}])[0] == "````\na ``` b\nc <d>\n````"
     assert body([{"type": "code", "text": "plain"}])[0] == "```\nplain\n```"
@@ -72,7 +76,7 @@ def test_markdown_diagram_is_a_mermaid_fence() -> None:
     assert body([{"type": "diagram", "text": "flowchart LR\n  n1[\"A\"]"}])[0] == "```mermaid\nflowchart LR\n  n1[\"A\"]\n```"
 
 
-@pytest.mark.parametrize("href", ["javascript:alert(1)", "a b.md", "https://x.example/a.md", "a.md#x"])
+@pytest.mark.parametrize("href", ["javascript:alert(1)", "a b.md", "https://x.example/a.md", "a.md#x", "//x.example/a.md", "/a.md"])
 def test_markdown_refuses_an_unsafe_link_target(href: str) -> None:
     result = render("markdown.mjs", "renderMarkdown", {"title": "T", "blocks": [para(link("x", href))]})
     assert result["ok"] is False
@@ -120,12 +124,23 @@ def test_html_escapes_every_value() -> None:  # AC-12
     assert text.count("<script") == 2
 
 
+def test_html_headings_cells_and_link_text_are_one_line() -> None:
+    blocks = [
+        {"type": "heading", "level": 2, "text": "a\nb"},
+        {"type": "table", "header": ["c\nd"], "rows": [[["e"]]]},
+        para(link("f\ng", "a.md")),
+    ]
+    text = page(blocks)
+    assert "<h2>a b</h2>" in text and "<th>c d</th>" in text and '<a href="a.html">f g</a>' in text
+    assert "<br>" not in text
+
+
 def test_html_links_point_at_pages() -> None:
     text = page([para(link("o", "README.md"), link("p", "../README.md"), link("q", "../areas/b.md"))])
     assert '<a href="index.html">o</a><a href="../index.html">p</a><a href="../areas/b.html">q</a>' in text
 
 
-@pytest.mark.parametrize("href", ["javascript:alert(1)", "a.html", "a b.md"])
+@pytest.mark.parametrize("href", ["javascript:alert(1)", "a.html", "a b.md", "//x.example/a.md"])
 def test_html_refuses_an_unsafe_link_target(href: str) -> None:
     result = render("html.mjs", "renderHtml", {"title": "T", "blocks": [para(link("x", href))]})
     assert result["ok"] is False
@@ -141,6 +156,10 @@ def test_mermaid_label_encodes_everything_else() -> None:  # AC-12
     assert mermaid("label", text)["value"] == (
         "Ab9 .'/_-#59;#34;#37;#37;#123;init#125;#37;#37;#233;#128512; x"
     )
+
+
+def test_mermaid_label_encodes_entity_and_statement_marks() -> None:  # AC-12
+    assert mermaid("label", "#34; a:b `|` <&>[]")["value"] == "#35;34#59; a#58;b #96;#124;#96; #60;#38;#62;#91;#93;"
 
 
 def test_flowchart_nodes_and_arrows() -> None:
@@ -162,3 +181,9 @@ def test_flowchart_refuses_an_arrow_to_no_node() -> None:
     result = mermaid("flowchart", [{"id": "a", "text": "A"}], [{"from": "a", "to": "ghost", "dashed": False, "text": ""}])
     assert result["ok"] is False
     assert "a -> ghost" in result["message"]
+
+
+def test_flowchart_refuses_an_arrow_from_no_node() -> None:
+    result = mermaid("flowchart", [{"id": "a", "text": "A"}], [{"from": "ghost", "to": "a", "dashed": False, "text": ""}])
+    assert result["ok"] is False
+    assert "ghost -> a" in result["message"]

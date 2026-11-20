@@ -11,4 +11,4 @@ export const docLink = (text, href) => ({ type: 'link', text, href });
 export const doc = (title, blocks) => ({ title, blocks });
 
 // A link target: a relative path to a document, made only of safe characters.
-export const SAFE_HREF = /^[A-Za-z0-9._/-]+$/;
+export const SAFE_HREF = /^(?!\/)[A-Za-z0-9._/-]+$/;
