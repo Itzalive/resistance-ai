@@ -130,3 +130,35 @@ def test_html_refuses_an_unsafe_link_target(href: str) -> None:
     result = render("html.mjs", "renderHtml", {"title": "T", "blocks": [para(link("x", href))]})
     assert result["ok"] is False
     assert "unsafe link target" in result["message"]
+
+
+def mermaid(fn: str, *args) -> dict:
+    return call("mermaid.mjs", fn, *args, lib=DOCS_LIB)
+
+
+def test_mermaid_label_encodes_everything_else() -> None:  # AC-12
+    text = "Ab9 .'/_-;\"%%{init}%%" + chr(0xE9) + chr(0x1F600) + "\nx"
+    assert mermaid("label", text)["value"] == (
+        "Ab9 .'/_-#59;#34;#37;#37;#123;init#125;#37;#37;#233;#128512; x"
+    )
+
+
+def test_flowchart_nodes_and_arrows() -> None:
+    nodes = [{"id": "a", "text": "A one"}, {"id": "b", "text": "B;two"}]
+    arrows = [{"from": "a", "to": "b", "dashed": False, "text": ""}, {"from": "b", "to": "a", "dashed": True, "text": "http, event"}]
+    assert mermaid("flowchart", nodes, arrows)["value"] == (
+        'flowchart LR\n  n1["A one"]\n  n2["B#59;two"]\n  n1 --> n2\n  n2 -.->|"http#44; event"| n1'
+    )
+
+
+def test_flowchart_arrow_limit() -> None:
+    nodes = [{"id": "a", "text": "A"}, {"id": "b", "text": "B"}]
+    arrow = {"from": "a", "to": "b", "dashed": False, "text": ""}
+    assert mermaid("flowchart", nodes, [arrow] * 80)["value"].count("-->") == 80
+    assert mermaid("flowchart", nodes, [arrow] * 81)["value"] is None
+
+
+def test_flowchart_refuses_an_arrow_to_no_node() -> None:
+    result = mermaid("flowchart", [{"id": "a", "text": "A"}], [{"from": "a", "to": "ghost", "dashed": False, "text": ""}])
+    assert result["ok"] is False
+    assert "a -> ghost" in result["message"]
