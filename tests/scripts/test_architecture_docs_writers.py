@@ -52,7 +52,8 @@ def test_markdown_escapes_a_dollar() -> None:
 
 
 def test_markdown_leading_spaces_cannot_open_a_code_block() -> None:
-    assert body([para("    Use a.b\n  next")])[0] == "&#32;&#32;&#32;&#32;Use a\\.b\\\n&#32;&#32;next"
+    assert body([para("    Use a.b\n  next")])[0] == "&#32;&#32;&#32;&#32;Use a\\.b\\\n  next"
+    assert body([para("\t \tcode")])[0] == "&#9;&#32;&#9;code"
     assert body([para(link("L", "a.md"), "  after")])[0] == "[L](a.md)  after"
 
 

@@ -19,8 +19,8 @@ function target(href) {
   return href;
 }
 
-// A line's leading spaces are written as entities, so four of them cannot open an indented code block.
-const leadingSpaces = (line) => line.replace(/^ +/, (spaces) => '&#32;'.repeat(spaces.length));
+// A block's leading spaces and tabs are written as entities, so they cannot open an indented code block.
+const leadingSpaces = (line) => line.replace(/^[ \t]+/, (lead) => lead.replace(/ /g, '&#32;').replace(/\t/g, '&#9;'));
 
 // Line feeds in text become hard breaks (a backslash at the end of the line), or spaces where the block is one line.
 function inline(parts, { indent = '', oneLine = false } = {}) {
@@ -28,7 +28,7 @@ function inline(parts, { indent = '', oneLine = false } = {}) {
     if (typeof part === 'string') {
       if (oneLine) return escapeText(part.replace(/\n/g, ' '));
       return part.split('\n').map(escapeText)
-        .map((line, at) => (at > 0 || index === 0 ? leadingSpaces(line) : line))
+        .map((line, at) => (index === 0 && at === 0 ? leadingSpaces(line) : line))
         .join(`\\\n${indent}`);
     }
     return `[${escapeText(String(part.text).replace(/\n/g, ' '))}](${target(part.href)})`;

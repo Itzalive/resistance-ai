@@ -170,6 +170,18 @@ def test_overview_empty_sections(tmp_path) -> None:  # Overview: an empty sectio
     }
 
 
+def test_overview_names_the_arrow_limit(tmp_path) -> None:  # Overview: a system diagram over the arrow limit is not drawn
+    names = [f"s{i}" for i in range(10)]
+    systems = "".join(f"  {name} = system '{name}'\n" for name in names)
+    links = "".join(f"  {a} -> {b}\n" for a in names for b in names if a != b)
+    repo = make_repo(tmp_path, "model {\n" + systems + links + "}\n")
+    proc = run_tool("build", "--repo", repo, script=DOCS_SCRIPT)
+    assert proc.returncode == 0, proc.stderr
+    sections = (repo / "docs" / "architecture" / "generated" / "README.md").read_text(encoding="utf-8").split("\n\n")
+    assert sections[sections.index("## System") + 1] == (
+        "The system diagram has more than 80 arrows and is not drawn; the tables list every element\\.")
+
+
 def test_overview_page_matches_and_is_marked(tmp_path) -> None:  # AC-13
     folder = build(tmp_path)
     page = (folder / "index.html").read_text(encoding="utf-8")
