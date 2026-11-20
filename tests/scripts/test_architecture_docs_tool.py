@@ -157,6 +157,22 @@ def test_build_over_the_limits_writes_nothing(tmp_path) -> None:  # AC-16
     assert not out_of(repo).exists()
 
 
+LATE_CLOCK = (
+    "const now = Date.now;\n"
+    "Date.now = () => (new Error().stack.includes('build.mjs') ? now() + 10 ** 9 : now());\n"
+)
+
+
+def test_build_checks_the_deadline_after_each_document(tmp_path) -> None:
+    preload = tmp_path / "late-clock.mjs"
+    preload.write_text(LATE_CLOCK, encoding="utf-8")
+    repo = make_repo(tmp_path)
+    proc = run_tool("build", "--repo", repo, script=DOCS_SCRIPT, preload=preload)
+    assert proc.returncode == 2
+    assert error_lines(proc)[0].startswith("error: timeout: ")
+    assert not out_of(repo).exists()
+
+
 def test_output_limits() -> None:  # AC-16
     code = (
         f"import {{ checkLimits }} from {json.dumps(lib_url('build.mjs', DOCS_LIB))};\n"

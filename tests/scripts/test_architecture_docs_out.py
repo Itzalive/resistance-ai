@@ -155,6 +155,9 @@ def test_list_out_accepts_a_marker_after_a_bom_and_before_cr(tmp_path) -> None:
     pytest.param("a.txt", MARKER + "\n", "a.txt was not written by architecture-docs", id="other-type"),
     pytest.param("extra/a.md", MARKER + "\n", "extra is not a folder the tool makes", id="unknown-folder"),
     pytest.param("pack/x/a.md", MARKER + "\n", "pack/x is not a folder the tool makes", id="unknown-nested"),
+    pytest.param(".notes.md", "hello\n", ".notes.md was not written by architecture-docs", id="dotfile"),
+    pytest.param("a.architecture-docs-1", "mine\n", "a.architecture-docs-1 was not written by architecture-docs", id="near-temp"),
+    pytest.param("x.json", '{"generated": "someone-else"}', "x.json was not written by architecture-docs", id="json-other-value"),
 ])
 def test_list_out_refuses(tmp_path, rel: str, content: str, detail: str) -> None:
     folder = tmp_path / "out"

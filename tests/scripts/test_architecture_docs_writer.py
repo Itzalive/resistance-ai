@@ -41,6 +41,24 @@ def test_write_output_removes_empty_folders(tmp_path) -> None:
     assert sorted(p.relative_to(folder).as_posix() for p in folder.rglob("*")) == ["README.md"]
 
 
+def test_write_output_creates_nested_named_folders(tmp_path) -> None:
+    folder = tmp_path / "out"
+    folder.mkdir()
+    assert write(folder, {"pack/areas/a.md": "x\n"}, {"files": [], "temps": []})["value"] == {"wrote": 1, "removed": 0}
+    assert (folder / "pack" / "areas" / "a.md").read_bytes() == b"x\n"
+
+
+def test_write_output_deletes_nothing_when_a_write_fails(tmp_path) -> None:
+    folder = tmp_path / "out"
+    (folder / "README.md").mkdir(parents=True)
+    (folder / "README.md" / "inner").write_text("x", encoding="utf-8")
+    (folder / "areas").mkdir()
+    (folder / "areas" / "old.md").write_text("old", encoding="utf-8")
+    result = write(folder, {"README.md": "x\n"}, {"files": ["areas/old.md"], "temps": []})
+    assert result["token"] == "out-error"
+    assert (folder / "areas" / "old.md").read_text(encoding="utf-8") == "old"
+
+
 def test_write_output_names_a_failed_replace(tmp_path) -> None:
     folder = tmp_path / "out"
     (folder / "README.md").mkdir(parents=True)
