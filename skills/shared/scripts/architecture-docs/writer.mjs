@@ -24,11 +24,14 @@ export function writeOutput(outDir, files, listed) {
     const final = path.join(outDir, rel);
     const temp = path.join(path.dirname(final), `${TEMP_PREFIX}${process.pid}-${index}`);
     attempt('create', path.posix.dirname(rel), () => fs.mkdirSync(path.dirname(final), { recursive: true }));
-    attempt('write', rel, () => fs.writeFileSync(temp, files[rel], 'utf8'));
+    // `wx`: a temporary file that appeared since the listing is never overwritten.
+    attempt('write', rel, () => fs.writeFileSync(temp, files[rel], { encoding: 'utf8', flag: 'wx' }));
     attempt('replace', rel, () => fs.renameSync(temp, final));
   });
-  const produced = new Set(names);
-  const stale = listed.files.filter((rel) => !produced.has(rel));
+  // A listed file whose name differs from a produced one only in letter case may be that file on a case-insensitive
+  // file system, so it is never stale.
+  const produced = new Set(names.map((rel) => rel.toLowerCase()));
+  const stale = listed.files.filter((rel) => !produced.has(rel.toLowerCase()));
   for (const rel of stale) attempt('delete', rel, () => fs.unlinkSync(path.join(outDir, rel)));
   for (const folder of [...FOLDERS].sort((x, y) => y.split('/').length - x.split('/').length)) {
     const full = path.join(outDir, folder);

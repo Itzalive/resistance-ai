@@ -18,13 +18,23 @@ def test_write_output_writes_replaces_and_deletes(tmp_path) -> None:
     (folder / "areas").mkdir(parents=True)
     (folder / "areas" / "old.md").write_text("old", encoding="utf-8")
     (folder / "README.md").write_text("before", encoding="utf-8")
-    (folder / ".architecture-docs-9").write_text("partial", encoding="utf-8")
+    (folder / ".architecture-docs-9-0").write_text("partial", encoding="utf-8")
     result = write(folder, {"README.md": "after\n", "pack/model.json": "{}\n"},
-                   {"files": ["README.md", "areas/old.md"], "temps": [".architecture-docs-9"]})
+                   {"files": ["README.md", "areas/old.md"], "temps": [".architecture-docs-9-0"]})
     assert result["value"] == {"wrote": 2, "removed": 1}
     assert (folder / "README.md").read_bytes() == b"after\n"
     assert (folder / "pack" / "model.json").read_bytes() == b"{}\n"
     assert sorted(p.relative_to(folder).as_posix() for p in folder.rglob("*")) == ["README.md", "pack", "pack/model.json"]
+
+
+def test_write_output_keeps_a_listed_file_that_differs_only_in_case(tmp_path) -> None:
+    # On a case-insensitive file system `pack/Model.json` is the produced file; deleting it would delete the new one.
+    folder = tmp_path / "out"
+    (folder / "pack").mkdir(parents=True)
+    (folder / "pack" / "Model.json").write_text('{"generated": "architecture-docs"}', encoding="utf-8")
+    result = write(folder, {"pack/model.json": "new\n"}, {"files": ["pack/Model.json"], "temps": []})
+    assert result["value"] == {"wrote": 1, "removed": 0}
+    assert (folder / "pack" / "model.json").read_bytes() == b"new\n"
 
 
 def test_write_output_creates_the_folder_and_its_parents(tmp_path) -> None:

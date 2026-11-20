@@ -63,7 +63,8 @@ export function readOptional(repo, value, fallback, flag, parse) {
 
 // Spec, Errors: any failure, including one thrown later from a timer or a promise and a failed
 // stdout write, is exit 2; the first one is reported and nothing after it can set another code.
-// `main` returns { output, exitCode }; the output is written only when nothing has failed.
+// `main(argv, { failed })` returns { output, exitCode }; the output is written only when nothing has failed.
+// `failed()` tells `main` whether a failure has been reported already, so it can stop before changing anything.
 export function runCli(main) {
   let failed = false;
   const fail = (err) => {
@@ -76,7 +77,7 @@ export function runCli(main) {
   process.on('uncaughtException', fail);
   process.on('unhandledRejection', fail);
   process.stdout.on('error', fail);
-  main(process.argv.slice(2))
+  main(process.argv.slice(2), { failed: () => failed })
     .then((result) => {
       if (failed) return;
       process.stdout.write(result.output);

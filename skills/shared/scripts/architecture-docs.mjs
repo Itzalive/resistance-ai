@@ -26,7 +26,14 @@ function readGap(loaded, value) {
   }));
 }
 
-function runBuild(outDir, files, listed) {
+// A failure reported earlier (a timer or a promise) stops the build before it writes. The folder is resolved and
+// listed again right before writing, so the write works from what the folder holds now.
+function runBuild(locate, files, state, tick) {
+  const stopped = { output: '', exitCode: 2 };
+  if (state.failed()) return stopped;
+  const outDir = locate();
+  const listed = listOut(outDir, tick);
+  if (state.failed()) return stopped;
   const { wrote, removed } = writeOutput(outDir, files, listed);
   return { output: `wrote ${wrote} files, removed ${removed}\n`, exitCode: 0 };
 }
@@ -40,8 +47,9 @@ function runCheck(outDir, files, listed) {
     if (!fs.existsSync(full)) lines.push(['missing', rel]);
     else if (fs.readFileSync(full, 'utf8').replace(/\r\n/g, '\n') !== files[rel]) lines.push(['changed', rel]);
   }
-  const keep = new Set(produced);
-  for (const rel of listed.files) if (!keep.has(rel)) lines.push(['extra', rel]);
+  // As in the writer: a file whose name differs from a produced one only in letter case is not `extra`.
+  const keep = new Set(produced.map((rel) => rel.toLowerCase()));
+  for (const rel of listed.files) if (!keep.has(rel.toLowerCase())) lines.push(['extra', rel]);
   lines.sort((x, y) => cmp(x[1], y[1]));
   const count = (word) => lines.filter((line) => line[0] === word).length;
   const output = lines.map(([word, rel]) => `${word} ${clean(rel)}\n`).join('')
@@ -49,20 +57,23 @@ function runCheck(outDir, files, listed) {
   return { output, exitCode: lines.length > 0 ? 1 : 0 };
 }
 
-async function main(argv) {
+async function main(argv, state) {
   const args = parseArgs(argv);
   const deadline = startDeadline(args.timeout);
   // Spec: the output folder is checked (write rules 1 and 2) before the model loads.
   const repo = realRepo(args.repo);
-  const outDir = resolveOut(repo, resolveInside(repo, args.model, '--model').path, args.out);
-  const listed = listOut(outDir);
+  const locate = () => resolveOut(repo, resolveInside(repo, args.model, '--model').path, args.out);
+  const outDir = locate();
+  const listed = listOut(outDir, deadline.check);
   deadline.check();
   const loaded = await loadRepoModel(args, deadline);
   const gap = readGap(loaded, args.gap);
   deadline.check();
   const files = buildFiles(loaded.model, loaded.records, gap, deadline.check);
   checkLimits(files);
-  const result = args.command === 'build' ? runBuild(outDir, files, listed) : runCheck(outDir, files, listed);
+  const result = args.command === 'build'
+    ? runBuild(locate, files, state, deadline.check)
+    : runCheck(outDir, files, listed);
   deadline.stop();
   return result;
 }

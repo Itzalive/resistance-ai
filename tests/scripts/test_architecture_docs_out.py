@@ -136,9 +136,9 @@ def test_list_out_lists_marked_and_temporary_files(tmp_path) -> None:
     put(folder, "index.html", MARKER + "\n<p>x</p>\n")
     put(folder, "areas/a.md", MARKER + "\n# A\n")
     put(folder, "pack/model.json", '{"generated": "architecture-docs", "export": {}}')
-    put(folder, ".architecture-docs-7", "partial")
+    put(folder, ".architecture-docs-7-0", "partial")
     put(folder, ".DS_Store", "os")
-    assert listing(folder)["value"] == {"files": ["areas/a.md", "index.html", "pack/model.json"], "temps": [".architecture-docs-7"]}
+    assert listing(folder)["value"] == {"files": ["areas/a.md", "index.html", "pack/model.json"], "temps": [".architecture-docs-7-0"]}
 
 
 def test_list_out_accepts_a_marker_after_a_bom_and_before_cr(tmp_path) -> None:
@@ -158,6 +158,8 @@ def test_list_out_accepts_a_marker_after_a_bom_and_before_cr(tmp_path) -> None:
     pytest.param(".notes.md", "hello\n", ".notes.md was not written by architecture-docs", id="dotfile"),
     pytest.param("a.architecture-docs-1", "mine\n", "a.architecture-docs-1 was not written by architecture-docs", id="near-temp"),
     pytest.param("x.json", '{"generated": "someone-else"}', "x.json was not written by architecture-docs", id="json-other-value"),
+    pytest.param(".architecture-docs-notes.md", "hello\n", ".architecture-docs-notes.md was not written by architecture-docs",
+                 id="temp-prefix-only"),
 ])
 def test_list_out_refuses(tmp_path, rel: str, content: str, detail: str) -> None:
     folder = tmp_path / "out"
@@ -176,9 +178,43 @@ def test_list_out_refuses_a_link(tmp_path) -> None:
     assert (result["token"], result["details"]) == ("out-error", ["areas is a link"])
 
 
-@pytest.mark.parametrize("name", ["big.md", ".architecture-docs-1"])
+@pytest.mark.parametrize("name", ["big.md", ".architecture-docs-1-0"])
 def test_list_out_refuses_a_file_over_50_mb(tmp_path, name: str) -> None:
     folder = tmp_path / "out"
     put(folder, name, MARKER.encode("utf-8") + b"\n" + b"x" * (50 * MB))
     result = listing(folder)
     assert (result["token"], result["details"]) == ("out-error", [f"{name} is over 50 MB"])
+
+
+@pytest.mark.skipif(not hasattr(os, "mkfifo"), reason="no FIFOs on this platform")
+def test_list_out_refuses_a_file_that_is_not_regular(tmp_path) -> None:
+    folder = tmp_path / "out"
+    folder.mkdir()
+    os.mkfifo(folder / "x.md")
+    result = listing(folder)
+    assert (result["token"], result["details"]) == ("out-error", ["x.md is not a regular file"])
+
+
+def test_list_out_refuses_more_than_2000_files(tmp_path) -> None:
+    folder = tmp_path / "out"
+    folder.mkdir()
+    for index in range(2001):
+        (folder / f".architecture-docs-{index}-0").write_bytes(b"")
+    result = listing(folder)
+    assert (result["token"], result["details"]) == ("out-error", ["the output folder holds more than 2000 files"])
+
+
+def test_list_out_refuses_more_than_50_mb_in_all(tmp_path) -> None:
+    folder = tmp_path / "out"
+    for name in ("a.md", "b.md"):
+        put(folder, name, MARKER.encode("utf-8") + b"\n" + b"x" * (26 * MB))
+    result = listing(folder)
+    assert (result["token"], result["details"]) == ("out-error", ["the output folder holds more than 50 MB"])
+
+
+def test_list_out_walks_folders_in_name_order(tmp_path) -> None:
+    folder = tmp_path / "out"
+    put(folder, "areas/a.md", "mine\n")
+    put(folder, "pack/b.md", "mine\n")
+    result = listing(folder)
+    assert (result["token"], result["details"]) == ("out-error", ["areas/a.md was not written by architecture-docs"])

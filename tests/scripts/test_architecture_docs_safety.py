@@ -9,7 +9,7 @@ from arch_delta_support import DOCS_LIB, DOCS_SCRIPT
 CHANGES_FILES = re.compile(
     r"(?<!stdout\.)(?<!stderr\.)\bwrite(Sync)?\s*\("
     r"|\b(writeFile|appendFile|mkdir|rmdir|rm|unlink|rename|copyFile|cp|createWriteStream|symlink|link|truncate"
-    r"|chmod|chown|utimes)(Sync)?\s*\("
+    r"|chmod|chown|utimes|mkdtemp|writev|ftruncate|futimes|lutimes|lchown|lchmod|fchmod|fchown)(Sync)?\s*\("
 )
 
 
@@ -35,3 +35,10 @@ def test_files_are_opened_only_for_reading() -> None:
     for source in sources():
         for match in re.finditer(r"openSync\(([^)]*)\)", source.read_text(encoding="utf-8")):
             assert match.group(1).rstrip().endswith("'r'"), source
+
+
+def test_files_are_never_opened_asynchronously() -> None:
+    # `fs.open` (or a bare `open` taken from `fs`) takes its flags out of sight of the `openSync` check above.
+    forbidden = re.compile(r"\bfs\.open\s*\(|\bopen\s*\(")
+    for source in sources():
+        assert not forbidden.search(source.read_text(encoding="utf-8")), source

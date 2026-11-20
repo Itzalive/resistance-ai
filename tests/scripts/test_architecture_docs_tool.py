@@ -66,19 +66,39 @@ def test_check_accepts_crlf_line_endings(tmp_path) -> None:  # AC-10
     assert docs("check", "--repo", repo).returncode == 0
 
 
+def assert_refused_unchanged(repo: Path) -> None:
+    before = snapshot(out_of(repo))
+    for command in ("build", "check"):
+        proc = docs(command, "--repo", repo)
+        assert proc.returncode == 2, command
+        assert error_lines(proc)[0].startswith("error: out-error: "), command
+    assert snapshot(out_of(repo)) == before
+
+
 def test_build_and_check_refuse_an_unmarked_file(tmp_path) -> None:  # AC-11
     repo = make_repo(tmp_path)
     docs("build", "--repo", repo)
     (out_of(repo) / "notes.md").write_text("mine\n", encoding="utf-8")
+    assert_refused_unchanged(repo)
+
+
+def test_build_and_check_refuse_a_link(tmp_path) -> None:  # AC-11
+    repo = make_repo(tmp_path)
+    docs("build", "--repo", repo)
     target = tmp_path / unique("t")
     target.mkdir()
     link_dir(target, out_of(repo) / "pack" / "areas")
-    before = snapshot(out_of(repo))
-    for command in ("build", "check"):
-        proc = docs(command, "--repo", repo)
-        assert proc.returncode == 2
-        assert error_lines(proc)[0].startswith("error: out-error: ")
-    assert snapshot(out_of(repo)) == before
+    assert_refused_unchanged(repo)
+
+
+def test_check_takes_a_file_that_differs_only_in_case_as_the_produced_one(tmp_path) -> None:
+    repo = make_repo(tmp_path)
+    docs("build", "--repo", repo)
+    pack = out_of(repo) / "pack"
+    (pack / "model.json").rename(pack / "Model.json")
+    check = docs("check", "--repo", repo)
+    assert check.returncode in (0, 1), check.stderr
+    assert not any(line.startswith("extra ") for line in check.stdout.splitlines()), check.stdout
 
 
 def test_build_leaves_operating_system_files(tmp_path) -> None:  # AC-11
@@ -117,15 +137,19 @@ def test_build_writes_nothing_on_invalid_records(tmp_path) -> None:  # AC-15
 def test_build_reads_the_gap_file_as_check_does(tmp_path) -> None:
     repo = make_repo(tmp_path)
     (repo / "docs" / "architecture" / "known-gap.json").write_text('{"entries": [{"from": "ghost"}]}', encoding="utf-8")
+    deps = repo / "deps.json"
+    deps.write_text('{"edges": []}', encoding="utf-8")
     proc = docs("build", "--repo", repo)
     assert proc.returncode == 2
     assert error_lines(proc)[0].startswith("error: bad-input: --gap entry 0")
+    assert error_lines(proc) == error_lines(run_tool("check", "--repo", repo, "--deps", deps))
+    assert not out_of(repo).exists()
 
 
 def test_build_leaves_no_temporary_file(tmp_path) -> None:  # AC-17
     repo = make_repo(tmp_path)
     docs("build", "--repo", repo)
-    (out_of(repo) / ".architecture-docs-1").write_text("partial", encoding="utf-8")
+    (out_of(repo) / ".architecture-docs-1-0").write_text("partial", encoding="utf-8")
     check = docs("check", "--repo", repo)
     assert (check.returncode, check.stdout) == (0, "0 missing, 0 changed, 0 extra\n")
     docs("build", "--repo", repo)
@@ -154,6 +178,19 @@ def test_build_over_the_limits_writes_nothing(tmp_path) -> None:  # AC-16
     proc = run_tool("build", "--repo", repo, script=DOCS_SCRIPT, preload=preload)
     assert proc.returncode == 2
     assert error_lines(proc) == ["error: out-error: the output would be more than 50 MB"]
+    assert not out_of(repo).exists()
+
+
+LATE_FAILURE = "setTimeout(() => { Promise.reject(new Error('late promise failure')); }, 0);\n"
+
+
+def test_build_writes_nothing_after_an_earlier_failure(tmp_path) -> None:
+    preload = tmp_path / "late-failure.mjs"
+    preload.write_text(LATE_FAILURE, encoding="utf-8")
+    repo = make_repo(tmp_path)
+    proc = run_tool("build", "--repo", repo, script=DOCS_SCRIPT, preload=preload)
+    assert proc.returncode == 2
+    assert error_lines(proc) == ["error: internal: late promise failure"]
     assert not out_of(repo).exists()
 
 
