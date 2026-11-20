@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import base64
+import hashlib
 import pytest
 
 from arch_delta_support import DOCS_LIB, call, require_node
@@ -73,5 +75,58 @@ def test_markdown_diagram_is_a_mermaid_fence() -> None:
 @pytest.mark.parametrize("href", ["javascript:alert(1)", "a b.md", "https://x.example/a.md", "a.md#x"])
 def test_markdown_refuses_an_unsafe_link_target(href: str) -> None:
     result = render("markdown.mjs", "renderMarkdown", {"title": "T", "blocks": [para(link("x", href))]})
+    assert result["ok"] is False
+    assert "unsafe link target" in result["message"]
+
+
+def page(blocks: list, title: str = "T") -> str:
+    result = render("html.mjs", "renderHtml", {"title": title, "blocks": blocks})
+    assert result["ok"], result
+    return result["value"]
+
+
+def test_html_page_policy_and_scripts() -> None:  # AC-13
+    text = page([para("x")])
+    lines = text.split("\n")
+    assert lines[0] == MARKER and lines[1] == "<!doctype html>"
+    start = '<script>mermaid.initialize({ startOnLoad: true, securityLevel: \'strict\' });</script>'
+    assert start in lines
+    script = start[len("<script>"):-len("</script>")]
+    digest = base64.b64encode(hashlib.sha256(script.encode("utf-8")).digest()).decode("ascii")
+    url = "https://cdn.jsdelivr.net/npm/mermaid@12.2.0/dist/mermaid.min.js"
+    policy = f"default-src 'none'; script-src {url} 'sha256-{digest}'; style-src 'unsafe-inline'; img-src data:"
+    assert f'<meta http-equiv="Content-Security-Policy" content="{policy}">' in lines
+    assert text.count("<script") == 2
+    assert (f'<script src="{url}" integrity="sha384-8xUhuLNMjW/cI2Dacg3DR4WliYznvIg0LVG1stctThKD/YVrJFI9TNCFxft5NYgp" '
+            'crossorigin="anonymous"></script>') in lines
+
+
+def test_html_escapes_every_value() -> None:  # AC-12
+    blocks = [
+        {"type": "heading", "level": 2, "text": "<b>h</b>"},
+        para("a <script>alert(1)</script> & 'q'\nnext", link('say "hi"', "areas/a.md")),
+        {"type": "table", "header": ["<th>"], "rows": [[["<td>\nx"]]]},
+        {"type": "code", "text": "<code>\n"},
+        {"type": "diagram", "text": "flowchart LR\n  n1[\"<A>\"]"},
+    ]
+    text = page(blocks, title="<T>")
+    assert "<title>&lt;T&gt;</title>" in text and "<h1>&lt;T&gt;</h1>" in text
+    assert "<h2>&lt;b&gt;h&lt;/b&gt;</h2>" in text
+    assert "<p>a &lt;script&gt;alert(1)&lt;/script&gt; &amp; &#39;q&#39;<br>\nnext" in text
+    assert '<a href="areas/a.html">say &quot;hi&quot;</a></p>' in text
+    assert "<th>&lt;th&gt;</th>" in text and "<td>&lt;td&gt; x</td>" in text
+    assert "<pre><code>&lt;code&gt;</code></pre>" in text
+    assert '<pre class="mermaid">flowchart LR\n  n1[&quot;&lt;A&gt;&quot;]</pre>' in text
+    assert text.count("<script") == 2
+
+
+def test_html_links_point_at_pages() -> None:
+    text = page([para(link("o", "README.md"), link("p", "../README.md"), link("q", "../areas/b.md"))])
+    assert '<a href="index.html">o</a><a href="../index.html">p</a><a href="../areas/b.html">q</a>' in text
+
+
+@pytest.mark.parametrize("href", ["javascript:alert(1)", "a.html", "a b.md"])
+def test_html_refuses_an_unsafe_link_target(href: str) -> None:
+    result = render("html.mjs", "renderHtml", {"title": "T", "blocks": [para(link("x", href))]})
     assert result["ok"] is False
     assert "unsafe link target" in result["message"]
