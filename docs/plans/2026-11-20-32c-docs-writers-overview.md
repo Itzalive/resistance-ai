@@ -12,9 +12,9 @@
 
 **Open decisions:** none
 
-**Size:** 6 tasks, 2 entry paths (`build`, `check`), 1151 lines (reported, not a target)
+**Size:** 7 tasks, 2 entry paths (`build`, `check`), 1243 lines (reported, not a target)
 
-**Trust boundary:** unchanged for files (only `writer.mjs` writes; the safety tests cover the new modules). The writers are the injection defence of the threat model's Integrity row; Tasks 1 to 3 test hostile text through each.
+**Trust boundary:** changed — see Trust-boundary table. No new file writes (only `writer.mjs` writes; the safety tests cover the new modules and must not be loosened: the tree's link constructor is named `docLink` because `link(` is a forbidden file call). The new output is where model and record text reaches readers, the threat model's injection row.
 
 ### Risk & Confidence Assessment
 
@@ -34,20 +34,34 @@ Searched: `skills/`, `tests/` with `rg -n "buildFiles|readGap|cleanText|wrote 1 
 
 | Changed | Caller, test, fake, mock or assert | Kind | Task | Literal edit |
 |---|---|---|---|---|
-| `build` writes three files | `tests/scripts/test_architecture_docs_tool.py:32` | assert | 6 | `"wrote 3 files, removed 0\n"` |
-| same | `tests/scripts/test_architecture_docs_tool.py:47` | assert | 6 | `(1, "missing README.md\nmissing index.html\nmissing pack/model.json\n3 missing, 0 changed, 0 extra\n")` |
-| same | `tests/scripts/test_architecture_docs_tool.py:54` | assert | 6 | `(1, "changed README.md\nextra areas/old.md\nchanged index.html\nchanged pack/model.json\n0 missing, 3 changed, 1 extra\n")` (the renamed element is in no area, so the overview's "Not in any area" table changes) |
-| same | `tests/scripts/test_architecture_docs_tool.py:56` | assert | 6 | `"wrote 3 files, removed 1\n"` |
-| same | `tests/scripts/test_architecture_docs_tool.py:57`, `:156` | assert | 6 | `== ["README.md", "index.html", "pack/model.json"]` |
+| `build` writes three files | `tests/scripts/test_architecture_docs_tool.py:32` | assert | 7 | `"wrote 3 files, removed 0\n"` |
+| same | `tests/scripts/test_architecture_docs_tool.py:47` | assert | 7 | `(1, "missing README.md\nmissing index.html\nmissing pack/model.json\n3 missing, 0 changed, 0 extra\n")` |
+| same | `tests/scripts/test_architecture_docs_tool.py:54` | assert | 7 | `(1, "changed README.md\nextra areas/old.md\nchanged index.html\nchanged pack/model.json\n0 missing, 3 changed, 1 extra\n")` (the renamed element is in no area, so the overview's "Not in any area" table changes) |
+| same | `tests/scripts/test_architecture_docs_tool.py:56` | assert | 7 | `"wrote 3 files, removed 1\n"` |
+| same | `tests/scripts/test_architecture_docs_tool.py:57`, `:156` | assert | 7 | `== ["README.md", "index.html", "pack/model.json"]` |
 | known-gap cleaning moves to `build.mjs` `cleanGap` | `skills/shared/scripts/architecture-docs.mjs` `readGap` | caller | 6 | `return cleanGap(entries);` in place of the `entries.map(...)`; import `cleanGap` from `./architecture-docs/build.mjs`; drop `clean`, `cleanText` from the errors import if unused after (`clean` is still used by `runCheck`) |
 | `buildFiles(model, records, gap, tick)` | `architecture-docs.mjs` `main` | caller | — | none: same signature |
+
+## Trust-boundary table
+
+| Boundary | Rule | Mechanism | Task | Test |
+|---|---|---|---|---|
+| Model text in Markdown | Writers, Markdown | `escapeText` on the title, headings, paragraphs, list items, table cells and link text; line feeds as hard breaks or spaces | 1 | `test_markdown_escapes_model_text`, `test_markdown_table_cells_are_one_line`, `test_markdown_headings_and_links_are_escaped` |
+| Code blocks | Writers, Markdown | fence longer than any backtick run | 1 | `test_markdown_code_fence_is_longer_than_any_backtick_run` |
+| Link targets | Writers | `SAFE_HREF` in both writers; `pageHref` maps only `.md` targets | 1, 2 | `test_markdown_refuses_an_unsafe_link_target`, `test_html_refuses_an_unsafe_link_target` |
+| Model text in HTML | Writers, HTML | `escapeHtml` on every value, the diagram text included | 2 | `test_html_escapes_every_value` |
+| Scripts in pages | Writers, HTML; Threat Model (tampered script) | fixed CSP; the pinned Mermaid script with integrity and `crossorigin`; one start-up script by hash | 2 | `test_html_page_policy_and_scripts` |
+| Model text in diagrams | Writers, Diagrams | `label` entity-encodes everything outside the safe set; generated node ids | 3 | `test_mermaid_label_encodes_everything_else` |
+| Known-gap text | The tool | `cleanGap` cleans ids and text like `export` | 6 | `test_clean_gap` |
+| The overview's producers | Shared rules | every model and record string reaches the page only through the writers | 7 | `test_overview_escapes_hostile_model_text` (element title and description; other producers share the same writers) |
+| Hrefs built from names and ids | Areas and capabilities (name rule); records (change file names) | names are `[a-z0-9-]`, change ids are file names; `SAFE_HREF` refuses anything else and the build fails as `internal`, exit 2 | 4, 7 | name and file rules' own tests; `test_markdown_refuses_an_unsafe_link_target` |
 
 ## Checkpoints
 
 | Checkpoint | After task | Tasks covered | Reviewer looks at |
 |---|---|---|---|
 | C1 | 3 | 1–3 | Task 1 items 1–5, Task 2 items 1–5, Task 3 items 1–4; focused tests `uv run pytest -q tests/scripts/test_architecture_docs_writers.py tests/scripts/test_architecture_docs_safety.py` |
-| C2 | 6 | 4–6 | Task 4 items 1–4, Task 5 items 1–4, Task 6 items 1–5; full suite `uv run pytest -q` (tool timeout 600000 ms) |
+| C2 | 7 | 4–7 | Task 4 items 1–3, Task 5 items 1–5, Task 6 item 1, Task 7 items 1–9; full suite `uv run pytest -q` (tool timeout 600000 ms) |
 
 Checkpoint reviewers on this machine: one scratch copy, one mutation at a time, in the foreground; a tool timeout of 600000 ms for long runs.
 
@@ -57,7 +71,7 @@ Writing rule for this plan's code: never put a `\u` escape in a source file (the
 
 ### Task 1: the document tree and the Markdown writer
 
-**Tier:** standard — complete code; escaping is exact.
+**Tier:** strong — the writers are the injection defence of the threat model; complete code is given, but the tier stays at strong for that boundary.
 
 **Files:**
 - Create: `skills/shared/scripts/architecture-docs/tree.mjs`, `skills/shared/scripts/architecture-docs/markdown.mjs`
@@ -82,13 +96,9 @@ Writing rule for this plan's code: never put a `\u` escape in a source file (the
 
 from __future__ import annotations
 
-import base64
-import hashlib
-import json
-
 import pytest
 
-from arch_delta_support import DOCS_LIB, call, lib_url, require_node, run_module
+from arch_delta_support import DOCS_LIB, call, require_node
 
 require_node()
 
@@ -173,7 +183,8 @@ export const list = (items) => ({ type: 'list', items });
 export const table = (header, rows) => ({ type: 'table', header, rows });
 export const code = (text) => ({ type: 'code', text });
 export const diagram = (text) => ({ type: 'diagram', text });
-export const link = (text, href) => ({ type: 'link', text, href });
+// Named docLink, not link: `link(` is a file-changing call the safety test forbids outside the writer.
+export const docLink = (text, href) => ({ type: 'link', text, href });
 export const doc = (title, blocks) => ({ title, blocks });
 
 // A link target: a relative path to a document, made only of safe characters.
@@ -256,7 +267,7 @@ export function renderMarkdown(doc) {
 
 ### Task 2: the HTML writer
 
-**Tier:** standard — complete code; every value escaped under a fixed CSP.
+**Tier:** strong — injection defence (escaping, CSP, scripts); complete code.
 
 **Files:**
 - Create: `skills/shared/scripts/architecture-docs/html.mjs`
@@ -274,7 +285,7 @@ export function renderMarkdown(doc) {
 - Satisfies Spec AC: AC-12 (HTML part), AC-13
 - **Test retention:** **Permanent**
 
-- [ ] **Step 1: RED.** Append to `tests/scripts/test_architecture_docs_writers.py`:
+- [ ] **Step 1: RED.** Add `import base64` and `import hashlib` at the top of `tests/scripts/test_architecture_docs_writers.py`, then append:
 
 ```python
 def page(blocks: list, title: str = "T") -> str:
@@ -430,7 +441,7 @@ export function renderHtml(doc) {
 
 ### Task 3: Mermaid labels and the flowchart
 
-**Tier:** standard — complete code.
+**Tier:** strong — injection defence for diagram text; complete code.
 
 **Files:**
 - Create: `skills/shared/scripts/architecture-docs/mermaid.mjs`
@@ -465,7 +476,7 @@ def test_flowchart_nodes_and_arrows() -> None:
     nodes = [{"id": "a", "text": "A one"}, {"id": "b", "text": "B;two"}]
     arrows = [{"from": "a", "to": "b", "dashed": False, "text": ""}, {"from": "b", "to": "a", "dashed": True, "text": "http, event"}]
     assert mermaid("flowchart", nodes, arrows)["value"] == (
-        'flowchart LR\n  n1["A one"]\n  n2["B#59;two"]\n  n1 --> n2\n  n2 -.->|"http, event"| n1'
+        'flowchart LR\n  n1["A one"]\n  n2["B#59;two"]\n  n1 --> n2\n  n2 -.->|"http#44; event"| n1'
     )
 
 
@@ -531,7 +542,7 @@ export function flowchart(nodes, arrows) {
 **Reviewer looks at:**
 - first area by name — mutation: keep areas in view order without the sort — killed by: `test_areas_by_element_are_sorted`
 - principles — mutation: drop the `owner` condition — killed by: `test_principles_and_cross_cutting` (a decision with obligations, empty binds and an owner is not a principle)
-- where a record is written in full — mutation: send a principle to its first area — killed by: `test_record_targets`; mutation: use only a contract's `bound`, not its `owner` — killed by the same test
+- where a record is written in full — mutation: use only a contract's `bound`, not its `owner` — killed by: `test_record_targets`
 - relative links — mutation: `path.relative` without `dirname` — killed by: `test_relative_links`
 
 - Satisfies Spec AC: AC-18, AC-20 (link rules, overview part)
@@ -549,8 +560,9 @@ from arch_delta_support import DOCS_LIB, call, require_node
 require_node()
 
 DATA = {
-    "elements": [{"id": e} for e in ("a", "a.x", "b", "c")],
-    "areas": [{"name": "zeta", "elements": ["a", "a.x"]}, {"name": "alpha", "elements": ["a.x", "b"]}],
+    "elements": [{"id": e, "title": e.upper()} for e in ("a", "a.x", "b", "c")],
+    "areas": [{"name": "zeta", "title": "Zeta", "elements": ["a", "a.x"]}, {"name": "alpha", "title": "Alpha", "elements": ["a.x", "b"]}],
+    "capabilities": [{"name": "pay", "title": "Pay", "steps": []}],
 }
 
 
@@ -657,10 +669,19 @@ export function elementTarget(id, byElement) {
   return areas.length > 0 ? areaDoc(areas[0]) : OVERVIEW;
 }
 
+// A principle binds no element, so it has no area and is written in the overview.
 export function recordTarget(kind, record, byElement) {
-  if (kind === 'decisions' && isPrinciple(record)) return OVERVIEW;
   const areas = areasOf(recordElements(kind, record), byElement);
   return areas.length > 0 ? areaDoc(areas[0]) : OVERVIEW;
+}
+
+// Spec, Shared rules: ids are shown as written, titles beside them.
+export function titlesOf(data) {
+  return {
+    elements: new Map(data.elements.map((element) => [element.id, element.title])),
+    areas: new Map(data.areas.map((area) => [area.name, area.title])),
+    capabilities: new Map(data.capabilities.map((capability) => [capability.name, capability.title])),
+  };
 }
 
 export function relative(from, to) {
@@ -687,6 +708,7 @@ export function relative(from, to) {
 - a decision with no reason — mutation: print `null` — killed by: `test_decision_in_full` ("Reason not known")
 - superseded decisions — mutation: print the status without the link — killed by: `test_decision_in_full`
 - "Also binds" leaves out the document's own area — mutation: drop the filter — killed by: `test_decision_in_an_area_document`
+- titles beside ids — mutation: drop the title part of `withTitle` — killed by: `test_decision_in_full`, `test_contract_and_open_question_in_full`
 - a contract's compatibility of `null` — mutation: print `null` — killed by: `test_contract_and_open_question_in_full` ("No rule stated")
 
 - Satisfies Spec AC: AC-20 (records in full)
@@ -704,7 +726,7 @@ def blocks(js: str, doc: str = "README.md", area: str = "null") -> object:
         f"const data = {json.dumps(DATA)};\n"
         "const byElement = f.areasByElement(data);\n"
         "const decisions = new Map([['D-0', { id: 'D-0', binds: ['b'] }]]);\n"
-        f"const ctx = {{ doc: {json.dumps(doc)}, byElement, decisions, area: {area} }};\n"
+        f"const ctx = {{ doc: {json.dumps(doc)}, byElement, titles: f.titlesOf(data), decisions, area: {area} }};\n"
         f"process.stdout.write(JSON.stringify({js}));\n"
     )
     proc = run_module(code)
@@ -729,23 +751,23 @@ def test_decision_in_full() -> None:
             ["Reason: ", "Reason not known"],
             ["Rejected: ", "Two stores; None"],
             ["Obligations: ", "Keep ids"],
-            ["Owner: ", L("a", "areas/zeta.md")],
+            ["Owner: ", L("a", "areas/zeta.md"), " (A)"],
             ["Compatibility: ", "Additive only."],
-            ["Capabilities: ", L("pay", "capabilities/pay.md")],
+            ["Capabilities: ", L("pay", "capabilities/pay.md"), " (Pay)"],
             ["Status: superseded by ", L("D-0", "areas/alpha.md")],
             ["Evidence: ", "spec"],
             ["Sources: ", "docs/x.md"],
             ["Note: ", "N"],
-            ["Binds: ", L("a", "areas/zeta.md"), ", ", L("b", "areas/alpha.md")],
-            ["Areas: ", L("alpha", "areas/alpha.md"), ", ", L("zeta", "areas/zeta.md")],
+            ["Binds: ", L("a", "areas/zeta.md"), " (A)", ", ", L("b", "areas/alpha.md"), " (B)"],
+            ["Areas: ", L("alpha", "areas/alpha.md"), " (Alpha)", ", ", L("zeta", "areas/zeta.md"), " (Zeta)"],
         ]},
     ]
 
 
 def test_decision_in_an_area_document() -> None:
     items = blocks(f"r.decisionBlocks({DECISION}, ctx)", doc="areas/zeta.md", area="'zeta'")[2]["items"]
-    assert items[-1] == ["Also binds: ", L("alpha", "alpha.md")]
-    assert items[3] == ["Owner: ", L("a", "zeta.md")]
+    assert items[-1] == ["Also binds: ", L("alpha", "alpha.md"), " (Alpha)"]
+    assert items[3] == ["Owner: ", L("a", "zeta.md"), " (A)"]
 
 
 def test_contract_and_open_question_in_full() -> None:
@@ -753,19 +775,19 @@ def test_contract_and_open_question_in_full() -> None:
     assert blocks(f"r.contractBlocks({contract}, ctx)") == [
         {"type": "heading", "level": 3, "text": "C-1: Orders API"},
         {"type": "list", "items": [
-            ["Owner: ", L("b", "areas/alpha.md")],
-            ["Bound: ", L("c", "README.md")],
+            ["Owner: ", L("b", "areas/alpha.md"), " (B)"],
+            ["Bound: ", L("c", "README.md"), " (C)"],
             ["Obligations: ", "Ids; Order"],
             ["Compatibility: ", "No rule stated"],
             ["Decisions: ", L("D-0", "areas/alpha.md")],
-            ["Areas: ", L("alpha", "areas/alpha.md")],
+            ["Areas: ", L("alpha", "areas/alpha.md"), " (Alpha)"],
         ]},
     ]
     hole = "{ id: 'H-1', what: 'Why two caches?', binds: ['c'], evidence: 'search' }"
     assert blocks(f"r.holeBlocks({hole}, ctx)") == [
         {"type": "heading", "level": 3, "text": "H-1"},
         {"type": "paragraph", "parts": ["Why two caches?"]},
-        {"type": "list", "items": [["Binds: ", L("c", "README.md")], ["Evidence: ", "search"]]},
+        {"type": "list", "items": [["Binds: ", L("c", "README.md"), " (C)"], ["Evidence: ", "search"]]},
     ]
 ```
 
@@ -774,21 +796,27 @@ def test_contract_and_open_question_in_full() -> None:
 
 ```js
 // Decisions, contracts and open questions printed in full, as document-tree blocks. `ctx`: { doc (the path of the
-// document being built), byElement (areasByElement), decisions (Map of id to decision), area (the area of an area
-// document, or null) }.
-import { heading, paragraph, list, link } from './tree.mjs';
+// document being built), byElement (areasByElement), titles (titlesOf), decisions (Map of id to decision), area (the
+// area of an area document, or null) }.
+import { heading, paragraph, list, docLink } from './tree.mjs';
 import { areaDoc, areasOf, capabilityDoc, elementTarget, recordElements, recordTarget, relative } from './facts.mjs';
 
 const has = (record, key) => Object.hasOwn(record, key);
 const separated = (parts) => parts.flatMap((part, index) => (index === 0 ? [part] : [', ', part]));
+// Spec, Shared rules: an id is shown as written, with its title beside it.
+const titled = (groups) => groups.flatMap((group, index) => (index === 0 ? group : [', ', ...group]));
+const withTitle = (id, href, title) => [docLink(id, href), ` (${title ?? id})`];
 
-export const elementLinks = (ids, ctx) => separated(ids.map((id) => link(id, relative(ctx.doc, elementTarget(id, ctx.byElement)))));
-export const areaLinks = (names, ctx) => separated(names.map((name) => link(name, relative(ctx.doc, areaDoc(name)))));
-const capabilityLinks = (names, ctx) => separated(names.map((name) => link(name, relative(ctx.doc, capabilityDoc(name)))));
+export const elementLinks = (ids, ctx) => titled(ids.map((id) =>
+  withTitle(id, relative(ctx.doc, elementTarget(id, ctx.byElement)), ctx.titles.elements.get(id))));
+export const areaLinks = (names, ctx) => titled(names.map((name) =>
+  withTitle(name, relative(ctx.doc, areaDoc(name)), ctx.titles.areas.get(name))));
+const capabilityLinks = (names, ctx) => titled(names.map((name) =>
+  withTitle(name, relative(ctx.doc, capabilityDoc(name)), ctx.titles.capabilities.get(name))));
 
 function decisionLink(id, ctx) {
   const decision = ctx.decisions.get(id);
-  return decision === undefined ? id : link(id, relative(ctx.doc, recordTarget('decisions', decision, ctx.byElement)));
+  return decision === undefined ? id : docLink(id, relative(ctx.doc, recordTarget('decisions', decision, ctx.byElement)));
 }
 
 // Spec, Area: the other areas the record is in ("Also binds" in an area document; "Areas" elsewhere).
@@ -845,26 +873,85 @@ export function holeBlocks(hole, ctx, level = 3) {
 - [ ] **Step 5:** No refactor.
 - [ ] **Step 6:** `git add skills/shared/scripts/architecture-docs/records-doc.mjs tests/scripts/test_architecture_docs_facts.py && git commit -m "feat(#32): decisions, contracts and open questions in full"`
 
-### Task 6: the overview, built into `README.md` and `index.html`
+### Task 6: known-gap cleaning moves into `build.mjs`
+
+**Tier:** standard — complete code; a move with a new direct test.
+
+**Files:**
+- Modify: `skills/shared/scripts/architecture-docs/build.mjs` (`cleanGap`), `skills/shared/scripts/architecture-docs.mjs` (`readGap` uses it)
+- Test: `tests/scripts/test_architecture_docs_build.py` (create)
+
+**Callers that move with this task:** the `readGap` sweep row.
+
+**Reviewer looks at:**
+- known-gap cleaning — mutation: `clean` on `reason` — killed by: `test_clean_gap` (the 250-character reason is not cut); mutation: `cleanText` on `from` — killed by the same test (the 250-character id is cut)
+
+- Satisfies Spec AC: AC-12 (known-gap text)
+- **Test retention:** **Permanent**
+
+- [ ] **Step 1: RED.** Create `tests/scripts/test_architecture_docs_build.py`:
+
+```python
+"""The documents of one build (spec 2026-11-17-architecture-docs-design.md, "The tool")."""
+
+from __future__ import annotations
+
+from arch_delta_support import DOCS_LIB, call, require_node
+
+require_node()
+
+
+def test_clean_gap() -> None:  # AC-12 (known-gap text is cleaned like export output)
+    entries = [{"from": "a" * 250, "to": "b", "reason": "r" * 250 + chr(27) + "[31m" + chr(0x202E) + "\nnext", "close_by": None}]
+    result = call("build.mjs", "cleanGap", entries, lib=DOCS_LIB)
+    assert result["value"] == [{"from": "a" * 199 + chr(0x2026), "to": "b", "reason": "r" * 250 + "\nnext", "close_by": None}]
+```
+
+- [ ] **Step 2:** `uv run pytest -q tests/scripts/test_architecture_docs_build.py`. Expected: FAIL (`cleanGap` is not a function).
+- [ ] **Step 3: GREEN.** In `build.mjs`, change the errors import to `import { ToolError, clean, cleanText } from '../architecture-delta/errors.mjs';` and add:
+
+```js
+// Spec, The tool: known-gap entries are cleaned like `export` output before any document uses them.
+export function cleanGap(entries) {
+  return entries.map((entry) => ({
+    from: clean(entry.from),
+    to: clean(entry.to),
+    reason: cleanText(entry.reason),
+    close_by: entry.close_by === null ? null : cleanText(entry.close_by),
+  }));
+}
+```
+
+Make the `architecture-docs.mjs` sweep edit (`readGap` returns `cleanGap(entries)`).
+- [ ] **Step 4:** `uv run pytest -q tests/scripts -k "architecture_docs"` (tool timeout 600000 ms). Expected: PASS.
+- [ ] **Step 5:** No refactor.
+- [ ] **Step 6:** `git add skills/shared/scripts/architecture-docs.mjs skills/shared/scripts/architecture-docs/build.mjs tests/scripts/test_architecture_docs_build.py && git commit -m "refactor(#32): known-gap cleaning moves into build.mjs, with its own test"`
+
+### Task 7: the overview, built into `README.md` and `index.html`
 
 **Tier:** standard — complete code; assembly of the earlier modules.
 
 **Files:**
 - Create: `skills/shared/scripts/architecture-docs/overview.mjs`
-- Modify: `skills/shared/scripts/architecture-docs/build.mjs` (overview files; `cleanGap`), `skills/shared/scripts/architecture-docs.mjs` (`readGap` uses `cleanGap`)
+- Modify: `skills/shared/scripts/architecture-docs/build.mjs` (overview files)
 - Modify: `docs/superpowers/specs/2026-11-17-architecture-docs-design.md` (the overview heading)
 - Test: `tests/scripts/test_architecture_docs_overview.py` (create); `tests/scripts/test_architecture_docs_tool.py` (sweep rows)
 
-**Callers that move with this task:** every sweep row.
+**Callers that move with this task:** the `test_architecture_docs_tool.py` sweep rows.
 
 **Reviewer looks at:**
 - relationships lifted to top-level elements — mutation: draw unlifted pairs — killed by: `test_overview_sections` (one arrow `n1 --> n2` for two child-level imports)
 - solid when any lifted relationship is an import — mutation: dashed whenever a runtime link is present — killed by: `test_overview_sections` (the `shop`→`pay` pair has an import and an `http` link and is solid)
 - changes newest first — mutation: oldest first — killed by: `test_overview_sections`
 - "Not in any area" — mutation: list every element — killed by: `test_overview_sections`; mutation: leave principles in it — killed by the same test
-- known-gap cleaning — mutation: `clean` on `reason` — killed by: `test_clean_gap` (the 250-character reason is not cut)
+- a relationship within one top-level element is not drawn — mutation: drop `if (from === to) return;` — killed by: `test_overview_lifts_sorts_and_counts`
+- the kinds of a dashed arrow sorted — mutation: drop the sort — killed by: `test_overview_lifts_sorts_and_counts` ("event, http")
+- model health counts and links — mutation: unmapped count always 0, or drop the open-questions line — killed by: `test_overview_lifts_sorts_and_counts`
+- no-area contracts in full — mutation: drop the no-area contract loop — killed by: `test_overview_lifts_sorts_and_counts`
 
-- Satisfies Spec AC: AC-12 and AC-13 (end to end), AC-18 (overview part), AC-20 (overview part)
+**Pinned by:** the over-80-arrow note is reached through `flowchart` returning `null`, pinned by `test_flowchart_arrow_limit` (Task 3); the note's wording is not asserted.
+
+- Satisfies Spec AC: AC-12 and AC-13 (end to end), AC-18 (overview part; the two-area case is plan 3's), AC-20 and AC-24 (overview parts)
 - **Test retention:** **Permanent**
 
 - [ ] **Step 1: RED.** Create `tests/scripts/test_architecture_docs_overview.py`:
@@ -954,11 +1041,11 @@ def test_overview_sections(tmp_path) -> None:  # AC-18, AC-20 (overview parts)
     assert ('```mermaid\nflowchart LR\n  n1["Bank"]\n  n2["Pay"]\n  n3["Shop"]\n'
             '  n2 -.->|"http"| n1\n  n3 --> n2\n```') in sections
     assert "| Area | Description | Elements |\n| --- | --- | --- |\n| [Shop](areas/front.md) |  | 3 |" in sections
-    assert "| Capability | Description | Areas |\n| --- | --- | --- |\n| [Buy](capabilities/buy.md) |  | [front](areas/front.md) |" in sections
+    assert "| Capability | Description | Areas |\n| --- | --- | --- |\n| [Buy](capabilities/buy.md) |  | [front](areas/front.md) \\(Shop\\) |" in sections
     principles = sections[sections.index("## Principles"):sections.index("## Contracts")]
     assert principles[1:3] == ["### P\\-1", "Decide P\\-1\\."]
     assert ("| Contract | Owner | Bound | Compatibility |\n| --- | --- | --- | --- |\n"
-            "| [C\\-1: Card API](areas/front.md) | [pay](README.md) | [shop\\.web](areas/front.md) | No rule stated |") in sections
+            "| [C\\-1: Card API](areas/front.md) | [pay](README.md) \\(Pay\\) | [shop\\.web](areas/front.md) \\(Web\\) | No rule stated |") in sections
     changes = sections[sections.index("## Changes") + 1]
     assert changes == ("- [2026\\-11\\-05\\-more](changes/2026-11-05-more.md) \\(2026\\-11\\-05\\): More\\. \\(not yet approved\\)\n"
                        "- [2026\\-11\\-01\\-baseline](changes/2026-11-01-baseline.md) \\(2026\\-11\\-01\\): Baseline\\. "
@@ -970,6 +1057,32 @@ def test_overview_sections(tmp_path) -> None:  # AC-18, AC-20 (overview parts)
     assert loose == "| Element | Title | Description |\n| --- | --- | --- |\n| bank | Bank |  |\n| pay | Pay |  |"
     after = sections[sections.index("## Not in any area"):]
     assert "### D\\-2" in after and "### H\\-1" in after and "### P\\-1" not in after and "### D\\-1" not in after
+
+
+def test_overview_lifts_sorts_and_counts(tmp_path) -> None:  # Overview: lifting and kinds; model health; no-area records
+    model = MODEL.replace("relationship http\n", "relationship http\n  relationship event\n").replace(
+        "  pay -[http]-> bank 'settles'\n",
+        "  pay -[http]-> bank 'settles'\n  shop.web -> shop.api\n  shop.api -[http]-> bank\n  shop.web -[event]-> bank\n")
+    repo = make_repo(tmp_path, model)
+    folder = repo / "docs" / "architecture"
+    write(folder, "decisions/core.json", {"title": "Core", "holes": [], "decisions": [decision("D-3", binds=[])]})
+    write(folder, "contracts/edge.json", {"title": "Edge", "contracts": [
+        {"id": "C-2", "name": "Bank feed", "owner": "bank", "bound": ["pay"], "obligations": ["Daily"], "compatibility": "Additive."}]})
+    write(folder, "coverage.json", {"answer": "Most code is mapped.", "baselined": [], "edge_nodes": [],
+                                    "counts": {"modules": 3, "groups": 1},
+                                    "unmapped": [{"module": "a", "reason": "r"}, {"module": "b", "reason": "r"}]})
+    proc = run_tool("build", "--repo", repo, script=DOCS_SCRIPT)
+    assert proc.returncode == 0, proc.stderr
+    sections = (folder / "generated" / "README.md").read_text(encoding="utf-8").split("\n\n")
+    assert ('```mermaid\nflowchart LR\n  n1["Bank"]\n  n2["Pay"]\n  n3["Shop"]\n'
+            '  n2 -.->|"http"| n1\n  n3 -.->|"event#44; http"| n1\n  n3 --> n2\n```') in sections
+    see = ", see [the improvement list](improvements.md)"
+    assert sections[sections.index("## Model health") + 1] == (
+        f"- Known\\-gap entries: 0{see}\n- Open questions: 0{see}\n- Coverage: Most code is mapped\\.{see}\n- Unmapped modules: 2{see}")
+    assert ("| [C\\-2: Bank feed](README.md) | [bank](README.md) \\(Bank\\) | [pay](README.md) \\(Pay\\) | Additive\\. |"
+            in sections[sections.index("## Contracts") + 1])
+    after = sections[sections.index("## Not in any area"):]
+    assert "### D\\-3" in after and "### C\\-2: Bank feed" in after
 
 
 def test_overview_page_matches_and_is_marked(tmp_path) -> None:  # AC-13
@@ -994,27 +1107,22 @@ def test_overview_escapes_hostile_model_text(tmp_path) -> None:  # AC-12
     label = node[len('  n1["'):-len('"]')]
     assert '"' not in label and "%%" not in label and "#37;#37;" in label
     assert ";" not in re.sub(r"#[0-9]+;", "", label)
-
-
-def test_clean_gap() -> None:
-    entries = [{"from": "a" * 250, "to": "b", "reason": "r" * 250 + chr(27) + "[31m" + chr(0x202E) + "\nnext", "close_by": None}]
-    result = call("build.mjs", "cleanGap", entries, lib=DOCS_LIB)
-    assert result["value"] == [{"from": "a" * 199 + chr(0x2026), "to": "b", "reason": "r" * 250 + "\nnext", "close_by": None}]
 ```
 
 Make the sweep edits to `tests/scripts/test_architecture_docs_tool.py`.
 
-- [ ] **Step 2:** `uv run pytest -q tests/scripts/test_architecture_docs_overview.py tests/scripts/test_architecture_docs_tool.py`. Expected: FAIL (no `README.md`; `cleanGap` is not a function; the sweep asserts expect three files).
+- [ ] **Step 2:** `uv run pytest -q tests/scripts/test_architecture_docs_overview.py tests/scripts/test_architecture_docs_tool.py`. Expected: FAIL (no `README.md`; the sweep asserts expect three files).
 - [ ] **Step 3: GREEN.** Create `overview.mjs`:
 
 ```js
 // The overview document: the system diagram, areas, capabilities, principles, contracts, changes, model health, and
 // everything in no area.
 import { cmp } from '../architecture-delta/report.mjs';
-import { doc, heading, paragraph, list, table, diagram, link } from './tree.mjs';
+import { doc, heading, paragraph, list, table, diagram, docLink } from './tree.mjs';
 import { flowchart } from './mermaid.mjs';
 import {
-  OVERVIEW, IMPROVEMENTS, areaDoc, capabilityDoc, changeDoc, topLevel, areasByElement, areasOf, isPrinciple, recordTarget,
+  OVERVIEW, IMPROVEMENTS, areaDoc, capabilityDoc, changeDoc, topLevel, areasByElement, areasOf, isPrinciple, recordElements,
+  recordTarget, titlesOf,
 } from './facts.mjs';
 import { decisionBlocks, contractBlocks, holeBlocks, elementLinks, areaLinks } from './records-doc.mjs';
 
@@ -1049,18 +1157,18 @@ const orNone = (parts) => (parts.length > 0 ? parts : ['None']);
 
 export function buildOverview(data, gap) {
   const byElement = areasByElement(data);
-  const ctx = { doc: OVERVIEW, byElement, decisions: new Map(data.decisions.map((d) => [d.id, d])), area: null };
+  const ctx = { doc: OVERVIEW, byElement, titles: titlesOf(data), decisions: new Map(data.decisions.map((d) => [d.id, d])), area: null };
   const blocks = [heading(2, 'System'), systemDiagram(data)];
 
   blocks.push(heading(2, 'Areas'));
   blocks.push(data.areas.length === 0 ? paragraph('The model has no area views.')
     : table(['Area', 'Description', 'Elements'], data.areas.map((area) => [
-      [link(area.title, areaDoc(area.name))], [area.description ?? ''], [String(area.elements.length)]])));
+      [docLink(area.title, areaDoc(area.name))], [area.description ?? ''], [String(area.elements.length)]])));
 
   blocks.push(heading(2, 'Capabilities'));
   blocks.push(data.capabilities.length === 0 ? paragraph('The model has no capability views.')
     : table(['Capability', 'Description', 'Areas'], data.capabilities.map((capability) => [
-      [link(capability.title, capabilityDoc(capability.name))], [capability.description ?? ''],
+      [docLink(capability.title, capabilityDoc(capability.name))], [capability.description ?? ''],
       orNone(areaLinks(areasOf(capability.steps.flatMap((step) => [step.from, step.to]), byElement), ctx))])));
 
   blocks.push(heading(2, 'Principles'));
@@ -1071,30 +1179,30 @@ export function buildOverview(data, gap) {
   blocks.push(heading(2, 'Contracts'));
   blocks.push(data.contracts.length === 0 ? paragraph('No contracts.')
     : table(['Contract', 'Owner', 'Bound', 'Compatibility'], data.contracts.map((contract) => [
-      [link(`${contract.id}: ${contract.name}`, recordTarget('contracts', contract, byElement))],
+      [docLink(`${contract.id}: ${contract.name}`, recordTarget('contracts', contract, byElement))],
       elementLinks([contract.owner], ctx), elementLinks(contract.bound, ctx), [contract.compatibility ?? 'No rule stated']])));
 
   blocks.push(heading(2, 'Changes'));
   const changes = [...data.changes].sort((x, y) => cmp(y.date, x.date) || cmp(x.id, y.id));
   blocks.push(changes.length === 0 ? paragraph('No change records.') : list(changes.map((change) => [
-    link(change.id, changeDoc(change.id)),
+    docLink(change.id, changeDoc(change.id)),
     ` (${change.date}): ${change.summary} `,
     change.approved === null ? '(not yet approved)' : `(approved by ${change.approved.by} on ${change.approved.date})`,
   ])));
 
   blocks.push(heading(2, 'Model health'));
-  const see = [', see ', link('the improvement list', IMPROVEMENTS)];
+  const see = [', see ', docLink('the improvement list', IMPROVEMENTS)];
   blocks.push(list([
     [`Known-gap entries: ${gap.length}`, ...see],
     [`Open questions: ${data.holes.length}`, ...see],
-    [`Coverage: ${data.coverage === null ? 'No coverage file' : data.coverage.answer}`],
+    [`Coverage: ${data.coverage === null ? 'No coverage file' : data.coverage.answer}`, ...see],
     [`Unmapped modules: ${data.coverage === null ? 0 : data.coverage.unmapped.length}`, ...see],
   ]));
 
   // Spec, Overview: the elements in no area, then every record (other than a principle) that has no area.
   blocks.push(heading(2, 'Not in any area'));
   const loose = data.elements.filter((element) => byElement.get(element.id).length === 0);
-  const noArea = (kind, record) => areasOf(kind === 'contracts' ? [record.owner, ...record.bound] : record.binds, byElement).length === 0;
+  const noArea = (kind, record) => areasOf(recordElements(kind, record), byElement).length === 0;
   const decisions = data.decisions.filter((d) => !isPrinciple(d) && noArea('decisions', d));
   const contracts = data.contracts.filter((c) => noArea('contracts', c));
   const holes = data.holes.filter((h) => noArea('holes', h));
@@ -1111,21 +1219,7 @@ export function buildOverview(data, gap) {
 }
 ```
 
-In `build.mjs`, add the imports `import { clean, cleanText } from '../architecture-delta/errors.mjs';` (merge with the existing `ToolError` import), `import { buildOverview } from './overview.mjs';`, `import { renderMarkdown } from './markdown.mjs';`, `import { renderHtml } from './html.mjs';`, add:
-
-```js
-// Spec, The tool: known-gap entries are cleaned like `export` output before any document uses them.
-export function cleanGap(entries) {
-  return entries.map((entry) => ({
-    from: clean(entry.from),
-    to: clean(entry.to),
-    reason: cleanText(entry.reason),
-    close_by: entry.close_by === null ? null : cleanText(entry.close_by),
-  }));
-}
-```
-
-and replace `buildFiles` with:
+In `build.mjs`, add the imports `import { buildOverview } from './overview.mjs';`, `import { renderMarkdown } from './markdown.mjs';` and `import { renderHtml } from './html.mjs';`, and replace `buildFiles` with:
 
 ```js
 // Spec, What each document holds: every document is built from the export (and the cleaned known-gap entries).
@@ -1142,10 +1236,8 @@ export function buildFiles(model, records, gap, tick = () => {}) {
 }
 ```
 
-Make the `architecture-docs.mjs` sweep edit (`readGap` returns `cleanGap(entries)`).
-
 In the spec's "Overview" list, replace "- The system title, and a diagram of the top-level elements" with "- The heading \"Architecture\", and a diagram of the top-level elements".
 
 - [ ] **Step 4:** `uv run pytest -q tests/scripts -k "architecture_docs or architecture_delta"` (tool timeout 600000 ms). Expected: PASS.
 - [ ] **Step 5:** No refactor.
-- [ ] **Step 6:** `git add skills/shared/scripts/architecture-docs.mjs skills/shared/scripts/architecture-docs tests/scripts docs/superpowers/specs/2026-11-17-architecture-docs-design.md && git commit -m "feat(#32): the overview, as README.md and index.html"`
+- [ ] **Step 6:** `git add skills/shared/scripts/architecture-docs tests/scripts docs/superpowers/specs/2026-11-17-architecture-docs-design.md && git commit -m "feat(#32): the overview, as README.md and index.html"`
