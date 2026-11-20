@@ -206,3 +206,19 @@ def test_capability_records() -> None:  # Capability and AI pack: the elements t
 def test_capability_records_with_no_steps_or_names() -> None:  # a record without `capabilities` names none
     empty = facts("capabilityRecords", RECORDS, {"name": "refund", "title": "Refund", "steps": []})
     assert empty == {"elements": [], "decisions": [], "contracts": []}
+
+
+def run_on(data: dict, code: str) -> object:
+    from arch_delta_support import lib_url, run_module
+    import json
+    snippet = f"import * as f from {json.dumps(lib_url('facts.mjs', DOCS_LIB))};\nconst data = {json.dumps(data)};\n{code}"
+    proc = run_module(snippet)
+    assert proc.returncode == 0, proc.stderr
+    return json.loads(proc.stdout)
+
+
+def test_outside_areas() -> None:  # Overview and AI pack: the facts outside any area
+    out = run_on(RECORDS, "process.stdout.write(JSON.stringify(f.outsideAreas(data, f.areasByElement(data))));")
+    assert [element["id"] for element in out["elements"]] == ["bank"]
+    assert (ids(out["principles"]), ids(out["decisions"]), ids(out["contracts"]), ids(out["holes"])) == (
+        ["P-1"], ["D-3"], ["C-2"], ["H-2"])

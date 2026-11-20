@@ -87,3 +87,17 @@ export function capabilityRecords(data, capability) {
     contracts: data.contracts.filter(names),
   };
 }
+
+
+// Spec, Overview and AI pack: the facts outside any area: the elements in no area, the principles, and the decisions
+// (other than principles), contracts and open questions that have no area.
+export function outsideAreas(data, byElement) {
+  const noArea = (kind, record) => areasOf(recordElements(kind, record), byElement).length === 0;
+  return {
+    elements: data.elements.filter((element) => byElement.get(element.id).length === 0),
+    principles: data.decisions.filter(isPrinciple),
+    decisions: data.decisions.filter((decision) => !isPrinciple(decision) && noArea('decisions', decision)),
+    contracts: data.contracts.filter((contract) => noArea('contracts', contract)),
+    holes: data.holes.filter((hole) => noArea('holes', hole)),
+  };
+}
