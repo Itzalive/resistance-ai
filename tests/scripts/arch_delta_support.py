@@ -13,6 +13,8 @@ from pathlib import Path
 ENGINE = Path(__file__).resolve().parents[2]
 SCRIPT = ENGINE / "skills" / "shared" / "scripts" / "architecture-delta.mjs"
 LIB = ENGINE / "skills" / "shared" / "scripts" / "architecture-delta"
+DOCS_SCRIPT = ENGINE / "skills" / "shared" / "scripts" / "architecture-docs.mjs"
+DOCS_LIB = ENGINE / "skills" / "shared" / "scripts" / "architecture-docs"
 SHIPPED_SPEC = ENGINE / "skills" / "shared" / "architecture" / "c4.c4"
 LIKEC4_DIR = ENGINE / "node_modules" / "likec4"
 LIKEC4_ENTRY = LIKEC4_DIR / "dist" / "index.mjs"
@@ -75,14 +77,14 @@ def run_module(code: str) -> subprocess.CompletedProcess[str]:
         )
 
 
-def lib_url(module: str) -> str:
-    return (LIB / module).as_uri()
+def lib_url(module: str, lib: Path = LIB) -> str:
+    return (lib / module).as_uri()
 
 
-def call(module: str, fn: str, *args: object) -> dict:
+def call(module: str, fn: str, *args: object, lib: Path = LIB) -> dict:
     """Call an exported function of a tool module; return {ok, value} or {ok, token, details, message}."""
     code = (
-        f"import * as m from {json.dumps(lib_url(module))};\n"
+        f"import * as m from {json.dumps(lib_url(module, lib))};\n"
         f"const args = {json.dumps(list(args))};\n"
         "try {\n"
         f"  const out = await m.{fn}(...args);\n"

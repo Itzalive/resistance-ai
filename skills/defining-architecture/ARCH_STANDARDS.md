@@ -29,6 +29,7 @@ The tool is `node <skills-dir>/shared/scripts/architecture-delta.mjs`, run from 
 - `export` also prints the model's records (decisions, holes, contracts, changes, coverage). A problem in a record file is `record-error`, exit 2, from both `export` and `check`.
 - `export` prints format 4: element and relationship titles, and the model's area and capability views. A record's `capabilities` must name capability views.
 - An area is an element view `view area-<name>`; a capability is a dynamic view `dynamic view capability-<name>` whose every step follows a relationship. `<name>` is 1 to 64 lowercase letters, digits and `-`, starting with a letter or digit, and not a Windows device name (`con`, `nul`, `com1` and the like). A bad area or capability view is `model-error` from `export` and `check`.
+- `node <skills-dir>/shared/scripts/architecture-docs.mjs build|check --repo . [--model <model>] [--out <folder>]` (it reads the known-gap file as `check` does, so skills pass no `--gap`) builds the generated documents into `<model>/generated` (or `--out`), or reports which are missing, changed or extra. `build` exits 0 or 2; `check` exits 0 when current, 1 when stale, 2 on an error. It overwrites or deletes only files it marked, and `out-error` names any problem with the output folder.
 - The `check` sections: new breaches, known breaches, not yet reached (an import relationship the code doesn't have yet), unmapped code, and the summary line `N new, N stale, N known`. Quote the whole output in the decision log.
 
 ## Terms
