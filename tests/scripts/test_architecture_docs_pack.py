@@ -326,3 +326,48 @@ def test_capability_slice_with_nothing() -> None:  # Pack layout: empty sections
     assert pack("p.capabilitySlice(data, { name: 'refund', title: 'Refund', description: null, steps: [] }, base)") == (
         MARKER + "\n\n# refund: Refund\n"
     )
+
+
+INDEX_SECTION = (
+    "## Index\n\n"
+    "### Elements\n\n"
+    "bank: README.md\npay: areas/money.md, capabilities/buy.md\nshop: areas/front.md\n"
+    "shop.api: areas/front.md, capabilities/buy.md\nshop.web: areas/front.md, capabilities/buy.md\n\n"
+    "### Decisions\n\n"
+    "D-1: areas/front.md, capabilities/buy.md\nD-2: areas/front.md, areas/money.md\nD-3: README.md\nP-1: README.md\n\n"
+    "### Contracts\n\n"
+    "C-1: areas/front.md, areas/money.md, capabilities/buy.md\nC-2: README.md\n\n"
+    "### Open questions\n\n"
+    "H-1: areas/front.md\n\n"
+    "### Capabilities\n\n"
+    "buy: capabilities/buy.md"
+)
+
+
+def test_pack_index() -> None:  # AI pack, Index; AC-26
+    text = pack("p.packIndex(data, gap, base)")
+    assert INDEX_SECTION in text
+
+
+def test_pack_index_file_sections() -> None:  # Pack layout: the index file; AC-24 (pack part)
+    text = pack("p.packIndex(data, gap, base)")
+    parts = text.rstrip("\n").split("\n\n")
+    assert parts[1] == "# Architecture pack"
+    assert parts[2].startswith("This pack holds the architecture model")
+    assert headings(text) == ["## Index", "## Principles", "## Elements in no area", "## Decisions in no area",
+                              "## Contracts in no area"]
+    after = text[text.index("## Principles"):]
+    assert [part.split("\n")[0] for part in after.split("\n\n") if part.startswith("### ")] == [
+        "### P-1", "### bank: Bank", "### D-3", "### C-2: Bank feed"]
+    assert "### bank: Bank\nkind system\nruntime: -> shop.api (event) [areas/front.md]\n" in text
+    assert "bound by: D-3\n" in text
+
+
+def test_build_pack_files_and_ticks() -> None:  # AI pack: one file per slice and the index; a deadline tick per file
+    result = pack("(() => { let ticks = 0; const files = p.buildPack(data, gap, () => { ticks += 1; });"
+                  " return { names: Object.keys(files).sort(), ticks, index: files['pack/README.md'] === p.packIndex(data, gap, base) }; })()")
+    assert result == {
+        "names": ["pack/README.md", "pack/areas/front.md", "pack/areas/money.md", "pack/capabilities/buy.md"],
+        "ticks": 4,
+        "index": True,
+    }
