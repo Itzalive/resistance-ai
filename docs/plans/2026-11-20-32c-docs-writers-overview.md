@@ -61,11 +61,7 @@ Searched: `skills/`, `tests/` with `rg -n "buildFiles|readGap|cleanText|wrote 1 
 | Checkpoint | After task | Tasks covered | Reviewer looks at |
 |---|---|---|---|
 | C1 | 3 | 1–3 | Task 1 items 1–5, Task 2 items 1–5, Task 3 items 1–4; focused tests `uv run pytest -q tests/scripts/test_architecture_docs_writers.py tests/scripts/test_architecture_docs_safety.py` |
-| C2 | 7 | 4–7 | Task 4 items 1–3, Task 5 items 1–5, Task 6 item 1, Task 7 items 1–9; full suite `uv run pytest -q` (tool timeout 600000 ms) |
-
-Checkpoint reviewers on this machine: one scratch copy, one mutation at a time, in the foreground; a tool timeout of 600000 ms for long runs.
-
-Writing rule for this plan's code: never put a `\u` escape in a source file (the editing tools have turned them into the literal character). Use code points (`String.fromCodePoint`, `chr`) where a test needs an unusual character.
+| C2 | 7 | 4–7 | Task 4 items 1–3, Task 5 items 1–5, Task 6 item 1, Task 7 items 1–9; full suite `uv run pytest -q` |
 
 ---
 
@@ -923,7 +919,7 @@ export function cleanGap(entries) {
 ```
 
 Make the `architecture-docs.mjs` sweep edit (`readGap` returns `cleanGap(entries)`).
-- [ ] **Step 4:** `uv run pytest -q tests/scripts -k "architecture_docs"` (tool timeout 600000 ms). Expected: PASS.
+- [ ] **Step 4:** `uv run pytest -q tests/scripts -k "architecture_docs"`. Expected: PASS.
 - [ ] **Step 5:** No refactor.
 - [ ] **Step 6:** `git add skills/shared/scripts/architecture-docs.mjs skills/shared/scripts/architecture-docs/build.mjs tests/scripts/test_architecture_docs_build.py && git commit -m "refactor(#32): known-gap cleaning moves into build.mjs, with its own test"`
 
@@ -1238,6 +1234,6 @@ export function buildFiles(model, records, gap, tick = () => {}) {
 
 In the spec's "Overview" list, replace "- The system title, and a diagram of the top-level elements" with "- The heading \"Architecture\", and a diagram of the top-level elements".
 
-- [ ] **Step 4:** `uv run pytest -q tests/scripts -k "architecture_docs or architecture_delta"` (tool timeout 600000 ms). Expected: PASS.
+- [ ] **Step 4:** `uv run pytest -q tests/scripts -k "architecture_docs or architecture_delta"`. Expected: PASS.
 - [ ] **Step 5:** No refactor.
 - [ ] **Step 6:** `git add skills/shared/scripts/architecture-docs tests/scripts docs/superpowers/specs/2026-11-17-architecture-docs-design.md && git commit -m "feat(#32): the overview, as README.md and index.html"`

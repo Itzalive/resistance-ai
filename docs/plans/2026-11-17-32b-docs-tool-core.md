@@ -60,8 +60,6 @@ Searched: `skills/`, `tests/` with `rg -n "loadRepoModel|startDeadline|readOptio
 | C1 | 3 | 1–3 | Task 1 pinning, Task 2 items 1–2, Task 3 items 1–5; focused tests `uv run pytest -q tests/scripts/test_architecture_docs_out.py tests/scripts/test_architecture_docs_args.py` and `uv run pytest -q tests/scripts -k architecture_delta` |
 | C2 | 6 | 4–6 | Task 4 items 1–5, Task 5 items 1–5, Task 6 items 1–5; full suite `uv run pytest -q` |
 
-Checkpoint reviewers on this machine: one scratch copy, one mutation at a time, in the foreground.
-
 ---
 
 ### Task 1: the delta tool's shared start moves into `load.mjs`
