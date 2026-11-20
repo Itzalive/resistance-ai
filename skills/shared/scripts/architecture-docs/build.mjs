@@ -1,9 +1,19 @@
 // The documents of one build, as { path with '/': text }, and the output limits (write rule 4).
-import { ToolError } from '../architecture-delta/errors.mjs';
+import { ToolError, clean, cleanText } from '../architecture-delta/errors.mjs';
 import { exportJson } from '../architecture-delta/report.mjs';
 
 export const OUT_FILE_LIMIT = 2000;
 export const OUT_BYTES_LIMIT = 50 * 1024 * 1024;
+
+// Spec, The tool: known-gap entries are cleaned like `export` output before any document uses them.
+export function cleanGap(entries) {
+  return entries.map((entry) => ({
+    from: clean(entry.from),
+    to: clean(entry.to),
+    reason: cleanText(entry.reason),
+    close_by: entry.close_by === null ? null : cleanText(entry.close_by),
+  }));
+}
 
 // Spec, AI pack: `pack/model.json` holds the format 4 export under `export`, marked by its first key.
 // Later plans add the other documents here; `gap` (cleaned known-gap entries) is for them.

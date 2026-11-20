@@ -3,7 +3,7 @@
 // Changes files only inside its output folder (architecture-docs/writer.mjs); never runs another program or uses the network.
 import fs from 'node:fs';
 import path from 'node:path';
-import { clean, cleanText } from './architecture-delta/errors.mjs';
+import { clean } from './architecture-delta/errors.mjs';
 import { realRepo, resolveInside } from './architecture-delta/paths.mjs';
 import { parseGap } from './architecture-delta/inputs.mjs';
 import { cmp } from './architecture-delta/report.mjs';
@@ -11,19 +11,14 @@ import { startDeadline, loadRepoModel, readOptional, runCli } from './architectu
 import { parseArgs } from './architecture-docs/args.mjs';
 import { resolveOut, listOut } from './architecture-docs/out.mjs';
 import { writeOutput } from './architecture-docs/writer.mjs';
-import { buildFiles, checkLimits } from './architecture-docs/build.mjs';
+import { buildFiles, checkLimits, cleanGap } from './architecture-docs/build.mjs';
 
 // Spec, The tool: known-gap entries are cleaned like `export` output before any document uses them.
 function readGap(loaded, value) {
   const ids = loaded.model.elements.map((element) => element.id);
   const entries = readOptional(loaded.repo, value, path.join(loaded.modelDir, 'known-gap.json'), '--gap',
     (data) => parseGap(data, ids)) ?? [];
-  return entries.map((entry) => ({
-    from: clean(entry.from),
-    to: clean(entry.to),
-    reason: cleanText(entry.reason),
-    close_by: entry.close_by === null ? null : cleanText(entry.close_by),
-  }));
+  return cleanGap(entries);
 }
 
 // A failure reported earlier (a timer or a promise) stops the build before it writes. The folder is resolved and
