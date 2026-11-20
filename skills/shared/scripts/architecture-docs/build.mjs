@@ -4,6 +4,7 @@ import { exportJson } from '../architecture-delta/report.mjs';
 import { buildOverview } from './overview.mjs';
 import { renderMarkdown } from './markdown.mjs';
 import { renderHtml } from './html.mjs';
+import { buildPack } from './pack.mjs';
 
 export const OUT_FILE_LIMIT = 2000;
 export const OUT_BYTES_LIMIT = 50 * 1024 * 1024;
@@ -24,6 +25,7 @@ export function buildFiles(model, records, gap, tick = () => {}) {
   const files = {};
   files['pack/model.json'] = `${JSON.stringify({ generated: 'architecture-docs', export: data }, null, 2)}\n`;
   tick();
+  Object.assign(files, buildPack(data, gap, tick));
   const overview = buildOverview(data, gap);
   files['README.md'] = renderMarkdown(overview);
   files['index.html'] = renderHtml(overview);

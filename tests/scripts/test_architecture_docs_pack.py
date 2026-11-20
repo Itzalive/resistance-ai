@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 
-from arch_delta_support import DOCS_LIB, call, lib_url, require_node, run_module
+from arch_delta_support import DOCS_LIB, DOCS_SCRIPT, call, lib_url, make_repo, require_node, run_module, run_tool
 
 require_node()
 
@@ -371,3 +371,135 @@ def test_build_pack_files_and_ticks() -> None:  # AI pack: one file per slice an
         "ticks": 4,
         "index": True,
     }
+
+
+MODEL = """specification {
+  relationship http
+}
+model {
+  shop = system 'Shop' {
+    web = container 'Web'
+    api = container 'API'
+  }
+  pay = system 'Pay'
+  bank = system 'Bank'
+  vault = system 'Vault'
+  shop.web -> shop.api 'orders'
+  shop.api -[http]-> pay 'charges'
+}
+views {
+  view area-front of shop {
+    include *
+  }
+  view area-money {
+    include pay
+  }
+  dynamic view capability-buy {
+    title 'Buy'
+    shop.web -> shop.api
+    shop.api -> pay
+  }
+}
+"""
+
+DECISIONS = {"title": "Core", "holes": [], "decisions": [
+    {"id": "D-1", "decision": "Use A.\n# Heading", "reason": "Because.", "rejected": [], "binds": ["shop.web"],
+     "capabilities": ["buy"], "status": "current", "evidence": "spec", "sources": ["docs/x.md"],
+     "note": "Red " + chr(27) + "[31mtext"},
+    {"id": "D-9", "decision": "Keep notes.", "reason": None, "rejected": [], "binds": [], "status": "current",
+     "evidence": "spec", "sources": ["docs/x.md"]},
+    {"id": "P-1", "decision": "Data stays in the EU.", "reason": "Law.", "rejected": [], "binds": [],
+     "obligations": ["EU only"], "status": "current", "evidence": "spec", "sources": ["docs/x.md"]},
+]}
+CONTRACTS = {"title": "Edge", "contracts": [
+    {"id": "C-9", "name": "Vault feed", "owner": "bank", "bound": ["vault"], "obligations": ["Daily"], "compatibility": None},
+]}
+
+
+def write_json(folder, rel: str, data: object) -> None:
+    target = folder / rel
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(json.dumps(data), encoding="utf-8")
+
+
+def built(tmp_path, model: str = MODEL, records: bool = True):
+    repo = make_repo(tmp_path, model)
+    folder = repo / "docs" / "architecture"
+    if records:
+        write_json(folder, "decisions/core.json", DECISIONS)
+        write_json(folder, "contracts/edge.json", CONTRACTS)
+    proc = run_tool("build", "--repo", repo, script=DOCS_SCRIPT)
+    assert proc.returncode == 0, proc.stderr
+    return repo, folder / "generated" / "pack"
+
+
+def index_lines(text: str) -> dict:
+    index = text[text.index("## Index"):text.index("## Principles")]
+    return dict(line.split(": ", 1) for line in index.split("\n") if ": " in line)
+
+
+def test_build_writes_the_pack(tmp_path) -> None:  # AC-26, AC-13 (pack files start with the marker)
+    repo, pack_dir = built(tmp_path)
+    names = sorted(p.relative_to(pack_dir).as_posix() for p in pack_dir.rglob("*") if p.is_file())
+    assert names == ["README.md", "areas/front.md", "areas/money.md", "capabilities/buy.md", "model.json"]
+    for name in names[:-1]:
+        assert (pack_dir / name).read_text(encoding="utf-8").startswith(MARKER + "\n\n# ")
+    exported = json.loads(run_tool("export", "--repo", repo).stdout)
+    index = index_lines((pack_dir / "README.md").read_text(encoding="utf-8"))
+    every = ([e["id"] for e in exported["elements"]] + [d["id"] for d in exported["decisions"]]
+             + [c["id"] for c in exported["contracts"]] + [c["name"] for c in exported["capabilities"]])
+    assert sorted(index) == sorted(every)
+    assert index["pay"] == "areas/money.md, capabilities/buy.md"
+    assert index["vault"] == "README.md"
+    buy = (pack_dir / "capabilities" / "buy.md").read_text(encoding="utf-8")
+    assert "\n### D-1\n" in buy
+    assert "1. shop.web -> shop.api: orders (uses)\n2. shop.api -> pay: charges (http)" in buy
+    front = (pack_dir / "areas" / "front.md").read_text(encoding="utf-8")
+    assert "runtime: -> pay (http, \"charges\") [areas/money.md]\n" in front
+
+
+def test_build_pack_text_rules(tmp_path) -> None:  # AC-25: `# Heading` guarded, ids unescaped
+    _, pack_dir = built(tmp_path)
+    front = (pack_dir / "areas" / "front.md").read_text(encoding="utf-8")
+    assert "### D-1\nUse A.\n\\# Heading\n" in front
+    assert "### shop.web: Web\n" in front and "shop\\.web" not in front
+
+
+def test_build_pack_holds_records_with_no_area(tmp_path) -> None:  # AC-24 (pack part)
+    _, pack_dir = built(tmp_path)
+    text = (pack_dir / "README.md").read_text(encoding="utf-8")
+    assert "### D-9\nKeep notes.\nreason: not known\nstatus: current\nevidence: spec\nsources: docs/x.md" in text
+    assert "### C-9: Vault feed\nowner: bank\nbound: vault\nobligations: Daily\ncompatibility: no rule stated" in text
+    assert "### P-1\n" in text
+    index = index_lines(text)
+    assert (index["D-9"], index["C-9"], index["P-1"]) == ("README.md", "README.md", "README.md")
+
+
+def test_build_pack_holds_no_escape_character(tmp_path) -> None:  # AC-12 (pack part)
+    _, pack_dir = built(tmp_path)
+    for path in pack_dir.rglob("*.md"):
+        assert chr(27) not in path.read_text(encoding="utf-8"), path
+    assert "note: Red text" in (pack_dir / "areas" / "front.md").read_text(encoding="utf-8")
+
+
+def test_check_reports_a_removed_area_s_pack_file(tmp_path) -> None:  # AC-9 (pack part)
+    repo, pack_dir = built(tmp_path)
+    model = repo / "docs" / "architecture" / "model.c4"
+    model.write_text(MODEL.replace("  view area-money {\n    include pay\n  }\n", ""), encoding="utf-8")
+    check = run_tool("check", "--repo", repo, script=DOCS_SCRIPT)
+    assert check.returncode == 1
+    lines = check.stdout.splitlines()
+    assert "extra pack/areas/money.md" in lines and "changed pack/README.md" in lines
+    assert run_tool("build", "--repo", repo, script=DOCS_SCRIPT).returncode == 0
+    assert not (pack_dir / "areas" / "money.md").exists()
+
+
+def test_build_removes_an_emptied_pack_folder(tmp_path) -> None:  # AC-17 (pack part)
+    repo, pack_dir = built(tmp_path, records=False)
+    assert (pack_dir / "capabilities" / "buy.md").exists()
+    model = repo / "docs" / "architecture" / "model.c4"
+    view = "  dynamic view capability-buy {\n    title 'Buy'\n    shop.web -> shop.api\n    shop.api -> pay\n  }\n"
+    model.write_text(MODEL.replace(view, ""), encoding="utf-8")
+    assert run_tool("build", "--repo", repo, script=DOCS_SCRIPT).returncode == 0
+    assert not (pack_dir / "capabilities").exists()
+    assert (pack_dir / "areas" / "front.md").exists()
