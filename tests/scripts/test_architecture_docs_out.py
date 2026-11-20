@@ -160,6 +160,7 @@ def test_list_out_accepts_a_marker_after_a_bom_and_before_cr(tmp_path) -> None:
     pytest.param("x.json", '{"generated": "someone-else"}', "x.json was not written by architecture-docs", id="json-other-value"),
     pytest.param(".architecture-docs-notes.md", "hello\n", ".architecture-docs-notes.md was not written by architecture-docs",
                  id="temp-prefix-only"),
+    pytest.param(".architecture-docs-1-0.md", "hello\n", ".architecture-docs-1-0.md was not written by architecture-docs", id="temp-form-plus-suffix"),
 ])
 def test_list_out_refuses(tmp_path, rel: str, content: str, detail: str) -> None:
     folder = tmp_path / "out"
@@ -218,3 +219,11 @@ def test_list_out_walks_folders_in_name_order(tmp_path) -> None:
     put(folder, "pack/b.md", "mine\n")
     result = listing(folder)
     assert (result["token"], result["details"]) == ("out-error", ["areas/a.md was not written by architecture-docs"])
+
+
+def test_list_out_accepts_exactly_2000_files(tmp_path) -> None:  # write rule 2: at most 2,000 files
+    folder = tmp_path / "out"
+    folder.mkdir()
+    for i in range(2000):
+        (folder / f".architecture-docs-{i}-0").write_bytes(b"")
+    assert len(listing(folder)["value"]["temps"]) == 2000
