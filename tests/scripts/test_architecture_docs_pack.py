@@ -187,3 +187,79 @@ def test_element_block_separates_tags_and_code_entries() -> None:  # element blo
     proc = run_module(snippet)
     assert proc.returncode == 0, proc.stderr
     assert json.loads(proc.stdout) == "kind container · tags #edge #layer · code src/api, src/jobs · rules BR-1, BR-4"
+
+
+def test_decision_block_in_full() -> None:  # AI pack, record blocks; AC-25
+    assert blocks("b.decisionBlock('D-1', ctx)", BUY) == (
+        "### D-1\n"
+        "Use A.\n"
+        "\\# Why\n"
+        "reason: not known\n"
+        "rejected: Keep it.; Two lines\n"
+        "capabilities: buy\n"
+        "status: superseded\n"
+        "superseded_by: D-2 [areas/front.md]\n"
+        "evidence: spec\n"
+        "sources: docs/x.md; two # lines\n"
+        "note: First.\n"
+        "\\---\n"
+        "Second.\n"
+        "binds: shop.api"
+    )
+
+
+def test_decision_block_with_an_owner() -> None:  # record blocks: owner, compatibility, obligations; empty lists left out
+    assert blocks("b.decisionBlock('D-2', ctx)", FRONT) == (
+        "### D-2\n"
+        "Decide D-2.\n"
+        "reason: Because.\n"
+        "\\# not a heading\n"
+        "obligations: Log calls.\n"
+        "owner: shop.api\n"
+        "compatibility: Additive. # x\n"
+        "status: current\n"
+        "evidence: code\n"
+        "binds: shop.api, pay [areas/money.md]"
+    )
+
+
+def test_contract_block() -> None:  # record blocks: contract
+    assert blocks("b.contractBlock('C-1', ctx)", FRONT) == (
+        "### C-1: Card API\n"
+        "owner: pay [areas/money.md]\n"
+        "bound: shop.web\n"
+        "obligations: Ids; Two lines\n"
+        "compatibility: no rule stated\n"
+        "notes: n1 # n\n"
+        "decisions: D-2, D-3 [README.md]\n"
+        "capabilities: buy [capabilities/buy.md]"
+    )
+
+
+def test_contract_block_with_a_rule() -> None:  # record blocks: a contract's compatibility is a one-line field
+    assert blocks("b.contractBlock('C-2', ctx)", INDEX) == (
+        "### C-2: Bank feed\nowner: bank\nbound: bank\nobligations: Daily\ncompatibility: Additive. # y"
+    )
+    assert "decisions: D-2 [areas/front.md], D-3 [README.md]\n" in blocks("b.contractBlock('C-1', ctx)", BUY)
+
+
+def test_open_question_block() -> None:  # record blocks: open question
+    assert blocks("b.holeBlock('H-1', ctx)", FRONT) == (
+        "### H-1\nWhy a web?\n\\# x\nbinds: shop.web, bank [README.md]\nevidence: search\nnote: n\n\\# w"
+    )
+
+
+def test_known_gap_lines() -> None:  # AI pack, known-gap lines
+    assert blocks(f"{json.dumps(GAP)}.map((entry) => b.gapLine(entry, ctx))", FRONT) == [
+        "- shop.web -> bank [README.md]: cycle in current code (close by 2027-01 # z)",
+        "- shop.api -> shop.web: two lines",
+    ]
+
+
+def test_step_lines() -> None:  # AI pack, step lines
+    steps = DATA["capabilities"][0]["steps"]
+    assert blocks(f"{json.dumps(steps)}.map((step, at) => b.stepLine(step, at + 1, ctx))", BUY) == [
+        "1. shop.web -> shop.api: order now (uses)",
+        "2. shop.api -> pay (http)",
+        "3. pay -> shop.api (reply): ok (event, http)",
+    ]

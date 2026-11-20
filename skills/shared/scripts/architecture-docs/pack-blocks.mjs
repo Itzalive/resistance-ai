@@ -76,3 +76,65 @@ export function elementBlock(id, ctx) {
   if (boundBy.length > 0) lines.push(`bound by: ${boundBy.join(', ')}`);
   return lines.join('\n');
 }
+
+const has = (record, key) => Object.hasOwn(record, key);
+const texts = (items) => items.map(oneLine).join('; ');
+const field = (key, value) => `${key}: ${value}`;
+// A multi-line field: the key goes on its first line, and the multi-line rule guards every line after it.
+const multiField = (key, text) => multiLine(field(key, text));
+
+// Spec, AI pack, record blocks: the fields in the order the area document prints them; an empty list is left out.
+export function decisionBlock(id, ctx) {
+  const decision = ctx.records.decisions.get(id);
+  const lines = [`### ${id}`, multiLine(decision.decision)];
+  lines.push(decision.reason === null ? field('reason', 'not known') : multiField('reason', decision.reason));
+  if (decision.rejected.length > 0) lines.push(field('rejected', texts(decision.rejected)));
+  if (has(decision, 'obligations')) lines.push(field('obligations', texts(decision.obligations)));
+  if (has(decision, 'owner')) lines.push(field('owner', ref('elements', decision.owner, ctx)));
+  if (has(decision, 'compatibility')) lines.push(field('compatibility', oneLine(decision.compatibility)));
+  if ((decision.capabilities ?? []).length > 0) lines.push(field('capabilities', refs('capabilities', decision.capabilities, ctx)));
+  lines.push(field('status', decision.status));
+  if (decision.status === 'superseded') lines.push(field('superseded_by', ref('decisions', decision.superseded_by, ctx)));
+  lines.push(field('evidence', oneLine(decision.evidence)));
+  if (decision.sources.length > 0) lines.push(field('sources', texts(decision.sources)));
+  if (has(decision, 'note')) lines.push(multiField('note', decision.note));
+  if (decision.binds.length > 0) lines.push(field('binds', refs('elements', decision.binds, ctx)));
+  return lines.join('\n');
+}
+
+export function contractBlock(id, ctx) {
+  const contract = ctx.records.contracts.get(id);
+  const lines = [
+    `### ${id}: ${oneLine(contract.name)}`,
+    field('owner', ref('elements', contract.owner, ctx)),
+    field('bound', refs('elements', contract.bound, ctx)),
+    field('obligations', texts(contract.obligations)),
+    field('compatibility', contract.compatibility === null ? 'no rule stated' : oneLine(contract.compatibility)),
+  ];
+  if ((contract.notes ?? []).length > 0) lines.push(field('notes', texts(contract.notes)));
+  if ((contract.decisions ?? []).length > 0) lines.push(field('decisions', refs('decisions', contract.decisions, ctx)));
+  if ((contract.capabilities ?? []).length > 0) lines.push(field('capabilities', refs('capabilities', contract.capabilities, ctx)));
+  return lines.join('\n');
+}
+
+export function holeBlock(id, ctx) {
+  const hole = ctx.records.holes.get(id);
+  const lines = [`### ${id}`, multiLine(hole.what)];
+  if (hole.binds.length > 0) lines.push(field('binds', refs('elements', hole.binds, ctx)));
+  lines.push(field('evidence', oneLine(hole.evidence)));
+  if (has(hole, 'note')) lines.push(multiField('note', hole.note));
+  return lines.join('\n');
+}
+
+// Spec, AI pack, known-gap lines.
+export function gapLine(entry, ctx) {
+  const closeBy = entry.close_by === null ? '' : ` (close by ${oneLine(entry.close_by)})`;
+  return `- ${ref('elements', entry.from, ctx)} -> ${ref('elements', entry.to, ctx)}: ${oneLine(entry.reason)}${closeBy}`;
+}
+
+// Spec, AI pack, step lines: `<n>. <from> -> <to>[ (reply)][: <label>] (<kinds>)`.
+export function stepLine(step, number, ctx) {
+  const reply = step.reply ? ' (reply)' : '';
+  const label = step.label === null ? '' : `: ${oneLine(step.label)}`;
+  return `${number}. ${ref('elements', step.from, ctx)} -> ${ref('elements', step.to, ctx)}${reply}${label} (${step.kinds.join(', ')})`;
+}
