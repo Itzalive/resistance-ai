@@ -168,7 +168,7 @@ Each item links to its areas (for a known-gap entry, both ends'). A judgement on
 - `pack/README.md`: how the pack is laid out; an index from every element, decision, contract, open question and capability id to the pack files that hold it; then the facts outside any area: the principles, the elements in no area, and the decisions, contracts and open questions with no area, in full.
 - `pack/areas/<name>.md`: one block per area element, then the area's decisions, contracts, open questions and known-gap entries (as in the area document), in full; no diagrams.
 - `pack/capabilities/<name>.md`: the steps, one block per element they touch, then the decisions and contracts that name the capability, in full.
-- Every id not held in the slice is followed by its **pack file** in brackets: the first area's pack file, or `README.md` for a fact outside any area; a capability's pack file is its own slice.
+- Every id not held in the slice is followed by its **pack file** in brackets: the first area's pack file, or `README.md` for a fact outside any area; a capability's pack file is its own slice. The bracket follows the id and any note in brackets that belongs to it (`D-3 (cross-cutting) [areas/x.md]`, `-> pay (http, "charges card") [areas/payments.md]`).
 - `pack/model.json`: `{ "generated": "architecture-docs", "export": <the format 4 export> }`.
 
 **Pack layout.** Each pack file starts with the marker line, then `# ` and its title: `Architecture pack` for the index, `<name>: <title>` for a slice. Then, in this order, the sections that have content (an empty section is left out):
@@ -176,7 +176,11 @@ Each item links to its areas (for a known-gap entry, both ends'). A judgement on
 - `pack/areas/<name>.md`: the area description; `## Elements`; `## Decisions` (cross-cutting first, by id within each); `## Contracts`; `## Open questions`; `## Known gap`.
 - `pack/capabilities/<name>.md`: the capability description; `## Steps`; `## Elements`; `## Decisions`; `## Contracts`.
 
-**Index.** Under `## Index`, one `### ` heading per kind, in the order Elements, Decisions, Contracts, Open questions, Capabilities, each followed by one line per id, sorted: `<id>: <file>, <file>`, naming every pack file that holds the id in full, sorted by path. An element is held by each of its areas' slices, each capability slice with a step that touches it, and `README.md` when it is in no area. A decision, contract or open question is held by each of its areas' slices, each capability slice that names it (decisions and contracts), and `README.md` when it has no area (every principle). A capability is held by its own slice.
+Within a section, elements and records are in id order (an area's decisions excepted, as above).
+
+**Pack fields.** One-line fields: titles, contract names, step labels, relationship titles, list items, `evidence`, `compatibility`, and a known-gap entry's `reason` and `close_by`. Multi-line fields: descriptions, a decision's `decision`, `reason` and `note`, and an open question's `what` and `note`.
+
+**Index.** Under `## Index`, one `### ` heading per kind that has ids (a kind with none is left out, like an empty section), in the order Elements, Decisions, Contracts, Open questions, Capabilities, each followed by one line per id, sorted: `<id>: <file>, <file>`, naming every pack file that holds the id in full, sorted by path. An element is held by each of its areas' slices, each capability slice with a step that touches it, and `README.md` when it is in no area. A decision, contract or open question is held by each of its areas' slices, each capability slice that names it (decisions and contracts), and `README.md` when it has no area (every principle). A capability is held by its own slice.
 
 Element block (the example below shows every line; a line or a `·` part with nothing to show is left out):
 
@@ -191,11 +195,12 @@ runtime: <- shop.jobs (event)
 bound by: D-3 (cross-cutting), D-7
 ```
 
+- Each tag is written with a leading `#`, tags separated by spaces; `code` and `rules` entries are separated by `, `.
 - `uses` lists the `to` of each `allowed` entry from the element, `used by` the `from` of each entry to it, sorted.
 - One `runtime` line per runtime link the element is an end of: `->` for a link from it, `<-` for one to it, then the other end, the kind and the link's titles in quotes. Outgoing lines come first, then incoming, each sorted by the other end, then kind.
 - `bound by` lists the decisions whose `binds` hold the element, by id, a cross-cutting one marked `(cross-cutting)`.
 
-Record blocks use the same form: `### <id>` (`### <id>: <name>` for a contract), the record's main text on the next line (a decision's `decision`, an open question's `what`), then one `<key>: <value>` line per field the record has, in the order the area document prints them (decision: reason, rejected, obligations, owner, compatibility, capabilities, status and superseded_by, evidence, sources, note, binds; contract: owner, bound, obligations, compatibility, notes, decisions, capabilities; open question: binds, evidence, note). Text lists are joined with `; `, id lists with `, `. A decision with no reason shows `reason: not known`.
+Record blocks use the same form: `### <id>` (`### <id>: <name>` for a contract), the record's main text on the next line (a decision's `decision`, an open question's `what`), then one `<key>: <value>` line per field the record has, leaving out a list field whose list is empty, in this order (decision: reason, rejected, obligations, owner, compatibility, capabilities, status and superseded_by, evidence, sources, note, binds; contract: owner, bound, obligations, compatibility, notes, decisions, capabilities; open question: binds, evidence, note). Text lists are joined with `; `, id lists with `, `. A decision with no reason shows `reason: not known`; a contract with no compatibility rule shows `compatibility: no rule stated`.
 
 Known-gap lines, under `## Known gap`, sorted by pair: `- <from> -> <to>: <reason>`, then ` (close by <close_by>)` when it has one.
 
