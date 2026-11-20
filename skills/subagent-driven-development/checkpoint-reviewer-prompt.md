@@ -57,6 +57,10 @@ Task tool (general-purpose):
 
     6. Run the focused tests in the real checkout (and the full suite if asked).
 
+    7. Keep the scratch copy: do not delete it. Report its path and the files
+       that differ from the commit you copied (your verified tests), so the
+       coordinator can reuse them instead of retyping them.
+
     ## Classify each finding
 
     - `weak-test` — a mutation survived or an assert proves nothing

@@ -77,6 +77,9 @@ A stale gap entry is not an issue.
 
 Apply any repo-specific review rules in `CLAUDE.md` or `AGENTS.md` on top of this checklist.
 
+If you build or change anything in a scratch copy to check a finding, keep it: do not delete it, and report its path
+and the files you changed, so verified fixes can be reused.
+
 ## Output Format
 
 ### Strengths

@@ -166,6 +166,12 @@ Task tool (general-purpose):
     - Does it ask or reject rather than guess when intent or architecture proof is
       missing?
 
+    ## Scratch work
+
+    This is a review: do not build the plan. If you apply or build anything to
+    check a claim, keep it and do not delete it. Report its path and the files it
+    changes, so execution can start from it instead of retyping it.
+
     ## Calibration
 
     Approve only when ALL 16 hard gates pass. No exceptions for time pressure or

@@ -65,6 +65,10 @@ The reviewer receives only:
 - The git diff or file paths of any repository changes the spec depends on.
 - The shipped `SPEC_RUBRIC.md`.
 
+**Scratch work:** the audit is a review and builds nothing the spec
+describes. If it probes or builds something to check a claim, it keeps that
+work, does not delete it, and reports its path, so later stages can reuse it.
+
 **Same reviewer across rounds:** round 2 and later go back to the same
 reviewer (resume or message it) with the spec diff and your response to each
 finding. Start a new reviewer only after a rewrite of the spec.
