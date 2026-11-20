@@ -39,3 +39,128 @@ def test_pack_file_layout() -> None:  # Pack layout; AC-13 (marker line)
 
 def test_pack_file_with_no_parts() -> None:  # Pack layout: an empty section is left out
     assert text_fn("packFile", "Architecture pack", []) == MARKER + "\n\n# Architecture pack\n"
+
+
+def element(id_: str, title: str, kind: str, **over) -> dict:
+    record = {"id": id_, "kind": kind, "tags": [], "code": [], "rules": [], "title": title, "description": None}
+    record.update(over)
+    return record
+
+
+def decision(id_: str, **over) -> dict:
+    record = {"id": id_, "decision": "Decide " + id_ + ".", "reason": "Because.", "rejected": [], "binds": [],
+              "status": "current", "evidence": "spec", "sources": []}
+    record.update(over)
+    return record
+
+
+# Export-shaped, not a valid model: every line form has a held and a not-held id (see the plan's Shared test fixture).
+DATA = {
+    "elements": [
+        element("bank", "Bank", "system"),
+        element("pay", "Pay", "system"),
+        element("shop", "Shop", "system", description="Sells things.\n# Not a heading"),
+        element("shop.api", "API", "container", tags=["layer"], code=["src/api"], rules=["BR-1", "BR-4"]),
+        element("shop.web", "Web\nfront", "container"),
+    ],
+    "allowed": [{"from": "shop.api", "to": "pay", "titles": []}, {"from": "shop.web", "to": "shop.api", "titles": []}],
+    "runtime": [
+        {"from": "bank", "to": "shop.api", "kind": "event", "titles": []},
+        {"from": "shop.api", "to": "pay", "kind": "http", "titles": ["charges\ncard"]},
+        {"from": "shop.api", "to": "bank", "kind": "event", "titles": []},
+        {"from": "shop.api", "to": "pay", "kind": "event", "titles": []},
+    ],
+    "decisions": [
+        decision("D-1", decision="Use A.\n# Why", reason=None, rejected=["Keep it.", "Two\nlines"], binds=["shop.api"],
+                 capabilities=["buy"], status="superseded", superseded_by="D-2", sources=["docs/x.md", "two\n# lines"],
+                 note="First.\n---\nSecond."),
+        decision("D-2", reason="Because.\n# not a heading", obligations=["Log\ncalls."], owner="shop.api",
+                 compatibility="Additive.\n# x", binds=["shop.api", "pay"], evidence="code"),
+        decision("D-3", binds=["bank"]),
+        decision("P-1", obligations=["Data stays in the EU."]),
+    ],
+    "contracts": [
+        {"id": "C-1", "name": "Card\nAPI", "owner": "pay", "bound": ["shop.web"], "obligations": ["Ids", "Two\nlines"],
+         "compatibility": None, "notes": ["n1\n# n"], "decisions": ["D-2", "D-3"], "capabilities": ["buy"]},
+        {"id": "C-2", "name": "Bank feed", "owner": "bank", "bound": ["bank"], "obligations": ["Daily"],
+         "compatibility": "Additive.\n# y"},
+    ],
+    "holes": [{"id": "H-1", "what": "Why a web?\n# x", "binds": ["shop.web", "bank"], "evidence": "search", "note": "n\n# w"}],
+    "changes": [],
+    "coverage": None,
+    "areas": [
+        {"name": "front", "title": "Front", "description": None, "elements": ["shop", "shop.api", "shop.web"]},
+        {"name": "money", "title": "Money", "description": "Payments.\n# Money", "elements": ["pay"]},
+    ],
+    "capabilities": [{"name": "buy", "title": "Buy", "description": None, "steps": [
+        {"from": "shop.web", "to": "shop.api", "label": "order\nnow", "reply": False, "kinds": ["uses"]},
+        {"from": "shop.api", "to": "pay", "label": None, "reply": False, "kinds": ["http"]},
+        {"from": "pay", "to": "shop.api", "label": "ok", "reply": True, "kinds": ["event", "http"]},
+    ]}],
+}
+GAP = [
+    {"from": "shop.web", "to": "bank", "reason": "cycle in current code", "close_by": "2027-01\n# z"},
+    {"from": "shop.api", "to": "shop.web", "reason": "two\nlines", "close_by": None},
+]
+FRONT = {"elements": ["shop", "shop.api", "shop.web"], "decisions": ["D-2", "D-1"], "contracts": ["C-1"], "holes": ["H-1"]}
+BUY = {"elements": ["pay", "shop.api", "shop.web"], "decisions": ["D-1"], "contracts": ["C-1"], "capabilities": ["buy"]}
+INDEX = {"elements": ["bank"], "decisions": ["D-3", "P-1"], "contracts": ["C-2"]}
+
+
+def blocks(code: str, held: dict) -> object:
+    snippet = (
+        f"import * as b from {json.dumps(lib_url('pack-blocks.mjs', DOCS_LIB))};\n"
+        f"const ctx = b.packContext({json.dumps(DATA)}, {json.dumps(held)});\n"
+        f"process.stdout.write(JSON.stringify({code}));\n"
+    )
+    proc = run_module(snippet)
+    assert proc.returncode == 0, proc.stderr
+    return json.loads(proc.stdout)
+
+
+def test_element_block() -> None:  # AI pack, element block; AC-26 (pack-file suffix)
+    assert blocks("b.elementBlock('shop.api', ctx)", FRONT) == (
+        "### shop.api: API\n"
+        "kind container · tags #layer · code src/api · rules BR-1, BR-4\n"
+        "uses: pay [areas/money.md]\n"
+        "used by: shop.web\n"
+        "runtime: -> bank (event) [README.md]\n"
+        "runtime: -> pay (event) [areas/money.md]\n"
+        "runtime: -> pay (http, \"charges card\") [areas/money.md]\n"
+        "runtime: <- bank (event) [README.md]\n"
+        "bound by: D-1, D-2 (cross-cutting)"
+    )
+
+
+def test_element_block_leaves_out_empty_lines_and_keeps_description_lines() -> None:  # element block; AC-25
+    assert blocks("b.elementBlock('shop', ctx)", FRONT) == "### shop: Shop\nkind system\nSells things.\n\\# Not a heading"
+
+
+def test_element_block_title_on_one_line() -> None:  # AC-25 (an element title holding a line feed)
+    assert blocks("b.elementBlock('shop.web', ctx)", FRONT) == "### shop.web: Web front\nkind container\nuses: shop.api"
+
+
+def test_element_block_names_the_pack_file_after_the_mark() -> None:  # element block: suffix after the parenthetical
+    assert blocks("b.elementBlock('pay', ctx)", BUY) == (
+        "### pay: Pay\n"
+        "kind system\n"
+        "used by: shop.api\n"
+        "runtime: <- shop.api (event)\n"
+        "runtime: <- shop.api (http, \"charges card\")\n"
+        "bound by: D-2 (cross-cutting) [areas/front.md]"
+    )
+
+
+def test_pack_file_of_an_unknown_id_fails() -> None:  # fail closed: an id that names nothing in the model
+    code = "['elements', 'decisions'].map((kind) => { try { return b.ref(kind, 'ghost', ctx); } catch (err) { return err.message; } })"
+    assert blocks(code, FRONT) == ["ghost is not in the model", "ghost is not in the model"]
+
+
+def test_element_block_outside_any_area() -> None:  # AC-26: an id outside any area names README.md
+    assert blocks("b.elementBlock('bank', ctx)", INDEX) == (
+        "### bank: Bank\n"
+        "kind system\n"
+        "runtime: -> shop.api (event) [areas/front.md]\n"
+        "runtime: <- shop.api (event) [areas/front.md]\n"
+        "bound by: D-3"
+    )
