@@ -14,7 +14,7 @@
 
 **Size:** 7 tasks, 2 entry paths (`build`, `check`), 1243 lines (reported, not a target)
 
-**Trust boundary:** changed — see Trust-boundary table. No new file writes (only `writer.mjs` writes; the safety tests cover the new modules and must not be loosened: the tree's link constructor is named `docLink` because `link(` is a forbidden file call). The new output is where model and record text reaches readers, the threat model's injection row.
+**Trust boundary:** changed — see Trust-boundary table. No new file writes (only `writer.mjs` writes; the safety tests cover the new modules and must not be loosened: the tree's link constructor is named `docLink` because `link(` is a forbidden file call). The new output is where model and record text reaches readers, the threat model's injection row. No comment or string in a docs module may hold a forbidden call name followed by an opening bracket: the safety test scans whole files.
 
 ### Risk & Confidence Assessment
 
@@ -183,7 +183,7 @@ export const list = (items) => ({ type: 'list', items });
 export const table = (header, rows) => ({ type: 'table', header, rows });
 export const code = (text) => ({ type: 'code', text });
 export const diagram = (text) => ({ type: 'diagram', text });
-// Named docLink, not link: `link(` is a file-changing call the safety test forbids outside the writer.
+// Named docLink: the safety test forbids any call named like fs.link outside the writer.
 export const docLink = (text, href) => ({ type: 'link', text, href });
 export const doc = (title, blocks) => ({ title, blocks });
 
