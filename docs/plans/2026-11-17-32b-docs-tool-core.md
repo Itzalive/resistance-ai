@@ -76,8 +76,8 @@ Checkpoint reviewers on this machine: one scratch copy, one mutation at a time, 
 
 **Pinned by:** behaviour is unchanged; existing tests pin it:
 - exit codes and error lines for every command: `tests/scripts/test_architecture_delta_check.py`, `test_architecture_delta_export.py`, `test_architecture_delta_safety.py::test_limits_end_to_end` (`model-size`, `file-size`, `edge-cap`, `timeout` first lines);
-- a failure after output starts is `internal`, exit 2, nothing else: `test_architecture_delta_safety.py::test_unexpected_error_is_internal_never_one` asserts `error_lines(proc) == ["error: internal: forced stdout failure"]`;
-- the engine and repository LikeC4 copies are found from the moved code's location: `tests/scripts/test_architecture_delta_likec4.py` (uses `copy_engine`);
+- a failure after output starts is `internal`, exit 2, nothing else: `test_architecture_delta_safety.py::test_unexpected_error_is_internal_never_one` asserts `error_lines(proc) == ["error: internal: forced stdout failure"]`, and `test_late_failures_exit_two_as_internal` pins that nothing is written after a failure (checkpoint C1 added its `two-failures` case for the first-failure latch);
+- the engine and repository LikeC4 copies and the shipped spec are found from the moved code's location: `tests/scripts/test_architecture_delta_export.py` and `test_architecture_delta_check.py` (run the real tool; `test_architecture_delta_likec4.py` calls `locateLikeC4` directly and does not pin this);
 - the shipped spec copy is found: `test_architecture_delta_export.py::test_export_checks_the_spec_copy`;
 - the delta tool still never writes: `test_tool_source_never_spawns_or_writes` globs `architecture-delta/*.mjs`, which now includes `load.mjs`.
 
@@ -270,7 +270,7 @@ export function parseArgs(argv) {
 **Callers that move with this task:** none.
 
 **Reviewer looks at:**
-- outside the repository — mutation: drop the `isInside(target, repo)` check — killed by: `test_resolve_out_refuses[outside]`
+- outside the repository — mutation: drop both outside checks (the lexical one and the real-path one; each alone is covered by the other, the real-path one being defence in depth) — killed by: `test_resolve_out_refuses[outside]`
 - links along the path — mutation: stop the part walk at the first part — killed by: `test_resolve_out_refuses_a_link_on_the_way` (the link is the second part)
 - holding the model folder — mutation: `isInside(target, modelDir)` instead of `isInside(modelDir, target)` — killed by: `test_resolve_out_refuses[repo-root]`, `[docs]`
 - inside the model folder only as `generated` — mutation: compare without `toLowerCase()` — killed by: `test_resolve_out_accepts_generated_in_any_case`; mutation: drop the rule — killed by: `[decisions]`, `[docs-out]`

@@ -31,7 +31,16 @@ def test_docs_args_defaults() -> None:
     pytest.param(("check", "--repo", ".", "--repo", "."), "--repo given twice", id="twice"),
     pytest.param(("build", "--repo", ".", "--out", ""), "--out must not be empty", id="empty-out"),
     pytest.param(("build", "--repo", ".", "--timeout", "601"), "--timeout must be a whole number from 0 to 600", id="timeout"),
+    pytest.param(("build", "--repo", ".", "--timeout", "-1"), "--timeout must be a whole number from 0 to 600", id="timeout-negative"),
+    pytest.param(("build", "--repo", ".", "--model", "--out", "o"), "--model needs a value", id="flag-as-value"),
+    pytest.param(("build", "--repo", ""), "--repo is required", id="empty-repo"),
+    pytest.param(("build", "--repo", ".", "--model", ""), "--model must not be empty", id="empty-model"),
+    pytest.param(("build", "--repo", ".", "--gap", ""), "--gap must not be empty", id="empty-gap"),
 ])
 def test_docs_args_problems(argv: tuple, detail: str) -> None:
     result = parse(*argv)
     assert (result["token"], result["details"]) == ("usage", [detail])
+
+
+def test_docs_args_timeout_bounds() -> None:
+    assert [parse("build", "--repo", ".", "--timeout", s)["value"]["timeout"] for s in ("0", "600")] == [0, 600]

@@ -140,6 +140,8 @@ def test_deadline_is_checked_while_matching(tmp_path) -> None:
 
 LATE_FAILURES = {
     "timer-throws": "setTimeout(() => { throw new Error('late timer failure'); }, 0);",
+    "two-failures": "setTimeout(() => { throw new Error('first late failure'); }, 0);"
+    "setTimeout(() => { throw new Error('second late failure'); }, 0);",
     "promise-rejects": "setTimeout(() => { Promise.reject(new Error('late promise failure')); }, 0);",
     "stdout-pipe-closed": (
         "const original = process.stdout.write.bind(process.stdout);"

@@ -87,6 +87,19 @@ def test_resolve_out_refuses_another_spelling_of_the_model_folder(tmp_path) -> N
     assert (result["token"], result["details"]) == ("out-error", ["--out inside the model folder must be its generated folder"])
 
 
+def test_resolve_out_returns_the_real_path(tmp_path) -> None:
+    repo, model = layout(tmp_path)
+    alternate = other_spelling(repo, model)
+    if alternate is None:
+        pytest.skip("no other spelling of the model folder on this file system")
+    assert resolve(repo, model, str(Path(alternate) / "generated"))["value"] == str(model / "generated")
+
+
+def test_resolve_out_before_the_model_folder_exists(tmp_path) -> None:
+    repo, model = layout(tmp_path)
+    assert resolve(repo, repo / "missing", "site")["value"] == str(repo / "site")
+
+
 def test_resolve_out_refuses_a_file_on_the_way_or_as_the_folder(tmp_path) -> None:
     repo, model = layout(tmp_path)
     (repo / "f").write_text("x", encoding="utf-8")
