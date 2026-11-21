@@ -4,15 +4,15 @@
 
 **Goal:** `architecture-docs build` also writes `changes/<id>.md` and `.html` for every change file, and `improvements.md` and `.html`, and `check` compares them; a change file's name is at most 64 characters.
 
-**Architecture:** This repository has no architecture model. The records reader (`skills/shared/scripts/architecture-delta/records.mjs`) refuses a change-file name over 64 characters. Two new modules in `skills/shared/scripts/architecture-docs/`: `change.mjs` (the change record) and `improvements.mjs` (the improvement list). `area-diagram.mjs` `drawing()` takes an optional map of marks, so a change record's framed nodes read `<title> (added)` or `<title> (changed)`. `records-doc.mjs` gains the element row (`ELEMENT_HEADER`, `elementCells`) that the area document and the change record share. `facts.mjs` `documentBase` gains Maps of contracts and open questions by id, which a change record reads to print current records. `build.mjs` adds the documents to the build, each with a `--timeout` check after it. The overview already links to `changes/<id>.md` and `improvements.md`; after this plan those links resolve.
+**Architecture:** This repository has no architecture model. The records reader (`skills/shared/scripts/architecture-delta/records.mjs`) refuses a change-file name over 64 characters. Two new modules in `skills/shared/scripts/architecture-docs/`: `change.mjs` (the change record) and `improvements.mjs` (the improvement list). `area-diagram.mjs` `drawing()` takes an optional map of marks, so a change record's framed nodes read `<title> (added)` or `<title> (changed)`. `records-doc.mjs` gains the element row (`ELEMENT_HEADER`, `elementCells`) and `tree.mjs` gains `orSay` (a section's blocks, or a sentence saying it is empty), which the area, capability and change documents share. `facts.mjs` `documentBase` gains Maps of contracts and open questions by id, which a change record reads to print current records. `build.mjs` adds the documents to the build, each with a `--timeout` check after it. The overview already links to `changes/<id>.md` and `improvements.md`; after this plan those links resolve.
 
 **Tech Stack:** Node ESM, pytest.
 
 **Spec:** `docs/superpowers/specs/2026-11-17-architecture-docs-design.md`, "Records amendment" (the change-file name limit), "Drawing rules" (the change-record diagram), "Change record", "Improvement list", "Shared rules" (links, the 80-arrow note), AC-22, AC-23, AC-27, and the change-record and improvement-list parts of AC-8, AC-9, AC-12, AC-13, AC-17 and AC-21 — decisions applied: none. The owner settled four questions on 2026-11-21 in one spec amendment (commit `8473868`) before this plan: the mark is a label suffix, `<title> (added)` or `<title> (changed)`; the frame is labelled with the change id, and an id listed as both added and changed is marked `added` and shown in both lists; a change record has no Dependencies section, so a neighbour's label alone names its area; the Known gap section lists pairs only, each end linked when it is a model element and otherwise marked "(not in the current model)"; and the improvement list's layout (a heading `<group name> (<count>)`, "None." when empty, details after the id, then `Areas: <links>` or "Not in any area", unmapped modules sorted by module with no areas part). After the alignment check's first round the owner approved a second amendment (commit `8173d46`): a change file's name, without `.json`, is at most 64 characters (records layout rule 2, AC-27), so `export`, which cuts ids at 200 characters, never cuts a change id; and the owner chose that a cycle item shows its reason, as the amended layout lists. This is plan 4 of the spec's four (#34), the last.
 
-**Open decisions:** none. The amendments `8473868` and `8173d46` are spec text. Two rules the tasks apply as written: a change record frames only ids still in the model (`drawing()` reads each framed id's links, and a gone id has none), and the known limit of pack text (only lines starting with `#`, `---`, three backticks or `~~~` are guarded) is unchanged: this plan writes no pack text. Presentation the spec leaves to the writer and the plan fixes in its tests: the `## Diagram` heading with a sentence when nothing is framed, one sentence for each empty section, `Added: ` and `Removed: ` items in one Known gap list, `approved by <by> on <date>`, `Exit: ` and `Summary: ` items, the improvement list's opening sentence, and the `: `, `; ` and `. ` separators of an improvement item; gone ids of every kind are one list after the current ones.
+**Open decisions:** none. The amendments `8473868` and `8173d46` are spec text. Two rules the tasks apply as written: a change record frames only ids still in the model (`drawing()` reads each framed id's links, and a gone id has none), and the known limit of pack text (only lines starting with `#`, `---`, three backticks or `~~~` are guarded) is unchanged: this plan writes no pack text. Presentation the spec leaves to the writer and the plan fixes in its tests: the `## Diagram` heading with a sentence when nothing is framed, one sentence for each empty section, `Added: ` and `Removed: ` items in one Known gap list, `Approved by <by> on <date>`, `Exit: ` and `Summary: ` items, the improvement list's opening sentence, and the `: `, `; ` and `. ` separators of an improvement item; gone ids of every kind are one list after the current ones.
 
-**Size:** 6 tasks, 1430 lines (reported, not a target). Entry paths: the docs tool's `build` and `check`. Task 1's rule sits in the records reader that every command loads through, so it also changes what the delta tool's `export` and `check` accept: four commands, one shared load step, the same place the spec's capabilities rule (plan 1) applies. The per-plan rule counts the docs tool's two paths; the records rule adds a refusal at load, not a new path, and its test runs through `export`.
+**Size:** 6 tasks, 1509 lines (reported, not a target). Entry paths: the docs tool's `build` and `check`. Task 1's rule sits in the records reader that every command loads through, so it also changes what the delta tool's `export` and `check` accept: four commands, one shared load step, the same place the spec's capabilities rule (plan 1) applies. The per-plan rule counts the docs tool's two paths; the records rule adds a refusal at load, not a new path, and its test runs through `export`.
 
 **Trust boundary:** changed — see Trust-boundary table. No new file writes: only `writer.mjs` writes, and the safety tests (`tests/scripts/test_architecture_docs_safety.py`, `tests/scripts/test_architecture_delta_safety.py`) scan every changed module unchanged. No comment or string in a docs module may hold a forbidden call name followed by `(`: the names in `CHANGES_FILES` (`write`, `link`, `rm`, `cp`, `rename`, `mkdir`, `unlink`, `truncate` and the others) must not be followed by an opening bracket anywhere in the new modules. The new documents carry change-file, record, coverage and known-gap text into Markdown, HTML and Mermaid, and change ids into output paths; the writers' escaping, the label encoding and the change-file name rule are their defence, and Task 6 feeds hostile text through both new documents.
 
@@ -45,6 +45,7 @@ Searched: `skills/`, `tests/`, `scripts/`, `agents/` with `rg -n "drawing\(|docu
 | `drawing(framedIds, frameText, gap, base)` → `drawing(framedIds, frameText, gap, base, marks = new Map())` | `skills/shared/scripts/architecture-docs/area.mjs:48` | caller | — | none: an area document passes no marks |
 | same | `tests/scripts/test_architecture_docs_area.py` (`test_area_drawing` and the other `d.drawing(...)` calls) | test | — | none: they pass four arguments and assert unmarked titles, which are unchanged |
 | the area document's element row moves to `records-doc.mjs` (`ELEMENT_HEADER`, `elementCells`) | `skills/shared/scripts/architecture-docs/area.mjs:6`, `:52-57` | caller | 3 | the import gains `ELEMENT_HEADER` and `elementCells`; the table becomes `table(ELEMENT_HEADER, area.elements.map((id) => [idCell(id, ctx), ...elementCells(ctx.elements.get(id))]))` (Task 3 Step 1) |
+| `orSay` moves from `area.mjs` and `capability.mjs` to `tree.mjs` | `skills/shared/scripts/architecture-docs/area.mjs:4`, `:41`; `skills/shared/scripts/architecture-docs/capability.mjs:3`, `:17` | caller | 3 | each import gains `orSay` and the local `const orSay = ...` line is deleted (Task 3 Step 1) |
 | `documentBase` gains `contracts` and `holes` | `skills/shared/scripts/architecture-docs/build.mjs:40`, `tests/scripts/test_architecture_docs_area.py:66`, `:227` | caller | — | none: two keys added, none changed |
 | `buildFiles` adds the change records and the improvement list | `skills/shared/scripts/architecture-docs.mjs:67` | caller | — | none: same signature and return shape |
 | same | `tests/scripts/test_architecture_docs_tool.py:32` | assert | 6 | `(0, "wrote 6 files, removed 0\n")` |
@@ -78,7 +79,7 @@ Mutation checkpoints run only around strong-tier tasks. Task 6 is the strong-tie
 | Checkpoint | After task | Tasks covered | Reviewer looks at |
 |---|---|---|---|
 | C1 | 6 | 6 | Task 6 items 1–10 (quick confirmation); the reviewer's own mutations at the decision points of Task 6 and the trust-boundary rows; full suite `uv run pytest -q` |
-| — | — | 1–5 | Task 1 items 1–2, Task 2 items 1–2, Task 3 items 1–4, Task 4 items 1–14, Task 5 items 1–16: survivability and the code review |
+| — | — | 1–5 | Task 1 items 1–2, Task 2 items 1–2, Task 3 items 1–5, Task 4 items 1–15, Task 5 items 1–16: survivability and the code review |
 
 ## Shared test fixture
 
@@ -266,29 +267,48 @@ git commit -m "feat(#34): the drawing marks a change record's framed nodes added
 
 ---
 
-### Task 3: one element row for the area document and the change record
+### Task 3: the documents' shared helpers: one element row and `orSay`
 
-**Tier:** fast — a move of existing code, complete code given; no behaviour changes.
+**Tier:** fast — a move of existing code, complete code given; no behaviour changes. One behaviour (shared helpers leave the documents that use them) and a true atomic change: every caller of a moved helper moves in the same commit, so the task touches four core files.
 
 **Files:**
 - Modify: `skills/shared/scripts/architecture-docs/records-doc.mjs` (adds `ELEMENT_HEADER`, `elementCells`)
-- Modify: `skills/shared/scripts/architecture-docs/area.mjs` (uses them)
+- Modify: `skills/shared/scripts/architecture-docs/tree.mjs` (adds `orSay`)
+- Modify: `skills/shared/scripts/architecture-docs/area.mjs` (uses them; its own `orSay` goes)
+- Modify: `skills/shared/scripts/architecture-docs/capability.mjs` (its own `orSay` goes)
 
-**Callers that move with this task:** sweep row `area.mjs:6`, `:52-57` (this task's own edit)
+**Callers that move with this task:** sweep rows `area.mjs:6`, `:52-57`, `area.mjs:4`, `:41` and `capability.mjs:3`, `:17` (this task's own edits)
 
 **Reviewer looks at:**
 1. The description cell lost — mutation: in `records-doc.mjs`, replace `[element.description ?? '']` with `['']` — killed by: `test_area_document_elements`
 2. The code cell lost — mutation: replace `[element.code.join(', ')],` with `[''],` — killed by: `test_area_document_elements`
 3. The rules cell lost — mutation: replace `[element.rules.join(', ')],` with `[''],` — killed by: `test_area_document_elements`
 4. The tags cell lost — mutation: replace ``[element.tags.map((tag) => `#${tag}`).join(' ')]];`` with `['']];` — killed by: `test_area_document_elements`
+5. An empty section without its sentence — mutation: in `tree.mjs`, replace `(blocks.length > 0 ? blocks : [paragraph(text)])` with `blocks` — killed by: `test_area_document_with_nothing`, `test_capability_document_with_no_steps`, `test_change_record_with_no_ids`
 
-**Pinned by:** the area document's element table is unchanged: `tests/scripts/test_architecture_docs_area.py::test_area_document_elements` asserts its header `["Element", "Title", "Description", "Code", "Rules", "Tags"]` and the row `[["shop"], ["Shop"], ["Sells things."], ["src/shop, src/lib"], ["BR-1, BR-2"], ["#edge #web"]]` exactly; it fails if any cell moves or changes.
+**Pinned by:** the area document's element table is unchanged: `tests/scripts/test_architecture_docs_area.py::test_area_document_elements` asserts its header `["Element", "Title", "Description", "Code", "Rules", "Tags"]` and the row `[["shop"], ["Shop"], ["Sells things."], ["src/shop, src/lib"], ["BR-1, BR-2"], ["#edge #web"]]` exactly; it fails if any cell moves or changes. Every empty section keeps its sentence: `test_area_document_with_nothing` asserts each of the area's empty sections (`[para("No dependencies.")]` and the others) exactly, and `test_capability_document_outside_any_area` asserts the capability's.
 
-- Satisfies Spec AC: Area, Elements (unchanged); Change record, What changed ("printed in full", used by Task 4)
+- Satisfies Spec AC: Area, Elements (unchanged); empty sections (unchanged); Change record, What changed ("printed in full", used by Task 4)
 - Decisions applied: none
 - **Test retention:** none added (a move; pinned as above)
 
 - [ ] **Step 1: GREEN (no RED: the behaviour is unchanged and pinned).**
+
+**In** `skills/shared/scripts/architecture-docs/records-doc.mjs` **replace**:
+
+```js
+// Decisions, contracts and open questions printed in full, as document-tree blocks. `ctx`: { doc (the path of the
+// document being built), byElement (areasByElement), titles (titlesOf), decisions (Map of id to decision), area (the
+// area of an area document, or null) }.
+```
+
+**with**:
+
+```js
+// Decisions, contracts and open questions printed in full, as document-tree blocks. `ctx` holds at least { doc (the
+// path of the document being built), byElement (areasByElement), titles (titlesOf), decisions (Map of id to decision),
+// area (the area of an area document, or null) }; a document's ctx may carry more of `documentBase`.
+```
 
 **In** `skills/shared/scripts/architecture-docs/records-doc.mjs` **replace**:
 
@@ -307,6 +327,32 @@ export const elementCells = (element) => [[element.title], [element.description 
   [element.rules.join(', ')], [element.tags.map((tag) => `#${tag}`).join(' ')]];
 ```
 
+**In** `skills/shared/scripts/architecture-docs/tree.mjs` **replace**:
+
+```js
+export const doc = (title, blocks) => ({ title, blocks });
+```
+
+**with**:
+
+```js
+export const doc = (title, blocks) => ({ title, blocks });
+// A section's blocks, or one paragraph saying it is empty.
+export const orSay = (blocks, text) => (blocks.length > 0 ? blocks : [paragraph(text)]);
+```
+
+**In** `skills/shared/scripts/architecture-docs/area.mjs` **replace**:
+
+```js
+import { doc, heading, paragraph, table, diagram, docLink } from './tree.mjs';
+```
+
+**with**:
+
+```js
+import { doc, heading, paragraph, table, diagram, docLink, orSay } from './tree.mjs';
+```
+
 **In** `skills/shared/scripts/architecture-docs/area.mjs` **replace**:
 
 ```js
@@ -319,6 +365,20 @@ import { decisionBlocks, contractBlocks, holeBlocks, elementLinks, areaLinks, ca
 import {
   ELEMENT_HEADER, decisionBlocks, contractBlocks, holeBlocks, elementCells, elementLinks, areaLinks, capabilityLinks,
 } from './records-doc.mjs';
+```
+
+**In** `skills/shared/scripts/architecture-docs/area.mjs` **replace**:
+
+```js
+
+const orSay = (blocks, text) => (blocks.length > 0 ? blocks : [paragraph(text)]);
+
+```
+
+**with**:
+
+```js
+
 ```
 
 **In** `skills/shared/scripts/architecture-docs/area.mjs` **replace**:
@@ -339,6 +399,32 @@ import {
     area.elements.map((id) => [idCell(id, ctx), ...elementCells(ctx.elements.get(id))]))], 'The area has no elements.'));
 ```
 
+**In** `skills/shared/scripts/architecture-docs/capability.mjs` **replace**:
+
+```js
+import { doc, heading, paragraph, list, table, diagram } from './tree.mjs';
+```
+
+**with**:
+
+```js
+import { doc, heading, paragraph, list, table, diagram, orSay } from './tree.mjs';
+```
+
+**In** `skills/shared/scripts/architecture-docs/capability.mjs` **replace**:
+
+```js
+}
+
+const orSay = (blocks, text) => (blocks.length > 0 ? blocks : [paragraph(text)]);
+```
+
+**with**:
+
+```js
+}
+```
+
 - [ ] **Step 2: run the area tests, the documents tests and the safety tests.**
 
 Run: `uv run pytest -q tests/scripts/test_architecture_docs_area.py tests/scripts/test_architecture_docs_documents.py tests/scripts/test_architecture_docs_safety.py`
@@ -347,8 +433,8 @@ Expected: PASS (41 passed).
 - [ ] **Step 3: commit.**
 
 ```bash
-git add skills/shared/scripts/architecture-docs/records-doc.mjs skills/shared/scripts/architecture-docs/area.mjs
-git commit -m "refactor(#34): one element row for the area and change documents"
+git add skills/shared/scripts/architecture-docs/records-doc.mjs skills/shared/scripts/architecture-docs/tree.mjs skills/shared/scripts/architecture-docs/area.mjs skills/shared/scripts/architecture-docs/capability.mjs
+git commit -m "refactor(#34): the documents' shared helpers - one element row in records-doc.mjs, orSay in tree.mjs"
 ```
 
 ---
@@ -368,10 +454,10 @@ git commit -m "refactor(#34): one element row for the area and change documents"
 1. `changed` overrides `added` for an id in both lists — mutation: in `change.mjs` `diagramBlock`, swap the two `for` lines so `added` is set first — killed by: `test_change_record_marks_an_id_in_both_lists_added`
 2. A gone element framed — mutation: replace `  for (const id of change.elements.added) if (ctx.elements.has(id)) marks.set(id, 'added');` with `  for (const id of change.elements.added) marks.set(id, 'added');` — killed by: `test_change_record_diagram`
 3. A diagram drawn with nothing to frame — mutation: delete the line `  if (marks.size === 0) return paragraph('No element the change added or changed is in the current model.');` — killed by: `test_change_record_with_nothing_to_draw`
-4. Removed records printed in full — mutation: in `recordBlocks`, replace `if (part === 'removed') {` with `if (part === 'never') {` — killed by: `test_change_record_prints_current_records_in_full_and_gone_ones_as_text`
-5. A gone element shown without its note — mutation: in `elementBlocks`, replace `blocks.push(list(gone.map((id) => [goneText(id)])));` with `blocks.push(list(gone.map((id) => [id])));` — killed by: `test_change_record_what_changed`
-6. Current elements out of the file's order — mutation: replace `const current = ids.filter((id) => ctx.elements.has(id));` with `const current = ids.filter((id) => ctx.elements.has(id)).reverse();` — killed by: `test_change_record_prints_elements_in_full_in_file_order`
-7. Gone records out of the file's order — mutation: replace `const gone = ids.filter((id) => !records.has(id));` with `const gone = ids.filter((id) => !records.has(id)).reverse();` — killed by: `test_change_record_prints_current_records_in_full_and_gone_ones_as_text`
+4. Removed ids printed in full — mutation: in `changedBlocks`, replace `if (part === 'removed') {` with `if (part === 'never') {` — killed by: `test_change_record_prints_current_records_in_full_and_gone_ones_as_text`
+5. A gone id shown without its note — mutation: replace `blocks.push(list(gone.map((id) => [goneText(id)])));` with `blocks.push(list(gone.map((id) => [id])));` — killed by: `test_change_record_what_changed`
+6. Current ids out of the file's order — mutation: replace `const present = ids.filter((id) => current.has(id));` with `const present = ids.filter((id) => current.has(id)).reverse();` — killed by: `test_change_record_prints_elements_in_full_in_file_order`
+7. Gone ids out of the file's order — mutation: replace `const gone = ids.filter((id) => !current.has(id));` with `const gone = ids.filter((id) => !current.has(id)).reverse();` — killed by: `test_change_record_prints_current_records_in_full_and_gone_ones_as_text`
 8. Choices skip changed decisions — mutation: replace `new Set([...change.decisions.added, ...change.decisions.changed])` with `new Set([...change.decisions.added])` — killed by: `test_change_record_choices_not_taken`
 9. Choices not deduplicated — mutation: replace the same expression with `[...change.decisions.added, ...change.decisions.changed]` — killed by: `test_change_record_choices_not_taken`
 10. A gone known-gap end linked — mutation: replace `const end = (id) => (ctx.elements.has(id) ? elementLinks([id], ctx) : [goneText(id)]);` with `const end = (id) => elementLinks([id], ctx);` — killed by: `test_change_record_known_gap`
@@ -379,6 +465,7 @@ git commit -m "refactor(#34): one element row for the area and change documents"
 12. The check output not in a code block — mutation: replace `code(change.check.output));` with `paragraph(change.check.output));` — killed by: `test_change_record_check`
 13. An element not printed in full — mutation: replace `...elementCells(ctx.elements.get(id))]` with `...elementCells({ ...ctx.elements.get(id), description: null })]` — killed by: `test_change_record_prints_elements_in_full_in_file_order`
 14. A change diagram of exactly 80 arrows replaced by the note — mutation: in `mermaid.mjs`, replace `if (arrows.length > ARROW_LIMIT) return null;` with `if (arrows.length >= ARROW_LIMIT) return null;` — killed by: `test_change_record_at_the_arrow_limit` (and 81 arrows by `test_change_record_over_the_arrow_limit`)
+15. A changed element gone from the model framed — mutation: replace `  for (const id of change.elements.changed) if (ctx.elements.has(id)) marks.set(id, 'changed');` with `  for (const id of change.elements.changed) marks.set(id, 'changed');` — killed by: `test_change_record_frames_no_changed_element_gone_from_the_model`
 
 **Pinned by:** `documentBase`'s existing keys are unchanged: every area and capability test in `tests/scripts/test_architecture_docs_area.py` builds through it and compares exact trees.
 
@@ -454,7 +541,7 @@ def test_change_record_layout() -> None:  # Change record: summary, asked by, ru
 
 def test_change_record_approval() -> None:  # Change record: approval by and date
     document = change_doc(change(approved={"by": "Owner", "date": "2026-11-06"}))
-    assert document["blocks"][0]["items"][-1] == ["Approval: ", "approved by Owner on 2026-11-06"]
+    assert document["blocks"][0]["items"][-1] == ["Approval: ", "Approved by Owner on 2026-11-06"]
 
 
 def test_change_record_diagram() -> None:  # Change record: added and changed elements still in the model framed and marked; AC-22
@@ -470,6 +557,13 @@ def test_change_record_diagram() -> None:  # Change record: added and changed el
 def test_change_record_marks_an_id_in_both_lists_added() -> None:  # Change record (amended): added wins
     text = section(change_doc(change(elements=lists(["pay"], ["pay", "shop.web"]))), "Diagram")[0]["text"]
     assert '["Pay #40;added#41;"]' in text and '["Web #40;changed#41;"]' in text and "Pay #40;changed" not in text
+
+
+def test_change_record_frames_no_changed_element_gone_from_the_model() -> None:  # Change record: only current ids framed
+    document = change_doc(change(elements=lists(["shop.web"], ["shop.gone"])))
+    text = section(document, "Diagram")[0]["text"]
+    assert '["Web #40;added#41;"]' in text and "changed" not in text
+    assert section(document, "What changed")[-1] == {"type": "list", "items": [["shop.gone (not in the current model)"]]}
 
 
 def test_change_record_with_nothing_to_draw() -> None:  # Change record: no diagram when no added or changed element is current
@@ -562,7 +656,7 @@ def test_change_record_at_the_arrow_limit() -> None:  # Shared rules: a flowchar
 - [ ] **Step 2: run RED.**
 
 Run: `uv run pytest -q tests/scripts/test_architecture_docs_changes.py`
-Expected: FAIL, 15 failed (`change.mjs` does not exist).
+Expected: FAIL, 16 failed (`change.mjs` does not exist).
 
 - [ ] **Step 3: GREEN.**
 
@@ -572,12 +666,12 @@ Expected: FAIL, 15 failed (`change.mjs` does not exist).
 // A change record (spec, What each document holds, Change record): the change's summary, asker, run, date and
 // approval; a diagram of the elements it added or changed; what changed; the choices not taken; its known-gap pairs;
 // its check. A change file holds only ids, so a record is printed as it stands in the model now.
-import { doc, heading, paragraph, list, table, code, diagram, docLink } from './tree.mjs';
+import { doc, heading, paragraph, list, table, code, diagram, docLink, orSay } from './tree.mjs';
 import { changeDoc, elementTarget, recordTarget, relative } from './facts.mjs';
 import { ELEMENT_HEADER, decisionBlocks, contractBlocks, holeBlocks, elementCells, elementLinks } from './records-doc.mjs';
 import { drawing, drawingText, TOO_MANY_ARROWS } from './area-diagram.mjs';
 
-export const GONE = ' (not in the current model)';
+const GONE = ' (not in the current model)';
 const PARTS = ['added', 'changed', 'removed'];
 // The record kinds of a change file after its elements, in document order: the change file's key, the heading word,
 // the Map of current records in `base`, and how a current record is printed in full.
@@ -587,50 +681,36 @@ const KINDS = [
   { key: 'holes', word: 'Open questions', records: 'holes', blocks: holeBlocks },
 ];
 
-const orSay = (blocks, text) => (blocks.length > 0 ? blocks : [paragraph(text)]);
 const goneText = (id) => `${id}${GONE}`;
 
 const elementRow = (id, ctx) => [[docLink(id, relative(ctx.doc, elementTarget(id, ctx.byElement)))], ...elementCells(ctx.elements.get(id))];
 
-// Spec, What changed: each list as the change file gives it. Added and changed elements still in the model in a table,
-// then the gone ones as plain text; removed ids as plain text.
-function elementBlocks(change, ctx) {
+// Spec, What changed: each list as the change file gives it, under `<word> <part>`. Added and changed ids still in the
+// model are printed in full by `inFull` (in the file's order), then the gone ones as plain text with their note;
+// removed ids are plain text.
+function changedBlocks(word, lists, current, inFull) {
   const blocks = [];
   for (const part of PARTS) {
-    const ids = change.elements[part];
+    const ids = lists[part];
     if (ids.length === 0) continue;
-    blocks.push(heading(3, `Elements ${part}`));
+    blocks.push(heading(3, `${word} ${part}`));
     if (part === 'removed') {
       blocks.push(list(ids.map((id) => [id])));
       continue;
     }
-    const current = ids.filter((id) => ctx.elements.has(id));
-    const gone = ids.filter((id) => !ctx.elements.has(id));
-    if (current.length > 0) blocks.push(table(ELEMENT_HEADER, current.map((id) => elementRow(id, ctx))));
+    const present = ids.filter((id) => current.has(id));
+    const gone = ids.filter((id) => !current.has(id));
+    if (present.length > 0) blocks.push(...inFull(present));
     if (gone.length > 0) blocks.push(list(gone.map((id) => [goneText(id)])));
   }
   return blocks;
 }
 
-// Spec, What changed: added and changed records still in the model in full, in the change file's order, then the gone
-// ones as plain text, as for elements; removed ids as plain text.
-function recordBlocks(change, kind, ctx) {
-  const blocks = [];
-  for (const part of PARTS) {
-    const ids = change[kind.key][part];
-    if (ids.length === 0) continue;
-    blocks.push(heading(3, `${kind.word} ${part}`));
-    if (part === 'removed') {
-      blocks.push(list(ids.map((id) => [id])));
-      continue;
-    }
-    const records = ctx[kind.records];
-    for (const id of ids) if (records.has(id)) blocks.push(...kind.blocks(records.get(id), ctx, 4));
-    const gone = ids.filter((id) => !records.has(id));
-    if (gone.length > 0) blocks.push(list(gone.map((id) => [goneText(id)])));
-  }
-  return blocks;
-}
+// The elements as one table; each record as its blocks.
+const elementBlocks = (change, ctx) => changedBlocks('Elements', change.elements, ctx.elements,
+  (ids) => [table(ELEMENT_HEADER, ids.map((id) => elementRow(id, ctx)))]);
+const recordBlocks = (change, kind, ctx) => changedBlocks(kind.word, change[kind.key], ctx[kind.records],
+  (ids) => ids.flatMap((id) => kind.blocks(ctx[kind.records].get(id), ctx, 4)));
 
 // Spec, Choices not taken: the change's `rejected` list, then the `rejected` options of each decision it added or
 // changed that is still in the model, each decision once, added ones first.
@@ -665,7 +745,7 @@ function diagramBlock(change, gap, ctx) {
 
 export function buildChange(data, gap, change, base) {
   const ctx = { ...base, doc: changeDoc(change.id), area: null };
-  const approval = change.approved === null ? 'Not yet approved' : `approved by ${change.approved.by} on ${change.approved.date}`;
+  const approval = change.approved === null ? 'Not yet approved' : `Approved by ${change.approved.by} on ${change.approved.date}`;
   const blocks = [list([
     ['Summary: ', change.summary], ['Asked by: ', change.asked_by], ['Run: ', change.run], ['Date: ', change.date],
     ['Approval: ', approval],
@@ -722,7 +802,7 @@ export function buildChange(data, gap, change, base) {
 - [ ] **Step 4: run the task's tests, the documents that read `documentBase`, and the safety tests.**
 
 Run: `uv run pytest -q tests/scripts/test_architecture_docs_changes.py tests/scripts/test_architecture_docs_area.py tests/scripts/test_architecture_docs_documents.py tests/scripts/test_architecture_docs_safety.py`
-Expected: PASS (56 passed).
+Expected: PASS (57 passed).
 
 - [ ] **Step 5: refactor.** None expected; rerun Step 4 if anything changed.
 
@@ -867,7 +947,7 @@ def test_improvement_list_statuses_and_records_with_no_area() -> None:  # Improv
 - [ ] **Step 2: run RED.**
 
 Run: `uv run pytest -q tests/scripts/test_architecture_docs_changes.py`
-Expected: FAIL, 6 failed, 15 passed (`improvements.mjs` does not exist).
+Expected: FAIL, 6 failed, 16 passed (`improvements.mjs` does not exist).
 
 - [ ] **Step 3: GREEN.**
 
@@ -881,7 +961,7 @@ import { doc, heading, paragraph, list, docLink } from './tree.mjs';
 import { IMPROVEMENTS, areasOf, recordElements, recordTarget, relative } from './facts.mjs';
 import { elementLinks, areaLinks } from './records-doc.mjs';
 
-export const IMPROVEMENTS_TITLE = 'Improvement list';
+const IMPROVEMENTS_TITLE = 'Improvement list';
 const CYCLE = 'cycle in current code';
 const NOT_BUILT = ['partly-built', 'planned'];
 
@@ -950,7 +1030,7 @@ export function buildImprovements(data, gap, base) {
 - [ ] **Step 4: run the task's tests and the safety tests.**
 
 Run: `uv run pytest -q tests/scripts/test_architecture_docs_changes.py tests/scripts/test_architecture_docs_safety.py`
-Expected: PASS (25 passed).
+Expected: PASS (26 passed).
 
 - [ ] **Step 5: refactor.** None expected; rerun Step 4 if anything changed.
 
@@ -1175,7 +1255,6 @@ def test_check_reports_a_removed_change_file(tmp_path) -> None:  # AC-9 (a chang
     assert run_tool("build", "--repo", repo, script=DOCS_SCRIPT).returncode == 0
     assert not (out / "changes").exists()
     assert run_tool("check", "--repo", repo, script=DOCS_SCRIPT).returncode == 0
-
 
 
 def test_build_writes_one_record_per_change_file(tmp_path) -> None:  # Change record: one per change file, each its own
@@ -1409,7 +1488,7 @@ import { buildImprovements } from './improvements.mjs';
 - [ ] **Step 5: run the full suite.**
 
 Run: `uv run pytest -q`
-Expected: PASS (711 passed, 1 skipped).
+Expected: PASS (712 passed, 1 skipped).
 
 - [ ] **Step 6: refactor.** None expected; rerun Step 5 if anything changed.
 
@@ -1424,7 +1503,7 @@ git commit -m "feat(#34): build and check write and compare the change records a
 
 ## Verification evidence
 
-- Dry run: one scratch copy of main at `637bc43` plus the amendment `8473868`; the code built once there, with the alignment check's fixes as commits on top; full suite 676 passed, 1 skipped before and 711 passed, 1 skipped after.
+- Dry run: one scratch copy of main at `637bc43` plus the amendment `8473868`; the code built once there, with the alignment check's fixes as commits on top; full suite 676 passed, 1 skipped before and 712 passed, 1 skipped after.
 - Plan blocks: applying this plan's blocks in order to the baseline gives the dry run's final files byte for byte; replaying the tasks in that order in the dry-run copy gave each task's RED and GREEN counts above.
-- Mutations: every "Reviewer looks at" item above (48) was applied by exact byte replacement in the dry run and killed by its named test.
+- Mutations: every "Reviewer looks at" item above (50) was applied by exact byte replacement in the dry run and killed by its named test.
 - Diagrams: every `mermaid` block of the change records, the area documents and the capability documents built from the Task 6 fixtures (23 blocks, including a hostile title framed and marked) parses under Mermaid 12.2.0; a broken block is refused.
