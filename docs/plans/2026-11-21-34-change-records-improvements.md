@@ -12,7 +12,7 @@
 
 **Open decisions:** none. The amendments `8473868` and `8173d46` are spec text. Two rules the tasks apply as written: a change record frames only ids still in the model (`drawing()` reads each framed id's links, and a gone id has none), and the known limit of pack text (only lines starting with `#`, `---`, three backticks or `~~~` are guarded) is unchanged: this plan writes no pack text. Presentation the spec leaves to the writer and the plan fixes in its tests: the `## Diagram` heading with a sentence when nothing is framed, one sentence for each empty section, `Added: ` and `Removed: ` items in one Known gap list, `approved by <by> on <date>`, `Exit: ` and `Summary: ` items, the improvement list's opening sentence, and the `: `, `; ` and `. ` separators of an improvement item; gone ids of every kind are one list after the current ones.
 
-**Size:** 6 tasks, 2 entry paths (`build`, `check` of the docs tool; Task 1's rule is in the records reader they load through, which the delta tool's `export` and `check` share), 1398 lines (reported, not a target)
+**Size:** 6 tasks, 1398 lines (reported, not a target). Entry paths: the docs tool's `build` and `check`. Task 1's rule sits in the records reader that every command loads through, so it also changes what the delta tool's `export` and `check` accept: four commands, one shared load step, the same place the spec's capabilities rule (plan 1) applies. The per-plan rule counts the docs tool's two paths; the records rule adds a refusal at load, not a new path, and its test runs through `export`.
 
 **Trust boundary:** changed — see Trust-boundary table. No new file writes: only `writer.mjs` writes, and the safety tests (`tests/scripts/test_architecture_docs_safety.py`, `tests/scripts/test_architecture_delta_safety.py`) scan every changed module unchanged. No comment or string in a docs module may hold a forbidden call name followed by `(`: the names in `CHANGES_FILES` (`write`, `link`, `rm`, `cp`, `rename`, `mkdir`, `unlink`, `truncate` and the others) must not be followed by an opening bracket anywhere in the new modules. The new documents carry change-file, record, coverage and known-gap text into Markdown, HTML and Mermaid, and change ids into output paths; the writers' escaping, the label encoding and the change-file name rule are their defence, and Task 6 feeds hostile text through both new documents.
 
@@ -98,7 +98,7 @@ Every edit is one of three kinds, each followed by its fenced block: **Create** 
 - Modify: `skills/shared/scripts/architecture-delta/records.mjs` (`CHANGE_FILE`)
 - Test: `tests/scripts/test_architecture_delta_records.py`
 
-**Callers that move with this task:** none (sweep rows `records.mjs:11` and the change-file fixtures)
+**Callers that move with this task:** none to edit; Step 4 runs the tests of the change-file fixtures (sweep rows `records.mjs:11` and the fixtures in `test_architecture_delta_records.py`, `test_architecture_docs_overview.py`, `test_architecture_docs_documents.py`)
 
 **Reviewer looks at:**
 1. The limit off by one — mutation: in `records.mjs`, replace `(?=.{1,64}\.json$)` with `(?=.{1,63}\.json$)` — killed by: `test_change_file_name_is_at_most_64_characters`
@@ -148,10 +148,10 @@ const CHANGE_FILE = /^[0-9]{4}-[0-9]{2}-[0-9]{2}-[a-z0-9]+(-[a-z0-9]+)*\.json$/;
 const CHANGE_FILE = /^(?=.{1,64}\.json$)[0-9]{4}-[0-9]{2}-[0-9]{2}-[a-z0-9]+(-[a-z0-9]+)*\.json$/;
 ```
 
-- [ ] **Step 4: run the task's tests.**
+- [ ] **Step 4: run the task's tests and the tests of the callers that write change files.**
 
-Run: `uv run pytest -q tests/scripts/test_architecture_delta_records.py`
-Expected: PASS (52 passed).
+Run: `uv run pytest -q tests/scripts/test_architecture_delta_records.py tests/scripts/test_architecture_docs_overview.py tests/scripts/test_architecture_docs_documents.py`
+Expected: PASS (69 passed).
 
 - [ ] **Step 5: refactor.** None expected; rerun Step 4 if anything changed.
 
