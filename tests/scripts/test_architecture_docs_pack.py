@@ -265,6 +265,37 @@ def test_step_lines() -> None:  # AI pack, step lines
     ]
 
 
+def test_record_blocks_leave_out_empty_binds() -> None:  # record blocks: an empty list field is left out
+    more = {**DATA, "holes": [*DATA["holes"], {"id": "H-2", "what": "Who?", "binds": [], "evidence": "search"}]}
+    code = f"(() => {{ const c = b.packContext({json.dumps(more)}); return [b.decisionBlock('P-1', c), b.holeBlock('H-2', c)]; }})()"
+    assert blocks(code, {}) == [
+        "### P-1\nDecide P-1.\nreason: Because.\nobligations: Data stays in the EU.\nstatus: current\nevidence: spec",
+        "### H-2\nWho?\nevidence: search",
+    ]
+
+
+def test_record_blocks_leave_out_empty_optional_lists() -> None:  # record blocks: an empty list field is left out
+    more = {**DATA, "decisions": [*DATA["decisions"], decision("D-4", capabilities=[])],
+            "contracts": [*DATA["contracts"], {"id": "C-3", "name": "Feed", "owner": "bank", "bound": ["bank"],
+                                               "obligations": ["Daily"], "compatibility": None, "notes": [],
+                                               "decisions": [], "capabilities": []}]}
+    code = f"(() => {{ const c = b.packContext({json.dumps(more)}); return [b.decisionBlock('D-4', c), b.contractBlock('C-3', c)]; }})()"
+    assert blocks(code, {}) == [
+        "### D-4\nDecide D-4.\nreason: Because.\nstatus: current\nevidence: spec",
+        "### C-3: Feed\nowner: bank [README.md]\nbound: bank [README.md]\nobligations: Daily\ncompatibility: no rule stated",
+    ]
+
+
+def test_decision_block_names_a_capability_s_pack_file() -> None:  # AC-26: a capability not held names its slice
+    assert "\ncapabilities: buy [capabilities/buy.md]\n" in blocks("b.decisionBlock('D-1', ctx)", FRONT)
+
+
+def test_known_gap_line_names_the_from_end_s_pack_file() -> None:  # AC-26: the suffix on both known-gap ends
+    assert blocks(f"b.gapLine({json.dumps(GAP[0])}, ctx)", INDEX) == (
+        "- shop.web [areas/front.md] -> bank: cycle in current code (close by 2027-01 # z)"
+    )
+
+
 def pack(code: str) -> object:
     snippet = (
         f"import * as p from {json.dumps(lib_url('pack.mjs', DOCS_LIB))};\n"
@@ -328,6 +359,16 @@ def test_capability_slice_with_nothing() -> None:  # Pack layout: empty sections
     )
 
 
+def test_capability_slice_holds_its_decisions() -> None:  # AC-26: a capability slice holds the decisions naming it
+    text = pack("p.capabilitySlice(data, data.capabilities[0], base)")
+    assert "\nbound by: D-1, D-2 (cross-cutting) [areas/front.md]\n" in text
+
+
+def test_capability_slice_description() -> None:  # Pack layout: the capability description; Pack fields: multi-line
+    text = pack("p.capabilitySlice(data, { ...data.capabilities[0], description: 'Buys.\\n# Buy' }, base)")
+    assert text.split("\n\n")[1:3] == ["# buy: Buy", "Buys.\n\\# Buy"]
+
+
 INDEX_SECTION = (
     "## Index\n\n"
     "### Elements\n\n"
@@ -371,6 +412,33 @@ def test_build_pack_files_and_ticks() -> None:  # AI pack: one file per slice an
         "ticks": 4,
         "index": True,
     }
+
+
+def test_pack_index_holds_an_open_question_in_no_area() -> None:  # Pack layout, Index; AC-24 (pack part)
+    text = pack("(() => { const more = { ...data, holes: [...data.holes, { id: 'H-2', what: 'Who?', binds: ['bank'],"
+                " evidence: 'search' }] }; return p.packIndex(more, gap, packContext(more)); })()")
+    assert headings(text)[-1] == "## Open questions in no area"
+    assert text.rstrip("\n").split("\n\n")[-1] == "### H-2\nWho?\nbinds: bank\nevidence: search"
+    assert "\nH-1: areas/front.md\nH-2: README.md\n" in text
+
+
+def test_pack_index_sorts_each_id_s_files_by_path() -> None:  # AI pack, Index: files sorted by path
+    text = pack("(() => { const more = { ...data, capabilities: [...data.capabilities, { name: 'sell', title: 'Sell',"
+                " description: null, steps: [{ from: 'shop.web', to: 'bank', label: null, reply: false, kinds: ['uses'] }] }] };"
+                " return p.packIndex(more, gap, packContext(more)); })()")
+    assert "\nbank: README.md, capabilities/sell.md\n" in text
+
+
+def test_pack_index_leaves_out_a_kind_with_no_ids() -> None:  # AI pack, Index: a kind with no ids is left out
+    text = pack("(() => { const more = { ...data, holes: [] }; return p.packIndex(more, gap, packContext(more)); })()")
+    assert "### Open questions" not in text
+    assert "\nC-2: README.md\n\n### Capabilities\n\nbuy: capabilities/buy.md\n\n## Principles" in text
+
+
+def test_pack_index_holds_a_principle_named_by_a_record_in_no_area() -> None:  # AC-26: README.md holds the principles
+    text = pack("(() => { const more = { ...data, contracts: data.contracts.map((c) => (c.id === 'C-2' ? { ...c, decisions: ['P-1'] } : c)) };"
+                " return p.packIndex(more, gap, packContext(more)); })()")
+    assert "compatibility: Additive. # y\ndecisions: P-1\n" in text
 
 
 MODEL = """specification {
