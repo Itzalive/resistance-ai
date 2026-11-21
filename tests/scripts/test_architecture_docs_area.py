@@ -142,13 +142,13 @@ def test_an_arrow_is_implied_only_by_one_strictly_inside() -> None:  # Drawing r
 
 
 def test_implied_arrows_stay_fast_for_deep_nesting() -> None:  # Availability: no pair per ancestor pair of each arrow
-    p = [".".join(["p"] * (i + 1)) for i in range(100)]
-    q = [".".join(["q"] * (i + 1)) for i in range(100)]
+    p = [".".join(["p"] * (i + 1)) for i in range(200)]
+    q = [".".join(["q"] * (i + 1)) for i in range(200)]
     data = {**DATA, "elements": [element(id_, "T") for id_ in p + q], "runtime": [], "areas": [],
-            "allowed": [{"from": p[i % 100], "to": q[(i // 100) % 100], "titles": []} for i in range(10000)]}
+            "allowed": [{"from": p[i % 200], "to": q[(i // 200) % 200], "titles": []} for i in range(40000)]}
     start = time.monotonic()
     arrows = run(f"d.drawing({json.dumps(p)}, 'P', [], base).arrows.map((a) => [a.from.length, a.to.length])", data=data, gap=[])
-    assert arrows == [[199, 199]]  # only the deepest pair is drawn
+    assert arrows == [[399, 399]]  # only the deepest pair is drawn
     assert time.monotonic() - start < 5
 
 
