@@ -82,6 +82,15 @@ GAP = {"entries": [{"from": "shop.api", "to": "ledger", "reason": "Red " + ESC +
 LEDGER = "Ledger#59; #34;x#34; #37;#37;#123;init#125;#37;#37; #40;no area#41;"
 
 
+def change_file(**over) -> dict:
+    lists = {"added": [], "changed": [], "removed": []}
+    record = {"id": "2026-11-05-more", "date": "2026-11-05", "run": "later-stage", "asked_by": "#1", "summary": "More.", "rejected": [],
+              "elements": lists, "decisions": lists, "holes": lists, "contracts": lists, "gap": {"added": [], "removed": []},
+              "check": {"exit": 0, "summary": "ok", "output": "ok\n"}, "approved": None}
+    record.update(over)
+    return record
+
+
 def write_json(folder: Path, rel: str, data: object) -> None:
     target = folder / rel
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -221,7 +230,8 @@ def test_check_reports_a_removed_area(tmp_path) -> None:  # AC-9 (the area case)
     check = run_tool("check", "--repo", repo, script=DOCS_SCRIPT)
     assert check.returncode == 1
     lines = check.stdout.splitlines()
-    for line in ("extra areas/money.md", "extra areas/money.html", "extra pack/areas/money.md", "changed README.md"):
+    for line in ("extra areas/money.md", "extra areas/money.html", "extra pack/areas/money.md", "changed README.md",
+                 "changed improvements.md"):
         assert line in lines
     assert not any(line.startswith("extra ") for line in lines if "money" not in line)
     assert run_tool("build", "--repo", repo, script=DOCS_SCRIPT).returncode == 0
@@ -273,10 +283,103 @@ TICKS = (
 )
 
 
-def test_build_checks_the_deadline_after_each_area_and_capability_document(tmp_path) -> None:  # Threat model: --timeout
+def test_build_checks_the_deadline_after_each_document(tmp_path) -> None:  # Threat model: --timeout
     preload = tmp_path / "ticks.mjs"
     preload.write_text(TICKS, encoding="utf-8")
     repo = make_repo(tmp_path, MODEL)
+    write_json(repo / "docs" / "architecture", "changes/2026-11-05-more.json", change_file())
     proc = run_tool("build", "--repo", repo, script=DOCS_SCRIPT, preload=preload)
     assert proc.returncode == 0, proc.stderr
-    assert proc.stderr.splitlines()[-1] == "ticks 6"  # model.json, the overview, three areas and one capability
+    # model.json, the overview, three areas, one capability, one change record and the improvement list
+    assert proc.stderr.splitlines()[-1] == "ticks 8"
+
+
+MORE = change_file(rejected=["A monolith."], elements={"added": ["shop.web", "shop.cart"], "changed": [], "removed": []},
+                   decisions={"added": [], "changed": ["D-2"], "removed": []}, contracts={"added": [], "changed": [], "removed": ["C-9"]},
+                   gap={"added": [["shop.web", "pay.gateway"]], "removed": [["shop.cart", "bank"]]})
+
+
+def built_with_change(tmp_path: Path, record: dict = MORE) -> tuple[Path, Path]:
+    repo = make_repo(tmp_path, MODEL)
+    folder = repo / "docs" / "architecture"
+    decisions = json.loads(json.dumps(DECISIONS))
+    decisions["decisions"][1]["rejected"] = ["Two APIs."]
+    write_json(folder, "decisions/core.json", decisions)
+    write_json(folder, "contracts/edge.json", CONTRACTS)
+    write_json(folder, "known-gap.json", GAP)
+    write_json(folder, f"changes/{record['id']}.json", record)
+    proc = run_tool("build", "--repo", repo, script=DOCS_SCRIPT)
+    assert proc.returncode == 0, proc.stderr
+    return repo, folder / "generated"
+
+
+def test_build_writes_change_records(tmp_path) -> None:  # AC-22, AC-13 (change record pages)
+    _, out = built_with_change(tmp_path)
+    text = (out / "changes" / "2026-11-05-more.md").read_text(encoding="utf-8")
+    assert text.startswith(MARKER + "\n\n# 2026\\-11\\-05\\-more\n\n- Summary: More\\.\n- Asked by: \\#1\n")
+    assert "\n- Approval: Not yet approved\n" in text
+    frame = re.search(r'```mermaid\nflowchart LR\n  subgraph frame\["2026-11-05-more"\]\n(.*?)\n  end\n', text, re.S).group(1)
+    assert frame == '    n4["Web #40;added#41;"]'
+    assert ("Web #40;added#41;", "-->", "known gap", "Gateway #40;core#41;", "red") in diagram_arrows(text)
+    assert "\n### Elements added\n\n| Element | Title |" in text and "| [shop\\.web](../areas/front.md) | Web |" in text
+    assert "\n- shop\\.cart \\(not in the current model\\)\n" in text
+    assert "\n### Decisions changed\n\n#### D\\-2\n\nDecide D\\-2\\.\n" in text
+    assert "\n### Contracts removed\n\n- C\\-9\n" in text
+    assert "\n## Choices not taken\n\n- A monolith\\.\n- [D\\-2](../areas/front.md): Two APIs\\.\n" in text
+    assert ("\n## Known gap\n\n- Added: [shop\\.web](../areas/front.md) \\(Web\\) \\-&gt; [pay\\.gateway](../areas/core.md) \\(Gateway\\)\n"
+            "- Removed: shop\\.cart \\(not in the current model\\) \\-&gt; [bank](../README.md) \\(Bank\\)\n") in text
+    assert text.endswith("\n## Check\n\n- Exit: 0\n- Summary: ok\n\n```\nok\n```\n")
+    page = (out / "changes" / "2026-11-05-more.html").read_text(encoding="utf-8")
+    assert page.startswith(MARKER + "\n") and page.count("<script") == 2
+    assert "content=\"default-src 'none'; script-src https://cdn.jsdelivr.net/npm/mermaid@12.2.0" in page
+    assert '<a href="../areas/front.html">D-2</a>' in page
+    assert "[2026\\-11\\-05\\-more](changes/2026-11-05-more.md)" in (out / "README.md").read_text(encoding="utf-8")
+
+
+def test_build_writes_the_improvement_list(tmp_path) -> None:  # AC-23 (through build), AC-13 (its page)
+    _, out = built_with_change(tmp_path)
+    text = (out / "improvements.md").read_text(encoding="utf-8")
+    assert text.startswith(MARKER + "\n\n# Improvement list\n\n")
+    assert re.findall(r"^## (.*)$", text, re.M) == [
+        "Cycles in current code \\(0\\)", "Other known breaches \\(2\\)", "Open questions \\(1\\)", "Decisions not yet fully built \\(0\\)",
+        "Decisions with no known reason \\(0\\)", "Unmapped code \\(0\\)", "Elements in no area \\(2\\)", "Elements that own nothing \\(5\\)"]
+    assert ("- [shop\\.web](areas/front.md) \\(Web\\) \\-&gt; [pay\\.gateway](areas/core.md) \\(Gateway\\): no relationship\\. "
+            "Areas: [core](areas/core.md) \\(Core\\), [front](areas/front.md) \\(Front\\), [money](areas/money.md) \\(Money\\)\n") in text
+    assert "- [H\\-1](areas/front.md): binds [shop\\.api](areas/front.md) \\(API\\)\\. Areas: [front](areas/front.md) \\(Front\\)\n" in text
+    assert "\n## Unmapped code \\(0\\)\n\nNone\\.\n" in text
+    assert "- [bank](README.md) \\(Bank\\)\\. Not in any area\n" in text
+    page = (out / "improvements.html").read_text(encoding="utf-8")
+    assert page.startswith(MARKER + "\n") and page.count("<script") == 2
+    assert '<a href="areas/front.html">H-1</a>' in page
+    assert "[the improvement list](improvements.md)" in (out / "README.md").read_text(encoding="utf-8")
+
+
+def test_build_escapes_hostile_change_and_improvement_text(tmp_path) -> None:  # AC-12 (change records, improvement list)
+    hostile = change_file(summary="More [x](javascript:alert(1)) <script> | %%{init}%% " + ESC + "[31m",
+                          rejected=["No <b>bold</b> | ```"], check={"exit": 1, "summary": "Bad " + ESC + "[0m", "output": "Out\n```\n" + ESC + "[31mred\n"})
+    _, out = built_with_change(tmp_path, hostile)
+    for name in files(out):
+        assert ESC not in (out / name).read_text(encoding="utf-8"), name
+    text = (out / "changes" / "2026-11-05-more.md").read_text(encoding="utf-8")
+    assert "- Summary: More \\[x\\]\\(javascript:alert\\(1\\)\\) &lt;script&gt; \\| %%\\{init\\}%% \n" in text
+    assert "- No &lt;b&gt;bold&lt;/b&gt; \\| \\`\\`\\`\n" in text
+    assert text.endswith("\n````\nOut\n```\nred\n````\n")
+    page = (out / "changes" / "2026-11-05-more.html").read_text(encoding="utf-8")
+    assert "<b>" not in page and "&lt;b&gt;bold" in page and page.count("<script") == 2
+    improvements = (out / "improvements.md").read_text(encoding="utf-8")
+    assert "Red gap \\| &lt;b&gt;; close by 2027 01\\." in improvements
+    assert "<b>" not in (out / "improvements.html").read_text(encoding="utf-8")
+
+
+def test_check_reports_a_removed_change_file(tmp_path) -> None:  # AC-9 (a change record), AC-17 (the changes folder)
+    repo, out = built_with_change(tmp_path)
+    (repo / "docs" / "architecture" / "changes" / "2026-11-05-more.json").unlink()
+    check = run_tool("check", "--repo", repo, script=DOCS_SCRIPT)
+    assert check.returncode == 1
+    lines = check.stdout.splitlines()
+    for line in ("extra changes/2026-11-05-more.html", "extra changes/2026-11-05-more.md", "changed README.md", "changed index.html"):
+        assert line in lines
+    assert [line for line in lines if line.startswith("extra ")] == ["extra changes/2026-11-05-more.html", "extra changes/2026-11-05-more.md"]
+    assert run_tool("build", "--repo", repo, script=DOCS_SCRIPT).returncode == 0
+    assert not (out / "changes").exists()
+    assert run_tool("check", "--repo", repo, script=DOCS_SCRIPT).returncode == 0

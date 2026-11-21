@@ -5,9 +5,11 @@ import { buildOverview } from './overview.mjs';
 import { renderMarkdown } from './markdown.mjs';
 import { renderHtml, pageHref } from './html.mjs';
 import { buildPack } from './pack.mjs';
-import { areaDoc, capabilityDoc, documentBase } from './facts.mjs';
+import { IMPROVEMENTS, areaDoc, capabilityDoc, changeDoc, documentBase } from './facts.mjs';
 import { buildArea } from './area.mjs';
 import { buildCapability } from './capability.mjs';
+import { buildChange } from './change.mjs';
+import { buildImprovements } from './improvements.mjs';
 
 export const OUT_FILE_LIMIT = 2000;
 export const OUT_BYTES_LIMIT = 50 * 1024 * 1024;
@@ -46,6 +48,12 @@ export function buildFiles(model, records, gap, tick = () => {}) {
     addDocument(files, capabilityDoc(capability.name), buildCapability(data, capability, base));
     tick();
   }
+  for (const change of data.changes) {
+    addDocument(files, changeDoc(change.id), buildChange(data, gap, change, base));
+    tick();
+  }
+  addDocument(files, IMPROVEMENTS, buildImprovements(data, gap, base));
+  tick();
   return files;
 }
 
