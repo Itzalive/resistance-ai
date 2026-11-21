@@ -151,6 +151,21 @@ def test_change_record_check() -> None:  # Change record: exit, summary, and the
         {"type": "code", "text": "New breaches\n  shop.api -> ledger (1 edges)\n"}]
 
 
+def test_change_record_prints_elements_in_full_in_file_order() -> None:  # Change record: in full, each list as the file gives it
+    table = section(change_doc(change(elements=lists(["shop.web", "shop"]))), "What changed")[1]
+    assert table["rows"] == [
+        [[L("shop.web", "../areas/front.md")], ["Web"], [""], [""], [""], [""]],
+        [[L("shop", "../areas/front.md")], ["Shop"], ["Sells things."], ["src/shop, src/lib"], ["BR-1, BR-2"], ["#edge #web"]],
+    ]
+
+
+def test_change_record_at_the_arrow_limit() -> None:  # Shared rules: a flowchart with 80 arrows is still drawn
+    data = {**RECORDS, "allowed": [{"from": "pay", "to": f"x{i:02}", "titles": []} for i in range(80)], "runtime": [],
+            "elements": RECORDS["elements"] + [element(f"x{i:02}", f"X{i}") for i in range(80)]}
+    diagram = section(change_doc(change(elements=lists(changed=["pay"])), data, []), "Diagram")
+    assert diagram[0]["type"] == "diagram" and diagram[0]["text"].count(" --> ") == 80
+
+
 def improvements(data: dict = RECORDS, gap: list = GAP) -> dict:
     return built("improvements.mjs", "m.buildImprovements(data, gap, base)", data, gap)
 
@@ -239,18 +254,3 @@ def test_improvement_list_statuses_and_records_with_no_area() -> None:  # Improv
     assert items(document, "Open questions (1)") == [[L("H-1", "README.md"), ". ", *NOWHERE]]
     assert items(document, "Cycles in current code (0)") == [para("None.")]
     assert items(document, "Other known breaches (0)") == [para("None.")]
-
-
-def test_change_record_prints_elements_in_full_in_file_order() -> None:  # Change record: in full, each list as the file gives it
-    table = section(change_doc(change(elements=lists(["shop.web", "shop"]))), "What changed")[1]
-    assert table["rows"] == [
-        [[L("shop.web", "../areas/front.md")], ["Web"], [""], [""], [""], [""]],
-        [[L("shop", "../areas/front.md")], ["Shop"], ["Sells things."], ["src/shop, src/lib"], ["BR-1, BR-2"], ["#edge #web"]],
-    ]
-
-
-def test_change_record_at_the_arrow_limit() -> None:  # Shared rules: a flowchart with 80 arrows is still drawn
-    data = {**RECORDS, "allowed": [{"from": "pay", "to": f"x{i:02}", "titles": []} for i in range(80)], "runtime": [],
-            "elements": RECORDS["elements"] + [element(f"x{i:02}", f"X{i}") for i in range(80)]}
-    diagram = section(change_doc(change(elements=lists(changed=["pay"])), data, []), "Diagram")
-    assert diagram[0]["type"] == "diagram" and diagram[0]["text"].count(" --> ") == 80
