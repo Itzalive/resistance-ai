@@ -5,7 +5,7 @@ import { doc, heading, paragraph, list, docLink } from './tree.mjs';
 import { IMPROVEMENTS, areasOf, recordElements, recordTarget, relative } from './facts.mjs';
 import { elementLinks, areaLinks } from './records-doc.mjs';
 
-export const IMPROVEMENTS_TITLE = 'Improvement list';
+const IMPROVEMENTS_TITLE = 'Improvement list';
 const CYCLE = 'cycle in current code';
 const NOT_BUILT = ['partly-built', 'planned'];
 

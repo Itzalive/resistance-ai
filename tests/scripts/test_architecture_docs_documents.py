@@ -392,7 +392,6 @@ def test_check_reports_a_removed_change_file(tmp_path) -> None:  # AC-9 (a chang
     assert run_tool("check", "--repo", repo, script=DOCS_SCRIPT).returncode == 0
 
 
-
 def test_build_writes_one_record_per_change_file(tmp_path) -> None:  # Change record: one per change file, each its own
     repo, out = built_with_change(tmp_path)
     later = change_file(id="2026-11-07-later", date="2026-11-07", summary="Later.")

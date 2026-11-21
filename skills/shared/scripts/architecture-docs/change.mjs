@@ -1,12 +1,12 @@
 // A change record (spec, What each document holds, Change record): the change's summary, asker, run, date and
 // approval; a diagram of the elements it added or changed; what changed; the choices not taken; its known-gap pairs;
 // its check. A change file holds only ids, so a record is printed as it stands in the model now.
-import { doc, heading, paragraph, list, table, code, diagram, docLink } from './tree.mjs';
+import { doc, heading, paragraph, list, table, code, diagram, docLink, orSay } from './tree.mjs';
 import { changeDoc, elementTarget, recordTarget, relative } from './facts.mjs';
 import { ELEMENT_HEADER, decisionBlocks, contractBlocks, holeBlocks, elementCells, elementLinks } from './records-doc.mjs';
 import { drawing, drawingText, TOO_MANY_ARROWS } from './area-diagram.mjs';
 
-export const GONE = ' (not in the current model)';
+const GONE = ' (not in the current model)';
 const PARTS = ['added', 'changed', 'removed'];
 // The record kinds of a change file after its elements, in document order: the change file's key, the heading word,
 // the Map of current records in `base`, and how a current record is printed in full.
@@ -16,50 +16,36 @@ const KINDS = [
   { key: 'holes', word: 'Open questions', records: 'holes', blocks: holeBlocks },
 ];
 
-const orSay = (blocks, text) => (blocks.length > 0 ? blocks : [paragraph(text)]);
 const goneText = (id) => `${id}${GONE}`;
 
 const elementRow = (id, ctx) => [[docLink(id, relative(ctx.doc, elementTarget(id, ctx.byElement)))], ...elementCells(ctx.elements.get(id))];
 
-// Spec, What changed: each list as the change file gives it. Added and changed elements still in the model in a table,
-// then the gone ones as plain text; removed ids as plain text.
-function elementBlocks(change, ctx) {
+// Spec, What changed: each list as the change file gives it, under `<word> <part>`. Added and changed ids still in the
+// model are printed in full by `inFull` (in the file's order), then the gone ones as plain text with their note;
+// removed ids are plain text.
+function changedBlocks(word, lists, current, inFull) {
   const blocks = [];
   for (const part of PARTS) {
-    const ids = change.elements[part];
+    const ids = lists[part];
     if (ids.length === 0) continue;
-    blocks.push(heading(3, `Elements ${part}`));
+    blocks.push(heading(3, `${word} ${part}`));
     if (part === 'removed') {
       blocks.push(list(ids.map((id) => [id])));
       continue;
     }
-    const current = ids.filter((id) => ctx.elements.has(id));
-    const gone = ids.filter((id) => !ctx.elements.has(id));
-    if (current.length > 0) blocks.push(table(ELEMENT_HEADER, current.map((id) => elementRow(id, ctx))));
+    const present = ids.filter((id) => current.has(id));
+    const gone = ids.filter((id) => !current.has(id));
+    if (present.length > 0) blocks.push(...inFull(present));
     if (gone.length > 0) blocks.push(list(gone.map((id) => [goneText(id)])));
   }
   return blocks;
 }
 
-// Spec, What changed: added and changed records still in the model in full, in the change file's order, then the gone
-// ones as plain text, as for elements; removed ids as plain text.
-function recordBlocks(change, kind, ctx) {
-  const blocks = [];
-  for (const part of PARTS) {
-    const ids = change[kind.key][part];
-    if (ids.length === 0) continue;
-    blocks.push(heading(3, `${kind.word} ${part}`));
-    if (part === 'removed') {
-      blocks.push(list(ids.map((id) => [id])));
-      continue;
-    }
-    const records = ctx[kind.records];
-    for (const id of ids) if (records.has(id)) blocks.push(...kind.blocks(records.get(id), ctx, 4));
-    const gone = ids.filter((id) => !records.has(id));
-    if (gone.length > 0) blocks.push(list(gone.map((id) => [goneText(id)])));
-  }
-  return blocks;
-}
+// The elements as one table; each record as its blocks.
+const elementBlocks = (change, ctx) => changedBlocks('Elements', change.elements, ctx.elements,
+  (ids) => [table(ELEMENT_HEADER, ids.map((id) => elementRow(id, ctx)))]);
+const recordBlocks = (change, kind, ctx) => changedBlocks(kind.word, change[kind.key], ctx[kind.records],
+  (ids) => ids.flatMap((id) => kind.blocks(ctx[kind.records].get(id), ctx, 4)));
 
 // Spec, Choices not taken: the change's `rejected` list, then the `rejected` options of each decision it added or
 // changed that is still in the model, each decision once, added ones first.
@@ -94,7 +80,7 @@ function diagramBlock(change, gap, ctx) {
 
 export function buildChange(data, gap, change, base) {
   const ctx = { ...base, doc: changeDoc(change.id), area: null };
-  const approval = change.approved === null ? 'Not yet approved' : `approved by ${change.approved.by} on ${change.approved.date}`;
+  const approval = change.approved === null ? 'Not yet approved' : `Approved by ${change.approved.by} on ${change.approved.date}`;
   const blocks = [list([
     ['Summary: ', change.summary], ['Asked by: ', change.asked_by], ['Run: ', change.run], ['Date: ', change.date],
     ['Approval: ', approval],

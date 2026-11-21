@@ -1,7 +1,7 @@
 // An area document (spec, What each document holds, Area): title and description, the diagram, the elements, their
 // dependencies, and the area's decisions, contracts, open questions, known-gap entries and capabilities.
 import { cmp } from '../architecture-delta/report.mjs';
-import { doc, heading, paragraph, table, diagram, docLink } from './tree.mjs';
+import { doc, heading, paragraph, table, diagram, docLink, orSay } from './tree.mjs';
 import { areaDoc, areaCapabilities, areaRecords, elementTarget, relative } from './facts.mjs';
 import {
   ELEMENT_HEADER, decisionBlocks, contractBlocks, holeBlocks, elementCells, elementLinks, areaLinks, capabilityLinks,
@@ -37,8 +37,6 @@ function dependencyRows(area, ctx) {
   }
   return rows;
 }
-
-const orSay = (blocks, text) => (blocks.length > 0 ? blocks : [paragraph(text)]);
 
 export function buildArea(data, gap, area, base) {
   const ctx = { ...base, doc: areaDoc(area.name), area: area.name };

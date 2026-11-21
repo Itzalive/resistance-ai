@@ -61,7 +61,7 @@ def test_change_record_layout() -> None:  # Change record: summary, asked by, ru
 
 def test_change_record_approval() -> None:  # Change record: approval by and date
     document = change_doc(change(approved={"by": "Owner", "date": "2026-11-06"}))
-    assert document["blocks"][0]["items"][-1] == ["Approval: ", "approved by Owner on 2026-11-06"]
+    assert document["blocks"][0]["items"][-1] == ["Approval: ", "Approved by Owner on 2026-11-06"]
 
 
 def test_change_record_diagram() -> None:  # Change record: added and changed elements still in the model framed and marked; AC-22
@@ -77,6 +77,13 @@ def test_change_record_diagram() -> None:  # Change record: added and changed el
 def test_change_record_marks_an_id_in_both_lists_added() -> None:  # Change record (amended): added wins
     text = section(change_doc(change(elements=lists(["pay"], ["pay", "shop.web"]))), "Diagram")[0]["text"]
     assert '["Pay #40;added#41;"]' in text and '["Web #40;changed#41;"]' in text and "Pay #40;changed" not in text
+
+
+def test_change_record_frames_no_changed_element_gone_from_the_model() -> None:  # Change record: only current ids framed
+    document = change_doc(change(elements=lists(["shop.web"], ["shop.gone"])))
+    text = section(document, "Diagram")[0]["text"]
+    assert '["Web #40;added#41;"]' in text and "changed" not in text
+    assert section(document, "What changed")[-1] == {"type": "list", "items": [["shop.gone (not in the current model)"]]}
 
 
 def test_change_record_with_nothing_to_draw() -> None:  # Change record: no diagram when no added or changed element is current

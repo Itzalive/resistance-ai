@@ -1,6 +1,6 @@
 // A capability document (spec, What each document holds, Capability): title and description, the sequence diagram,
 // the steps, the decisions and contracts that name the capability, and the areas involved.
-import { doc, heading, paragraph, list, table, diagram } from './tree.mjs';
+import { doc, heading, paragraph, list, table, diagram, orSay } from './tree.mjs';
 import { STEP_LIMIT, sequence } from './mermaid.mjs';
 import { areasOf, capabilityDoc, capabilityRecords } from './facts.mjs';
 import { decisionBlocks, contractBlocks, elementLinks, areaLinks } from './records-doc.mjs';
@@ -13,8 +13,6 @@ function sequenceText(capability, ctx) {
   const participants = [...seen].map((id) => ({ id, text: ctx.titles.elements.get(id) ?? id }));
   return sequence(participants, capability.steps.map((step) => ({ from: step.from, to: step.to, reply: step.reply, text: step.label ?? '' })));
 }
-
-const orSay = (blocks, text) => (blocks.length > 0 ? blocks : [paragraph(text)]);
 
 export function buildCapability(data, capability, base) {
   const ctx = { ...base, doc: capabilityDoc(capability.name), area: null };

@@ -1,6 +1,6 @@
-// Decisions, contracts and open questions printed in full, as document-tree blocks. `ctx`: { doc (the path of the
-// document being built), byElement (areasByElement), titles (titlesOf), decisions (Map of id to decision), area (the
-// area of an area document, or null) }.
+// Decisions, contracts and open questions printed in full, as document-tree blocks. `ctx` holds at least { doc (the
+// path of the document being built), byElement (areasByElement), titles (titlesOf), decisions (Map of id to decision),
+// area (the area of an area document, or null) }; a document's ctx may carry more of `documentBase`.
 import { heading, paragraph, list, docLink } from './tree.mjs';
 import { areaDoc, areasOf, capabilityDoc, elementTarget, recordElements, recordTarget, relative } from './facts.mjs';
 
