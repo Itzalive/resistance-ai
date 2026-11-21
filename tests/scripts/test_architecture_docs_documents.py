@@ -210,7 +210,7 @@ def test_build_pack_guards_fences_and_line_separators(tmp_path) -> None:  # AC-2
     assert "\n### D-3\nUse A.\n\\```js\nx\n\\# y\nreason: Because.\n" in text
 
 
-AREA_MONEY ="  view area-money {\n    title 'Money'\n    include pay.gateway\n  }\n"
+AREA_MONEY = "  view area-money {\n    title 'Money'\n    include pay.gateway\n  }\n"
 CAPABILITY_BUY = ("  dynamic view capability-buy {\n    title 'Buy'\n    shop.web -> shop.api 'order; %%{init}%% now'\n"
                   "    shop.api -> pay.gateway\n    pay.gateway -> shop.api 'paid'\n  }\n")
 

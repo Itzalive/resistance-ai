@@ -769,7 +769,7 @@ git commit -m "feat(#33): the sequence diagram, with the 200-step limit"
 9. An arrow hidden by one the diagram does not draw — mutation: in `area-diagram.mjs`, let `hideImplied` also take an arrow the diagram does not draw (`bank -> pay.gateway` in the test) as an implying arrow — killed by: `test_an_arrow_is_hidden_only_by_a_drawn_one`
 
 - Satisfies Spec AC: AC-19 (neighbour labelled with its area, gap red and labelled, both arrows of a shared pair, runtime dashed with its kind, no implied import, no arrow between neighbours); AC-21 (the arrow limit); Drawing rules (amendment c081dce: neighbour labels, no `click` lines)
-- Decisions applied: none (the 2026-11-21 amendment, commit `c081dce`, is spec text)
+- Decisions applied: none (the 2026-11-21 amendments, commits `c081dce` and `6fae32e`, are spec text)
 - **Test retention:** **Permanent**
 
 - [ ] **Step 1: write RED tests.**
@@ -1090,7 +1090,7 @@ git commit -m "feat(#33): the drawing rules: framed elements, neighbours, import
 11. Dependencies name only the first area of the other end — mutation: in `area.mjs`, pass only the first of the other end's areas to `areaLinks` — killed by: `test_area_document_dependencies_name_every_area_of_the_other_end`
 
 - Satisfies Spec AC: Area (every section); AC-20 (a cross-cutting decision in both areas with "Also binds"; no principle); AC-21 (the note, the tables complete)
-- Decisions applied: none (the 2026-11-21 amendment, commit `c081dce`, is spec text)
+- Decisions applied: none (the 2026-11-21 amendments, commits `c081dce` and `6fae32e`, are spec text)
 - **Test retention:** **Permanent**
 
 - [ ] **Step 1: write RED tests.**
@@ -1807,7 +1807,7 @@ def test_build_pack_guards_fences_and_line_separators(tmp_path) -> None:  # AC-2
     assert "\n### D-3\nUse A.\n\\```js\nx\n\\# y\nreason: Because.\n" in text
 
 
-AREA_MONEY ="  view area-money {\n    title 'Money'\n    include pay.gateway\n  }\n"
+AREA_MONEY = "  view area-money {\n    title 'Money'\n    include pay.gateway\n  }\n"
 CAPABILITY_BUY = ("  dynamic view capability-buy {\n    title 'Buy'\n    shop.web -> shop.api 'order; %%{init}%% now'\n"
                   "    shop.api -> pay.gateway\n    pay.gateway -> shop.api 'paid'\n  }\n")
 
