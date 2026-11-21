@@ -99,7 +99,7 @@ Writes `<model>/changes/<date>-<name>.json`, the run's change file:
 
 The file is written with two-space indents, LF line endings and a final line feed, its keys in the records spec's table order. Before writing, the object is checked with the records' own change-file rules: a name that breaks layout rule 2 (form, a real date, at most 64 characters) or an empty text flag is `bad-input`, and nothing is written. A change file of that id that already exists is replaced only when its `approved` is `null` (a draft of this run); one that is approved is `out-error`, and nothing is written. The write goes to a temporary file `.architecture-records-<pid>-<n>` in `changes/` (a name the records reader ignores, layout rule 7) and is renamed into place; a later `change` removes any such file it finds; `changes/` is created when absent; a failed write, rename or removal is `out-error`. The command prints `wrote changes/<id>.json`.
 
-**`--compare`** builds the same object and writes nothing. `--asked-by`, `--summary` and `--rejected` default to the values in the existing file of that id. It prints `same changes/<id>.json` and exits 0 when the object equals the file, or prints `differs changes/<id>.json` (or `missing changes/<id>.json` when there is no file) and exits 1. The review uses it to confirm the draft's lists.
+**`--compare`** builds the same object and writes nothing. `--asked-by`, `--summary` and `--rejected` default to the values in the existing file of that id. With no file of that id it prints `missing changes/<id>.json` and exits 1 before the text flags are checked. Otherwise it prints `same changes/<id>.json` and exits 0 when the object equals the file, or prints `differs changes/<id>.json` and exits 1. The review uses it to confirm the draft's lists.
 
 ### `cycles`
 
@@ -109,7 +109,7 @@ Reads only. From the model's import relationships (`allowed`; runtime links are 
 
 1. The levels are the sets of siblings: the top-level elements first, then the children of each element, parents taken in order of depth, then id.
 2. In one set, sibling X **reaches** sibling Y when a relationship has its source X or inside X and its target Y or inside Y. A **strongly connected group** is a largest set of two or more siblings that all reach each other, directly or through others.
-3. In each group, the **candidate pairs** are the sibling pairs X → Y inside it that at least one relationship gives. Leaving out a pair leaves out every relationship that gives it. The command chooses the set of pairs whose removal leaves the group with no cycle and that leaves out, in order: the fewest relationships; then the fewest module edges (dependency-file edges whose source maps, by the longest `code` prefix, to the relationship's source or inside it, and whose target maps likewise); then the first sorted list of pairs. The search is exact.
+3. In each group, the **candidate pairs** are the sibling pairs X → Y inside it that at least one relationship gives. Leaving out a pair leaves out every relationship that gives it. The command chooses the set of pairs whose removal leaves the group with no cycle and that leaves out, in order: the fewest relationships; then the fewest distinct module edges among all the relationships left out in the group (dependency-file edges whose source maps, by the longest `code` prefix, to the relationship's source or inside it, and whose target maps likewise); then the first sorted list of pairs. The search is exact.
 4. A group with more than 20 candidate pairs gets no proposal; it is reported as too large, its relationships stay in, and the owner and the run choose by hand.
 5. A relationship gives a pair at exactly one level: among the children of the nearest common ancestor of its ends (the top level when they have none). A relationship from an element to one inside it gives no pair.
 
@@ -128,11 +128,13 @@ The review's cycle check runs `cycles` on the written model and passes only when
 - No element's `code` is a root, unless the whole repository is baselined [whole].
 - Every edge node in `coverage.json` is a `component` with `code`, no children and no `rules`, and is in no decision's `binds` or `owner` and no contract's `owner` or `bound` [whole].
 - The run's change file quotes `check`: its `check.output` equals a `check` run now on the same files [whole]; `change --compare` with the run's before copy exits 0 [changed].
-- No approved change file was edited or removed: `git status --porcelain -- <model>/changes` lists only this run's file [whole].
+- No approved change file was edited or removed: `git status --porcelain --untracked-files=all -- <model>/changes` lists only the change files written by this run and by the baselines nested in it, and each nested baseline's file still has the `approved` it was given at its approval [whole].
 - Every improvement the run noted is a hole or a proposed decision [changed].
 - `architecture-docs check` exits 0 [whole].
 - Every element is in at least one area in `export` `areas` [whole].
 - No element description states a target as fact [changed].
+
+`ARCH_STANDARDS.md`'s edge-node term matches the manifest item above: no children, no `rules`, in no decision's `binds` or `owner` and no contract's `owner` or `bound`.
 
 **The audit verifies the dependency file by a second method (F1).** The auditor scans the source for imports by a method independent of the `deps-command` (its own search over import statements) and compares the module edges it finds, inside the coverage, with the dependency file. An edge it finds that the file lacks is a `deps-defect` finding and fails the audit. A `deps-defect` stops the run: the run reports the missing edges to the owner with a recommended fix to the `deps-command`, which the owner (or a work item) changes, since the skill changes no file outside the model folder; the run then resumes at step 2, keeping its before copy.
 
@@ -148,7 +150,6 @@ The review's cycle check runs `cycles` on the written model and passes only when
 
 - `planning-features` (`SKILL.md`, `FEATURES_STANDARDS.md`, `FEATURES_REVIEW_MANIFEST.md`, `FEATURES_RUBRIC.md`): the rule map is the elements' `rules` in `export`; cross-cutting decisions are decisions with `obligations`; the "unchanged" check names the `.c4` files, the records and the change files instead of `architecture.md`.
 - `specifying-features` (`FEATURE_STANDARDS.md`, `FEATURE_REVIEW_MANIFEST.md`, `FEATURE_RUBRIC.md`): the same; "the decision log only grew" becomes "no approved change file was edited".
-- `ARCH_STANDARDS.md`'s edge-node term matches the manifest: no children, no `rules`, in no decision's `binds` or `owner` and no contract's `owner` or `bound`.
 - `specifying-work-items` `SKILL.md`, "Shard of a feature": the cross-cutting decisions are the decisions with `obligations` that bind the elements, and the principles.
 
 Both feature skills' `field-evidence.md` files name neither `architecture.md` nor the old test and need no change. Each skill may point readers at the generated pack (`generated/pack/`) for the slice they need; none of them writes records.
