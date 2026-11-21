@@ -37,8 +37,9 @@ function hideImplied(arrows) {
   return arrows.filter((arrow) => !implied.has(arrow));
 }
 
-// The nodes, arrows and frame of a diagram whose framed elements are `framedIds`: { nodes, arrows, frame }.
-export function drawing(framedIds, frameText, gap, base) {
+// The nodes, arrows and frame of a diagram whose framed elements are `framedIds`: { nodes, arrows, frame }. `marks` maps
+// a framed id to `added` or `changed` (a change record's diagram); a marked node is labelled `<title> (<mark>)`.
+export function drawing(framedIds, frameText, gap, base, marks = new Map()) {
   const framed = new Set(framedIds);
   const pairs = Object.fromEntries(STYLES.map((style) => [style, new Map()]));
   const add = (style, from, to, kind = null, titles = []) => {
@@ -72,7 +73,7 @@ export function drawing(framedIds, frameText, gap, base) {
   const neighbours = new Set(arrows.flatMap((arrow) => [arrow.from, arrow.to]).filter((id) => !framed.has(id)));
   const nodeText = (id) => {
     const title = base.titles.elements.get(id) ?? id;
-    if (framed.has(id)) return title;
+    if (framed.has(id)) return marks.has(id) ? `${title} (${marks.get(id)})` : title;
     const areas = base.byElement.get(id) ?? [];
     return `${title} (${areas.length > 0 ? areas[0] : 'no area'})`;
   };

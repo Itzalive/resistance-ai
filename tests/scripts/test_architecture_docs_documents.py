@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+import base64
+import hashlib
 import json
 import re
 from pathlib import Path
@@ -80,6 +82,15 @@ CONTRACTS = {"title": "Edge", "contracts": [{"id": "C-1", "name": "Card API", "o
 GAP = {"entries": [{"from": "shop.api", "to": "ledger", "reason": "Red " + ESC + "[31mgap | <b>", "close_by": "2027 " + ESC + "[0m01"},
                    {"from": "shop.web", "to": "pay.gateway", "reason": "no relationship"}]}
 LEDGER = "Ledger#59; #34;x#34; #37;#37;#123;init#125;#37;#37; #40;no area#41;"
+
+
+def change_file(**over) -> dict:
+    lists = {"added": [], "changed": [], "removed": []}
+    record = {"id": "2026-11-05-more", "date": "2026-11-05", "run": "later-stage", "asked_by": "#1", "summary": "More.", "rejected": [],
+              "elements": lists, "decisions": lists, "holes": lists, "contracts": lists, "gap": {"added": [], "removed": []},
+              "check": {"exit": 0, "summary": "ok", "output": "ok\n"}, "approved": None}
+    record.update(over)
+    return record
 
 
 def write_json(folder: Path, rel: str, data: object) -> None:
@@ -221,7 +232,8 @@ def test_check_reports_a_removed_area(tmp_path) -> None:  # AC-9 (the area case)
     check = run_tool("check", "--repo", repo, script=DOCS_SCRIPT)
     assert check.returncode == 1
     lines = check.stdout.splitlines()
-    for line in ("extra areas/money.md", "extra areas/money.html", "extra pack/areas/money.md", "changed README.md"):
+    for line in ("extra areas/money.md", "extra areas/money.html", "extra pack/areas/money.md", "changed README.md",
+                 "changed improvements.md"):
         assert line in lines
     assert not any(line.startswith("extra ") for line in lines if "money" not in line)
     assert run_tool("build", "--repo", repo, script=DOCS_SCRIPT).returncode == 0
@@ -273,10 +285,219 @@ TICKS = (
 )
 
 
-def test_build_checks_the_deadline_after_each_area_and_capability_document(tmp_path) -> None:  # Threat model: --timeout
+def test_build_checks_the_deadline_after_each_document(tmp_path) -> None:  # Threat model: --timeout
     preload = tmp_path / "ticks.mjs"
     preload.write_text(TICKS, encoding="utf-8")
     repo = make_repo(tmp_path, MODEL)
+    for id_ in ("2026-11-05-more", "2026-11-05-later"):
+        write_json(repo / "docs" / "architecture", f"changes/{id_}.json", change_file(id=id_))
     proc = run_tool("build", "--repo", repo, script=DOCS_SCRIPT, preload=preload)
     assert proc.returncode == 0, proc.stderr
-    assert proc.stderr.splitlines()[-1] == "ticks 6"  # model.json, the overview, three areas and one capability
+    # model.json, the overview, three areas, one capability, two change records (one check each) and the improvement list
+    assert proc.stderr.splitlines()[-1] == "ticks 9"
+
+
+MORE = change_file(rejected=["A monolith."], elements={"added": ["shop.web", "shop.cart"], "changed": [], "removed": []},
+                   decisions={"added": [], "changed": ["D-2"], "removed": []}, contracts={"added": [], "changed": [], "removed": ["C-9"]},
+                   gap={"added": [["shop.web", "pay.gateway"]], "removed": [["shop.cart", "bank"]]})
+
+
+def built_with_change(tmp_path: Path, record: dict = MORE) -> tuple[Path, Path]:
+    repo = make_repo(tmp_path, MODEL)
+    folder = repo / "docs" / "architecture"
+    decisions = json.loads(json.dumps(DECISIONS))
+    decisions["decisions"][1]["rejected"] = ["Two APIs."]
+    write_json(folder, "decisions/core.json", decisions)
+    write_json(folder, "contracts/edge.json", CONTRACTS)
+    write_json(folder, "known-gap.json", GAP)
+    write_json(folder, f"changes/{record['id']}.json", record)
+    proc = run_tool("build", "--repo", repo, script=DOCS_SCRIPT)
+    assert proc.returncode == 0, proc.stderr
+    return repo, folder / "generated"
+
+
+def test_build_writes_change_records(tmp_path) -> None:  # AC-22, AC-13 (change record pages)
+    _, out = built_with_change(tmp_path)
+    text = (out / "changes" / "2026-11-05-more.md").read_text(encoding="utf-8")
+    assert text.startswith(MARKER + "\n\n# 2026\\-11\\-05\\-more\n\n- Summary: More\\.\n- Asked by: \\#1\n")
+    assert "\n- Approval: Not yet approved\n" in text
+    frame = re.search(r'```mermaid\nflowchart LR\n  subgraph frame\["2026-11-05-more"\]\n(.*?)\n  end\n', text, re.S).group(1)
+    assert frame == '    n4["Web #40;added#41;"]'
+    assert ("Web #40;added#41;", "-->", "known gap", "Gateway #40;core#41;", "red") in diagram_arrows(text)
+    assert "\n### Elements added\n\n| Element | Title |" in text and "| [shop\\.web](../areas/front.md) | Web |" in text
+    assert "\n- shop\\.cart \\(not in the current model\\)\n" in text
+    assert "\n### Decisions changed\n\n#### D\\-2\n\nDecide D\\-2\\.\n" in text
+    assert "\n### Contracts removed\n\n- C\\-9\n" in text
+    assert "\n## Choices not taken\n\n- A monolith\\.\n- [D\\-2](../areas/front.md): Two APIs\\.\n" in text
+    assert ("\n## Known gap\n\n- Added: [shop\\.web](../areas/front.md) \\(Web\\) \\-&gt; [pay\\.gateway](../areas/core.md) \\(Gateway\\)\n"
+            "- Removed: shop\\.cart \\(not in the current model\\) \\-&gt; [bank](../README.md) \\(Bank\\)\n") in text
+    assert text.endswith("\n## Check\n\n- Exit: 0\n- Summary: ok\n\n```\nok\n```\n")
+    page = (out / "changes" / "2026-11-05-more.html").read_text(encoding="utf-8")
+    assert page.startswith(MARKER + "\n") and page.count("<script") == 2
+    assert "content=\"default-src 'none'; script-src https://cdn.jsdelivr.net/npm/mermaid@12.2.0" in page
+    assert '<a href="../areas/front.html">D-2</a>' in page
+    assert "[2026\\-11\\-05\\-more](changes/2026-11-05-more.md)" in (out / "README.md").read_text(encoding="utf-8")
+
+
+def test_build_writes_the_improvement_list(tmp_path) -> None:  # AC-23 (through build), AC-13 (its page)
+    _, out = built_with_change(tmp_path)
+    text = (out / "improvements.md").read_text(encoding="utf-8")
+    assert text.startswith(MARKER + "\n\n# Improvement list\n\n")
+    assert re.findall(r"^## (.*)$", text, re.M) == [
+        "Cycles in current code \\(0\\)", "Other known breaches \\(2\\)", "Open questions \\(1\\)", "Decisions not yet fully built \\(0\\)",
+        "Decisions with no known reason \\(0\\)", "Unmapped code \\(0\\)", "Elements in no area \\(2\\)", "Elements that own nothing \\(5\\)"]
+    assert ("- [shop\\.web](areas/front.md) \\(Web\\) \\-&gt; [pay\\.gateway](areas/core.md) \\(Gateway\\): no relationship\\. "
+            "Areas: [core](areas/core.md) \\(Core\\), [front](areas/front.md) \\(Front\\), [money](areas/money.md) \\(Money\\)\n") in text
+    assert "- [H\\-1](areas/front.md): binds [shop\\.api](areas/front.md) \\(API\\)\\. Areas: [front](areas/front.md) \\(Front\\)\n" in text
+    assert "\n## Unmapped code \\(0\\)\n\nNone\\.\n" in text
+    assert "- [bank](README.md) \\(Bank\\)\\. Not in any area\n" in text
+    page = (out / "improvements.html").read_text(encoding="utf-8")
+    assert page.startswith(MARKER + "\n") and page.count("<script") == 2
+    assert '<a href="areas/front.html">H-1</a>' in page
+    assert "[the improvement list](improvements.md)" in (out / "README.md").read_text(encoding="utf-8")
+
+
+def test_build_escapes_hostile_change_and_improvement_text(tmp_path) -> None:  # AC-12 (change records, improvement list)
+    hostile = change_file(summary="More [x](javascript:alert(1)) <script> | %%{init}%% " + ESC + "[31m",
+                          elements={"added": ["ledger"], "changed": [], "removed": []},
+                          rejected=["No <b>bold</b> | ```"], check={"exit": 1, "summary": "Bad " + ESC + "[0m", "output": "Out\n```\n" + ESC + "[31mred\n"})
+    _, out = built_with_change(tmp_path, hostile)
+    for name in files(out):
+        assert ESC not in (out / name).read_text(encoding="utf-8"), name
+    text = (out / "changes" / "2026-11-05-more.md").read_text(encoding="utf-8")
+    assert "- Summary: More \\[x\\]\\(javascript:alert\\(1\\)\\) &lt;script&gt; \\| %%\\{init\\}%% \n" in text
+    assert "- No &lt;b&gt;bold&lt;/b&gt; \\| \\`\\`\\`\n" in text
+    assert text.endswith("\n````\nOut\n```\nred\n````\n")
+    diagram = re.search(r"```mermaid\n(.*?)\n```", text, re.S).group(1)
+    assert '["' + LEDGER.replace("#40;no area#41;", "#40;added#41;") + '"]' in diagram
+    assert "%%" not in diagram and ";" not in re.sub(r"#\d+;", "", diagram.replace("\n", " "))
+    page = (out / "changes" / "2026-11-05-more.html").read_text(encoding="utf-8")
+    assert "<b>" not in page and "&lt;b&gt;bold" in page and page.count("<script") == 2
+    improvements = (out / "improvements.md").read_text(encoding="utf-8")
+    assert "Red gap \\| &lt;b&gt;; close by 2027 01\\." in improvements
+    assert "<b>" not in (out / "improvements.html").read_text(encoding="utf-8")
+
+
+def test_check_reports_a_removed_change_file(tmp_path) -> None:  # AC-9 (a change record), AC-17 (the changes folder)
+    repo, out = built_with_change(tmp_path)
+    (repo / "docs" / "architecture" / "changes" / "2026-11-05-more.json").unlink()
+    check = run_tool("check", "--repo", repo, script=DOCS_SCRIPT)
+    assert check.returncode == 1
+    lines = check.stdout.splitlines()
+    for line in ("extra changes/2026-11-05-more.html", "extra changes/2026-11-05-more.md", "changed README.md", "changed index.html"):
+        assert line in lines
+    assert [line for line in lines if line.startswith("extra ")] == ["extra changes/2026-11-05-more.html", "extra changes/2026-11-05-more.md"]
+    assert run_tool("build", "--repo", repo, script=DOCS_SCRIPT).returncode == 0
+    assert not (out / "changes").exists()
+    assert run_tool("check", "--repo", repo, script=DOCS_SCRIPT).returncode == 0
+
+
+def test_build_writes_one_record_per_change_file(tmp_path) -> None:  # Change record: one per change file, each its own
+    repo, out = built_with_change(tmp_path)
+    later = change_file(id="2026-11-07-later", date="2026-11-07", summary="Later.")
+    write_json(repo / "docs" / "architecture", "changes/2026-11-07-later.json", later)
+    assert run_tool("build", "--repo", repo, script=DOCS_SCRIPT).returncode == 0
+    assert files(out, "changes/*") == ["changes/2026-11-05-more.html", "changes/2026-11-05-more.md",
+                                       "changes/2026-11-07-later.html", "changes/2026-11-07-later.md"]
+    assert "\n- Summary: More\\.\n" in (out / "changes" / "2026-11-05-more.md").read_text(encoding="utf-8")
+    assert "\n- Summary: Later\\.\n" in (out / "changes" / "2026-11-07-later.md").read_text(encoding="utf-8")
+    assert "# 2026\\-11\\-07\\-later\n" in (out / "changes" / "2026-11-07-later.md").read_text(encoding="utf-8")
+
+
+def test_build_with_a_change_file_is_deterministic_and_check_agrees(tmp_path) -> None:  # AC-8 (change records, improvement list)
+    repo, out = built_with_change(tmp_path)
+    first = {name: (out / name).read_bytes() for name in files(out)}
+    assert run_tool("build", "--repo", repo, script=DOCS_SCRIPT).returncode == 0
+    assert {name: (out / name).read_bytes() for name in files(out)} == first
+    check = run_tool("check", "--repo", repo, script=DOCS_SCRIPT)
+    assert (check.returncode, check.stdout) == (0, "0 missing, 0 changed, 0 extra\n")
+
+
+def test_build_escapes_hostile_coverage_and_ids_not_in_the_model(tmp_path) -> None:  # AC-12 (coverage text, gone ids)
+    hostile_id = "x](javascript:alert(1)) <script> | %%{init}%%"
+    record = change_file(elements={"added": [hostile_id], "changed": [], "removed": [hostile_id]},
+                         gap={"added": [[hostile_id, "bank"]], "removed": []})
+    repo, out = built_with_change(tmp_path, record)
+    write_json(repo / "docs" / "architecture", "coverage.json", {
+        "answer": "A.", "baselined": [], "edge_nodes": [], "counts": {"modules": 1, "groups": 1},
+        "unmapped": [{"module": "src/[x](javascript:alert(1))", "reason": "<b>bad</b> | " + ESC + "[31m"}]})
+    proc = run_tool("build", "--repo", repo, script=DOCS_SCRIPT)
+    assert proc.returncode == 0, proc.stderr
+    change = (out / "changes" / "2026-11-05-more.md").read_text(encoding="utf-8")
+    escaped = "x\\]\\(javascript:alert\\(1\\)\\) &lt;script&gt; \\| %%\\{init\\}%%"
+    assert f"\n- {escaped} \\(not in the current model\\)\n" in change
+    assert f"\n- Added: {escaped} \\(not in the current model\\) \\-&gt; [bank](../README.md) \\(Bank\\)\n" in change
+    assert "](javascript" not in change and "<script>" not in change
+    improvements = (out / "improvements.md").read_text(encoding="utf-8")
+    assert "\n- src/\\[x\\]\\(javascript:alert\\(1\\)\\): &lt;b&gt;bad&lt;/b&gt; \\|" in improvements
+    assert "](javascript" not in improvements and "<b>" not in improvements and ESC not in improvements
+    for name in ("changes/2026-11-05-more.html", "improvements.html"):
+        page = (out / name).read_text(encoding="utf-8")
+        assert "<b>" not in page and "<script>alert" not in page and page.count("<script") == 2, name
+
+
+def test_build_improvement_list_with_one_item_of_each_kind(tmp_path) -> None:  # AC-23 (through build, with a coverage file)
+    repo = make_repo(tmp_path, MODEL)
+    folder = repo / "docs" / "architecture"
+    decisions = json.loads(json.dumps(DECISIONS))
+    decisions["decisions"][2:2] = [decision("D-3", binds=["shop.api"], status="planned"), decision("D-4", binds=["bank"], reason=None)]
+    write_json(folder, "decisions/core.json", decisions)
+    write_json(folder, "known-gap.json", {"entries": GAP["entries"] + [{"from": "bank", "to": "pay", "reason": "cycle in current code"}]})
+    write_json(folder, "changes/2026-11-05-more.json", change_file())
+    write_json(folder, "coverage.json", {"answer": "A.", "baselined": [], "edge_nodes": [{"element": "bank", "run": "2026-11-05-more"}],
+                                         "counts": {"modules": 1, "groups": 1}, "unmapped": [{"module": "src/z", "reason": "new code"}]})
+    proc = run_tool("build", "--repo", repo, script=DOCS_SCRIPT)
+    assert proc.returncode == 0, proc.stderr
+    text = (folder / "generated" / "improvements.md").read_text(encoding="utf-8")
+    assert re.findall(r"^## (.*)$", text, re.M) == [
+        "Cycles in current code \\(1\\)", "Other known breaches \\(2\\)", "Open questions \\(1\\)", "Decisions not yet fully built \\(1\\)",
+        "Decisions with no known reason \\(1\\)", "Unmapped code \\(1\\)", "Elements in no area \\(2\\)", "Elements that own nothing \\(4\\)"]
+    assert ("\n- [bank](README.md) \\(Bank\\) \\-&gt; [pay](areas/core.md) \\(Pay\\): cycle in current code\\. "
+            "Areas: [core](areas/core.md) \\(Core\\)\n") in text
+    assert "\n- [D\\-3](areas/front.md): status planned\\. Areas: [front](areas/front.md) \\(Front\\)\n" in text
+    assert "\n- [D\\-4](README.md)\\. Not in any area\n" in text
+    assert "\n- src/z: new code\n" in text
+    assert "[bank]" not in text.split("## Elements that own nothing")[1]
+
+
+def test_new_pages_carry_the_full_policy(tmp_path) -> None:  # AC-13 (change record and improvement list pages)
+    _, out = built_with_change(tmp_path)
+    script = "mermaid.initialize({ startOnLoad: true, securityLevel: 'strict' });"
+    digest = base64.b64encode(hashlib.sha256(script.encode("utf-8")).digest()).decode("ascii")
+    url = "https://cdn.jsdelivr.net/npm/mermaid@12.2.0/dist/mermaid.min.js"
+    policy = f"default-src 'none'; script-src {url} 'sha256-{digest}'; style-src 'unsafe-inline'; img-src data:"
+    for name in ("changes/2026-11-05-more.html", "improvements.html"):
+        lines = (out / name).read_text(encoding="utf-8").split("\n")
+        assert lines[0] == MARKER, name
+        assert f'<meta http-equiv="Content-Security-Policy" content="{policy}">' in lines, name
+        assert (f'<script src="{url}" integrity="sha384-8xUhuLNMjW/cI2Dacg3DR4WliYznvIg0LVG1stctThKD/YVrJFI9TNCFxft5NYgp" '
+                'crossorigin="anonymous"></script>') in lines, name
+        assert f"<script>{script}</script>" in lines and sum(line.count("<script") for line in lines) == 2, name
+
+
+def test_check_compares_a_new_and_a_stale_change_record(tmp_path) -> None:  # AC-9 (a change record missing or changed)
+    repo, _ = built(tmp_path)
+    folder = repo / "docs" / "architecture"
+    write_json(folder, "changes/2026-11-05-more.json", change_file())
+    new = run_tool("check", "--repo", repo, script=DOCS_SCRIPT)
+    assert new.returncode == 1
+    assert [line for line in new.stdout.splitlines() if "changes/" in line] == [
+        "missing changes/2026-11-05-more.html", "missing changes/2026-11-05-more.md"]
+    assert run_tool("build", "--repo", repo, script=DOCS_SCRIPT).returncode == 0
+    # The check output is printed only in the change record and the pack's model.json; the overview stays current.
+    write_json(folder, "changes/2026-11-05-more.json", change_file(check={"exit": 0, "summary": "ok", "output": "other\n"}))
+    stale = run_tool("check", "--repo", repo, script=DOCS_SCRIPT)
+    assert (stale.returncode, stale.stdout) == (
+        1, "changed changes/2026-11-05-more.html\nchanged changes/2026-11-05-more.md\nchanged pack/model.json\n0 missing, 3 changed, 0 extra\n")
+
+
+def test_build_counts_change_records_toward_the_file_limit(tmp_path) -> None:  # AC-16 (change records count)
+    repo = make_repo(tmp_path, MODEL)
+    folder = repo / "docs" / "architecture"
+    # 1,001 change files are within the model folder's limits, but their records alone are 2,002 output files.
+    for at in range(1001):
+        write_json(folder, f"changes/2026-11-05-c{at}.json", change_file(id=f"2026-11-05-c{at}"))
+    proc = run_tool("build", "--repo", repo, script=DOCS_SCRIPT)
+    assert proc.returncode == 2
+    assert "error: out-error: the output would be more than 2000 files" in proc.stderr
+    assert not (folder / "generated").exists()

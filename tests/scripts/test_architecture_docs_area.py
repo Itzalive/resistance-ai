@@ -177,6 +177,24 @@ def test_an_arrow_is_hidden_only_by_a_drawn_one() -> None:  # Drawing rules: the
     assert [node["id"] for node in picture["nodes"]] == ["bank", "pay"]
 
 
+def test_change_drawing_marks_framed_nodes() -> None:  # Change record: framed nodes labelled `<title> (added)` or `(changed)`
+    marks = "new Map([['shop.web', 'added'], ['pay.gateway', 'changed']])"
+    picture = run(f"d.drawing(['shop.web', 'pay.gateway'], '2026-11-05-more', [], base, {marks})", gap=[])
+    assert picture["frame"] == {"text": "2026-11-05-more", "ids": ["pay.gateway", "shop.web"]}
+    assert picture["nodes"] == [
+        {"id": "bank", "text": "Bank (no area)"},
+        {"id": "pay.gateway", "text": "Gateway (changed)"},
+        {"id": "shop.api", "text": "API (front)"},
+        {"id": "shop.api.orders", "text": "Orders (front)"},
+        {"id": "shop.web", "text": "Web (added)"},
+    ]
+
+
+def test_drawing_leaves_an_unmarked_framed_node_as_its_title() -> None:  # Change record: only marked ids carry a mark
+    picture = run("d.drawing(['shop.web', 'pay.gateway'], 'c', [], base, new Map([['shop.web', 'added']]))", gap=[])
+    assert {node["id"]: node["text"] for node in picture["nodes"]}["pay.gateway"] == "Gateway"
+
+
 RECORDS = {
     **DATA,
     "decisions": [

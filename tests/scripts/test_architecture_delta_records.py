@@ -546,3 +546,15 @@ def test_capability_names_skip_wrong_types_and_unknown_comes_first(tmp_path) -> 
         "error: record-error: contracts/b.json: contracts[0].capabilities[3]: ship is not a capability",
         "error: record-error: contracts/b.json: contracts[0].capabilities[3]: ship is listed twice",
     ]
+
+
+def test_change_file_name_is_at_most_64_characters(tmp_path) -> None:  # AC-27 (docs spec): a change id is never cut
+    at_limit = "2026-11-16-" + "a" * 53
+    over = "2026-11-16-" + "b" * 54
+    files = {f"changes/{at_limit}.json": change(at_limit), f"changes/{over}.json": change(over)}
+    repo, _ = model_folder(tmp_path, files)
+    assert error_lines(run_tool("export", "--repo", repo)) == [f"error: record-error: changes/{over}.json: -: not a valid file name here"]
+    (repo / "docs" / "architecture" / "changes" / f"{over}.json").unlink()
+    proc = run_tool("export", "--repo", repo)
+    assert proc.returncode == 0, proc.stderr
+    assert [record["id"] for record in json.loads(proc.stdout)["changes"]] == [at_limit]

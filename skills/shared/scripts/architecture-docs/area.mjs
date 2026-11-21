@@ -1,9 +1,11 @@
 // An area document (spec, What each document holds, Area): title and description, the diagram, the elements, their
 // dependencies, and the area's decisions, contracts, open questions, known-gap entries and capabilities.
 import { cmp } from '../architecture-delta/report.mjs';
-import { doc, heading, paragraph, table, diagram, docLink } from './tree.mjs';
+import { doc, heading, paragraph, table, diagram, docLink, orSay } from './tree.mjs';
 import { areaDoc, areaCapabilities, areaRecords, elementTarget, relative } from './facts.mjs';
-import { decisionBlocks, contractBlocks, holeBlocks, elementLinks, areaLinks, capabilityLinks } from './records-doc.mjs';
+import {
+  ELEMENT_HEADER, decisionBlocks, contractBlocks, holeBlocks, elementCells, elementLinks, areaLinks, capabilityLinks,
+} from './records-doc.mjs';
 import { drawing, drawingText, TOO_MANY_ARROWS } from './area-diagram.mjs';
 
 // An id is plain text in the document that holds it, a link elsewhere.
@@ -36,8 +38,6 @@ function dependencyRows(area, ctx) {
   return rows;
 }
 
-const orSay = (blocks, text) => (blocks.length > 0 ? blocks : [paragraph(text)]);
-
 export function buildArea(data, gap, area, base) {
   const ctx = { ...base, doc: areaDoc(area.name), area: area.name };
   const records = areaRecords(data, gap, area);
@@ -49,12 +49,8 @@ export function buildArea(data, gap, area, base) {
   blocks.push(text === null ? paragraph(TOO_MANY_ARROWS) : diagram(text));
 
   blocks.push(heading(2, 'Elements'));
-  blocks.push(...orSay(area.elements.length === 0 ? [] : [table(['Element', 'Title', 'Description', 'Code', 'Rules', 'Tags'],
-    area.elements.map((id) => {
-      const element = ctx.elements.get(id);
-      return [idCell(id, ctx), [element.title], [element.description ?? ''], [element.code.join(', ')],
-        [element.rules.join(', ')], [element.tags.map((tag) => `#${tag}`).join(' ')]];
-    }))], 'The area has no elements.'));
+  blocks.push(...orSay(area.elements.length === 0 ? [] : [table(ELEMENT_HEADER,
+    area.elements.map((id) => [idCell(id, ctx), ...elementCells(ctx.elements.get(id))]))], 'The area has no elements.'));
 
   blocks.push(heading(2, 'Dependencies'));
   const rows = dependencyRows(area, ctx);

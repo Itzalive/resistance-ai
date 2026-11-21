@@ -9,6 +9,8 @@ export const diagram = (text) => ({ type: 'diagram', text });
 // Named docLink: the safety test forbids any call named like fs.link outside the writer.
 export const docLink = (text, href) => ({ type: 'link', text, href });
 export const doc = (title, blocks) => ({ title, blocks });
+// A section's blocks, or one paragraph saying it is empty.
+export const orSay = (blocks, text) => (blocks.length > 0 ? blocks : [paragraph(text)]);
 
 // A link target: a relative path to a document, made only of safe characters.
 export const SAFE_HREF = /^(?!\/)[A-Za-z0-9._/-]+$/;

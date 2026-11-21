@@ -1,6 +1,6 @@
-// Decisions, contracts and open questions printed in full, as document-tree blocks. `ctx`: { doc (the path of the
-// document being built), byElement (areasByElement), titles (titlesOf), decisions (Map of id to decision), area (the
-// area of an area document, or null) }.
+// Decisions, contracts and open questions printed in full, as document-tree blocks. `ctx` holds at least { doc (the
+// path of the document being built), byElement (areasByElement), titles (titlesOf), decisions (Map of id to decision),
+// area (the area of an area document, or null) }; a document's ctx may carry more of `documentBase`.
 import { heading, paragraph, list, docLink } from './tree.mjs';
 import { areaDoc, areasOf, capabilityDoc, elementTarget, recordElements, recordTarget, relative } from './facts.mjs';
 
@@ -9,6 +9,11 @@ const separated = (parts) => parts.flatMap((part, index) => (index === 0 ? [part
 // Spec, Shared rules: an id is shown as written, with its title beside it.
 const titled = (groups) => groups.flatMap((group, index) => (index === 0 ? group : [', ', ...group]));
 const withTitle = (id, href, title) => [docLink(id, href), ` (${title ?? id})`];
+
+// Spec, Area and Change record: an element printed in full is a table row: id, title, description, code, rules, tags.
+export const ELEMENT_HEADER = ['Element', 'Title', 'Description', 'Code', 'Rules', 'Tags'];
+export const elementCells = (element) => [[element.title], [element.description ?? ''], [element.code.join(', ')],
+  [element.rules.join(', ')], [element.tags.map((tag) => `#${tag}`).join(' ')]];
 
 export const elementLinks = (ids, ctx) => titled(ids.map((id) =>
   withTitle(id, relative(ctx.doc, elementTarget(id, ctx.byElement)), ctx.titles.elements.get(id))));
