@@ -30,7 +30,7 @@
 
 ## Caller and test sweep
 
-Searched: `skills/`, `tests/`, `scripts/`, `agents/` with `grep -rn "KINDS\|missed-caller\|finding kind" skills tests scripts agents --include=*.py --include=*.md`.
+Searched: `skills/`, `tests/`, `scripts/`, `agents/` with `grep -rn "KINDS\|missed-caller\|finding kind" skills tests scripts agents --include=*.py --include=*.md`, and the alignment reviewer's wider `git grep` for each kind name.
 
 | Changed | Caller, test, fake, mock or assert | Kind | Task | Literal edit |
 |---|---|---|---|---|
@@ -39,6 +39,7 @@ Searched: `skills/`, `tests/`, `scripts/`, `agents/` with `grep -rn "KINDS\|miss
 | same | `tests/scripts/test_review_log_cli.py::test_rejects_finding_with_unknown_kind` (`style`) and `::test_run_record_rejects_unknown_finding_kind_and_writes_nothing` (`nit`) | assert | — | none: neither kind is added |
 | same | `skills/shared/review-log-jsonl.md` "**`findings[].kind`:**" table | doc | 1 | three rows, below |
 | same | skill texts that list a subset of kinds (`subagent-driven-development`, `writing-plans`, `checkpoint-reviewer-prompt.md`) | doc | — | none: they name the kinds their own reviews use |
+| same | `skills/survivability/SKILL.md:123` names `real-bug` | doc | — | none: names one kind its own step logs |
 
 ## Checkpoints
 
@@ -46,7 +47,7 @@ Searched: `skills/`, `tests/`, `scripts/`, `agents/` with `grep -rn "KINDS\|miss
 |---|---|---|---|
 | C1 | 1 | 1 | Task 1 items 1–3; focused tests `uv run pytest -q tests/scripts/test_review_log_cli.py` |
 
-Task 1 is fast tier; per the owner's checkpoint rule, mutation checkpoints sit only around strong-tier tasks, so C1 is covered by the code review and survivability of the whole change.
+Task 1 is fast tier. Under the owner's rule, no mutation checkpoint reviewer is sent for C1: the code review and survivability of the whole change check items 1–3. The meaning text of the three doc rows is checked by review only; no test pins it.
 
 ---
 
@@ -143,7 +144,7 @@ KINDS = (
 In `skills/shared/review-log-jsonl.md`, after the row ``| `wording` | Clarity or consistency only; no behaviour change |`` add:
 
 ```markdown
-| `model-drift` | The architecture model states something the code does not do, or a description states a target as fact |
+| `model-drift` | The model states something the code does not do, or a description states a target as fact |
 | `deps-defect` | The dependency file is wrong or incomplete |
 | `unsourced` | A recorded reason or evidence claim has no source, or its source does not say it |
 ```
@@ -151,7 +152,7 @@ In `skills/shared/review-log-jsonl.md`, after the row ``| `wording` | Clarity or
 - [ ] **Step 4: run GREEN and the whole CLI file.**
 
 Run: `uv run pytest -q tests/scripts/test_review_log_cli.py`
-Expected: all pass (the 8 new tests included).
+Expected: 49 passed (41 existing plus the 8 new).
 
 - [ ] **Step 5: refactor.** None expected; confirm `git diff --stat` shows only the three files.
 
