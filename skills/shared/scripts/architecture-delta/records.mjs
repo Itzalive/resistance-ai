@@ -6,7 +6,9 @@ import { isObject, shapeProblems } from './records-shape.mjs';
 import { cmp } from './report.mjs';
 
 const GROUP_FILE = /^[a-z0-9]+(-[a-z0-9]+)*\.json$/;
-const CHANGE_FILE = /^[0-9]{4}-[0-9]{2}-[0-9]{2}-[a-z0-9]+(-[a-z0-9]+)*\.json$/;
+// A change file's name, without `.json`, is at most 64 characters, so `export` (which cuts ids at 200) never cuts a
+// change id.
+const CHANGE_FILE = /^(?=.{1,64}\.json$)[0-9]{4}-[0-9]{2}-[0-9]{2}-[a-z0-9]+(-[a-z0-9]+)*\.json$/;
 const FOLDERS = [
   { folder: 'changes', kind: 'change', pattern: CHANGE_FILE },
   { folder: 'contracts', kind: 'contracts', pattern: GROUP_FILE },
