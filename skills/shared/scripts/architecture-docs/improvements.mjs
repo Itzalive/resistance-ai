@@ -45,7 +45,7 @@ function ownsNothing(data) {
 }
 
 export function buildImprovements(data, gap, base) {
-  const ctx = { ...base, doc: IMPROVEMENTS, area: null };
+  const ctx = { ...base, doc: IMPROVEMENTS };
   const sortedGap = [...gap].sort(byPair);
   const decisions = [...data.decisions].sort(byId);
   const groups = [

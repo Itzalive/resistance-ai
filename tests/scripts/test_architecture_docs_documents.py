@@ -289,11 +289,12 @@ def test_build_checks_the_deadline_after_each_document(tmp_path) -> None:  # Thr
     preload = tmp_path / "ticks.mjs"
     preload.write_text(TICKS, encoding="utf-8")
     repo = make_repo(tmp_path, MODEL)
-    write_json(repo / "docs" / "architecture", "changes/2026-11-05-more.json", change_file())
+    for id_ in ("2026-11-05-more", "2026-11-05-later"):
+        write_json(repo / "docs" / "architecture", f"changes/{id_}.json", change_file(id=id_))
     proc = run_tool("build", "--repo", repo, script=DOCS_SCRIPT, preload=preload)
     assert proc.returncode == 0, proc.stderr
-    # model.json, the overview, three areas, one capability, one change record and the improvement list
-    assert proc.stderr.splitlines()[-1] == "ticks 8"
+    # model.json, the overview, three areas, one capability, two change records (one check each) and the improvement list
+    assert proc.stderr.splitlines()[-1] == "ticks 9"
 
 
 MORE = change_file(rejected=["A monolith."], elements={"added": ["shop.web", "shop.cart"], "changed": [], "removed": []},
@@ -473,3 +474,31 @@ def test_new_pages_carry_the_full_policy(tmp_path) -> None:  # AC-13 (change rec
         assert (f'<script src="{url}" integrity="sha384-8xUhuLNMjW/cI2Dacg3DR4WliYznvIg0LVG1stctThKD/YVrJFI9TNCFxft5NYgp" '
                 'crossorigin="anonymous"></script>') in lines, name
         assert f"<script>{script}</script>" in lines and sum(line.count("<script") for line in lines) == 2, name
+
+
+def test_check_compares_a_new_and_a_stale_change_record(tmp_path) -> None:  # AC-9 (a change record missing or changed)
+    repo, _ = built(tmp_path)
+    folder = repo / "docs" / "architecture"
+    write_json(folder, "changes/2026-11-05-more.json", change_file())
+    new = run_tool("check", "--repo", repo, script=DOCS_SCRIPT)
+    assert new.returncode == 1
+    assert [line for line in new.stdout.splitlines() if "changes/" in line] == [
+        "missing changes/2026-11-05-more.html", "missing changes/2026-11-05-more.md"]
+    assert run_tool("build", "--repo", repo, script=DOCS_SCRIPT).returncode == 0
+    # The check output is printed only in the change record and the pack's model.json; the overview stays current.
+    write_json(folder, "changes/2026-11-05-more.json", change_file(check={"exit": 0, "summary": "ok", "output": "other\n"}))
+    stale = run_tool("check", "--repo", repo, script=DOCS_SCRIPT)
+    assert (stale.returncode, stale.stdout) == (
+        1, "changed changes/2026-11-05-more.html\nchanged changes/2026-11-05-more.md\nchanged pack/model.json\n0 missing, 3 changed, 0 extra\n")
+
+
+def test_build_counts_change_records_toward_the_file_limit(tmp_path) -> None:  # AC-16 (change records count)
+    repo = make_repo(tmp_path, MODEL)
+    folder = repo / "docs" / "architecture"
+    # 1,001 change files are within the model folder's limits, but their records alone are 2,002 output files.
+    for at in range(1001):
+        write_json(folder, f"changes/2026-11-05-c{at}.json", change_file(id=f"2026-11-05-c{at}"))
+    proc = run_tool("build", "--repo", repo, script=DOCS_SCRIPT)
+    assert proc.returncode == 2
+    assert "error: out-error: the output would be more than 2000 files" in proc.stderr
+    assert not (folder / "generated").exists()
