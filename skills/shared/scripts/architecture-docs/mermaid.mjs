@@ -1,6 +1,9 @@
 // Mermaid diagram text. Node ids are generated (n1, n2, ... in the order given); every label is entity-encoded, so model
 // text cannot close a quote, end a statement or open a directive. Mermaid decodes `#<code>;` before it parses.
+import { cmp } from '../architecture-delta/report.mjs';
+
 export const ARROW_LIMIT = 80;
+export const STEP_LIMIT = 200;
 const SAFE = /^[A-Za-z0-9 .'/_-]$/;
 const RED = 'stroke:#d00,color:#d00';
 
@@ -38,5 +41,21 @@ export function flowchart(nodes, arrows, frame = null) {
     if (arrow.red) red.push(at);
   });
   if (red.length > 0) lines.push(`  linkStyle ${red.join(',')} ${RED}`);
+  return lines.join('\n');
+}
+
+// A sequence diagram. `participants`: { id, text }, drawn in the order given, with ids generated in element-id order;
+// `messages`: { from, to, reply, text } by participant id, calls solid and replies dashed. Returns null when there are
+// more than STEP_LIMIT messages.
+export function sequence(participants, messages) {
+  if (messages.length > STEP_LIMIT) return null;
+  const ids = new Map(participants.map((participant) => participant.id).sort(cmp).map((id, index) => [id, `n${index + 1}`]));
+  const lines = ['sequenceDiagram', ...participants.map((participant) => `  participant ${ids.get(participant.id)} as ${label(participant.text)}`)];
+  for (const message of messages) {
+    const from = ids.get(message.from);
+    const to = ids.get(message.to);
+    if (from === undefined || to === undefined) throw new Error(`message ${message.from} -> ${message.to} has an end that is not a participant`);
+    lines.push(`  ${from}${message.reply ? '-->>' : '->>'}${to}: ${label(message.text)}`);
+  }
   return lines.join('\n');
 }

@@ -221,3 +221,28 @@ def test_flowchart_refuses_a_framed_id_that_is_no_node() -> None:  # fail closed
     result = mermaid("flowchart", [{"id": "a", "text": "A"}], [], {"text": "F", "ids": ["a", "ghost"]})
     assert result["ok"] is False
     assert "ghost" in result["message"]
+
+
+def test_sequence_diagram() -> None:  # Capability: participants by first appearance, ids in element-id order; replies dashed
+    participants = [{"id": "shop.web", "text": "Web"}, {"id": "shop.api", "text": "API; v2"}, {"id": "bank", "text": "Bank"}]
+    messages = [{"from": "shop.web", "to": "shop.api", "reply": False, "text": "order: now"},
+                {"from": "shop.api", "to": "bank", "reply": False, "text": ""},
+                {"from": "shop.api", "to": "shop.web", "reply": True, "text": "%%{init}%%"}]
+    assert mermaid("sequence", participants, messages)["value"] == (
+        "sequenceDiagram\n  participant n3 as Web\n  participant n2 as API#59; v2\n  participant n1 as Bank\n"
+        "  n3->>n2: order#58; now\n  n2->>n1: \n  n2-->>n3: #37;#37;#123;init#125;#37;#37;"
+    )
+
+
+def test_sequence_step_limit() -> None:  # Shared rules: a sequence diagram over 200 steps is replaced by a note
+    participants = [{"id": "a", "text": "A"}, {"id": "b", "text": "B"}]
+    message = {"from": "a", "to": "b", "reply": False, "text": "x"}
+    assert mermaid("sequence", participants, [message] * 200)["value"].count("->>") == 200
+    assert mermaid("sequence", participants, [message] * 201)["value"] is None
+
+
+def test_sequence_refuses_a_message_to_no_participant() -> None:  # fail closed: a message names only participants
+    for message in ({"from": "a", "to": "ghost", "reply": False, "text": ""}, {"from": "ghost", "to": "a", "reply": True, "text": ""}):
+        result = mermaid("sequence", [{"id": "a", "text": "A"}], [message])
+        assert result["ok"] is False
+        assert "ghost" in result["message"]
