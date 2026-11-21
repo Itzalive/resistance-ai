@@ -158,6 +158,14 @@ def test_area_drawing_text_and_arrow_limit() -> None:  # AC-21 (the diagram part
     assert run("d.drawingText(d.drawing(data.areas[1].elements, data.areas[1].title, [], base))", data=many).count(" --> ") == 80
 
 
+def test_an_arrow_is_hidden_only_by_a_drawn_one() -> None:  # Drawing rules: the implying arrow has a framed end
+    data = {**DATA, "runtime": [], "allowed": [{"from": "bank", "to": "pay", "titles": []}, {"from": "bank", "to": "pay.gateway", "titles": []}],
+            "areas": [{"name": "solo", "title": "Solo", "description": None, "elements": ["pay"]}]}
+    picture = run("d.drawing(data.areas[0].elements, data.areas[0].title, [], base)", data=data, gap=[])
+    assert picture["arrows"] == [arrow("bank", "pay", "import")]
+    assert [node["id"] for node in picture["nodes"]] == ["bank", "pay"]
+
+
 RECORDS = {
     **DATA,
     "decisions": [
@@ -325,6 +333,13 @@ def test_area_document_over_the_arrow_limit() -> None:  # AC-21: the note, and t
     document = area_doc(1, data, [])
     assert section(document, "Diagram") == [para("The diagram has more than 80 arrows and is not drawn; the tables list everything.")]
     assert len(section(document, "Dependencies")[0]["rows"]) == 81
+
+
+def test_area_document_dependencies_name_every_area_of_the_other_end() -> None:  # Area: "the other end's areas"
+    data = {**RECORDS, "areas": [{"name": "core", "title": "Core", "description": None, "elements": ["pay.gateway"]}, *RECORDS["areas"]]}
+    rows = section(area_doc(1, data), "Dependencies")[0]["rows"]
+    assert [["shop.api.orders"], ["uses"], [L("pay.gateway", "core.md"), " (Gateway)"], [""],
+            [L("core", "core.md"), " (Core)", ", ", L("money", "money.md"), " (Money)"]] in rows
 
 
 def capability_doc(index: int = 1, data: dict = RECORDS) -> dict:

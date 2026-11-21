@@ -30,7 +30,7 @@ model {
     gateway = container 'Gateway'
   }
   bank = system 'Bank'
-  ledger = system 'Ledger'
+  ledger = system 'Ledger; "x" %%{init}%%'
   shop.web -> shop.api 'orders'
   shop.api.orders -> pay.gateway
   shop.api -> pay
@@ -77,7 +77,9 @@ DECISIONS = {"title": "Core", "holes": [{"id": "H-1", "what": "Why?", "binds": [
 ]}
 CONTRACTS = {"title": "Edge", "contracts": [{"id": "C-1", "name": "Card API", "owner": "pay.gateway", "bound": ["shop.web"],
                                              "obligations": ["Ids"], "compatibility": None, "capabilities": ["buy"]}]}
-GAP = {"entries": [{"from": "shop.api", "to": "ledger", "reason": "Red " + ESC + "[31mgap | <b>", "close_by": "2027 " + ESC + "[0m01"}]}
+GAP = {"entries": [{"from": "shop.api", "to": "ledger", "reason": "Red " + ESC + "[31mgap | <b>", "close_by": "2027 " + ESC + "[0m01"},
+                   {"from": "shop.web", "to": "pay.gateway", "reason": "no relationship"}]}
+LEDGER = "Ledger#59; #34;x#34; #37;#37;#123;init#125;#37;#37; #40;no area#41;"
 
 
 def write_json(folder: Path, rel: str, data: object) -> None:
@@ -139,22 +141,27 @@ def test_build_writes_area_and_capability_documents(tmp_path) -> None:  # AC-18,
     for name in names:
         if name.endswith((".md", ".html")):
             assert (out / name).read_text(encoding="utf-8").startswith(MARKER + "\n"), name
+    for name in ("areas/front.html", "capabilities/buy.html"):
+        page = (out / name).read_text(encoding="utf-8")
+        assert page.count("<script") == 2 and "content=\"default-src 'none'; script-src https://cdn.jsdelivr.net/npm/mermaid@12.2.0" in page
     page = (out / "areas" / "front.html").read_text(encoding="utf-8")
-    assert page.count("<script") == 2 and "content=\"default-src 'none'; script-src https://cdn.jsdelivr.net/npm/mermaid@12.2.0" in page
     assert '<a href="../index.html">bank</a>' in page and '<a href="../capabilities/buy.html">buy</a>' in page
+    slice_ = (out / "pack" / "areas" / "front.md").read_text(encoding="utf-8")
+    assert slice_.endswith("\n\n## Capabilities\n\n- buy: Buy [capabilities/buy.md]\n")  # AC-26 (an area slice's capabilities)
 
 
 def test_build_area_diagram(tmp_path) -> None:  # AC-19
     _, out = built(tmp_path)
     arrows = diagram_arrows((out / "areas" / "front.md").read_text(encoding="utf-8"))
-    assert ("API", "-->", "known gap", "Ledger #40;no area#41;", "red") in arrows
+    assert ("API", "-->", "known gap", LEDGER, "red") in arrows
+    assert ("Web", "-->", "known gap", "Gateway #40;core#41;", "red") in arrows
     assert ("Web", "-->", "", "Bank #40;no area#41;") in arrows
     assert ("Web", "-.->", "event#44; #34;reports#34;", "Bank #40;no area#41;") in arrows
     assert ("API", "-.->", "http#44; #34;charges#34;", "Gateway #40;core#41;") in arrows
     assert ("Orders", "-->", "", "Gateway #40;core#41;") in arrows
     assert not any(arrow[0] == "API" and arrow[3] == "Pay #40;no area#41;" for arrow in arrows)
     assert not any(arrow[0] == "Bank #40;no area#41;" for arrow in arrows)
-    assert len(arrows) == 6
+    assert len(arrows) == 7
 
 
 def test_build_cross_cutting_decision_and_principle(tmp_path) -> None:  # AC-20
@@ -190,7 +197,20 @@ def test_build_escapes_hostile_text(tmp_path) -> None:  # AC-12 (area and capabi
     assert page.count("<script") == 2
 
 
-AREA_MONEY = "  view area-money {\n    title 'Money'\n    include pay.gateway\n  }\n"
+def test_build_pack_guards_fences_and_line_separators(tmp_path) -> None:  # AC-25 (amended), through `build`
+    model = MODEL.replace("  bank = system 'Bank'\n", "  bank = system 'Bank\nfeed" + chr(0x2029) + "line'\n")
+    repo = make_repo(tmp_path, model)
+    folder = repo / "docs" / "architecture"
+    write_json(folder, "decisions/core.json", {"title": "Core", "holes": [], "decisions": [
+        decision("D-3", decision="Use A.\n```js\nx" + chr(0x2028) + "# y", binds=["bank"])]})
+    proc = run_tool("build", "--repo", repo, script=DOCS_SCRIPT)
+    assert proc.returncode == 0, proc.stderr
+    text = (folder / "generated" / "pack" / "README.md").read_text(encoding="utf-8")
+    assert "\n### bank: Bank feed line\n" in text
+    assert "\n### D-3\nUse A.\n\\```js\nx\n\\# y\nreason: Because.\n" in text
+
+
+AREA_MONEY ="  view area-money {\n    title 'Money'\n    include pay.gateway\n  }\n"
 CAPABILITY_BUY = ("  dynamic view capability-buy {\n    title 'Buy'\n    shop.web -> shop.api 'order; %%{init}%% now'\n"
                   "    shop.api -> pay.gateway\n    pay.gateway -> shop.api 'paid'\n  }\n")
 
