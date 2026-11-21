@@ -120,8 +120,8 @@ export function areaCapabilities(data, area) {
     .sort((x, y) => cmp(x.name, y.name));
 }
 
-// What every area and capability document reads, built once per build: `byElement` (areasByElement), `links`
-// (linkIndex), `titles` (titlesOf), `elements` and `decisions` (Maps by id).
+// What every area, capability and change document reads, built once per build: `byElement` (areasByElement), `links`
+// (linkIndex), `titles` (titlesOf), `elements`, `decisions`, `contracts` and `holes` (Maps by id).
 export function documentBase(data) {
   return {
     byElement: areasByElement(data),
@@ -129,5 +129,7 @@ export function documentBase(data) {
     titles: titlesOf(data),
     elements: new Map(data.elements.map((element) => [element.id, element])),
     decisions: new Map(data.decisions.map((decision) => [decision.id, decision])),
+    contracts: new Map(data.contracts.map((contract) => [contract.id, contract])),
+    holes: new Map(data.holes.map((hole) => [hole.id, hole])),
   };
 }
