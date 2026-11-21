@@ -12,7 +12,7 @@
 
 **Open decisions:** none. The amendments `8473868` and `8173d46` are spec text. Two rules the tasks apply as written: a change record frames only ids still in the model (`drawing()` reads each framed id's links, and a gone id has none), and the known limit of pack text (only lines starting with `#`, `---`, three backticks or `~~~` are guarded) is unchanged: this plan writes no pack text. Presentation the spec leaves to the writer and the plan fixes in its tests: the `## Diagram` heading with a sentence when nothing is framed, one sentence for each empty section, `Added: ` and `Removed: ` items in one Known gap list, `approved by <by> on <date>`, `Exit: ` and `Summary: ` items, the improvement list's opening sentence, and the `: `, `; ` and `. ` separators of an improvement item; gone ids of every kind are one list after the current ones.
 
-**Size:** 6 tasks, 1398 lines (reported, not a target). Entry paths: the docs tool's `build` and `check`. Task 1's rule sits in the records reader that every command loads through, so it also changes what the delta tool's `export` and `check` accept: four commands, one shared load step, the same place the spec's capabilities rule (plan 1) applies. The per-plan rule counts the docs tool's two paths; the records rule adds a refusal at load, not a new path, and its test runs through `export`.
+**Size:** 6 tasks, 1430 lines (reported, not a target). Entry paths: the docs tool's `build` and `check`. Task 1's rule sits in the records reader that every command loads through, so it also changes what the delta tool's `export` and `check` accept: four commands, one shared load step, the same place the spec's capabilities rule (plan 1) applies. The per-plan rule counts the docs tool's two paths; the records rule adds a refusal at load, not a new path, and its test runs through `export`.
 
 **Trust boundary:** changed — see Trust-boundary table. No new file writes: only `writer.mjs` writes, and the safety tests (`tests/scripts/test_architecture_docs_safety.py`, `tests/scripts/test_architecture_delta_safety.py`) scan every changed module unchanged. No comment or string in a docs module may hold a forbidden call name followed by `(`: the names in `CHANGES_FILES` (`write`, `link`, `rm`, `cp`, `rename`, `mkdir`, `unlink`, `truncate` and the others) must not be followed by an opening bracket anywhere in the new modules. The new documents carry change-file, record, coverage and known-gap text into Markdown, HTML and Mermaid, and change ids into output paths; the writers' escaping, the label encoding and the change-file name rule are their defence, and Task 6 feeds hostile text through both new documents.
 
@@ -30,7 +30,7 @@
 
 **Main failure modes:** a section of a change record or of the improvement list missing, out of order, or with a wrong link (Tasks 4 and 5 compare exact trees); a gone id framed in a diagram (the build stops with an error; `test_change_record_diagram` frames one); a tool test still expecting four files after the improvement list is added (Task 6 moves those asserts); a module comment that names a forbidden call (the safety test fails the commit).
 
-**Measured at the cap:** an export-shaped model of 5,000 elements, 10,000 imports, 5,000 runtime links, 2,000 decisions, 500 contracts, 500 open questions, 500 known-gap entries, 51 areas (one holding every element), a coverage file with 2,000 unmapped modules, and 1,001 change files (one of them adding or changing every element) builds its change records in 0.45 s and its improvement list in 0.09 s (Markdown and HTML rendered, 11.2 MB in all).
+**Measured at the cap:** an export-shaped model of 5,000 elements, 10,000 imports, 5,000 runtime links, 2,000 decisions, 500 contracts, 500 open questions, 500 known-gap entries, 51 areas (one holding every element), a coverage file with 2,000 unmapped modules, and 900 change files (one of them adding or changing every element) builds its change records in 0.42 s and its improvement list in 0.09 s (Markdown and HTML rendered, 10.3 MB in all), calling the builders directly. That is about the most change files such a model can hold: with its 51 areas the output is about 1,960 files, and change records count toward the 2,000-file limit (write rule 4), which `test_build_counts_change_records_toward_the_file_limit` pins through the tool.
 
 ---
 
@@ -53,7 +53,7 @@ Searched: `skills/`, `tests/`, `scripts/`, `agents/` with `rg -n "drawing\(|docu
 | same | `tests/scripts/test_architecture_docs_tool.py:56` | assert | 6 | `"wrote 6 files, removed 1\n"` |
 | same | `tests/scripts/test_architecture_docs_tool.py:57`, `:156` | assert | 6 | `["README.md", "improvements.html", "improvements.md", "index.html", "pack/README.md", "pack/model.json"]` |
 | same | `tests/scripts/test_architecture_docs_documents.py:224` (`test_check_reports_a_removed_area`) | assert | 6 | the expected lines add `"changed improvements.md"` (a known-gap entry's areas lose `money`) |
-| same | `tests/scripts/test_architecture_docs_documents.py:276-282` (`test_build_checks_the_deadline_after_each_area_and_capability_document`, `ticks 6`) | assert | 6 | renamed `test_build_checks_the_deadline_after_each_document`; it writes one change file and expects `ticks 8` (model.json, the overview, three areas, one capability, one change record, the improvement list) |
+| same | `tests/scripts/test_architecture_docs_documents.py:276-282` (`test_build_checks_the_deadline_after_each_area_and_capability_document`, `ticks 6`) | assert | 6 | renamed `test_build_checks_the_deadline_after_each_document`; it writes two change files and expects `ticks 9` (model.json, the overview, three areas, one capability, two change records, the improvement list) |
 | same | `tests/scripts/test_architecture_docs_pack.py:512-513` (lists `pack/` only), `tests/scripts/test_architecture_docs_overview.py` (reads `README.md` and `index.html` only), `tests/scripts/test_architecture_docs_documents.py:175` (`### P\-1` only in `README.md` among non-pack Markdown files: the improvement list links `P-1`, it never heads it) | assert | — | none |
 
 Not affected (checked): `tests/scripts/test_architecture_docs_writer.py:27` and `:51` list folders built from their own file sets; `tests/scripts/test_architecture_docs_out.py` calls `listOut` directly and `changes` is already in `out.mjs` `FOLDERS`; `tests/scripts/test_architecture_docs_build.py` and `test_architecture_docs_facts.py` call none of the changed functions; `scripts/` and `agents/` hold no caller.
@@ -77,7 +77,7 @@ Mutation checkpoints run only around strong-tier tasks. Task 6 is the strong-tie
 
 | Checkpoint | After task | Tasks covered | Reviewer looks at |
 |---|---|---|---|
-| C1 | 6 | 6 | Task 6 items 1–7 (quick confirmation); the reviewer's own mutations at the decision points of Task 6 and the trust-boundary rows; full suite `uv run pytest -q` |
+| C1 | 6 | 6 | Task 6 items 1–10 (quick confirmation); the reviewer's own mutations at the decision points of Task 6 and the trust-boundary rows; full suite `uv run pytest -q` |
 | — | — | 1–5 | Task 1 items 1–2, Task 2 items 1–2, Task 3 items 1–4, Task 4 items 1–14, Task 5 items 1–16: survivability and the code review |
 
 ## Shared test fixture
@@ -921,7 +921,7 @@ function ownsNothing(data) {
 }
 
 export function buildImprovements(data, gap, base) {
-  const ctx = { ...base, doc: IMPROVEMENTS, area: null };
+  const ctx = { ...base, doc: IMPROVEMENTS };
   const sortedGap = [...gap].sort(byPair);
   const decisions = [...data.decisions].sort(byId);
   const groups = [
@@ -981,10 +981,13 @@ git commit -m "feat(#34): the improvement list: eight groups in order, each with
 5. No deadline check after a change record — mutation: delete the `tick();` after `addDocument(files, changeDoc(change.id), ...)` — killed by: `test_build_checks_the_deadline_after_each_document`
 6. No deadline check after the improvement list — mutation: delete the `tick();` after the improvement list's `addDocument` — killed by: `test_build_checks_the_deadline_after_each_document`
 7. The improvement list without the known gap — mutation: replace `buildImprovements(data, gap, base)` with `buildImprovements(data, [], base)` — killed by: `test_build_improvement_list_with_one_item_of_each_kind`
+8. One deadline check after all change records, not one each — mutation: move the `tick();` from inside the change loop to after it — killed by: `test_build_checks_the_deadline_after_each_document` (two change files, `ticks 9`)
+9. `check` skipping the change records it would write — mutation: in `architecture-docs.mjs`, leave the produced `changes/` files out of the comparison — killed by: `test_check_compares_a_new_and_a_stale_change_record`
+10. Change records left out of the output limit — mutation: in `architecture-docs.mjs`, pass `checkLimits` the files without `changes/` — killed by: `test_build_counts_change_records_toward_the_file_limit`
 
 **Pinned by:** the whole set stays deterministic and `check` agrees, with and without a change file: `tests/scripts/test_architecture_docs_tool.py::test_build_is_deterministic_and_check_agrees` (no change file) and the new `test_build_with_a_change_file_is_deterministic_and_check_agrees` build twice, compare every file byte for byte, and assert `check` prints `0 missing, 0 changed, 0 extra` (AC-8).
 
-- Satisfies Spec AC: AC-22 and AC-23 through `build` (one item of each improvement kind, with a coverage file); AC-8 (with a change file); AC-9 (a removed change file's two files `extra`, the overview `changed`; a removed area changes the improvement list); AC-12 (change records, the improvement list, coverage text, ids not in the model); AC-13 (the full policy, scripts and marker line on the new pages); AC-17 (the `changes` folder emptied and removed); the threat model's `--timeout` check after each document
+- Satisfies Spec AC: AC-22 and AC-23 through `build` (one item of each improvement kind, with a coverage file); AC-8 (with a change file); AC-9 (a new change file's two files `missing`, a changed one `changed`, a removed one's `extra`, the overview `changed`; a removed area changes the improvement list); AC-12 (change records, the improvement list, coverage text, ids not in the model); AC-13 (the full policy, scripts and marker line on the new pages); AC-16 (1,001 change files are more than 2,000 output files: `out-error`, nothing written); AC-17 (the `changes` folder emptied and removed); the threat model's `--timeout` check after each document
 - Decisions applied: none
 - **Test retention:** **Permanent**
 
@@ -1062,7 +1065,8 @@ def test_build_checks_the_deadline_after_each_document(tmp_path) -> None:  # Thr
 
 ```python
     repo = make_repo(tmp_path, MODEL)
-    write_json(repo / "docs" / "architecture", "changes/2026-11-05-more.json", change_file())
+    for id_ in ("2026-11-05-more", "2026-11-05-later"):
+        write_json(repo / "docs" / "architecture", f"changes/{id_}.json", change_file(id=id_))
 ```
 
 **In** `tests/scripts/test_architecture_docs_documents.py` **replace**:
@@ -1074,8 +1078,8 @@ def test_build_checks_the_deadline_after_each_document(tmp_path) -> None:  # Thr
 **with**:
 
 `````python
-    # model.json, the overview, three areas, one capability, one change record and the improvement list
-    assert proc.stderr.splitlines()[-1] == "ticks 8"
+    # model.json, the overview, three areas, one capability, two change records (one check each) and the improvement list
+    assert proc.stderr.splitlines()[-1] == "ticks 9"
 
 
 MORE = change_file(rejected=["A monolith."], elements={"added": ["shop.web", "shop.cart"], "changed": [], "removed": []},
@@ -1255,12 +1259,40 @@ def test_new_pages_carry_the_full_policy(tmp_path) -> None:  # AC-13 (change rec
         assert (f'<script src="{url}" integrity="sha384-8xUhuLNMjW/cI2Dacg3DR4WliYznvIg0LVG1stctThKD/YVrJFI9TNCFxft5NYgp" '
                 'crossorigin="anonymous"></script>') in lines, name
         assert f"<script>{script}</script>" in lines and sum(line.count("<script") for line in lines) == 2, name
+
+
+def test_check_compares_a_new_and_a_stale_change_record(tmp_path) -> None:  # AC-9 (a change record missing or changed)
+    repo, _ = built(tmp_path)
+    folder = repo / "docs" / "architecture"
+    write_json(folder, "changes/2026-11-05-more.json", change_file())
+    new = run_tool("check", "--repo", repo, script=DOCS_SCRIPT)
+    assert new.returncode == 1
+    assert [line for line in new.stdout.splitlines() if "changes/" in line] == [
+        "missing changes/2026-11-05-more.html", "missing changes/2026-11-05-more.md"]
+    assert run_tool("build", "--repo", repo, script=DOCS_SCRIPT).returncode == 0
+    # The check output is printed only in the change record and the pack's model.json; the overview stays current.
+    write_json(folder, "changes/2026-11-05-more.json", change_file(check={"exit": 0, "summary": "ok", "output": "other\n"}))
+    stale = run_tool("check", "--repo", repo, script=DOCS_SCRIPT)
+    assert (stale.returncode, stale.stdout) == (
+        1, "changed changes/2026-11-05-more.html\nchanged changes/2026-11-05-more.md\nchanged pack/model.json\n0 missing, 3 changed, 0 extra\n")
+
+
+def test_build_counts_change_records_toward_the_file_limit(tmp_path) -> None:  # AC-16 (change records count)
+    repo = make_repo(tmp_path, MODEL)
+    folder = repo / "docs" / "architecture"
+    # 1,001 change files are within the model folder's limits, but their records alone are 2,002 output files.
+    for at in range(1001):
+        write_json(folder, f"changes/2026-11-05-c{at}.json", change_file(id=f"2026-11-05-c{at}"))
+    proc = run_tool("build", "--repo", repo, script=DOCS_SCRIPT)
+    assert proc.returncode == 2
+    assert "error: out-error: the output would be more than 2000 files" in proc.stderr
+    assert not (folder / "generated").exists()
 `````
 
 - [ ] **Step 2: run RED.**
 
 Run: `uv run pytest -q tests/scripts/test_architecture_docs_documents.py`
-Expected: FAIL, 10 failed, 8 passed (no change record or improvement list is written; the removed-area test now also expects `changed improvements.md`; the AC-8 test with a change file passes already and guards the GREEN step).
+Expected: FAIL, 12 failed, 8 passed (no change record or improvement list is written; the removed-area test now also expects `changed improvements.md`; the AC-8 test with a change file passes already and guards the GREEN step).
 
 - [ ] **Step 3: GREEN.**
 
@@ -1377,7 +1409,7 @@ import { buildImprovements } from './improvements.mjs';
 - [ ] **Step 5: run the full suite.**
 
 Run: `uv run pytest -q`
-Expected: PASS (709 passed, 1 skipped).
+Expected: PASS (711 passed, 1 skipped).
 
 - [ ] **Step 6: refactor.** None expected; rerun Step 5 if anything changed.
 
@@ -1392,7 +1424,7 @@ git commit -m "feat(#34): build and check write and compare the change records a
 
 ## Verification evidence
 
-- Dry run: one scratch copy of main at `637bc43` plus the amendment `8473868`; the code built once there, with the alignment check's fixes as commits on top; full suite 676 passed, 1 skipped before and 709 passed, 1 skipped after.
+- Dry run: one scratch copy of main at `637bc43` plus the amendment `8473868`; the code built once there, with the alignment check's fixes as commits on top; full suite 676 passed, 1 skipped before and 711 passed, 1 skipped after.
 - Plan blocks: applying this plan's blocks in order to the baseline gives the dry run's final files byte for byte; replaying the tasks in that order in the dry-run copy gave each task's RED and GREEN counts above.
-- Mutations: every "Reviewer looks at" item above (45) was applied by exact byte replacement in the dry run and killed by its named test.
+- Mutations: every "Reviewer looks at" item above (48) was applied by exact byte replacement in the dry run and killed by its named test.
 - Diagrams: every `mermaid` block of the change records, the area documents and the capability documents built from the Task 6 fixtures (23 blocks, including a hostile title framed and marked) parses under Mermaid 12.2.0; a broken block is refused.
