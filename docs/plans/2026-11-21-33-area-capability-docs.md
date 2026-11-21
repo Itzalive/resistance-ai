@@ -315,7 +315,7 @@ git commit -m "refactor(#33): the per-element link index moves into facts.mjs fo
 2. Capabilities not sorted by name — mutation: in `facts.mjs`, drop the `.sort` from `areaCapabilities` — killed by: `test_area_slice_lists_its_capabilities`
 3. The capability line has no pack file — mutation: in `pack.mjs`, write the capability line as `- <name>: <title>` without `ref` — killed by: `test_area_slice_lists_its_capabilities`
 4. The capability title keeps its line feeds — mutation: in `pack.mjs`, write the capability title without `oneLine` — killed by: `test_area_slice_lists_its_capabilities`
-5. The Capabilities section written even when empty — mutation: in `pack.mjs`, replace `    ...section('Capabilities', lineBlock(` with `    ...['## Capabilities', ...lineBlock(` — killed by: `test_area_slice_with_no_capability_leaves_the_section_out`
+5. The Capabilities section written even when empty — mutation: in `pack.mjs`, write `['## Capabilities', ...lineBlock(...)]` in place of `section('Capabilities', lineBlock(...))`, so the heading appears even when empty — killed by: `test_area_slice_with_no_capability_leaves_the_section_out`
 6. The layout paragraph does not name an area slice's capabilities — mutation: in `pack.mjs`, replace `known-gap entries, and the capabilities that pass through it. '` with `known-gap entries. '` — killed by: `test_pack_layout_names_an_area_slice_s_capabilities`
 
 - Satisfies Spec AC: AC-26 (an area slice lists each capability with a step in the area, with its pack file); Pack layout (amendment c081dce)

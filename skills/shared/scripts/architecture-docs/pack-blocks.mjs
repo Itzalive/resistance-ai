@@ -63,8 +63,8 @@ export function elementBlock(id, ctx) {
   const element = ctx.elements.get(id);
   const head = [`kind ${element.kind}`];
   if (element.tags.length > 0) head.push(`tags ${element.tags.map((tag) => `#${tag}`).join(' ')}`);
-  if (element.code.length > 0) head.push(`code ${element.code.join(', ')}`);
-  if (element.rules.length > 0) head.push(`rules ${element.rules.join(', ')}`);
+  if (element.code.length > 0) head.push(`code ${element.code.map(oneLine).join(', ')}`);
+  if (element.rules.length > 0) head.push(`rules ${element.rules.map(oneLine).join(', ')}`);
   const lines = [`### ${id}: ${oneLine(element.title)}`, head.join(' · ')];
   if (element.description !== null) lines.push(multiLine(element.description));
   const uses = [...new Set(ctx.links.get(id).from.map((entry) => entry.to))].sort(cmp);

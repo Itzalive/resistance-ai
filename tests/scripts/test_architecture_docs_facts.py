@@ -256,3 +256,11 @@ def test_area_capabilities() -> None:  # Area and AI pack: the capabilities with
     assert names(["shop.web"]) == ["buy"]
     assert names(["pay"]) == ["pay"]
     assert names([]) == []
+
+
+def test_area_capabilities_sort_by_name_and_keep_the_export() -> None:  # Area and AI pack: in name order, not title order
+    code = ("const more = { capabilities: [{ name: 'zap', title: 'A zap', steps: [{ from: 'a', to: 'b' }] },"
+            " { name: 'add', title: 'Z add', steps: [{ from: 'b', to: 'a' }] }] };\n"
+            "const names = f.areaCapabilities(more, { elements: ['a'] }).map((c) => c.name);\n"
+            "process.stdout.write(JSON.stringify([names, more.capabilities.map((c) => c.name)]));")
+    assert run(code) == [["add", "zap"], ["zap", "add"]]

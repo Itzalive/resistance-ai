@@ -585,6 +585,20 @@ def test_pack_line_separators_count_as_line_feeds() -> None:  # Pack text: U+202
     assert text_fn("multiLine", "a" + chr(0x2028) + "# b" + chr(0x2029) + "--- c") == "a\n\\# b\n\\--- c"
 
 
+def test_pack_multi_line_fields_guard_the_first_line() -> None:  # Pack text: a field's first line is guarded too
+    assert text_fn("multiLine", "# a\nb") == "\\# a\nb"
+    assert text_fn("multiLine", "```js\nx") == "\\```js\nx"
+
+
+def test_element_block_code_and_rules_on_one_line() -> None:  # Pack text: U+2028 and U+2029 in a code or rules entry
+    hostile = json.dumps({"code": ["src/a" + chr(0x2028) + "# H"], "rules": ["BR-1" + chr(0x2029) + "```"]})
+    text = pack("(() => { const more = { ...data, elements: data.elements.map((e) => e.id === 'shop.api'"
+                f" ? {{ ...e, ...{hostile} }} : e) }};"
+                " return p.areaSlice(more, gap, more.areas[0], packContext(more)); })()")
+    assert chr(0x2028) not in text and chr(0x2029) not in text
+    assert "kind container · tags #layer · code src/a # H · rules BR-1 ```\n" in text
+
+
 def test_area_slice_lists_its_capabilities() -> None:  # Pack layout: `## Capabilities`; AC-26 (an area slice's capabilities)
     text = pack("p.areaSlice(data, gap, data.areas[0], base)")
     assert text.endswith("\n\n## Capabilities\n\n- buy: Buy [capabilities/buy.md]\n")
