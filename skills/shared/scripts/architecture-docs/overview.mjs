@@ -4,8 +4,7 @@ import { cmp } from '../architecture-delta/report.mjs';
 import { doc, heading, paragraph, list, table, diagram, docLink } from './tree.mjs';
 import { ARROW_LIMIT, flowchart } from './mermaid.mjs';
 import {
-  OVERVIEW, IMPROVEMENTS, changeDoc, topLevel, areasByElement, areasOf, isPrinciple, recordElements,
-  recordTarget, titlesOf,
+  OVERVIEW, IMPROVEMENTS, changeDoc, topLevel, areasByElement, areasOf, outsideAreas, recordTarget, titlesOf,
 } from './facts.mjs';
 import { decisionBlocks, contractBlocks, holeBlocks, elementLinks, areaLinks, capabilityLinks } from './records-doc.mjs';
 
@@ -41,6 +40,7 @@ const orNone = (parts) => (parts.length > 0 ? parts : ['None']);
 export function buildOverview(data, gap) {
   const byElement = areasByElement(data);
   const ctx = { doc: OVERVIEW, byElement, titles: titlesOf(data), decisions: new Map(data.decisions.map((d) => [d.id, d])), area: null };
+  const outside = outsideAreas(data, byElement);
   const blocks = [heading(2, 'System'), systemDiagram(data)];
 
   blocks.push(heading(2, 'Areas'));
@@ -55,7 +55,7 @@ export function buildOverview(data, gap) {
       orNone(areaLinks(areasOf(capability.steps.flatMap((step) => [step.from, step.to]), byElement), ctx))])));
 
   blocks.push(heading(2, 'Principles'));
-  const principles = data.decisions.filter(isPrinciple);
+  const principles = outside.principles;
   if (principles.length === 0) blocks.push(paragraph('No principles.'));
   for (const principle of principles) blocks.push(...decisionBlocks(principle, ctx));
 
@@ -84,11 +84,7 @@ export function buildOverview(data, gap) {
 
   // Spec, Overview: the elements in no area, then every record (other than a principle) that has no area.
   blocks.push(heading(2, 'Not in any area'));
-  const loose = data.elements.filter((element) => byElement.get(element.id).length === 0);
-  const noArea = (kind, record) => areasOf(recordElements(kind, record), byElement).length === 0;
-  const decisions = data.decisions.filter((d) => !isPrinciple(d) && noArea('decisions', d));
-  const contracts = data.contracts.filter((c) => noArea('contracts', c));
-  const holes = data.holes.filter((h) => noArea('holes', h));
+  const { elements: loose, decisions, contracts, holes } = outside;
   if (loose.length > 0) {
     blocks.push(table(['Element', 'Title', 'Description'], loose.map((element) => [[element.id], [element.title], [element.description ?? '']])));
   }

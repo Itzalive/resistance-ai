@@ -29,7 +29,7 @@ def snapshot(folder: Path) -> dict:
 def test_build_is_deterministic_and_check_agrees(tmp_path) -> None:  # AC-8, AC-13 (JSON marker)
     repo = make_repo(tmp_path)
     first = docs("build", "--repo", repo)
-    assert (first.returncode, first.stdout) == (0, "wrote 3 files, removed 0\n"), first.stderr
+    assert (first.returncode, first.stdout) == (0, "wrote 4 files, removed 0\n"), first.stderr
     before = snapshot(out_of(repo))
     assert docs("build", "--repo", repo).returncode == 0
     assert snapshot(out_of(repo)) == before
@@ -44,17 +44,17 @@ def test_build_is_deterministic_and_check_agrees(tmp_path) -> None:  # AC-8, AC-
 def test_check_reports_missing_changed_and_extra(tmp_path) -> None:  # AC-9 (stale marked file)
     repo = make_repo(tmp_path)
     missing = docs("check", "--repo", repo)
-    assert (missing.returncode, missing.stdout) == (1, "missing README.md\nmissing index.html\nmissing pack/model.json\n3 missing, 0 changed, 0 extra\n")
+    assert (missing.returncode, missing.stdout) == (1, "missing README.md\nmissing index.html\nmissing pack/README.md\nmissing pack/model.json\n4 missing, 0 changed, 0 extra\n")
     docs("build", "--repo", repo)
     (out_of(repo) / "areas").mkdir()
     (out_of(repo) / "areas" / "old.md").write_text(MARKER + "\n# Old\n", encoding="utf-8")
     model = repo / "docs" / "architecture" / "model.c4"
     model.write_text(model.read_text(encoding="utf-8").replace("'Card'", "'Card reader'"), encoding="utf-8")
     stale = docs("check", "--repo", repo)
-    assert (stale.returncode, stale.stdout) == (1, "changed README.md\nextra areas/old.md\nchanged index.html\nchanged pack/model.json\n0 missing, 3 changed, 1 extra\n")
+    assert (stale.returncode, stale.stdout) == (1, "changed README.md\nextra areas/old.md\nchanged index.html\nchanged pack/README.md\nchanged pack/model.json\n0 missing, 4 changed, 1 extra\n")
     rebuilt = docs("build", "--repo", repo)
-    assert rebuilt.stdout == "wrote 3 files, removed 1\n"
-    assert sorted(snapshot(out_of(repo))) == ["README.md", "index.html", "pack/model.json"]
+    assert rebuilt.stdout == "wrote 4 files, removed 1\n"
+    assert sorted(snapshot(out_of(repo))) == ["README.md", "index.html", "pack/README.md", "pack/model.json"]
     assert not (out_of(repo) / "areas").exists()
 
 
@@ -153,7 +153,7 @@ def test_build_leaves_no_temporary_file(tmp_path) -> None:  # AC-17
     check = docs("check", "--repo", repo)
     assert (check.returncode, check.stdout) == (0, "0 missing, 0 changed, 0 extra\n")
     docs("build", "--repo", repo)
-    assert sorted(snapshot(out_of(repo))) == ["README.md", "index.html", "pack/model.json"]
+    assert sorted(snapshot(out_of(repo))) == ["README.md", "index.html", "pack/README.md", "pack/model.json"]
 
 
 def test_build_usage_and_timeout(tmp_path) -> None:
@@ -203,6 +203,22 @@ LATE_CLOCK = (
 def test_build_checks_the_deadline_after_each_document(tmp_path) -> None:
     preload = tmp_path / "late-clock.mjs"
     preload.write_text(LATE_CLOCK, encoding="utf-8")
+    repo = make_repo(tmp_path)
+    proc = run_tool("build", "--repo", repo, script=DOCS_SCRIPT, preload=preload)
+    assert proc.returncode == 2
+    assert error_lines(proc)[0].startswith("error: timeout: ")
+    assert not out_of(repo).exists()
+
+
+PACK_CLOCK = (
+    "const now = Date.now;\n"
+    "Date.now = () => (new Error().stack.includes('pack.mjs') ? now() + 10 ** 9 : now());\n"
+)
+
+
+def test_build_checks_the_deadline_after_each_pack_file(tmp_path) -> None:  # a deadline tick per pack file, in build
+    preload = tmp_path / "pack-clock.mjs"
+    preload.write_text(PACK_CLOCK, encoding="utf-8")
     repo = make_repo(tmp_path)
     proc = run_tool("build", "--repo", repo, script=DOCS_SCRIPT, preload=preload)
     assert proc.returncode == 2

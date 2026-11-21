@@ -58,3 +58,44 @@ export function relative(from, to) {
   if (to.startsWith('/') || path.posix.normalize(to).startsWith('..')) throw new Error(`link target ${to} leaves the output folder`);
   return path.posix.relative(path.posix.dirname(from), to);
 }
+
+// Spec, Area: an area's records: the decisions binding an area element (cross-cutting first, then by id), the
+// contracts whose owner or bound elements are in the area, the open questions binding area elements, and the
+// known-gap entries with an end in the area, sorted by pair.
+export function areaRecords(data, gap, area) {
+  const inArea = new Set(area.elements);
+  const touches = (ids) => ids.some((id) => inArea.has(id));
+  const decisions = data.decisions.filter((decision) => touches(decision.binds))
+    .sort((x, y) => Number(isCrossCutting(y)) - Number(isCrossCutting(x)) || cmp(x.id, y.id));
+  return {
+    decisions,
+    contracts: data.contracts.filter((contract) => touches(recordElements('contracts', contract))),
+    holes: data.holes.filter((hole) => touches(hole.binds)),
+    gap: gap.filter((entry) => inArea.has(entry.from) || inArea.has(entry.to))
+      .sort((x, y) => cmp(x.from, y.from) || cmp(x.to, y.to)),
+  };
+}
+
+// Spec, Capability and AI pack: the elements a capability's steps touch (sorted), and the decisions and contracts
+// whose `capabilities` name it.
+export function capabilityRecords(data, capability) {
+  const names = (record) => (record.capabilities ?? []).includes(capability.name);
+  return {
+    elements: [...new Set(capability.steps.flatMap((step) => [step.from, step.to]))].sort(cmp),
+    decisions: data.decisions.filter(names),
+    contracts: data.contracts.filter(names),
+  };
+}
+
+// Spec, Overview and AI pack: the facts outside any area: the elements in no area, the principles, and the decisions
+// (other than principles), contracts and open questions that have no area.
+export function outsideAreas(data, byElement) {
+  const noArea = (kind, record) => areasOf(recordElements(kind, record), byElement).length === 0;
+  return {
+    elements: data.elements.filter((element) => byElement.get(element.id).length === 0),
+    principles: data.decisions.filter(isPrinciple),
+    decisions: data.decisions.filter((decision) => !isPrinciple(decision) && noArea('decisions', decision)),
+    contracts: data.contracts.filter((contract) => noArea('contracts', contract)),
+    holes: data.holes.filter((hole) => noArea('holes', hole)),
+  };
+}

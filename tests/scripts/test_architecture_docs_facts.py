@@ -150,3 +150,75 @@ def test_contract_and_open_question_in_full() -> None:
         {"type": "paragraph", "parts": ["Why two caches?"]},
         {"type": "list", "items": [["Binds: ", L("c", "README.md"), " (C)"], ["Evidence: ", "search"]]},
     ]
+
+
+RECORDS = {
+    "elements": [{"id": e, "title": e} for e in ("bank", "pay", "shop", "shop.api", "shop.web")],
+    "areas": [{"name": "front", "title": "Front", "elements": ["shop", "shop.api", "shop.web"]},
+              {"name": "money", "title": "Money", "elements": ["pay"]}],
+    "capabilities": [{"name": "buy", "title": "Buy", "steps": [
+        {"from": "shop.web", "to": "shop.api"}, {"from": "shop.api", "to": "pay"}, {"from": "pay", "to": "shop.api"}]}],
+    "decisions": [
+        {"id": "D-1", "binds": ["shop.api"], "capabilities": ["buy"]},
+        {"id": "D-2", "binds": ["shop.api", "pay"], "obligations": ["o"]},
+        {"id": "D-3", "binds": ["bank"]},
+        {"id": "D-4", "binds": ["shop.web"], "obligations": ["o"]},
+        {"id": "P-1", "binds": [], "obligations": ["o"]},
+    ],
+    "contracts": [{"id": "C-1", "owner": "pay", "bound": ["shop.web"], "capabilities": ["buy"]},
+                  {"id": "C-2", "owner": "bank", "bound": ["bank"]},
+                  {"id": "C-3", "owner": "pay", "bound": ["bank"]}],
+    "holes": [{"id": "H-1", "binds": ["shop.web"]}, {"id": "H-2", "binds": ["bank"]}],
+}
+GAP = [
+    {"from": "shop.web", "to": "bank", "reason": "r", "close_by": None},
+    {"from": "shop.api", "to": "bank", "reason": "r", "close_by": None},
+    {"from": "bank", "to": "pay", "reason": "r", "close_by": None},
+]
+
+
+def ids(records: list) -> list:
+    return [record["id"] for record in records]
+
+
+def test_area_records() -> None:  # Area: decisions (cross-cutting first), contracts, open questions, known-gap entries
+    front = facts("areaRecords", RECORDS, GAP, RECORDS["areas"][0])
+    assert ids(front["decisions"]) == ["D-2", "D-4", "D-1"]
+    assert ids(front["contracts"]) == ["C-1"]
+    assert ids(front["holes"]) == ["H-1"]
+    assert [(e["from"], e["to"]) for e in front["gap"]] == [("shop.api", "bank"), ("shop.web", "bank")]
+    money = facts("areaRecords", RECORDS, GAP, RECORDS["areas"][1])
+    assert (ids(money["decisions"]), ids(money["contracts"]), ids(money["holes"])) == (["D-2"], ["C-1", "C-3"], [])
+    assert [(e["from"], e["to"]) for e in money["gap"]] == [("bank", "pay")]
+
+
+def test_area_records_of_an_area_with_none() -> None:  # Area: an area may have no records
+    empty = facts("areaRecords", RECORDS, GAP, {"name": "x", "title": "X", "elements": []})
+    assert empty == {"decisions": [], "contracts": [], "holes": [], "gap": []}
+
+
+def test_capability_records() -> None:  # Capability and AI pack: the elements the steps touch, the records naming it
+    buy = facts("capabilityRecords", RECORDS, RECORDS["capabilities"][0])
+    assert buy["elements"] == ["pay", "shop.api", "shop.web"]
+    assert (ids(buy["decisions"]), ids(buy["contracts"])) == (["D-1"], ["C-1"])
+
+
+def test_capability_records_with_no_steps_or_names() -> None:  # a record without `capabilities` names none
+    empty = facts("capabilityRecords", RECORDS, {"name": "refund", "title": "Refund", "steps": []})
+    assert empty == {"elements": [], "decisions": [], "contracts": []}
+
+
+def run_on(data: dict, code: str) -> object:
+    from arch_delta_support import lib_url, run_module
+    import json
+    snippet = f"import * as f from {json.dumps(lib_url('facts.mjs', DOCS_LIB))};\nconst data = {json.dumps(data)};\n{code}"
+    proc = run_module(snippet)
+    assert proc.returncode == 0, proc.stderr
+    return json.loads(proc.stdout)
+
+
+def test_outside_areas() -> None:  # Overview and AI pack: the facts outside any area
+    out = run_on(RECORDS, "process.stdout.write(JSON.stringify(f.outsideAreas(data, f.areasByElement(data))));")
+    assert [element["id"] for element in out["elements"]] == ["bank"]
+    assert (ids(out["principles"]), ids(out["decisions"]), ids(out["contracts"]), ids(out["holes"])) == (
+        ["P-1"], ["D-3"], ["C-2"], ["H-2"])
