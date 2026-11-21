@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+import base64
+import hashlib
 import json
 import re
 from pathlib import Path
@@ -387,3 +389,87 @@ def test_check_reports_a_removed_change_file(tmp_path) -> None:  # AC-9 (a chang
     assert run_tool("build", "--repo", repo, script=DOCS_SCRIPT).returncode == 0
     assert not (out / "changes").exists()
     assert run_tool("check", "--repo", repo, script=DOCS_SCRIPT).returncode == 0
+
+
+
+def test_build_writes_one_record_per_change_file(tmp_path) -> None:  # Change record: one per change file, each its own
+    repo, out = built_with_change(tmp_path)
+    later = change_file(id="2026-11-07-later", date="2026-11-07", summary="Later.")
+    write_json(repo / "docs" / "architecture", "changes/2026-11-07-later.json", later)
+    assert run_tool("build", "--repo", repo, script=DOCS_SCRIPT).returncode == 0
+    assert files(out, "changes/*") == ["changes/2026-11-05-more.html", "changes/2026-11-05-more.md",
+                                       "changes/2026-11-07-later.html", "changes/2026-11-07-later.md"]
+    assert "\n- Summary: More\\.\n" in (out / "changes" / "2026-11-05-more.md").read_text(encoding="utf-8")
+    assert "\n- Summary: Later\\.\n" in (out / "changes" / "2026-11-07-later.md").read_text(encoding="utf-8")
+    assert "# 2026\\-11\\-07\\-later\n" in (out / "changes" / "2026-11-07-later.md").read_text(encoding="utf-8")
+
+
+def test_build_with_a_change_file_is_deterministic_and_check_agrees(tmp_path) -> None:  # AC-8 (change records, improvement list)
+    repo, out = built_with_change(tmp_path)
+    first = {name: (out / name).read_bytes() for name in files(out)}
+    assert run_tool("build", "--repo", repo, script=DOCS_SCRIPT).returncode == 0
+    assert {name: (out / name).read_bytes() for name in files(out)} == first
+    check = run_tool("check", "--repo", repo, script=DOCS_SCRIPT)
+    assert (check.returncode, check.stdout) == (0, "0 missing, 0 changed, 0 extra\n")
+
+
+def test_build_escapes_hostile_coverage_and_ids_not_in_the_model(tmp_path) -> None:  # AC-12 (coverage text, gone ids)
+    hostile_id = "x](javascript:alert(1)) <script> | %%{init}%%"
+    record = change_file(elements={"added": [hostile_id], "changed": [], "removed": [hostile_id]},
+                         gap={"added": [[hostile_id, "bank"]], "removed": []})
+    repo, out = built_with_change(tmp_path, record)
+    write_json(repo / "docs" / "architecture", "coverage.json", {
+        "answer": "A.", "baselined": [], "edge_nodes": [], "counts": {"modules": 1, "groups": 1},
+        "unmapped": [{"module": "src/[x](javascript:alert(1))", "reason": "<b>bad</b> | " + ESC + "[31m"}]})
+    proc = run_tool("build", "--repo", repo, script=DOCS_SCRIPT)
+    assert proc.returncode == 0, proc.stderr
+    change = (out / "changes" / "2026-11-05-more.md").read_text(encoding="utf-8")
+    escaped = "x\\]\\(javascript:alert\\(1\\)\\) &lt;script&gt; \\| %%\\{init\\}%%"
+    assert f"\n- {escaped} \\(not in the current model\\)\n" in change
+    assert f"\n- Added: {escaped} \\(not in the current model\\) \\-&gt; [bank](../README.md) \\(Bank\\)\n" in change
+    assert "](javascript" not in change and "<script>" not in change
+    improvements = (out / "improvements.md").read_text(encoding="utf-8")
+    assert "\n- src/\\[x\\]\\(javascript:alert\\(1\\)\\): &lt;b&gt;bad&lt;/b&gt; \\|" in improvements
+    assert "](javascript" not in improvements and "<b>" not in improvements and ESC not in improvements
+    for name in ("changes/2026-11-05-more.html", "improvements.html"):
+        page = (out / name).read_text(encoding="utf-8")
+        assert "<b>" not in page and "<script>alert" not in page and page.count("<script") == 2, name
+
+
+def test_build_improvement_list_with_one_item_of_each_kind(tmp_path) -> None:  # AC-23 (through build, with a coverage file)
+    repo = make_repo(tmp_path, MODEL)
+    folder = repo / "docs" / "architecture"
+    decisions = json.loads(json.dumps(DECISIONS))
+    decisions["decisions"][2:2] = [decision("D-3", binds=["shop.api"], status="planned"), decision("D-4", binds=["bank"], reason=None)]
+    write_json(folder, "decisions/core.json", decisions)
+    write_json(folder, "known-gap.json", {"entries": GAP["entries"] + [{"from": "bank", "to": "pay", "reason": "cycle in current code"}]})
+    write_json(folder, "changes/2026-11-05-more.json", change_file())
+    write_json(folder, "coverage.json", {"answer": "A.", "baselined": [], "edge_nodes": [{"element": "bank", "run": "2026-11-05-more"}],
+                                         "counts": {"modules": 1, "groups": 1}, "unmapped": [{"module": "src/z", "reason": "new code"}]})
+    proc = run_tool("build", "--repo", repo, script=DOCS_SCRIPT)
+    assert proc.returncode == 0, proc.stderr
+    text = (folder / "generated" / "improvements.md").read_text(encoding="utf-8")
+    assert re.findall(r"^## (.*)$", text, re.M) == [
+        "Cycles in current code \\(1\\)", "Other known breaches \\(2\\)", "Open questions \\(1\\)", "Decisions not yet fully built \\(1\\)",
+        "Decisions with no known reason \\(1\\)", "Unmapped code \\(1\\)", "Elements in no area \\(2\\)", "Elements that own nothing \\(4\\)"]
+    assert ("\n- [bank](README.md) \\(Bank\\) \\-&gt; [pay](areas/core.md) \\(Pay\\): cycle in current code\\. "
+            "Areas: [core](areas/core.md) \\(Core\\)\n") in text
+    assert "\n- [D\\-3](areas/front.md): status planned\\. Areas: [front](areas/front.md) \\(Front\\)\n" in text
+    assert "\n- [D\\-4](README.md)\\. Not in any area\n" in text
+    assert "\n- src/z: new code\n" in text
+    assert "[bank]" not in text.split("## Elements that own nothing")[1]
+
+
+def test_new_pages_carry_the_full_policy(tmp_path) -> None:  # AC-13 (change record and improvement list pages)
+    _, out = built_with_change(tmp_path)
+    script = "mermaid.initialize({ startOnLoad: true, securityLevel: 'strict' });"
+    digest = base64.b64encode(hashlib.sha256(script.encode("utf-8")).digest()).decode("ascii")
+    url = "https://cdn.jsdelivr.net/npm/mermaid@12.2.0/dist/mermaid.min.js"
+    policy = f"default-src 'none'; script-src {url} 'sha256-{digest}'; style-src 'unsafe-inline'; img-src data:"
+    for name in ("changes/2026-11-05-more.html", "improvements.html"):
+        lines = (out / name).read_text(encoding="utf-8").split("\n")
+        assert lines[0] == MARKER, name
+        assert f'<meta http-equiv="Content-Security-Policy" content="{policy}">' in lines, name
+        assert (f'<script src="{url}" integrity="sha384-8xUhuLNMjW/cI2Dacg3DR4WliYznvIg0LVG1stctThKD/YVrJFI9TNCFxft5NYgp" '
+                'crossorigin="anonymous"></script>') in lines, name
+        assert f"<script>{script}</script>" in lines and sum(line.count("<script") for line in lines) == 2, name
