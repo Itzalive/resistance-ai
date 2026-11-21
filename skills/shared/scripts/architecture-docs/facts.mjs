@@ -119,3 +119,15 @@ export function areaCapabilities(data, area) {
   return data.capabilities.filter((capability) => capability.steps.some((step) => inArea.has(step.from) || inArea.has(step.to)))
     .sort((x, y) => cmp(x.name, y.name));
 }
+
+// What every area and capability document reads, built once per build: `byElement` (areasByElement), `links`
+// (linkIndex), `titles` (titlesOf), `elements` and `decisions` (Maps by id).
+export function documentBase(data) {
+  return {
+    byElement: areasByElement(data),
+    links: linkIndex(data),
+    titles: titlesOf(data),
+    elements: new Map(data.elements.map((element) => [element.id, element])),
+    decisions: new Map(data.decisions.map((decision) => [decision.id, decision])),
+  };
+}
