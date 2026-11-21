@@ -222,3 +222,23 @@ def test_outside_areas() -> None:  # Overview and AI pack: the facts outside any
     assert [element["id"] for element in out["elements"]] == ["bank"]
     assert (ids(out["principles"]), ids(out["decisions"]), ids(out["contracts"]), ids(out["holes"])) == (
         ["P-1"], ["D-3"], ["C-2"], ["H-2"])
+
+
+LINKS = {
+    "elements": [{"id": e} for e in ("a", "b", "c")],
+    "allowed": [{"from": "a", "to": "b", "titles": []}, {"from": "c", "to": "a", "titles": []}],
+    "runtime": [{"from": "b", "to": "a", "kind": "http", "titles": ["t"]}, {"from": "ghost", "to": "c", "kind": "event", "titles": []}],
+    "decisions": [{"id": "D-1", "binds": ["a", "a", "c"]}, {"id": "D-2", "binds": ["a"]}],
+}
+
+
+def test_link_index() -> None:  # Area and AI pack: each element's entries, grouped once
+    code = ("const i = f.linkIndex(data);\n"
+            "process.stdout.write(JSON.stringify(Object.fromEntries([...i].map(([id, e]) => [id, {"
+            " from: e.from.map((x) => x.to), to: e.to.map((x) => x.from), out: e.out.map((x) => x.to), in: e.in.map((x) => x.from),"
+            " boundBy: e.boundBy.map((d) => d.id) }]))));")
+    assert run_on(LINKS, code) == {
+        "a": {"from": ["b"], "to": ["c"], "out": [], "in": ["b"], "boundBy": ["D-1", "D-2"]},
+        "b": {"from": [], "to": ["a"], "out": ["a"], "in": [], "boundBy": []},
+        "c": {"from": ["a"], "to": [], "out": [], "in": ["ghost"], "boundBy": ["D-1"]},
+    }

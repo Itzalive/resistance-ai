@@ -2,7 +2,7 @@
 // held in the slice being written is followed by its pack file in brackets: the first area's slice, or README.md for
 // a fact outside any area; a capability's pack file is its own slice. `ctx` comes from `packContext`.
 import { cmp } from '../architecture-delta/report.mjs';
-import { areasByElement, areasOf, isCrossCutting, recordElements } from './facts.mjs';
+import { areasByElement, areasOf, isCrossCutting, linkIndex, recordElements } from './facts.mjs';
 import { oneLine, multiLine } from './pack-text.mjs';
 
 export const PACK_INDEX = 'README.md';
@@ -26,16 +26,6 @@ export function packContext(data, held = {}) {
     held: heldSets(held),
     links: linkIndex(data),
   };
-}
-
-// Each element's allowed, runtime and binding-decision entries, grouped once so a block does not rescan the export.
-function linkIndex(data) {
-  const index = new Map(data.elements.map((element) => [element.id, { from: [], to: [], out: [], in: [], boundBy: [] }]));
-  const at = (id) => index.get(id) ?? { from: [], to: [], out: [], in: [], boundBy: [] };
-  for (const entry of data.allowed) { at(entry.from).from.push(entry); at(entry.to).to.push(entry); }
-  for (const link of data.runtime) { at(link.from).out.push(link); at(link.to).in.push(link); }
-  for (const decision of data.decisions) for (const id of new Set(decision.binds)) at(id).boundBy.push(decision);
-  return index;
 }
 
 // The same context for another slice: the maps are kept, only the held sets change.
