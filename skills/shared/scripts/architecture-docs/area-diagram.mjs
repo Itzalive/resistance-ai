@@ -40,11 +40,9 @@ function hideImplied(arrows) {
 // The nodes, arrows and frame of a diagram whose framed elements are `framedIds`: { nodes, arrows, frame }.
 export function drawing(framedIds, frameText, gap, base) {
   const framed = new Set(framedIds);
-  const neighbours = new Set();
   const pairs = Object.fromEntries(STYLES.map((style) => [style, new Map()]));
   const add = (style, from, to, kind = null, titles = []) => {
     if (!framed.has(from) && !framed.has(to)) return;
-    for (const end of [from, to]) if (!framed.has(end)) neighbours.add(end);
     const key = JSON.stringify([from, to]);
     if (!pairs[style].has(key)) pairs[style].set(key, { from, to, kinds: new Set(), titles: new Set() });
     const pair = pairs[style].get(key);
@@ -70,6 +68,8 @@ export function drawing(framedIds, frameText, gap, base) {
     }));
   }).sort((x, y) => cmp(x.from, y.from) || cmp(x.to, y.to) || STYLES.indexOf(x.style) - STYLES.indexOf(y.style));
 
+  // Spec, Drawing rules: a neighbour is drawn only when one of its arrows is.
+  const neighbours = new Set(arrows.flatMap((arrow) => [arrow.from, arrow.to]).filter((id) => !framed.has(id)));
   const nodeText = (id) => {
     const title = base.titles.elements.get(id) ?? id;
     if (framed.has(id)) return title;

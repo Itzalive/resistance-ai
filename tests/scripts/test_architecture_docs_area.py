@@ -82,7 +82,6 @@ def test_area_drawing() -> None:  # AC-19; Drawing rules
     assert picture["nodes"] == [
         {"id": "bank", "text": "Bank (no area)"},
         {"id": "ledger", "text": "Ledger (no area)"},
-        {"id": "pay", "text": "Pay (money)"},
         {"id": "pay.gateway", "text": "Gateway (money)"},
         {"id": "shop", "text": "Shop"},
         {"id": "shop.api", "text": "API"},
@@ -97,12 +96,12 @@ def test_area_drawing() -> None:  # AC-19; Drawing rules
         arrow("shop.web", "bank", "runtime", 'event, http, "feeds", "reports"'),
         arrow("shop.web", "shop.api", "import"),
     ]
+    # `pay` is a neighbour only through `shop.api -> pay` and `shop -> pay`, both hidden: it is left out.
 
 
 def test_area_drawing_of_the_other_area() -> None:  # Drawing rules: neighbours and arrows of an unscoped area
     picture = run("d.drawing(data.areas[1].elements, data.areas[1].title, gap, base)")
-    assert [node["text"] for node in picture["nodes"]] == ["Bank (no area)", "Pay", "Gateway", "Shop (front)", "API (front)",
-                                                            "Orders (front)"]
+    assert [node["text"] for node in picture["nodes"]] == ["Bank (no area)", "Pay", "Gateway", "API (front)", "Orders (front)"]
     assert picture["arrows"] == [
         arrow("bank", "pay", "import"),
         arrow("bank", "pay", "gap", "known gap"),
@@ -249,7 +248,7 @@ def test_area_document_layout() -> None:  # Area: title, description, then the s
     diagram = section(document, "Diagram")
     assert len(diagram) == 1 and diagram[0]["type"] == "diagram"
     assert diagram[0]["text"].startswith('flowchart LR\n  subgraph frame["Front"]\n')
-    assert '  n6 -->|"known gap"| n2' in diagram[0]["text"]
+    assert '  n5 -->|"known gap"| n2' in diagram[0]["text"]
 
 
 def test_area_document_elements() -> None:  # Area: Elements (id, title, description, code, rules, tags)
