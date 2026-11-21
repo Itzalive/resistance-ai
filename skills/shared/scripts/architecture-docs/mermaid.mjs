@@ -2,6 +2,7 @@
 // text cannot close a quote, end a statement or open a directive. Mermaid decodes `#<code>;` before it parses.
 export const ARROW_LIMIT = 80;
 const SAFE = /^[A-Za-z0-9 .'/_-]$/;
+const RED = 'stroke:#d00,color:#d00';
 
 export function label(text) {
   return Array.from(String(text).replace(/\n/g, ' '))
@@ -9,18 +10,33 @@ export function label(text) {
     .join('');
 }
 
-// A left-to-right flowchart. `nodes`: { id, text }; `arrows`: { from, to, dashed, text } by node id, drawn solid or
-// dashed, with the text as a label when it is not empty. Returns null when there are more than ARROW_LIMIT arrows.
-export function flowchart(nodes, arrows) {
+// A left-to-right flowchart. `nodes`: { id, text }; `arrows`: { from, to, dashed, red, text } by node id, drawn solid or
+// dashed, red ones in red, with the text as a label when it is not empty; `frame`: null, or { text, ids }, the nodes
+// drawn inside one frame. Returns null when there are more than ARROW_LIMIT arrows.
+export function flowchart(nodes, arrows, frame = null) {
   if (arrows.length > ARROW_LIMIT) return null;
   const ids = new Map(nodes.map((node, index) => [node.id, `n${index + 1}`]));
-  const lines = ['flowchart LR', ...nodes.map((node) => `  ${ids.get(node.id)}["${label(node.text)}"]`)];
-  for (const arrow of arrows) {
+  const nodeLine = (node, indent) => `${indent}${ids.get(node.id)}["${label(node.text)}"]`;
+  const lines = ['flowchart LR'];
+  if (frame === null) {
+    lines.push(...nodes.map((node) => nodeLine(node, '  ')));
+  } else {
+    const framed = new Set(frame.ids);
+    for (const id of framed) if (!ids.has(id)) throw new Error(`framed element ${id} is not a node`);
+    lines.push(`  subgraph frame["${label(frame.text)}"]`);
+    lines.push(...nodes.filter((node) => framed.has(node.id)).map((node) => nodeLine(node, '    ')));
+    lines.push('  end');
+    lines.push(...nodes.filter((node) => !framed.has(node.id)).map((node) => nodeLine(node, '  ')));
+  }
+  const red = [];
+  arrows.forEach((arrow, at) => {
     const from = ids.get(arrow.from);
     const to = ids.get(arrow.to);
     if (from === undefined || to === undefined) throw new Error(`arrow ${arrow.from} -> ${arrow.to} has an end that is not a node`);
     const text = arrow.text ? `|"${label(arrow.text)}"|` : '';
     lines.push(`  ${from} ${arrow.dashed ? '-.->' : '-->'}${text} ${to}`);
-  }
+    if (arrow.red) red.push(at);
+  });
+  if (red.length > 0) lines.push(`  linkStyle ${red.join(',')} ${RED}`);
   return lines.join('\n');
 }

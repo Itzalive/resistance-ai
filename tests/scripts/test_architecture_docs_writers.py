@@ -197,3 +197,27 @@ def test_flowchart_refuses_an_arrow_from_no_node() -> None:
     result = mermaid("flowchart", [{"id": "a", "text": "A"}], [{"from": "ghost", "to": "a", "dashed": False, "text": ""}])
     assert result["ok"] is False
     assert "ghost -> a" in result["message"]
+
+
+def test_flowchart_frame_and_red_arrows() -> None:  # Drawing rules: framed elements in one frame; known gap in red
+    nodes = [{"id": "a", "text": "A"}, {"id": "b", "text": "B (x)"}, {"id": "c", "text": "C"}]
+    arrows = [{"from": "a", "to": "b", "dashed": False, "red": True, "text": "known gap"},
+              {"from": "a", "to": "c", "dashed": True, "red": False, "text": ""},
+              {"from": "c", "to": "b", "dashed": False, "red": True, "text": ""}]
+    assert mermaid("flowchart", nodes, arrows, {"text": "Front;end", "ids": ["c", "a"]})["value"] == (
+        'flowchart LR\n  subgraph frame["Front#59;end"]\n    n1["A"]\n    n3["C"]\n  end\n  n2["B #40;x#41;"]\n'
+        '  n1 -->|"known gap"| n2\n  n1 -.-> n3\n  n3 --> n2\n  linkStyle 0,2 stroke:#d00,color:#d00'
+    )
+
+
+def test_flowchart_with_no_red_arrow_has_no_link_style() -> None:  # Drawing rules: only known-gap arrows are red
+    nodes = [{"id": "a", "text": "A"}, {"id": "b", "text": "B"}]
+    text = mermaid("flowchart", nodes, [{"from": "a", "to": "b", "dashed": False, "red": False, "text": ""}],
+                   {"text": "F", "ids": ["a", "b"]})["value"]
+    assert text == 'flowchart LR\n  subgraph frame["F"]\n    n1["A"]\n    n2["B"]\n  end\n  n1 --> n2'
+
+
+def test_flowchart_refuses_a_framed_id_that_is_no_node() -> None:  # fail closed: a frame names only drawn nodes
+    result = mermaid("flowchart", [{"id": "a", "text": "A"}], [], {"text": "F", "ids": ["a", "ghost"]})
+    assert result["ok"] is False
+    assert "ghost" in result["message"]
