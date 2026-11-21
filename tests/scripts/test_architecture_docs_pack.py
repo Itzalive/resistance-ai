@@ -572,3 +572,13 @@ def test_build_removes_an_emptied_pack_folder(tmp_path) -> None:  # AC-17 (pack 
     assert run_tool("build", "--repo", repo, script=DOCS_SCRIPT).returncode == 0
     assert not (pack_dir / "capabilities").exists()
     assert (pack_dir / "areas" / "front.md").exists()
+
+
+def test_pack_multi_line_fields_guard_code_fences() -> None:  # Pack text: a fence line cannot open a code block
+    text = "Use A.\n```js\n~~~\n``two\nkeep ``` here\n~~ two\n````"
+    assert text_fn("multiLine", text) == "Use A.\n\\```js\n\\~~~\n``two\nkeep ``` here\n~~ two\n\\````"
+
+
+def test_pack_line_separators_count_as_line_feeds() -> None:  # Pack text: U+2028 and U+2029; AC-25
+    assert text_fn("oneLine", "a" + chr(0x2028) + "b" + chr(0x2029) + "c\nd") == "a b c d"
+    assert text_fn("multiLine", "a" + chr(0x2028) + "# b" + chr(0x2029) + "--- c") == "a\n\\# b\n\\--- c"
