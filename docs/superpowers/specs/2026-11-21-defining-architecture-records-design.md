@@ -128,9 +128,9 @@ The review's cycle check runs `cycles` on the written model and passes only when
 - No element's `code` is a root, unless the whole repository is baselined [whole].
 - Every edge node in `coverage.json` is a `component` with `code`, no children and no `rules`, and is in no decision's `binds` or `owner` and no contract's `owner` or `bound` [whole].
 - The run's change file quotes `check`: its `check.output` equals a `check` run now on the same files [whole]; `change --compare` with the run's before copy exits 0 [changed].
-- No approved change file was edited or removed: `git status --porcelain --untracked-files=all -- <model>/changes` lists only the change files written by this run and by the baselines nested in it, and each nested baseline's file still has the `approved` it was given at its approval [whole].
 - Every improvement the run noted is a hole or a proposed decision [changed].
 - `architecture-docs check` exits 0 [whole].
+- The rubric's "the decision log only grew" item is removed, with no replacement check (owner, 2026-11-21). The rule "a change file is never edited after its run is approved" stays in the skill text, and `change` refuses to replace an approved change file (AC-6).
 - Every element is in at least one area in `export` `areas` [whole].
 - No element description states a target as fact [changed].
 
@@ -149,7 +149,7 @@ The review's cycle check runs `cycles` on the written model and passes only when
 ## The other skills
 
 - `planning-features` (`SKILL.md`, `FEATURES_STANDARDS.md`, `FEATURES_REVIEW_MANIFEST.md`, `FEATURES_RUBRIC.md`): the rule map is the elements' `rules` in `export`; cross-cutting decisions are decisions with `obligations`; the "unchanged" check names the `.c4` files, the records and the change files instead of `architecture.md`.
-- `specifying-features` (`FEATURE_STANDARDS.md`, `FEATURE_REVIEW_MANIFEST.md`, `FEATURE_RUBRIC.md`): the same; "the decision log only grew" becomes "no approved change file was edited".
+- `specifying-features` (`FEATURE_STANDARDS.md`, `FEATURE_REVIEW_MANIFEST.md`, `FEATURE_RUBRIC.md`): the same; the rubric item "the decision log only grew" is removed, as in this skill's rubric.
 - `specifying-work-items` `SKILL.md`, "Shard of a feature": the cross-cutting decisions are the decisions with `obligations` that bind the elements, and the principles.
 
 Both feature skills' `field-evidence.md` files name neither `architecture.md` nor the old test and need no change. Each skill may point readers at the generated pack (`generated/pack/`) for the slice they need; none of them writes records.
