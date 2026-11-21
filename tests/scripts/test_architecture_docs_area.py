@@ -325,3 +325,75 @@ def test_area_document_over_the_arrow_limit() -> None:  # AC-21: the note, and t
     document = area_doc(1, data, [])
     assert section(document, "Diagram") == [para("The diagram has more than 80 arrows and is not drawn; the tables list everything.")]
     assert len(section(document, "Dependencies")[0]["rows"]) == 81
+
+
+def capability_doc(index: int = 1, data: dict = RECORDS) -> dict:
+    return built("capability.mjs", f"m.buildCapability(data, data.capabilities[{index}], base)", data, [])
+
+
+def test_capability_document() -> None:  # Capability: title, description, sequence, steps, records, areas; AC-18
+    document = capability_doc()
+    assert document["title"] == "Buy"
+    assert document["blocks"][0] == para("Buy a thing.")
+    assert heads(document, 2) == ["Sequence", "Steps", "Decisions", "Contracts", "Areas involved"]
+    assert section(document, "Sequence") == [{"type": "diagram", "text": (
+        "sequenceDiagram\n  participant n3 as Web\n  participant n2 as API\n  participant n1 as Gateway\n"
+        "  n3->>n2: order\n  n2->>n1: \n  n1-->>n2: paid")}]
+    table = section(document, "Steps")[0]
+    assert table["header"] == ["Step", "From", "To", "Label", "Call or reply", "Kinds"]
+    web, api, gateway = ([L(id_, f"../areas/{area}.md"), f" ({title})"] for id_, area, title in
+                         (("shop.web", "front", "Web"), ("shop.api", "front", "API"), ("pay.gateway", "money", "Gateway")))
+    assert table["rows"] == [
+        [["1"], web, api, ["order"], ["call"], ["uses"]],
+        [["2"], api, gateway, [""], ["call"], ["http, uses"]],
+        [["3"], gateway, api, ["paid"], ["reply"], ["http"]],
+    ]
+
+
+def test_capability_document_records_and_areas() -> None:  # Capability: the records naming it; the areas involved
+    document = capability_doc()
+    decisions = section(document, "Decisions")
+    assert [block["text"] for block in decisions if block["type"] == "heading"] == ["D-0"]
+    assert decisions[2]["items"][-1] == ["Areas: ", L("front", "../areas/front.md"), " (Front)"]
+    contracts = section(document, "Contracts")
+    assert contracts[0]["text"] == "C-1: Card API"
+    assert section(document, "Areas involved") == [{"type": "list", "items": [
+        [L("front", "../areas/front.md"), " (Front)"], [L("money", "../areas/money.md"), " (Money)"]]}]
+
+
+def test_capability_document_outside_any_area() -> None:  # Capability: "Not in any area"; empty sections say so
+    document = capability_doc(0)
+    assert document["blocks"][0] == {"type": "heading", "level": 2, "text": "Sequence"}
+    assert section(document, "Decisions") == [para("No decisions name this capability.")]
+    assert section(document, "Contracts") == [para("No contracts name this capability.")]
+    assert section(document, "Areas involved") == [{"type": "list", "items": [["Not in any area"]]}]
+    assert section(document, "Steps")[0]["rows"][0][1] == [L("bank", "../README.md"), " (Bank)"]
+
+
+def test_capability_document_with_an_end_in_no_area_and_one_in_an_area() -> None:  # Capability: both kinds of end
+    data = {**RECORDS, "capabilities": [{"name": "feed", "title": "Feed", "description": None, "steps": [
+        {"from": "bank", "to": "pay", "label": "settle", "reply": False, "kinds": ["uses"]}]}]}
+    assert section(capability_doc(0, data), "Areas involved") == [{"type": "list", "items": [
+        [L("money", "../areas/money.md"), " (Money)"], ["Not in any area"]]}]
+
+
+def test_capability_document_with_no_steps() -> None:  # Capability: a capability with no steps
+    data = {**RECORDS, "capabilities": [{"name": "idle", "title": "Idle", "description": None, "steps": []}]}
+    document = capability_doc(0, data)
+    assert section(document, "Sequence") == [para("The capability has no steps.")]
+    assert section(document, "Steps") == [para("No steps.")]
+    assert section(document, "Areas involved") == [para("No areas.")]
+
+
+def test_capability_document_step_limit() -> None:  # AC-21 (capability part): 200 steps drawn, 201 replaced by the note
+    step = {"from": "shop.web", "to": "shop.api", "label": "x", "reply": False, "kinds": ["uses"]}
+    for count, drawn in ((200, True), (201, False)):
+        data = {**RECORDS, "capabilities": [{"name": "loop", "title": "Loop", "description": None, "steps": [step] * count}]}
+        document = capability_doc(0, data)
+        sequence = section(document, "Sequence")
+        if drawn:
+            assert sequence[0]["type"] == "diagram" and sequence[0]["text"].count("->>") == 200
+        else:
+            assert sequence == [para("The capability has more than 200 steps, so its sequence diagram is not drawn; "
+                                     "the steps table lists every step.")]
+        assert len(section(document, "Steps")[0]["rows"]) == count
