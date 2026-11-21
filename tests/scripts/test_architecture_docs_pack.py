@@ -326,16 +326,17 @@ def test_area_slice() -> None:  # AI pack, area slice; Pack layout
         "binds: shop.api [areas/front.md], pay\n\n"
         "## Contracts\n\n"
         "### C-1: Card API\nowner: pay\nbound: shop.web [areas/front.md]\nobligations: Ids; Two lines\n"
-        "compatibility: no rule stated\nnotes: n1 # n\ndecisions: D-2, D-3 [README.md]\ncapabilities: buy [capabilities/buy.md]\n"
+        "compatibility: no rule stated\nnotes: n1 # n\ndecisions: D-2, D-3 [README.md]\ncapabilities: buy [capabilities/buy.md]\n\n"
+        "## Capabilities\n\n- buy: Buy [capabilities/buy.md]\n"
     )
 
 
 def test_area_slice_sections_and_order() -> None:  # Pack layout: cross-cutting decisions first; known gap sorted
     text = pack("p.areaSlice(data, gap, data.areas[0], base)")
     assert text.split("\n\n")[1:3] == ["# front: Front", "## Elements"]
-    assert headings(text) == ["## Elements", "## Decisions", "## Contracts", "## Open questions", "## Known gap"]
+    assert headings(text) == ["## Elements", "## Decisions", "## Contracts", "## Open questions", "## Known gap", "## Capabilities"]
     assert text.index("### D-2") < text.index("### D-1")
-    assert text.rstrip("\n").split("\n\n")[-1] == (
+    assert text.rstrip("\n").split("\n\n")[-3] == (
         "- shop.api -> shop.web: two lines\n- shop.web -> bank [README.md]: cycle in current code (close by 2027-01 # z)"
     )
 
@@ -572,3 +573,47 @@ def test_build_removes_an_emptied_pack_folder(tmp_path) -> None:  # AC-17 (pack 
     assert run_tool("build", "--repo", repo, script=DOCS_SCRIPT).returncode == 0
     assert not (pack_dir / "capabilities").exists()
     assert (pack_dir / "areas" / "front.md").exists()
+
+
+def test_pack_multi_line_fields_guard_code_fences() -> None:  # Pack text: a fence line cannot open a code block
+    text = "Use A.\n```js\n~~~\n``two\nkeep ``` here\n~~ two\n````"
+    assert text_fn("multiLine", text) == "Use A.\n\\```js\n\\~~~\n``two\nkeep ``` here\n~~ two\n\\````"
+
+
+def test_pack_line_separators_count_as_line_feeds() -> None:  # Pack text: U+2028 and U+2029; AC-25
+    assert text_fn("oneLine", "a" + chr(0x2028) + "b" + chr(0x2029) + "c\nd") == "a b c d"
+    assert text_fn("multiLine", "a" + chr(0x2028) + "# b" + chr(0x2029) + "--- c") == "a\n\\# b\n\\--- c"
+
+
+def test_pack_multi_line_fields_guard_the_first_line() -> None:  # Pack text: a field's first line is guarded too
+    assert text_fn("multiLine", "# a\nb") == "\\# a\nb"
+    assert text_fn("multiLine", "```js\nx") == "\\```js\nx"
+
+
+def test_element_block_code_and_rules_on_one_line() -> None:  # Pack text: U+2028 and U+2029 in a code or rules entry
+    hostile = json.dumps({"code": ["src/a" + chr(0x2028) + "# H"], "rules": ["BR-1" + chr(0x2029) + "```"]})
+    text = pack("(() => { const more = { ...data, elements: data.elements.map((e) => e.id === 'shop.api'"
+                f" ? {{ ...e, ...{hostile} }} : e) }};"
+                " return p.areaSlice(more, gap, more.areas[0], packContext(more)); })()")
+    assert chr(0x2028) not in text and chr(0x2029) not in text
+    assert "kind container · tags #layer · code src/a # H · rules BR-1 ```\n" in text
+
+
+def test_area_slice_lists_its_capabilities() -> None:  # Pack layout: `## Capabilities`; AC-26 (an area slice's capabilities)
+    text = pack("p.areaSlice(data, gap, data.areas[0], base)")
+    assert text.endswith("\n\n## Capabilities\n\n- buy: Buy [capabilities/buy.md]\n")
+    more = pack("(() => { const more = { ...data, capabilities: [...data.capabilities, { name: 'audit', title: 'Audit\\nlog',"
+                " description: null, steps: [{ from: 'bank', to: 'shop', label: null, reply: false, kinds: ['uses'] }] }] };"
+                " return p.areaSlice(more, gap, more.areas[0], packContext(more)); })()")
+    assert more.endswith("\n\n## Capabilities\n\n- audit: Audit log [capabilities/audit.md]\n- buy: Buy [capabilities/buy.md]\n")
+
+
+def test_area_slice_with_no_capability_leaves_the_section_out() -> None:  # Pack layout: an empty section is left out
+    text = pack("p.areaSlice(data, gap, { name: 'bank', title: 'Bank', description: null, elements: ['bank'] }, base)")
+    assert "## Capabilities" not in text
+
+
+def test_pack_layout_names_an_area_slice_s_capabilities() -> None:  # AI pack: how the pack is laid out
+    text = pack("p.packIndex(data, gap, base)")
+    assert ("areas/<name>.md holds one area: its elements, decisions, contracts, open questions and known-gap entries, "
+            "and the capabilities that pass through it. capabilities/<name>.md holds one capability") in text

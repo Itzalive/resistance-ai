@@ -3,8 +3,11 @@ import { ToolError, clean, cleanText } from '../architecture-delta/errors.mjs';
 import { exportJson } from '../architecture-delta/report.mjs';
 import { buildOverview } from './overview.mjs';
 import { renderMarkdown } from './markdown.mjs';
-import { renderHtml } from './html.mjs';
+import { renderHtml, pageHref } from './html.mjs';
 import { buildPack } from './pack.mjs';
+import { areaDoc, capabilityDoc, documentBase } from './facts.mjs';
+import { buildArea } from './area.mjs';
+import { buildCapability } from './capability.mjs';
 
 export const OUT_FILE_LIMIT = 2000;
 export const OUT_BYTES_LIMIT = 50 * 1024 * 1024;
@@ -19,6 +22,12 @@ export function cleanGap(entries) {
   }));
 }
 
+// A document's Markdown file and its HTML page.
+function addDocument(files, rel, tree) {
+  files[rel] = renderMarkdown(tree);
+  files[pageHref(rel)] = renderHtml(tree);
+}
+
 // Spec, What each document holds: every document is built from the export (and the cleaned known-gap entries).
 export function buildFiles(model, records, gap, tick = () => {}) {
   const data = exportJson(model, records);
@@ -26,10 +35,17 @@ export function buildFiles(model, records, gap, tick = () => {}) {
   files['pack/model.json'] = `${JSON.stringify({ generated: 'architecture-docs', export: data }, null, 2)}\n`;
   tick();
   Object.assign(files, buildPack(data, gap, tick));
-  const overview = buildOverview(data, gap);
-  files['README.md'] = renderMarkdown(overview);
-  files['index.html'] = renderHtml(overview);
+  addDocument(files, 'README.md', buildOverview(data, gap));
   tick();
+  const base = documentBase(data);
+  for (const area of data.areas) {
+    addDocument(files, areaDoc(area.name), buildArea(data, gap, area, base));
+    tick();
+  }
+  for (const capability of data.capabilities) {
+    addDocument(files, capabilityDoc(capability.name), buildCapability(data, capability, base));
+    tick();
+  }
   return files;
 }
 

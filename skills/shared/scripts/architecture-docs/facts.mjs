@@ -99,3 +99,35 @@ export function outsideAreas(data, byElement) {
     holes: data.holes.filter((hole) => noArea('holes', hole)),
   };
 }
+
+// Each element's allowed, runtime and binding-decision entries, grouped once so a document does not rescan the export:
+// `from` and `to` (allowed entries from and to it), `out` and `in` (runtime links from and to it), `boundBy` (decisions
+// whose `binds` hold it, in export order).
+export function linkIndex(data) {
+  const empty = () => ({ from: [], to: [], out: [], in: [], boundBy: [] });
+  const index = new Map(data.elements.map((element) => [element.id, empty()]));
+  const at = (id) => index.get(id) ?? empty();
+  for (const entry of data.allowed) { at(entry.from).from.push(entry); at(entry.to).to.push(entry); }
+  for (const link of data.runtime) { at(link.from).out.push(link); at(link.to).in.push(link); }
+  for (const decision of data.decisions) for (const id of new Set(decision.binds)) at(id).boundBy.push(decision);
+  return index;
+}
+
+// Spec, Area and AI pack: the capabilities with a step whose end is an area element, in name order.
+export function areaCapabilities(data, area) {
+  const inArea = new Set(area.elements);
+  return data.capabilities.filter((capability) => capability.steps.some((step) => inArea.has(step.from) || inArea.has(step.to)))
+    .sort((x, y) => cmp(x.name, y.name));
+}
+
+// What every area and capability document reads, built once per build: `byElement` (areasByElement), `links`
+// (linkIndex), `titles` (titlesOf), `elements` and `decisions` (Maps by id).
+export function documentBase(data) {
+  return {
+    byElement: areasByElement(data),
+    links: linkIndex(data),
+    titles: titlesOf(data),
+    elements: new Map(data.elements.map((element) => [element.id, element])),
+    decisions: new Map(data.decisions.map((decision) => [decision.id, decision])),
+  };
+}

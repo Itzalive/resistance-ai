@@ -197,3 +197,58 @@ def test_flowchart_refuses_an_arrow_from_no_node() -> None:
     result = mermaid("flowchart", [{"id": "a", "text": "A"}], [{"from": "ghost", "to": "a", "dashed": False, "text": ""}])
     assert result["ok"] is False
     assert "ghost -> a" in result["message"]
+
+
+def test_flowchart_frame_and_red_arrows() -> None:  # Drawing rules: framed elements in one frame; known gap in red
+    nodes = [{"id": "a", "text": "A"}, {"id": "b", "text": "B (x)"}, {"id": "c", "text": "C"}]
+    arrows = [{"from": "a", "to": "b", "dashed": False, "red": True, "text": "known gap"},
+              {"from": "a", "to": "c", "dashed": True, "red": False, "text": ""},
+              {"from": "c", "to": "b", "dashed": False, "red": True, "text": ""}]
+    assert mermaid("flowchart", nodes, arrows, {"text": "Front;end", "ids": ["c", "a"]})["value"] == (
+        'flowchart LR\n  subgraph frame["Front#59;end"]\n    n1["A"]\n    n3["C"]\n  end\n  n2["B #40;x#41;"]\n'
+        '  n1 -->|"known gap"| n2\n  n1 -.-> n3\n  n3 --> n2\n  linkStyle 0,2 stroke:#d00,color:#d00'
+    )
+
+
+def test_flowchart_with_no_red_arrow_has_no_link_style() -> None:  # Drawing rules: only known-gap arrows are red
+    nodes = [{"id": "a", "text": "A"}, {"id": "b", "text": "B"}]
+    text = mermaid("flowchart", nodes, [{"from": "a", "to": "b", "dashed": False, "red": False, "text": ""}],
+                   {"text": "F", "ids": ["a", "b"]})["value"]
+    assert text == 'flowchart LR\n  subgraph frame["F"]\n    n1["A"]\n    n2["B"]\n  end\n  n1 --> n2'
+
+
+def test_flowchart_never_writes_an_empty_label() -> None:  # Mermaid 12.2.0 refuses `[""]`; an area view may have `title ''`
+    text = mermaid("flowchart", [{"id": "a", "text": ""}], [], {"text": "", "ids": ["a"]})["value"]
+    assert '[""]' not in text
+    assert text.split("\n")[1:3] == ['  subgraph frame[" "]', '    n1[" "]']
+
+
+def test_flowchart_refuses_a_framed_id_that_is_no_node() -> None:  # fail closed: a frame names only drawn nodes
+    result = mermaid("flowchart", [{"id": "a", "text": "A"}], [], {"text": "F", "ids": ["a", "ghost"]})
+    assert result["ok"] is False
+    assert "ghost" in result["message"]
+
+
+def test_sequence_diagram() -> None:  # Capability: participants by first appearance, ids in element-id order; replies dashed
+    participants = [{"id": "shop.web", "text": "Web"}, {"id": "shop.api", "text": "API; v2"}, {"id": "bank", "text": "Bank"}]
+    messages = [{"from": "shop.web", "to": "shop.api", "reply": False, "text": "order: now"},
+                {"from": "shop.api", "to": "bank", "reply": False, "text": ""},
+                {"from": "shop.api", "to": "shop.web", "reply": True, "text": "%%{init}%%"}]
+    assert mermaid("sequence", participants, messages)["value"] == (
+        "sequenceDiagram\n  participant n3 as Web\n  participant n2 as API#59; v2\n  participant n1 as Bank\n"
+        "  n3->>n2: order#58; now\n  n2->>n1: \n  n2-->>n3: #37;#37;#123;init#125;#37;#37;"
+    )
+
+
+def test_sequence_step_limit() -> None:  # Shared rules: a sequence diagram over 200 steps is replaced by a note
+    participants = [{"id": "a", "text": "A"}, {"id": "b", "text": "B"}]
+    message = {"from": "a", "to": "b", "reply": False, "text": "x"}
+    assert mermaid("sequence", participants, [message] * 200)["value"].count("->>") == 200
+    assert mermaid("sequence", participants, [message] * 201)["value"] is None
+
+
+def test_sequence_refuses_a_message_to_no_participant() -> None:  # fail closed: a message names only participants
+    for message in ({"from": "a", "to": "ghost", "reply": False, "text": ""}, {"from": "ghost", "to": "a", "reply": True, "text": ""}):
+        result = mermaid("sequence", [{"id": "a", "text": "A"}], [message])
+        assert result["ok"] is False
+        assert "ghost" in result["message"]
