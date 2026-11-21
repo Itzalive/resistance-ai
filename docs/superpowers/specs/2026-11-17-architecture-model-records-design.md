@@ -2,7 +2,7 @@
 
 Work item: #31, part A3a (A3 of #37). Amended for #31 part A3c: decisions carry obligations ("Decisions, cross-cutting decisions and principles" below). Amends `2026-11-09-architecture-delta-tool-design.md` and `2026-11-16-architecture-delta-runtime-links-design.md`.
 
-> Amended by `2026-11-17-architecture-docs-design.md`: `capabilities` entries name capability views, checked in pass 4.
+> Amended by `2026-11-17-architecture-docs-design.md`: `capabilities` entries name capability views, checked in pass 4; a change file's name, without `.json`, is at most 64 characters (layout rule 2).
 
 ## Why
 
@@ -24,7 +24,7 @@ The data files that hold those records in the model folder, and the delta tool r
 `*.c4`, `c4.c4` and `known-gap.json` are unchanged. A model folder no longer has an `architecture.md`.
 
 1. **A group is a file.** Its name, without `.json`, is the group. A decisions or contracts file name matches `^[a-z0-9]+(-[a-z0-9]+)*\.json$`, so the group is lower-case ASCII letters and digits in hyphen-separated parts (`memory`, `app-and-server`). Nothing depends on which group a record is in.
-2. **A change file's name** matches `^[0-9]{4}-[0-9]{2}-[0-9]{2}-[a-z0-9]+(-[a-z0-9]+)*\.json$`: its `date`, a hyphen, and a name of the same form as a group (`2026-11-16-baseline.json`).
+2. **A change file's name** matches `^[0-9]{4}-[0-9]{2}-[0-9]{2}-[a-z0-9]+(-[a-z0-9]+)*\.json$`: its `date`, a hyphen, and a name of the same form as a group (`2026-11-16-baseline.json`). Without `.json`, it is at most 64 characters.
 3. **One record id space.** Decision, hole and contract ids are unique across the whole folder, so a record can move between files without breaking a link. A record id matches `^[A-Za-z0-9][A-Za-z0-9.-]*$` (ASCII). Change files have their own ids, their file names, which are unique because they are file names; a change id never clashes with a record id.
 4. **Element ids are LikeC4's.** Wherever a record names an element (`binds`, `owner`, `bound`, `edge_nodes`, and a change's `elements` and `gap`), the value is any non-empty string; it is not held to rule 3, because LikeC4 allows other characters in its ids.
 5. **Links point from a record to elements.** Elements carry no list of their decisions; "which records bind this element" is answered by reading the records.

@@ -9,7 +9,7 @@ The architecture model is the single source of truth, but only a tool or a patie
 ## What this work item owns
 
 - What `export` prints about element and relationship titles, area views and capability views (format 4), and the rules that keep those views honest, applied wherever the model is loaded.
-- One records rule: a `capabilities` entry names a capability view.
+- Two records rules: a `capabilities` entry names a capability view; a change file's name, without `.json`, is at most 64 characters.
 - A new tool, `architecture-docs.mjs`, beside the delta tool, that writes the documents into one output folder (`build`) and reports when they are stale (`check`).
 - What each generated document holds.
 
@@ -67,6 +67,8 @@ A view's `title` is LikeC4's title for it when that is not `null`, otherwise the
 
 - pass 4 (links) reports `<value> is not a capability` at the entry's path for a name that is no capability's name, and `<value> is listed twice` at the second entry's path for a name repeated in one list;
 - `capabilities` joins the keys whose values are cleaned as ids.
+
+A change file's name, without `.json`, is at most 64 characters, the same as an area or capability name; a longer one breaks layout rule 2 and is reported in pass 1 as `not a valid file name here`, like any misnamed file. A change id is then never cut by `export` (which cuts ids at 200 characters), so it always names one change document.
 
 **Model-folder walk amendment.** The folder `generated` at the root of the model folder is walked as before for links and config files, and a LikeC4 source file (`.c4`, `.likec4`, `.like-c4`) in it is a `model-error`. The folder's name is matched in any case, and walk errors name paths with `/` on every platform. Its files count toward their own limits (2,000 files, 50 MB), not the model folder's, so generated documents can never push the model over its limits; going over them is `model-size`, as for the model folder.
 
@@ -214,7 +216,7 @@ A model with no area or capability views exports as before apart from `format` 4
 
 ## Scope
 
-- The delta tool: element and relationship titles, area and capability views, the view rules, `format` 4, the walk amendment; the records capability rule. Tests beside the existing delta tests. Existing tests change only where they assert `format` or the exact element and relationship objects, and in the records spec's AC-19 test, whose capability `Pay` becomes `pay`, the name of a capability view it adds to its model.
+- The delta tool: element and relationship titles, area and capability views, the view rules, `format` 4, the walk amendment; the records capability rule and the change-file name limit. Tests beside the existing delta tests. Existing tests change only where they assert `format` or the exact element and relationship objects, and in the records spec's AC-19 test, whose capability `Pay` becomes `pay`, the name of a capability view it adds to its model.
 - The new tool: `skills/shared/scripts/architecture-docs.mjs` and its modules in `skills/shared/scripts/architecture-docs/` (not in `architecture-delta/`, whose source test forbids writes), reusing the delta modules; tests in `tests/scripts/`.
 - `ARCH_STANDARDS.md`: one line each for `format` 4, the area and capability view naming, and the new tool's two commands. The rest of the skill text is A3b.
 - Amendment notes in the records spec, the runtime-links spec and the delta tool spec.
@@ -269,6 +271,7 @@ Documents:
 - **AC-24** Given a decision with empty `binds` and no obligations, and a contract with no area, when `build` runs, then both are printed in full in the overview's "Not in any area" section and in `pack/README.md`, and links to them point there.
 - **AC-25** Given decision text holding a line `# Heading`, a line opening a code fence and a U+2028 line separator, and an element title holding a line feed and a U+2029, when `build` runs, then the pack holds the line as `\# Heading`, the fence line with a leading `\`, the separator as a line break, and the title on one line, and the pack shows ids unescaped.
 - **AC-26** Given a valid model with a principle and an element in no area, when `build` runs, then every element, decision, contract, open question and capability id is in the pack index; every id not held in a slice is followed by its first area's pack file, or `README.md`; a capability slice holds the decisions naming it; an area slice lists each capability with a step in the area, with its pack file; and `pack/model.json` holds the export under `export`.
+- **AC-27** Given a change file whose name, without `.json`, is 65 characters, and one whose name is 64 characters, when `export` runs, then it exits 2 with one `record-error` line, `changes/<the 65-character name>.json: -: not a valid file name here`, and nothing for the 64-character one.
 
 ## Future work (downstream cost)
 
