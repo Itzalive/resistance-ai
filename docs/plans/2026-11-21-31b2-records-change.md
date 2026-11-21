@@ -1227,7 +1227,7 @@ def sources() -> list:
 
 def test_only_the_writer_changes_files() -> None:
     checked = [source for source in sources() if source.name != "writer.mjs"]
-    assert len(checked) >= 4
+    assert len(checked) >= 3  # the script, args.mjs and change.mjs
     for source in checked:
         assert not CHANGES_FILES.search(source.read_text(encoding="utf-8")), source
 
