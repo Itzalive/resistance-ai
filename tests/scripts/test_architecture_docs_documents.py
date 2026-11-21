@@ -356,6 +356,7 @@ def test_build_writes_the_improvement_list(tmp_path) -> None:  # AC-23 (through 
 
 def test_build_escapes_hostile_change_and_improvement_text(tmp_path) -> None:  # AC-12 (change records, improvement list)
     hostile = change_file(summary="More [x](javascript:alert(1)) <script> | %%{init}%% " + ESC + "[31m",
+                          elements={"added": ["ledger"], "changed": [], "removed": []},
                           rejected=["No <b>bold</b> | ```"], check={"exit": 1, "summary": "Bad " + ESC + "[0m", "output": "Out\n```\n" + ESC + "[31mred\n"})
     _, out = built_with_change(tmp_path, hostile)
     for name in files(out):
@@ -364,6 +365,9 @@ def test_build_escapes_hostile_change_and_improvement_text(tmp_path) -> None:  #
     assert "- Summary: More \\[x\\]\\(javascript:alert\\(1\\)\\) &lt;script&gt; \\| %%\\{init\\}%% \n" in text
     assert "- No &lt;b&gt;bold&lt;/b&gt; \\| \\`\\`\\`\n" in text
     assert text.endswith("\n````\nOut\n```\nred\n````\n")
+    diagram = re.search(r"```mermaid\n(.*?)\n```", text, re.S).group(1)
+    assert '["' + LEDGER.replace("#40;no area#41;", "#40;added#41;") + '"]' in diagram
+    assert "%%" not in diagram and ";" not in re.sub(r"#\d+;", "", diagram.replace("\n", " "))
     page = (out / "changes" / "2026-11-05-more.html").read_text(encoding="utf-8")
     assert "<b>" not in page and "&lt;b&gt;bold" in page and page.count("<script") == 2
     improvements = (out / "improvements.md").read_text(encoding="utf-8")
