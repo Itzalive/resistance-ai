@@ -242,3 +242,17 @@ def test_link_index() -> None:  # Area and AI pack: each element's entries, grou
         "b": {"from": [], "to": ["a"], "out": ["a"], "in": [], "boundBy": []},
         "c": {"from": ["a"], "to": [], "out": [], "in": ["ghost"], "boundBy": ["D-1"]},
     }
+
+
+def test_area_capabilities() -> None:  # Area and AI pack: the capabilities with a step whose end is an area element
+    data = {"capabilities": [
+        {"name": "buy", "steps": [{"from": "shop.web", "to": "shop.api"}]},
+        {"name": "pay", "steps": [{"from": "bank", "to": "pay"}]},
+        {"name": "refund", "steps": [{"from": "bank", "to": "shop.api"}]},
+        {"name": "idle", "steps": []},
+    ]}
+    names = lambda area: [c["name"] for c in facts("areaCapabilities", data, {"elements": area})]  # noqa: E731
+    assert names(["shop.api"]) == ["buy", "refund"]
+    assert names(["shop.web"]) == ["buy"]
+    assert names(["pay"]) == ["pay"]
+    assert names([]) == []

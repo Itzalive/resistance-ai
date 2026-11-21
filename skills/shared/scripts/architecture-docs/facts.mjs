@@ -112,3 +112,10 @@ export function linkIndex(data) {
   for (const decision of data.decisions) for (const id of new Set(decision.binds)) at(id).boundBy.push(decision);
   return index;
 }
+
+// Spec, Area and AI pack: the capabilities with a step whose end is an area element, in name order.
+export function areaCapabilities(data, area) {
+  const inArea = new Set(area.elements);
+  return data.capabilities.filter((capability) => capability.steps.some((step) => inArea.has(step.from) || inArea.has(step.to)))
+    .sort((x, y) => cmp(x.name, y.name));
+}

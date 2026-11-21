@@ -1,11 +1,11 @@
 // The AI pack (spec, AI pack): the area and capability slices and the index file, in pack text. `base` is a
 // `packContext` of the export; each slice adds the ids it holds in full.
 import { cmp } from '../architecture-delta/report.mjs';
-import { areaRecords, capabilityRecords, outsideAreas } from './facts.mjs';
-import { packFile, multiLine } from './pack-text.mjs';
+import { areaCapabilities, areaRecords, capabilityRecords, outsideAreas } from './facts.mjs';
+import { packFile, multiLine, oneLine } from './pack-text.mjs';
 import {
   PACK_INDEX, packArea, packCapability, packContext, withHeld, elementBlock, decisionBlock, contractBlock, holeBlock,
-  gapLine, stepLine,
+  gapLine, stepLine, ref,
 } from './pack-blocks.mjs';
 
 const idsOf = (records) => records.map((record) => record.id);
@@ -26,6 +26,8 @@ export function areaSlice(data, gap, area, base) {
     ...section('Contracts', records.contracts.map((record) => contractBlock(record.id, ctx))),
     ...section('Open questions', records.holes.map((record) => holeBlock(record.id, ctx))),
     ...section('Known gap', lineBlock(records.gap.map((entry) => gapLine(entry, ctx)))),
+    ...section('Capabilities', lineBlock(areaCapabilities(data, area)
+      .map((capability) => `- ${ref('capabilities', capability.name, ctx, `: ${oneLine(capability.title)}`)}`))),
   ]);
 }
 
@@ -44,7 +46,8 @@ export function capabilitySlice(data, capability, base) {
 }
 
 const LAYOUT = 'This pack holds the architecture model in slices for agents. areas/<name>.md holds one area: its elements, '
-  + 'decisions, contracts, open questions and known-gap entries. capabilities/<name>.md holds one capability: its steps, '
+  + 'decisions, contracts, open questions and known-gap entries, and the capabilities that pass through it. '
+  + 'capabilities/<name>.md holds one capability: its steps, '
   + 'the elements they touch, and the decisions and contracts that name it. This file holds the index and the facts '
   + 'outside any area. A pack file in brackets after an id names the file that holds that id in full. model.json holds '
   + 'the whole export.';
