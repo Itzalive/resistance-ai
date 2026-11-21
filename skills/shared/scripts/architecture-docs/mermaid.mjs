@@ -19,14 +19,16 @@ export function label(text) {
 export function flowchart(nodes, arrows, frame = null) {
   if (arrows.length > ARROW_LIMIT) return null;
   const ids = new Map(nodes.map((node, index) => [node.id, `n${index + 1}`]));
-  const nodeLine = (node, indent) => `${indent}${ids.get(node.id)}["${label(node.text)}"]`;
+  // Mermaid refuses an empty quoted label, so an empty one is a space.
+  const quoted = (text) => `"${label(text) || ' '}"`;
+  const nodeLine = (node, indent) => `${indent}${ids.get(node.id)}[${quoted(node.text)}]`;
   const lines = ['flowchart LR'];
   if (frame === null) {
     lines.push(...nodes.map((node) => nodeLine(node, '  ')));
   } else {
     const framed = new Set(frame.ids);
     for (const id of framed) if (!ids.has(id)) throw new Error(`framed element ${id} is not a node`);
-    lines.push(`  subgraph frame["${label(frame.text)}"]`);
+    lines.push(`  subgraph frame[${quoted(frame.text)}]`);
     lines.push(...nodes.filter((node) => framed.has(node.id)).map((node) => nodeLine(node, '    ')));
     lines.push('  end');
     lines.push(...nodes.filter((node) => !framed.has(node.id)).map((node) => nodeLine(node, '  ')));

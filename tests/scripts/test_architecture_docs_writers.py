@@ -217,6 +217,12 @@ def test_flowchart_with_no_red_arrow_has_no_link_style() -> None:  # Drawing rul
     assert text == 'flowchart LR\n  subgraph frame["F"]\n    n1["A"]\n    n2["B"]\n  end\n  n1 --> n2'
 
 
+def test_flowchart_never_writes_an_empty_label() -> None:  # Mermaid 12.2.0 refuses `[""]`; an area view may have `title ''`
+    text = mermaid("flowchart", [{"id": "a", "text": ""}], [], {"text": "", "ids": ["a"]})["value"]
+    assert '[""]' not in text
+    assert text.split("\n")[1:3] == ['  subgraph frame[" "]', '    n1[" "]']
+
+
 def test_flowchart_refuses_a_framed_id_that_is_no_node() -> None:  # fail closed: a frame names only drawn nodes
     result = mermaid("flowchart", [{"id": "a", "text": "A"}], [], {"text": "F", "ids": ["a", "ghost"]})
     assert result["ok"] is False

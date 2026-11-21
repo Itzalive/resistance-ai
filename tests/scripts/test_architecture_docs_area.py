@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import time
 
 from arch_delta_support import DOCS_LIB, lib_url, require_node, run_module
 
@@ -140,6 +141,17 @@ def test_an_arrow_is_implied_only_by_one_strictly_inside() -> None:  # Drawing r
     assert drawn == [("shop", "bank"), ("shop.api", "pay.gateway"), ("shop.web", "pay.gateway")]
 
 
+def test_implied_arrows_stay_fast_for_deep_nesting() -> None:  # Availability: no pair per ancestor pair of each arrow
+    p = [".".join(["p"] * (i + 1)) for i in range(100)]
+    q = [".".join(["q"] * (i + 1)) for i in range(100)]
+    data = {**DATA, "elements": [element(id_, "T") for id_ in p + q], "runtime": [], "areas": [],
+            "allowed": [{"from": p[i % 100], "to": q[(i // 100) % 100], "titles": []} for i in range(10000)]}
+    start = time.monotonic()
+    arrows = run(f"d.drawing({json.dumps(p)}, 'P', [], base).arrows.map((a) => [a.from.length, a.to.length])", data=data, gap=[])
+    assert arrows == [[199, 199]]  # only the deepest pair is drawn
+    assert time.monotonic() - start < 5
+
+
 def test_area_drawing_with_no_relationships() -> None:  # Drawing rules: framed elements are drawn with no arrows
     data = {**DATA, "allowed": [], "runtime": []}
     picture = run("d.drawing(data.areas[1].elements, data.areas[1].title, [], base)", data=data, gap=[])
@@ -255,6 +267,8 @@ def test_area_document_links_an_element_held_by_another_area() -> None:  # Share
     data = {**RECORDS, "areas": [{"name": "core", "title": "Core", "description": None, "elements": ["shop.api"]}, *RECORDS["areas"]]}
     rows = section(area_doc(1, data), "Elements")[0]["rows"]
     assert [row[0] for row in rows] == [["shop"], [L("shop.api", "core.md")], ["shop.api.orders"], ["shop.web"]]
+    dependencies = [row[0] for row in section(area_doc(1, data), "Dependencies")[0]["rows"]]
+    assert [L("shop.api", "core.md")] in dependencies and ["shop.web"] in dependencies
 
 
 def test_area_document_dependencies() -> None:  # Area: Dependencies, each with the other end's areas

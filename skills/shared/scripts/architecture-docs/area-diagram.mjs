@@ -12,17 +12,29 @@ function selfAndAbove(id) {
 }
 
 // Within one style, an arrow X -> Y is implied by an arrow X' -> Y' with X' at or inside X, Y' at or inside Y, and the
-// two arrows not the same.
+// two arrows not the same. Only pairs that are arrows are looked up. An implying arrow is deeper than the arrow it
+// implies and implies everything that arrow does, so arrows are visited deepest first and an implied one is skipped.
 function hideImplied(arrows) {
-  const implied = new Set();
+  const depth = (arrow) => arrow.from.split('.').length + arrow.to.split('.').length;
+  const targets = new Map();
   for (const arrow of arrows) {
+    if (!targets.has(arrow.from)) targets.set(arrow.from, new Map());
+    targets.get(arrow.from).set(arrow.to, arrow);
+  }
+  const implied = new Set();
+  for (const arrow of [...arrows].sort((x, y) => depth(y) - depth(x))) {
+    if (implied.has(arrow)) continue;
+    const above = selfAndAbove(arrow.to);
     for (const from of selfAndAbove(arrow.from)) {
-      for (const to of selfAndAbove(arrow.to)) {
-        if (from !== arrow.from || to !== arrow.to) implied.add(JSON.stringify([from, to]));
+      const tos = targets.get(from);
+      if (tos === undefined) continue;
+      for (const to of above) {
+        const other = tos.get(to);
+        if (other !== undefined && other !== arrow) implied.add(other);
       }
     }
   }
-  return arrows.filter((arrow) => !implied.has(JSON.stringify([arrow.from, arrow.to])));
+  return arrows.filter((arrow) => !implied.has(arrow));
 }
 
 // The nodes, arrows and frame of a diagram whose framed elements are `framedIds`: { nodes, arrows, frame }.

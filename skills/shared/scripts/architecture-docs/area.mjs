@@ -23,7 +23,7 @@ function dependencyRows(area, ctx) {
   const rows = [];
   for (const id of area.elements) {
     const links = ctx.links.get(id);
-    const row = (relation, other, detail) => [[id], [relation], elementLinks([other], ctx), [detail], otherAreas(other, ctx)];
+    const row = (relation, other, detail) => [idCell(id, ctx), [relation], elementLinks([other], ctx), [detail], otherAreas(other, ctx)];
     for (const other of [...new Set(links.from.map((entry) => entry.to))].sort(cmp)) rows.push(row('uses', other, ''));
     for (const other of [...new Set(links.to.map((entry) => entry.from))].sort(cmp)) rows.push(row('used by', other, ''));
     const detail = (link) => [link.kind, ...link.titles.map((title) => `"${title}"`)].join(', ');
