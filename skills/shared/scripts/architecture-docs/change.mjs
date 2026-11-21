@@ -3,12 +3,11 @@
 // its check. A change file holds only ids, so a record is printed as it stands in the model now.
 import { doc, heading, paragraph, list, table, code, diagram, docLink } from './tree.mjs';
 import { changeDoc, elementTarget, recordTarget, relative } from './facts.mjs';
-import { decisionBlocks, contractBlocks, holeBlocks, elementLinks } from './records-doc.mjs';
+import { ELEMENT_HEADER, decisionBlocks, contractBlocks, holeBlocks, elementCells, elementLinks } from './records-doc.mjs';
 import { drawing, drawingText, TOO_MANY_ARROWS } from './area-diagram.mjs';
 
 export const GONE = ' (not in the current model)';
 const PARTS = ['added', 'changed', 'removed'];
-const ELEMENT_HEADER = ['Element', 'Title', 'Description', 'Code', 'Rules', 'Tags'];
 // The record kinds of a change file after its elements, in document order: the change file's key, the heading word,
 // the Map of current records in `base`, and how a current record is printed in full.
 const KINDS = [
@@ -20,11 +19,7 @@ const KINDS = [
 const orSay = (blocks, text) => (blocks.length > 0 ? blocks : [paragraph(text)]);
 const goneText = (id) => `${id}${GONE}`;
 
-function elementRow(id, ctx) {
-  const element = ctx.elements.get(id);
-  return [[docLink(id, relative(ctx.doc, elementTarget(id, ctx.byElement)))], [element.title], [element.description ?? ''],
-    [element.code.join(', ')], [element.rules.join(', ')], [element.tags.map((tag) => `#${tag}`).join(' ')]];
-}
+const elementRow = (id, ctx) => [[docLink(id, relative(ctx.doc, elementTarget(id, ctx.byElement)))], ...elementCells(ctx.elements.get(id))];
 
 // Spec, What changed: each list as the change file gives it. Added and changed elements still in the model in a table,
 // then the gone ones as plain text; removed ids as plain text.
@@ -46,8 +41,8 @@ function elementBlocks(change, ctx) {
   return blocks;
 }
 
-// Spec, What changed: added and changed records still in the model in full, in the change file's order; a gone id as
-// plain text; removed ids as plain text.
+// Spec, What changed: added and changed records still in the model in full, in the change file's order, then the gone
+// ones as plain text, as for elements; removed ids as plain text.
 function recordBlocks(change, kind, ctx) {
   const blocks = [];
   for (const part of PARTS) {
@@ -58,10 +53,10 @@ function recordBlocks(change, kind, ctx) {
       blocks.push(list(ids.map((id) => [id])));
       continue;
     }
-    for (const id of ids) {
-      const record = ctx[kind.records].get(id);
-      blocks.push(...(record === undefined ? [paragraph(goneText(id))] : kind.blocks(record, ctx, 4)));
-    }
+    const records = ctx[kind.records];
+    for (const id of ids) if (records.has(id)) blocks.push(...kind.blocks(records.get(id), ctx, 4));
+    const gone = ids.filter((id) => !records.has(id));
+    if (gone.length > 0) blocks.push(list(gone.map((id) => [goneText(id)])));
   }
   return blocks;
 }

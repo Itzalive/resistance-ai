@@ -10,6 +10,11 @@ const separated = (parts) => parts.flatMap((part, index) => (index === 0 ? [part
 const titled = (groups) => groups.flatMap((group, index) => (index === 0 ? group : [', ', ...group]));
 const withTitle = (id, href, title) => [docLink(id, href), ` (${title ?? id})`];
 
+// Spec, Area and Change record: an element printed in full is a table row: id, title, description, code, rules, tags.
+export const ELEMENT_HEADER = ['Element', 'Title', 'Description', 'Code', 'Rules', 'Tags'];
+export const elementCells = (element) => [[element.title], [element.description ?? ''], [element.code.join(', ')],
+  [element.rules.join(', ')], [element.tags.map((tag) => `#${tag}`).join(' ')]];
+
 export const elementLinks = (ids, ctx) => titled(ids.map((id) =>
   withTitle(id, relative(ctx.doc, elementTarget(id, ctx.byElement)), ctx.titles.elements.get(id))));
 export const areaLinks = (names, ctx) => titled(names.map((name) =>

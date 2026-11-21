@@ -108,15 +108,15 @@ def test_change_record_what_changed() -> None:  # Change record: What changed; A
 
 
 def test_change_record_prints_current_records_in_full_and_gone_ones_as_text() -> None:  # Change record: What changed
-    record = change(contracts=lists(["C-1", "C-7"]), holes=lists(changed=["H-1", "H-9"]), decisions=lists(["D-8"], [], ["D-1"]))
+    record = change(contracts=lists(["C-7", "C-1"]), holes=lists(changed=["H-9", "H-1", "H-8"]), decisions=lists(["D-8"], [], ["D-1"]))
     blocks = section(change_doc(record), "What changed")
-    assert blocks[0:2] == [{"type": "heading", "level": 3, "text": "Decisions added"}, para("D-8" + GONE)]
+    assert blocks[0:2] == [{"type": "heading", "level": 3, "text": "Decisions added"}, {"type": "list", "items": [["D-8" + GONE]]}]
     assert blocks[2:4] == [{"type": "heading", "level": 3, "text": "Decisions removed"}, {"type": "list", "items": [["D-1"]]}]
     assert blocks[4:6] == [{"type": "heading", "level": 3, "text": "Contracts added"}, {"type": "heading", "level": 4, "text": "C-1: Card API"}]
-    assert blocks[7] == para("C-7" + GONE)
+    assert blocks[7] == {"type": "list", "items": [["C-7" + GONE]]}
     assert blocks[8:11] == [{"type": "heading", "level": 3, "text": "Open questions changed"},
                             {"type": "heading", "level": 4, "text": "H-1"}, para("Why one API?")]
-    assert blocks[12] == para("H-9" + GONE)
+    assert blocks[12] == {"type": "list", "items": [["H-9" + GONE], ["H-8" + GONE]]}
     assert len(blocks) == 13
 
 
@@ -181,7 +181,7 @@ def test_improvement_list_groups_in_order_with_counts() -> None:  # Improvement 
 def test_improvement_list_items() -> None:  # Improvement list (amended): each item, its details and its areas; AC-23
     document = improvements()
     assert items(document, "Cycles in current code (1)") == [
-        [L("shop.api", "areas/front.md"), " (API)", " -> ", L("ledger", "README.md"), " (Ledger)", ": ", "close by 2027-01", ". ", *FRONT]]
+        [L("shop.api", "areas/front.md"), " (API)", " -> ", L("ledger", "README.md"), " (Ledger)", ": ", "cycle in current code", "; ", "close by 2027-01", ". ", *FRONT]]
     assert items(document, "Other known breaches (1)") == [
         [L("bank", "README.md"), " (Bank)", " -> ", L("pay", "areas/money.md"), " (Pay)", ": ", "between neighbours", ". ", *MONEY]]
     assert items(document, "Open questions (1)") == [

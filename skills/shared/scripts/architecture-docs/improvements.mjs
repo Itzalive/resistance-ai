@@ -22,9 +22,8 @@ function item(main, details, areas, ctx) {
   return parts;
 }
 
-function gapItem(entry, withReason, ctx) {
-  const details = [];
-  if (withReason) details.push([entry.reason]);
+function gapItem(entry, ctx) {
+  const details = [[entry.reason]];
   if (entry.close_by !== null) details.push([`close by ${entry.close_by}`]);
   const main = [...elementLinks([entry.from], ctx), ' -> ', ...elementLinks([entry.to], ctx)];
   return item(main, details, areasOf([entry.from, entry.to], ctx.byElement), ctx);
@@ -50,8 +49,8 @@ export function buildImprovements(data, gap, base) {
   const sortedGap = [...gap].sort(byPair);
   const decisions = [...data.decisions].sort(byId);
   const groups = [
-    ['Cycles in current code', sortedGap.filter((entry) => entry.reason === CYCLE).map((entry) => gapItem(entry, false, ctx))],
-    ['Other known breaches', sortedGap.filter((entry) => entry.reason !== CYCLE).map((entry) => gapItem(entry, true, ctx))],
+    ['Cycles in current code', sortedGap.filter((entry) => entry.reason === CYCLE).map((entry) => gapItem(entry, ctx))],
+    ['Other known breaches', sortedGap.filter((entry) => entry.reason !== CYCLE).map((entry) => gapItem(entry, ctx))],
     ['Open questions', [...data.holes].sort(byId).map((hole) =>
       recordItem('holes', hole, hole.binds.length > 0 ? [['binds ', ...elementLinks(hole.binds, ctx)]] : [], ctx))],
     ['Decisions not yet fully built', decisions.filter((decision) => NOT_BUILT.includes(decision.status))
