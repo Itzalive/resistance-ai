@@ -130,11 +130,10 @@ The review's cycle check runs `cycles` on the written model and passes only when
 - The run's change file quotes `check`: its `check.output` equals a `check` run now on the same files [whole]; `change --compare` with the run's before copy exits 0 [changed].
 - Every improvement the run noted is a hole or a proposed decision [changed].
 - `architecture-docs check` exits 0 [whole].
-- The rubric's "the decision log only grew" item is removed, with no replacement check (owner, 2026-11-21). The rule "a change file is never edited after its run is approved" stays in the skill text, and `change` refuses to replace an approved change file (AC-6).
 - Every element is in at least one area in `export` `areas` [whole].
 - No element description states a target as fact [changed].
 
-`ARCH_STANDARDS.md`'s edge-node term matches the manifest item above: no children, no `rules`, in no decision's `binds` or `owner` and no contract's `owner` or `bound`.
+The rubric's "the decision log only grew" item is removed, with no replacement check (owner, 2026-11-21); the rule "a change file is never edited after its run is approved" stays in the skill text, and `change` refuses to replace an approved change file (AC-6). `ARCH_STANDARDS.md`'s edge-node term matches the manifest item above: no children, no `rules`, in no decision's `binds` or `owner` and no contract's `owner` or `bound`.
 
 **The audit verifies the dependency file by a second method (F1).** The auditor scans the source for imports by a method independent of the `deps-command` (its own search over import statements) and compares the module edges it finds, inside the coverage, with the dependency file. An edge it finds that the file lacks is a `deps-defect` finding and fails the audit. A `deps-defect` stops the run: the run reports the missing edges to the owner with a recommended fix to the `deps-command`, which the owner (or a work item) changes, since the skill changes no file outside the model folder; the run then resumes at step 2, keeping its before copy.
 
