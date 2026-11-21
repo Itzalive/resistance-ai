@@ -8,11 +8,11 @@
 
 **Tech Stack:** Node ESM, pytest.
 
-**Spec:** `docs/superpowers/specs/2026-11-17-architecture-docs-design.md`, "Writers" (Pack text, Diagrams), "What each document holds" (Shared rules, Drawing rules, Area, Capability, AI pack for the area slice's capabilities), AC-9 (the area case left by plan 2a), AC-12 and AC-13 (area and capability parts), AC-17 (the `capabilities` folder), AC-18, AC-19, AC-20 (the area part), AC-21, and the amended AC-25 and AC-26 — decisions applied: none. The owner settled seven questions on 2026-11-21 in one spec amendment (commit `c081dce`) before this plan: the pack area slice's `## Capabilities`, code-fence and U+2028/U+2029 guards in pack text, the field-line known limit, "Pack text" pointing to "Pack fields", neighbour labels naming their first area with no `click` lines, and the 80-arrow limit applying to flowcharts only. This is plan 3 of the spec's four (#33); plan 4 (change records and the improvement list, #34) reuses `area-diagram.mjs`.
+**Spec:** `docs/superpowers/specs/2026-11-17-architecture-docs-design.md`, "Writers" (Pack text, Diagrams), "What each document holds" (Shared rules, Drawing rules, Area, Capability, AI pack for the area slice's capabilities), AC-9 (the area case left by plan 2a), AC-12 and AC-13 (area and capability parts), AC-17 (the `capabilities` folder), AC-18, AC-19, AC-20 (the area part), AC-21, and the amended AC-25 and AC-26 — decisions applied: none. The owner settled seven questions on 2026-11-21 in one spec amendment (commit `c081dce`) before this plan: the pack area slice's `## Capabilities`, code-fence and U+2028/U+2029 guards in pack text, the field-line known limit, "Pack text" pointing to "Pack fields", neighbour labels naming their first area with no `click` lines, and the 80-arrow limit applying to flowcharts only. After the alignment check's first round the owner approved a second amendment (commit `6fae32e`): Dependencies name every area of the other end, only a drawn arrow hides another, the runtime arrow label's form, and neighbour labels using the first area's name. This is plan 3 of the spec's four (#33); plan 4 (change records and the improvement list, #34) reuses `area-diagram.mjs`.
 
-**Open decisions:** none. Readings of the spec the tasks apply, each forced by its text: an arrow is hidden only by another arrow the diagram would draw (one with a framed end), since the drawing rules speak of the diagram's arrows; a runtime arrow's label is its sorted kinds, then its sorted titles in quotes (the pack's runtime form); a neighbour's label names its first area by name (ids are shown as written); "the other end's area" in Dependencies lists all its areas, or "Not in any area"; node ids follow element-id order and participants are declared in order of first appearance (the two rules in "Diagrams" and "Capability").
+**Open decisions:** none. The drawing rules' hiding, the runtime label, the neighbour label and the Dependencies areas are spec text since `6fae32e`. One rule pair the tasks apply as written: node ids follow element-id order ("Diagrams") and participants are declared in order of first appearance ("Capability").
 
-**Size:** 9 tasks, 2 entry paths (`build`, `check`), 1922 lines (reported, not a target)
+**Size:** 9 tasks, 2 entry paths (`build`, `check`), 1961 lines (reported, not a target)
 
 **Trust boundary:** changed — see Trust-boundary table. No new file writes: only `writer.mjs` writes, and the safety tests (`tests/scripts/test_architecture_docs_safety.py`) scan every new module unchanged. No comment or string in a docs module may hold a forbidden call name followed by `(`: the names in `CHANGES_FILES` (`write`, `link`, `rm`, `cp`, `rename`, `mkdir`, `unlink`, `truncate` and the others) must not be followed by an opening bracket anywhere in the new modules. The new documents carry model, record and known-gap text into Markdown, HTML and Mermaid; the writers' escaping and the label encoding are their defence, and Task 9 feeds hostile text through every new document.
 
@@ -76,8 +76,8 @@ Not affected (checked): `tests/scripts/test_architecture_docs_writer.py:27` and 
 | Checkpoint | After task | Tasks covered | Reviewer looks at |
 |---|---|---|---|
 | C1 | 3 | 1–3 | Task 1 items 1–4 (strong), Task 2 items 1–3, Task 3 items 1–6; full suite `uv run pytest -q` (Task 2 moves code the pack reads) |
-| C2 | 6 | 4–6 | Task 4 items 1–5, Task 5 items 1–6, Task 6 items 1–8; full suite `uv run pytest -q` (Task 4 changes the overview's flowchart function) |
-| C3 | 9 | 7–9 | Task 7 items 1–10, Task 8 items 1–7, Task 9 items 1–6; full suite `uv run pytest -q` |
+| C2 | 6 | 4–6 | Task 4 items 1–5, Task 5 items 1–6, Task 6 items 1–9; full suite `uv run pytest -q` (Task 4 changes the overview's flowchart function) |
+| C3 | 9 | 7–9 | Task 7 items 1–11, Task 8 items 1–7, Task 9 items 1–8; full suite `uv run pytest -q` |
 
 ## Shared test fixture
 
@@ -766,6 +766,7 @@ git commit -m "feat(#33): the sequence diagram, with the 200-step limit"
 6. Runtime kinds and titles not sorted — mutation: in `area-diagram.mjs`, replace `[...[...pair.kinds].sort(cmp), ...[...pair.titles].sort(cmp).map(` with `[...pair.kinds, ...[...pair.titles].map(` — killed by: `test_area_drawing`
 7. A neighbour labelled without its area — mutation: in `area-diagram.mjs`, return the bare title for every node (the `if (framed.has(id)) return title;` line becomes `return title;`) — killed by: `test_area_drawing`
 8. Known-gap entries outside the area drawn — mutation: in `area-diagram.mjs`, add every known-gap entry as an arrow, whether or not it has a framed end — killed by: `test_area_drawing`
+9. An arrow hidden by one the diagram does not draw — mutation: in `area-diagram.mjs`, let `hideImplied` also take an arrow the diagram does not draw (`bank -> pay.gateway` in the test) as an implying arrow — killed by: `test_an_arrow_is_hidden_only_by_a_drawn_one`
 
 - Satisfies Spec AC: AC-19 (neighbour labelled with its area, gap red and labelled, both arrows of a shared pair, runtime dashed with its kind, no implied import, no arrow between neighbours); AC-21 (the arrow limit); Drawing rules (amendment c081dce: neighbour labels, no `click` lines)
 - Decisions applied: none (the 2026-11-21 amendment, commit `c081dce`, is spec text)
@@ -934,12 +935,20 @@ def test_area_drawing_text_and_arrow_limit() -> None:  # AC-21 (the diagram part
     assert run("d.drawingText(d.drawing(data.areas[1].elements, data.areas[1].title, [], base))", data=many) is None
     many["allowed"] = many["allowed"][:80]
     assert run("d.drawingText(d.drawing(data.areas[1].elements, data.areas[1].title, [], base))", data=many).count(" --> ") == 80
+
+
+def test_an_arrow_is_hidden_only_by_a_drawn_one() -> None:  # Drawing rules: the implying arrow has a framed end
+    data = {**DATA, "runtime": [], "allowed": [{"from": "bank", "to": "pay", "titles": []}, {"from": "bank", "to": "pay.gateway", "titles": []}],
+            "areas": [{"name": "solo", "title": "Solo", "description": None, "elements": ["pay"]}]}
+    picture = run("d.drawing(data.areas[0].elements, data.areas[0].title, [], base)", data=data, gap=[])
+    assert picture["arrows"] == [arrow("bank", "pay", "import")]
+    assert [node["id"] for node in picture["nodes"]] == ["bank", "pay"]
 ```
 
 - [ ] **Step 2: run RED.**
 
 Run: `uv run pytest -q tests/scripts/test_architecture_docs_area.py`
-Expected: FAIL, 7 failed (the snippet cannot import `area-diagram.mjs`, and `documentBase` is not exported).
+Expected: FAIL, 8 failed (the snippet cannot import `area-diagram.mjs`, and `documentBase` is not exported).
 
 - [ ] **Step 3: GREEN.**
 
@@ -1044,7 +1053,7 @@ export const TOO_MANY_ARROWS = `The diagram has more than ${ARROW_LIMIT} arrows 
 - [ ] **Step 4: run GREEN and the callers' tests.**
 
 Run: `uv run pytest -q tests/scripts/test_architecture_docs_area.py tests/scripts/test_architecture_docs_facts.py tests/scripts/test_architecture_docs_safety.py`
-Expected: PASS (27 passed).
+Expected: PASS (28 passed).
 
 - [ ] **Step 5: refactor.** None expected; rerun Step 4 if anything changed.
 
@@ -1078,6 +1087,7 @@ git commit -m "feat(#33): the drawing rules: framed elements, neighbours, import
 8. An empty section left blank — mutation: in `area.mjs`, replace `const orSay = (blocks, text) => (blocks.length > 0 ? blocks : [paragraph(text)]);` with `const orSay = (blocks) => blocks;` — killed by: `test_area_document_with_nothing`
 9. No note over the arrow limit — mutation: in `area.mjs`, replace `blocks.push(text === null ? paragraph(TOO_MANY_ARROWS) : diagram(text));` with `blocks.push(diagram(String(text)));` — killed by: `test_area_document_over_the_arrow_limit`
 10. The description left out — mutation: in `area.mjs`, delete the line that adds the area description — killed by: `test_area_document_layout`
+11. Dependencies name only the first area of the other end — mutation: in `area.mjs`, pass only the first of the other end's areas to `areaLinks` — killed by: `test_area_document_dependencies_name_every_area_of_the_other_end`
 
 - Satisfies Spec AC: Area (every section); AC-20 (a cross-cutting decision in both areas with "Also binds"; no principle); AC-21 (the note, the tables complete)
 - Decisions applied: none (the 2026-11-21 amendment, commit `c081dce`, is spec text)
@@ -1257,12 +1267,19 @@ def test_area_document_over_the_arrow_limit() -> None:  # AC-21: the note, and t
     document = area_doc(1, data, [])
     assert section(document, "Diagram") == [para("The diagram has more than 80 arrows and is not drawn; the tables list everything.")]
     assert len(section(document, "Dependencies")[0]["rows"]) == 81
+
+
+def test_area_document_dependencies_name_every_area_of_the_other_end() -> None:  # Area: "the other end's areas"
+    data = {**RECORDS, "areas": [{"name": "core", "title": "Core", "description": None, "elements": ["pay.gateway"]}, *RECORDS["areas"]]}
+    rows = section(area_doc(1, data), "Dependencies")[0]["rows"]
+    assert [["shop.api.orders"], ["uses"], [L("pay.gateway", "core.md"), " (Gateway)"], [""],
+            [L("core", "core.md"), " (Core)", ", ", L("money", "money.md"), " (Money)"]] in rows
 ```
 
 - [ ] **Step 2: run RED.**
 
 Run: `uv run pytest -q tests/scripts/test_architecture_docs_area.py`
-Expected: FAIL, 10 failed, 7 passed (the snippet cannot import `area.mjs`).
+Expected: FAIL, 11 failed, 8 passed (the snippet cannot import `area.mjs`).
 
 - [ ] **Step 3: GREEN.**
 
@@ -1355,7 +1372,7 @@ export function buildArea(data, gap, area, base) {
 - [ ] **Step 4: run GREEN and the callers' tests.**
 
 Run: `uv run pytest -q tests/scripts/test_architecture_docs_area.py tests/scripts/test_architecture_docs_safety.py`
-Expected: PASS (21 passed).
+Expected: PASS (23 passed).
 
 - [ ] **Step 5: refactor.** None expected; rerun Step 4 if anything changed.
 
@@ -1473,7 +1490,7 @@ def test_capability_document_step_limit() -> None:  # AC-21 (capability part): 2
 - [ ] **Step 2: run RED.**
 
 Run: `uv run pytest -q tests/scripts/test_architecture_docs_area.py`
-Expected: FAIL, 6 failed, 17 passed (the snippet cannot import `capability.mjs`).
+Expected: FAIL, 6 failed, 19 passed (the snippet cannot import `capability.mjs`).
 
 - [ ] **Step 3: GREEN.**
 
@@ -1534,7 +1551,7 @@ export function buildCapability(data, capability, base) {
 - [ ] **Step 4: run GREEN and the callers' tests.**
 
 Run: `uv run pytest -q tests/scripts/test_architecture_docs_area.py tests/scripts/test_architecture_docs_safety.py`
-Expected: PASS (27 passed).
+Expected: PASS (29 passed).
 
 - [ ] **Step 5: refactor.** None expected; rerun Step 4 if anything changed.
 
@@ -1564,10 +1581,12 @@ git commit -m "feat(#33): the capability document: sequence diagram, steps, reco
 4. No deadline check after a capability document — mutation: in `build.mjs`, delete the `tick()` after each capability document — killed by: `test_build_checks_the_deadline_after_each_area_and_capability_document`
 5. No HTML page for a document — mutation: in `build.mjs`, write the HTML page only for `README.md` — killed by: `test_build_writes_area_and_capability_documents`
 6. The capability documents not built — mutation: in `build.mjs`, loop over no capabilities — killed by: `test_build_writes_area_and_capability_documents`
+7. A pack element title keeps U+2029 — mutation: in `pack-blocks.mjs`, write the element block title with only `\n` replaced, instead of `oneLine` — killed by: `test_build_pack_guards_fences_and_line_separators`
+8. Pack decision text not split at U+2028 — mutation: in `pack-blocks.mjs`, split the decision text on `\n` only, keeping the guard, instead of `multiLine` — killed by: `test_build_pack_guards_fences_and_line_separators`
 
 **Pinned by:** `tests/scripts/test_architecture_docs_overview.py::test_overview_page_matches_and_is_marked` reads `index.html` and asserts its marker line and its link `<a href="areas/front.html">front</a> (Shop)`; it fails if `addDocument` writes the overview page under another name or from another tree.
 
-- Satisfies Spec AC: AC-9 (the area case), AC-12 and AC-13 (area and capability parts), AC-17 (the `capabilities` folder), AC-18, AC-19, AC-20, AC-21; the `--timeout` deadline after each document (Threat model, Availability); plan 2b's carried mutants (`readGap` skipping `cleanGap`)
+- Satisfies Spec AC: AC-9 (the area case), AC-12 and AC-13 (area and capability parts), AC-17 (the `capabilities` folder), AC-18, AC-19, AC-20, AC-21; the amended AC-25 and AC-26 through `build`; the `--timeout` deadline after each document (Threat model, Availability); plan 2b's carried mutants (`readGap` skipping `cleanGap`)
 - Decisions applied: none (the 2026-11-21 amendment, commit `c081dce`, is spec text)
 - **Test retention:** **Permanent**
 
@@ -1608,7 +1627,7 @@ model {
     gateway = container 'Gateway'
   }
   bank = system 'Bank'
-  ledger = system 'Ledger'
+  ledger = system 'Ledger; "x" %%{init}%%'
   shop.web -> shop.api 'orders'
   shop.api.orders -> pay.gateway
   shop.api -> pay
@@ -1655,7 +1674,9 @@ DECISIONS = {"title": "Core", "holes": [{"id": "H-1", "what": "Why?", "binds": [
 ]}
 CONTRACTS = {"title": "Edge", "contracts": [{"id": "C-1", "name": "Card API", "owner": "pay.gateway", "bound": ["shop.web"],
                                              "obligations": ["Ids"], "compatibility": None, "capabilities": ["buy"]}]}
-GAP = {"entries": [{"from": "shop.api", "to": "ledger", "reason": "Red " + ESC + "[31mgap | <b>", "close_by": "2027 " + ESC + "[0m01"}]}
+GAP = {"entries": [{"from": "shop.api", "to": "ledger", "reason": "Red " + ESC + "[31mgap | <b>", "close_by": "2027 " + ESC + "[0m01"},
+                   {"from": "shop.web", "to": "pay.gateway", "reason": "no relationship"}]}
+LEDGER = "Ledger#59; #34;x#34; #37;#37;#123;init#125;#37;#37; #40;no area#41;"
 
 
 def write_json(folder: Path, rel: str, data: object) -> None:
@@ -1717,22 +1738,27 @@ def test_build_writes_area_and_capability_documents(tmp_path) -> None:  # AC-18,
     for name in names:
         if name.endswith((".md", ".html")):
             assert (out / name).read_text(encoding="utf-8").startswith(MARKER + "\n"), name
+    for name in ("areas/front.html", "capabilities/buy.html"):
+        page = (out / name).read_text(encoding="utf-8")
+        assert page.count("<script") == 2 and "content=\"default-src 'none'; script-src https://cdn.jsdelivr.net/npm/mermaid@12.2.0" in page
     page = (out / "areas" / "front.html").read_text(encoding="utf-8")
-    assert page.count("<script") == 2 and "content=\"default-src 'none'; script-src https://cdn.jsdelivr.net/npm/mermaid@12.2.0" in page
     assert '<a href="../index.html">bank</a>' in page and '<a href="../capabilities/buy.html">buy</a>' in page
+    slice_ = (out / "pack" / "areas" / "front.md").read_text(encoding="utf-8")
+    assert slice_.endswith("\n\n## Capabilities\n\n- buy: Buy [capabilities/buy.md]\n")  # AC-26 (an area slice's capabilities)
 
 
 def test_build_area_diagram(tmp_path) -> None:  # AC-19
     _, out = built(tmp_path)
     arrows = diagram_arrows((out / "areas" / "front.md").read_text(encoding="utf-8"))
-    assert ("API", "-->", "known gap", "Ledger #40;no area#41;", "red") in arrows
+    assert ("API", "-->", "known gap", LEDGER, "red") in arrows
+    assert ("Web", "-->", "known gap", "Gateway #40;core#41;", "red") in arrows
     assert ("Web", "-->", "", "Bank #40;no area#41;") in arrows
     assert ("Web", "-.->", "event#44; #34;reports#34;", "Bank #40;no area#41;") in arrows
     assert ("API", "-.->", "http#44; #34;charges#34;", "Gateway #40;core#41;") in arrows
     assert ("Orders", "-->", "", "Gateway #40;core#41;") in arrows
     assert not any(arrow[0] == "API" and arrow[3] == "Pay #40;no area#41;" for arrow in arrows)
     assert not any(arrow[0] == "Bank #40;no area#41;" for arrow in arrows)
-    assert len(arrows) == 6
+    assert len(arrows) == 7
 
 
 def test_build_cross_cutting_decision_and_principle(tmp_path) -> None:  # AC-20
@@ -1768,7 +1794,20 @@ def test_build_escapes_hostile_text(tmp_path) -> None:  # AC-12 (area and capabi
     assert page.count("<script") == 2
 
 
-AREA_MONEY = "  view area-money {\n    title 'Money'\n    include pay.gateway\n  }\n"
+def test_build_pack_guards_fences_and_line_separators(tmp_path) -> None:  # AC-25 (amended), through `build`
+    model = MODEL.replace("  bank = system 'Bank'\n", "  bank = system 'Bank\nfeed" + chr(0x2029) + "line'\n")
+    repo = make_repo(tmp_path, model)
+    folder = repo / "docs" / "architecture"
+    write_json(folder, "decisions/core.json", {"title": "Core", "holes": [], "decisions": [
+        decision("D-3", decision="Use A.\n```js\nx" + chr(0x2028) + "# y", binds=["bank"])]})
+    proc = run_tool("build", "--repo", repo, script=DOCS_SCRIPT)
+    assert proc.returncode == 0, proc.stderr
+    text = (folder / "generated" / "pack" / "README.md").read_text(encoding="utf-8")
+    assert "\n### bank: Bank feed line\n" in text
+    assert "\n### D-3\nUse A.\n\\```js\nx\n\\# y\nreason: Because.\n" in text
+
+
+AREA_MONEY ="  view area-money {\n    title 'Money'\n    include pay.gateway\n  }\n"
 CAPABILITY_BUY = ("  dynamic view capability-buy {\n    title 'Buy'\n    shop.web -> shop.api 'order; %%{init}%% now'\n"
                   "    shop.api -> pay.gateway\n    pay.gateway -> shop.api 'paid'\n  }\n")
 
@@ -1843,7 +1882,7 @@ def test_build_checks_the_deadline_after_each_area_and_capability_document(tmp_p
 - [ ] **Step 2: run RED.**
 
 Run: `uv run pytest -q tests/scripts/test_architecture_docs_documents.py`
-Expected: FAIL, 8 failed (no area or capability document is written).
+Expected: FAIL, 8 failed, 1 passed (no area or capability document is written; the pack test passes already, its rules come from Task 1).
 
 - [ ] **Step 3: GREEN.**
 
@@ -1910,7 +1949,7 @@ function addDocument(files, rel, tree) {
 - [ ] **Step 4: run the full suite.**
 
 Run: `uv run pytest -q` (about 2.5 minutes; allow 10)
-Expected: PASS (668 passed, 1 skipped).
+Expected: PASS (671 passed, 1 skipped).
 
 - [ ] **Step 5: refactor.** None expected; rerun Step 4 if anything changed.
 
