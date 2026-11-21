@@ -24,7 +24,18 @@ export function packContext(data, held = {}) {
       holes: new Map(data.holes.map((record) => [record.id, record])),
     },
     held: heldSets(held),
+    links: linkIndex(data),
   };
+}
+
+// Each element's allowed, runtime and binding-decision entries, grouped once so a block does not rescan the export.
+function linkIndex(data) {
+  const index = new Map(data.elements.map((element) => [element.id, { from: [], to: [], out: [], in: [], boundBy: [] }]));
+  const at = (id) => index.get(id) ?? { from: [], to: [], out: [], in: [], boundBy: [] };
+  for (const entry of data.allowed) { at(entry.from).from.push(entry); at(entry.to).to.push(entry); }
+  for (const link of data.runtime) { at(link.from).out.push(link); at(link.to).in.push(link); }
+  for (const decision of data.decisions) for (const id of new Set(decision.binds)) at(id).boundBy.push(decision);
+  return index;
 }
 
 // The same context for another slice: the maps are kept, only the held sets change.
@@ -49,8 +60,8 @@ const refs = (kind, ids, ctx) => ids.map((id) => ref(kind, id, ctx)).join(', ');
 
 function runtimeLines(id, ctx) {
   const byOther = (x, y) => cmp(x.other, y.other) || cmp(x.link.kind, y.link.kind);
-  const outgoing = ctx.data.runtime.filter((link) => link.from === id).map((link) => ({ arrow: '->', other: link.to, link })).sort(byOther);
-  const incoming = ctx.data.runtime.filter((link) => link.to === id).map((link) => ({ arrow: '<-', other: link.from, link })).sort(byOther);
+  const outgoing = ctx.links.get(id).out.map((link) => ({ arrow: '->', other: link.to, link })).sort(byOther);
+  const incoming = ctx.links.get(id).in.map((link) => ({ arrow: '<-', other: link.from, link })).sort(byOther);
   return [...outgoing, ...incoming].map(({ arrow, other, link }) => {
     const detail = [link.kind, ...link.titles.map((title) => `"${oneLine(title)}"`)].join(', ');
     return `runtime: ${arrow} ${ref('elements', other, ctx, ` (${detail})`)}`;
@@ -66,12 +77,12 @@ export function elementBlock(id, ctx) {
   if (element.rules.length > 0) head.push(`rules ${element.rules.join(', ')}`);
   const lines = [`### ${id}: ${oneLine(element.title)}`, head.join(' · ')];
   if (element.description !== null) lines.push(multiLine(element.description));
-  const uses = [...new Set(ctx.data.allowed.filter((entry) => entry.from === id).map((entry) => entry.to))].sort(cmp);
-  const usedBy = [...new Set(ctx.data.allowed.filter((entry) => entry.to === id).map((entry) => entry.from))].sort(cmp);
+  const uses = [...new Set(ctx.links.get(id).from.map((entry) => entry.to))].sort(cmp);
+  const usedBy = [...new Set(ctx.links.get(id).to.map((entry) => entry.from))].sort(cmp);
   if (uses.length > 0) lines.push(`uses: ${refs('elements', uses, ctx)}`);
   if (usedBy.length > 0) lines.push(`used by: ${refs('elements', usedBy, ctx)}`);
   lines.push(...runtimeLines(id, ctx));
-  const boundBy = ctx.data.decisions.filter((decision) => decision.binds.includes(id))
+  const boundBy = ctx.links.get(id).boundBy
     .map((decision) => ref('decisions', decision.id, ctx, isCrossCutting(decision) ? ' (cross-cutting)' : ''));
   if (boundBy.length > 0) lines.push(`bound by: ${boundBy.join(', ')}`);
   return lines.join('\n');

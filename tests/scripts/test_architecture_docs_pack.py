@@ -515,7 +515,8 @@ def test_build_writes_the_pack(tmp_path) -> None:  # AC-26, AC-13 (pack files st
     exported = json.loads(run_tool("export", "--repo", repo).stdout)
     index = index_lines((pack_dir / "README.md").read_text(encoding="utf-8"))
     every = ([e["id"] for e in exported["elements"]] + [d["id"] for d in exported["decisions"]]
-             + [c["id"] for c in exported["contracts"]] + [c["name"] for c in exported["capabilities"]])
+             + [c["id"] for c in exported["contracts"]] + [h["id"] for h in exported["holes"]]
+             + [c["name"] for c in exported["capabilities"]])
     assert sorted(index) == sorted(every)
     assert index["pay"] == "areas/money.md, capabilities/buy.md"
     assert index["vault"] == "README.md"
