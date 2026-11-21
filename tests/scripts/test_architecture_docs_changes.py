@@ -149,3 +149,93 @@ def test_change_record_check() -> None:  # Change record: exit, summary, and the
     assert section(change_doc(), "Check") == [
         {"type": "list", "items": [["Exit: ", "1"], ["Summary: ", "1 new breach"]]},
         {"type": "code", "text": "New breaches\n  shop.api -> ledger (1 edges)\n"}]
+
+
+def improvements(data: dict = RECORDS, gap: list = GAP) -> dict:
+    return built("improvements.mjs", "m.buildImprovements(data, gap, base)", data, gap)
+
+
+def items(document: dict, heading: str) -> list:
+    blocks = section(document, heading)
+    assert len(blocks) == 1
+    return blocks[0]["items"] if blocks[0]["type"] == "list" else blocks
+
+
+FRONT = ["Areas: ", L("front", "areas/front.md"), " (Front)"]
+MONEY = ["Areas: ", L("money", "areas/money.md"), " (Money)"]
+NOWHERE = ["Not in any area"]
+COVERAGE = {"answer": "Most code is mapped.", "baselined": [], "edge_nodes": [{"element": "bank", "run": "baseline"}],
+            "counts": {"modules": 9, "groups": 2},
+            "unmapped": [{"module": "src/z", "reason": "new code"}, {"module": "src/a", "reason": "generated"}]}
+
+
+def test_improvement_list_groups_in_order_with_counts() -> None:  # Improvement list (amended): `<group name> (<count>)`; AC-23
+    document = improvements()
+    assert document["title"] == "Improvement list"
+    assert document["blocks"][0] == para("Facts from the architecture model and the known-gap file; nothing here is judged or ranked.")
+    assert heads(document, 2) == [
+        "Cycles in current code (1)", "Other known breaches (1)", "Open questions (1)", "Decisions not yet fully built (1)",
+        "Decisions with no known reason (1)", "Unmapped code (0)", "Elements in no area (2)", "Elements that own nothing (5)"]
+
+
+def test_improvement_list_items() -> None:  # Improvement list (amended): each item, its details and its areas; AC-23
+    document = improvements()
+    assert items(document, "Cycles in current code (1)") == [
+        [L("shop.api", "areas/front.md"), " (API)", " -> ", L("ledger", "README.md"), " (Ledger)", ": ", "close by 2027-01", ". ", *FRONT]]
+    assert items(document, "Other known breaches (1)") == [
+        [L("bank", "README.md"), " (Bank)", " -> ", L("pay", "areas/money.md"), " (Pay)", ": ", "between neighbours", ". ", *MONEY]]
+    assert items(document, "Open questions (1)") == [
+        [L("H-1", "areas/front.md"), ": ", "binds ", L("shop.api", "areas/front.md"), " (API)", ". ", *FRONT]]
+    assert items(document, "Decisions not yet fully built (1)") == [[L("D-2", "areas/front.md"), ": ", "status ", "planned", ". ", *FRONT]]
+    assert items(document, "Decisions with no known reason (1)") == [[L("D-0", "areas/front.md"), ". ", *FRONT]]
+    assert items(document, "Unmapped code (0)") == [para("None.")]
+    assert items(document, "Elements in no area (2)") == [
+        [L("bank", "README.md"), " (Bank)", ". ", *NOWHERE], [L("ledger", "README.md"), " (Ledger)", ". ", *NOWHERE]]
+    assert [item[0]["text"] for item in items(document, "Elements that own nothing (5)")] == [
+        "bank", "ledger", "pay.gateway", "shop.api.orders", "shop.web"]
+    assert items(document, "Elements that own nothing (5)")[2] == [L("pay.gateway", "areas/money.md"), " (Gateway)", ". ", *MONEY]
+
+
+def test_improvement_list_with_a_coverage_file() -> None:  # Improvement list: unmapped entries by module; edge nodes own something
+    document = improvements({**RECORDS, "coverage": COVERAGE})
+    assert items(document, "Unmapped code (2)") == [["src/a", ": ", "generated"], ["src/z", ": ", "new code"]]
+    assert [item[0]["text"] for item in items(document, "Elements that own nothing (4)")] == [
+        "ledger", "pay.gateway", "shop.api.orders", "shop.web"]
+
+
+def test_elements_that_own_nothing() -> None:  # Improvement list: no code, no child, kind not external, not an edge node
+    data = copy.deepcopy(RECORDS)
+    data["elements"] = [element("a", "A", kind="external"), element("b", "B", code=["src/b"]), element("c", "C"), element("c.d", "D"),
+                        element("e", "E", kind="system")]
+    data["areas"] = []
+    document = improvements(data, [])
+    assert [item[0]["text"] for item in items(document, "Elements that own nothing (2)")] == ["c.d", "e"]
+
+
+def test_improvement_list_sorts_items() -> None:  # Improvement list: items sorted by id, by pair or by module
+    data = copy.deepcopy(RECORDS)
+    data["decisions"] = [dict(data["decisions"][2], id=id_) for id_ in ("D-9", "D-10", "D-3")]
+    data["holes"] = [dict(data["holes"][0], id=id_) for id_ in ("H-3", "H-10")]
+    gap = [{"from": "shop.web", "to": "bank", "reason": "r", "close_by": None}, {"from": "bank", "to": "shop.web", "reason": "r", "close_by": None},
+           {"from": "bank", "to": "pay", "reason": "r", "close_by": None}]
+    data["coverage"] = {**COVERAGE, "unmapped": [{"module": "b", "reason": "r"}, {"module": "B", "reason": "r"}, {"module": "a", "reason": "r"}]}
+    document = improvements(data, gap)
+    assert [item[0]["text"] for item in items(document, "Decisions not yet fully built (3)")] == ["D-10", "D-3", "D-9"]
+    assert [item[0]["text"] for item in items(document, "Open questions (2)")] == ["H-10", "H-3"]
+    assert [(item[0]["text"], item[3]["text"]) for item in items(document, "Other known breaches (3)")] == [
+        ("bank", "pay"), ("bank", "shop.web"), ("shop.web", "bank")]
+    assert [item[0] for item in items(document, "Unmapped code (3)")] == ["B", "a", "b"]
+
+
+def test_improvement_list_statuses_and_records_with_no_area() -> None:  # Improvement list: partly-built and planned; no area
+    data = copy.deepcopy(RECORDS)
+    data["decisions"] = [dict(data["decisions"][0], id="D-5", status="partly-built", binds=[], reason="R."),
+                         dict(data["decisions"][0], id="D-6", status="superseded", superseded_by="D-5", reason="R."),
+                         dict(data["decisions"][3], reason=None)]
+    data["holes"] = [dict(data["holes"][0], binds=[])]
+    document = improvements(data, [])
+    assert items(document, "Decisions not yet fully built (1)") == [[L("D-5", "README.md"), ": ", "status ", "partly-built", ". ", *NOWHERE]]
+    assert items(document, "Decisions with no known reason (1)") == [[L("P-1", "README.md"), ". ", *NOWHERE]]
+    assert items(document, "Open questions (1)") == [[L("H-1", "README.md"), ". ", *NOWHERE]]
+    assert items(document, "Cycles in current code (0)") == [para("None.")]
+    assert items(document, "Other known breaches (0)") == [para("None.")]
