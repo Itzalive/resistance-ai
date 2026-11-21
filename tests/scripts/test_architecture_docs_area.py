@@ -156,3 +156,172 @@ def test_area_drawing_text_and_arrow_limit() -> None:  # AC-21 (the diagram part
     assert run("d.drawingText(d.drawing(data.areas[1].elements, data.areas[1].title, [], base))", data=many) is None
     many["allowed"] = many["allowed"][:80]
     assert run("d.drawingText(d.drawing(data.areas[1].elements, data.areas[1].title, [], base))", data=many).count(" --> ") == 80
+
+
+RECORDS = {
+    **DATA,
+    "decisions": [
+        {"id": "D-0", "decision": "Keep the web thin.", "reason": None, "rejected": [], "binds": ["shop.web"], "capabilities": ["buy"],
+         "status": "current", "evidence": "spec", "sources": []},
+        {"id": "D-1", "decision": "Log every call.", "reason": "Audit.", "rejected": [], "binds": ["shop.web", "pay"],
+         "obligations": ["Log."], "status": "current", "evidence": "spec", "sources": []},
+        {"id": "D-2", "decision": "One API.", "reason": "Simple.", "rejected": [], "binds": ["shop.api"], "status": "planned",
+         "evidence": "spec", "sources": []},
+        {"id": "P-1", "decision": "Data stays in the EU.", "reason": "Law.", "rejected": [], "binds": [], "obligations": ["EU only."],
+         "status": "current", "evidence": "spec", "sources": []},
+    ],
+    "contracts": [{"id": "C-1", "name": "Card API", "owner": "pay", "bound": ["shop.web"], "obligations": ["Ids"],
+                   "compatibility": None, "capabilities": ["buy"]}],
+    "holes": [{"id": "H-1", "what": "Why one API?", "binds": ["shop.api"], "evidence": "search"}],
+    "capabilities": [
+        {"name": "audit", "title": "Audit", "description": None, "steps": [
+            {"from": "bank", "to": "ledger", "label": None, "reply": False, "kinds": ["uses"]}]},
+        {"name": "buy", "title": "Buy", "description": "Buy a thing.", "steps": [
+            {"from": "shop.web", "to": "shop.api", "label": "order", "reply": False, "kinds": ["uses"]},
+            {"from": "shop.api", "to": "pay.gateway", "label": None, "reply": False, "kinds": ["http", "uses"]},
+            {"from": "pay.gateway", "to": "shop.api", "label": "paid", "reply": True, "kinds": ["http"]}]},
+    ],
+}
+
+
+def built(module: str, code: str, data: dict = RECORDS, gap: list = GAP) -> dict:
+    snippet = (
+        f"import * as m from {json.dumps(lib_url(module, DOCS_LIB))};\n"
+        f"import {{ documentBase }} from {json.dumps(lib_url('facts.mjs', DOCS_LIB))};\n"
+        f"const data = {json.dumps(data)};\nconst gap = {json.dumps(gap)};\nconst base = documentBase(data);\n"
+        f"process.stdout.write(JSON.stringify({code}));\n"
+    )
+    proc = run_module(snippet)
+    assert proc.returncode == 0, proc.stderr
+    return json.loads(proc.stdout)
+
+
+def area_doc(index: int = 0, data: dict = RECORDS, gap: list = GAP) -> dict:
+    return built("area.mjs", f"m.buildArea(data, gap, data.areas[{index}], base)", data, gap)
+
+
+def section(document: dict, title: str) -> list:
+    """The blocks under the level-2 heading `title`, up to the next level-2 heading."""
+    blocks = document["blocks"]
+    start = blocks.index({"type": "heading", "level": 2, "text": title}) + 1
+    end = next((at for at in range(start, len(blocks)) if blocks[at]["type"] == "heading" and blocks[at]["level"] == 2), len(blocks))
+    return blocks[start:end]
+
+
+def L(text: str, href: str) -> dict:
+    return {"type": "link", "text": text, "href": href}
+
+
+def para(text: str) -> dict:
+    return {"type": "paragraph", "parts": [text]}
+
+
+def heads(document: dict, level: int) -> list:
+    return [block["text"] for block in document["blocks"] if block["type"] == "heading" and block["level"] == level]
+
+
+def test_area_document_layout() -> None:  # Area: title, description, then the sections in order
+    document = area_doc()
+    assert document["title"] == "Front"
+    assert document["blocks"][0] == para("The shop.")
+    assert heads(document, 2) == ["Diagram", "Elements", "Dependencies", "Decisions", "Contracts", "Open questions", "Known gap",
+                                  "Capabilities"]
+    diagram = section(document, "Diagram")
+    assert len(diagram) == 1 and diagram[0]["type"] == "diagram"
+    assert diagram[0]["text"].startswith('flowchart LR\n  subgraph frame["Front"]\n')
+    assert '  n6 -->|"known gap"| n2' in diagram[0]["text"]
+
+
+def test_area_document_elements() -> None:  # Area: Elements (id, title, description, code, rules, tags)
+    rows = section(area_doc(), "Elements")[0]
+    assert rows["header"] == ["Element", "Title", "Description", "Code", "Rules", "Tags"]
+    assert rows["rows"] == [
+        [["shop"], ["Shop"], ["Sells things."], ["src/shop, src/lib"], ["BR-1, BR-2"], ["#edge #web"]],
+        [["shop.api"], ["API"], [""], [""], [""], [""]],
+        [["shop.api.orders"], ["Orders"], [""], [""], [""], [""]],
+        [["shop.web"], ["Web"], [""], [""], [""], [""]],
+    ]
+
+
+def test_area_document_links_an_element_held_by_another_area() -> None:  # Shared rules: an id links to its first area
+    data = {**RECORDS, "areas": [{"name": "core", "title": "Core", "description": None, "elements": ["shop.api"]}, *RECORDS["areas"]]}
+    rows = section(area_doc(1, data), "Elements")[0]["rows"]
+    assert [row[0] for row in rows] == [["shop"], [L("shop.api", "core.md")], ["shop.api.orders"], ["shop.web"]]
+
+
+def test_area_document_dependencies() -> None:  # Area: Dependencies, each with the other end's areas
+    table = section(area_doc(), "Dependencies")[0]
+    assert table["header"] == ["Element", "Relation", "Other end", "Kind and titles", "Its areas"]
+    money = [L("money", "money.md"), " (Money)"]
+    assert table["rows"] == [
+        [["shop"], ["runtime to"], [L("pay", "money.md"), " (Pay)"], ["http"], money],
+        [["shop.api"], ["uses"], [L("pay", "money.md"), " (Pay)"], [""], money],
+        [["shop.api"], ["used by"], [L("shop.web", "front.md"), " (Web)"], [""], [L("front", "front.md"), " (Front)"]],
+        [["shop.api"], ["runtime to"], [L("pay.gateway", "money.md"), " (Gateway)"], ['http, "charges"'], money],
+        [["shop.api.orders"], ["uses"], [L("pay.gateway", "money.md"), " (Gateway)"], [""], money],
+        [["shop.web"], ["uses"], [L("bank", "../README.md"), " (Bank)"], [""], ["Not in any area"]],
+        [["shop.web"], ["uses"], [L("shop.api", "front.md"), " (API)"], [""], [L("front", "front.md"), " (Front)"]],
+        [["shop.web"], ["runtime to"], [L("bank", "../README.md"), " (Bank)"], ['event, "reports"'], ["Not in any area"]],
+        [["shop.web"], ["runtime to"], [L("bank", "../README.md"), " (Bank)"], ['http, "feeds", "reports"'], ["Not in any area"]],
+    ]
+
+
+def test_area_document_runtime_from() -> None:  # Area: an incoming runtime link names its source
+    rows = section(area_doc(1), "Dependencies")[0]["rows"]
+    assert [row[1][0] for row in rows] == ["used by", "used by", "runtime from", "used by", "runtime from"]
+    assert rows[2] == [["pay"], ["runtime from"], [L("shop", "front.md"), " (Shop)"], ["http"], [L("front", "front.md"), " (Front)"]]
+
+
+def test_area_document_decisions() -> None:  # Area: cross-cutting first, by id; "Also binds"; AC-20
+    blocks = section(area_doc(), "Decisions")
+    assert [block["text"] for block in blocks if block["type"] == "heading"] == ["D-1", "D-0", "D-2"]
+    d1 = blocks[2]["items"]
+    assert d1[-1] == ["Also binds: ", L("money", "money.md"), " (Money)"]
+    assert ["Reason: ", "Reason not known"] in blocks[5]["items"]
+    assert not any(item[0] == "Also binds: " for item in blocks[5]["items"])
+    money = section(area_doc(1), "Decisions")
+    assert [block["text"] for block in money if block["type"] == "heading"] == ["D-1"]
+    assert money[2]["items"][-1] == ["Also binds: ", L("front", "front.md"), " (Front)"]
+    assert "P-1" not in json.dumps(area_doc()) and "P-1" not in json.dumps(area_doc(1))
+
+
+def test_area_document_contracts_open_questions_gap_and_capabilities() -> None:  # Area: the rest, in full
+    document = area_doc()
+    contracts = section(document, "Contracts")
+    assert contracts[0] == {"type": "heading", "level": 3, "text": "C-1: Card API"}
+    assert contracts[1]["items"][-1] == ["Also in: ", L("money", "money.md"), " (Money)"]
+    holes = section(document, "Open questions")
+    assert [holes[0]["text"], holes[1]] == ["H-1", para("Why one API?")]
+    gap = section(document, "Known gap")[0]
+    assert gap["header"] == ["From", "To", "Reason", "Close by"]
+    assert gap["rows"] == [[[L("shop.api", "front.md"), " (API)"], [L("ledger", "../README.md"), " (Ledger)"],
+                            ["cycle in current code"], ["2027-01"]]]
+    capabilities = section(document, "Capabilities")[0]
+    assert capabilities["header"] == ["Capability", "Description"]
+    assert capabilities["rows"] == [[[L("buy", "../capabilities/buy.md"), " (Buy)"], ["Buy a thing."]]]
+
+
+def test_area_document_known_gap_with_no_close_by() -> None:  # Area: `close_by` is optional
+    rows = section(area_doc(1), "Known gap")[0]["rows"]
+    assert rows == [[[L("bank", "../README.md"), " (Bank)"], [L("pay", "money.md"), " (Pay)"], ["between neighbours"], [""]]]
+
+
+def test_area_document_with_nothing() -> None:  # Area: an empty section says so; no description, no paragraph
+    data = {**RECORDS, "areas": [{"name": "side", "title": "Side", "description": None, "elements": []}]}
+    document = area_doc(0, data)
+    assert document["blocks"][0] == {"type": "heading", "level": 2, "text": "Diagram"}
+    assert section(document, "Elements") == [para("The area has no elements.")]
+    assert section(document, "Dependencies") == [para("No dependencies.")]
+    assert section(document, "Decisions") == [para("No decisions bind an element of this area.")]
+    assert section(document, "Contracts") == [para("No contracts.")]
+    assert section(document, "Open questions") == [para("No open questions.")]
+    assert section(document, "Known gap") == [para("No known-gap entries.")]
+    assert section(document, "Capabilities") == [para("No capabilities pass through this area.")]
+
+
+def test_area_document_over_the_arrow_limit() -> None:  # AC-21: the note, and the tables complete
+    data = {**RECORDS, "allowed": [{"from": "pay", "to": f"x{i:02}", "titles": []} for i in range(81)], "runtime": [],
+            "elements": RECORDS["elements"] + [element(f"x{i:02}", f"X{i}") for i in range(81)]}
+    document = area_doc(1, data, [])
+    assert section(document, "Diagram") == [para("The diagram has more than 80 arrows and is not drawn; the tables list everything.")]
+    assert len(section(document, "Dependencies")[0]["rows"]) == 81
