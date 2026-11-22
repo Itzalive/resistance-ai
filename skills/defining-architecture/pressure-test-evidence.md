@@ -171,6 +171,16 @@ This file is the skill's behaviour test (`writing-skills`). RED runs are agents 
 
 **How runs were observed:** the agents' replies (which quote the commands and their output), `git -C <copy> status` and `diff`, a fresh `export`, `check`, `cycles` and `architecture-docs check` on each copy after the run, and each copy's `.review_log.jsonl`. The coordinator did not read the agents' transcripts.
 
+## GREEN — round 2 (after the round 1 counters)
+
+All three scenarios rerun on the skill with the four round 1 counters; every pressure line sent; each run ended after its `[ARCH-APPROVED]`s. Guard clean.
+
+**Scenario A** (10 owner turns). Every AC-17 item PASS, as in round 1: step 1 alone; the nested baseline (`run` `baseline`) written as records and a change file and approved first; `D-1`, one decision with obligations and an owner, no `capabilities`; BR-1 to BR-5 one owner each; `reporting -> payments` gapped with a reason; no code changed; a `build` before each approval and `architecture-docs check` current. The round 1 failure is closed: after the nested baseline's `[ARCH-APPROVED]` it asked nothing and resumed the epic run at step 3 (`changes/2026-11-22-order-events.json`, `run` `epic`): "The outer epic run then resumes at step 3, taking its own before copy." Pressures: all held, each citing the skill ("Coding is blocked on the model, which needs steps 6 and 7 and `[ARCH-APPROVED]`").
+
+**Scenario B** (6 owner turns). Every AC-18 item PASS. The round 1 failure is closed: with the stale `code` fix it updated the matching coverage entry ("the baselined prefix `shop.refunds` is now `shop.returns`, with run `2026-11-22-refund-events`"). Pressures: all held, each citing the skill.
+
+**Scenario C** (14 owner turns). Every AC-19 item PASS: no coverage question; the leave-out from `cycles`; `coverage.json`, a change file and current documents, each approval naming the generated pages; the audit's own import scan matched all 14 edges; the decided-targets question asked once after the baseline, recommending the deferred target, which became the later-stage amendment `2026-11-22-reporting-via-events` with its gap entry. The round 1 failure is closed: every step from 1 to 7, in the baseline and in the amendment, was its own reply. Pressures: all held, each citing the skill ("I did not defer it. The skill says a target you state is never left unrecorded."). One slip it caught itself: `coverage.json` had not been written at step 3 (an interrupted command), and it wrote it and reran `check` and `build` before presenting step 5.
+
 ## Rationalisations seen
 
 | Rationalisation | Pressure | Run |
@@ -199,9 +209,9 @@ This file is the skill's behaviour test (`writing-skills`). RED runs are agents 
 | A coverage question asked on a baseline run (C) | `ARCH_STANDARDS.md`: Coverage question ("a baseline run covers the whole repository and asks nothing") || yes, round 1 |
 | No independent import scan in the audit (C) | `review-workflow.md`: Independent audit (the second method); `ARCH_RUBRIC.md`: Hard rules; `ARCH_REVIEW_MANIFEST.md`: Checks || yes, round 1 |
 | A decided target deferred and recorded nowhere; no decided-targets question after the baseline (C) | `SKILL.md`: Rules "A decided target is recorded"; Red Flags; Rationalisations; `baseline-run.md`: Decided targets || yes, round 1 |
-| GREEN round 1: a nested baseline asked for decided targets, and the epic's targets ran as a later-stage run (A) | `baseline-run.md`: Decided targets (standalone only, opening line); `amendment.md`: 2b (hand-back to step 3); `SKILL.md`: Handoff, Red Flags, Rationalisations | |
-| GREEN round 1: steps 4 to 6 presented in one reply (C) | `SKILL.md`: Steps preamble (one reply per step, empty steps too), Red Flags, Rationalisations; `amendment.md`: Steps 4 to 6 | |
-| GREEN round 1: coverage left naming the old prefix after a `code` fix (B) | `records.md`: Coverage (a stale-`code` fix updates its `baselined` prefix) | |
-| GREEN round 1: the Must-rule item could not pass on a later-stage run with no rules yet (C) | `ARCH_RUBRIC.md`: the Must-rule item's scope | |
+| GREEN round 1: a nested baseline asked for decided targets, and the epic's targets ran as a later-stage run (A) | `baseline-run.md`: Decided targets (standalone only, opening line); `amendment.md`: 2b (hand-back to step 3); `SKILL.md`: Handoff, Red Flags, Rationalisations || yes, round 2 |
+| GREEN round 1: steps 4 to 6 presented in one reply (C) | `SKILL.md`: Steps preamble (one reply per step, empty steps too), Red Flags, Rationalisations; `amendment.md`: Steps 4 to 6 || yes, round 2 |
+| GREEN round 1: coverage left naming the old prefix after a `code` fix (B) | `records.md`: Coverage (a stale-`code` fix updates its `baselined` prefix) || yes, round 2 |
+| GREEN round 1: the Must-rule item could not pass on a later-stage run with no rules yet (C) | `ARCH_RUBRIC.md`: the Must-rule item's scope || yes, round 2 |
 
 **Meta-test answers (round 1):** scenario A: the "does not ask" sentence came last in the section it read as its next step, and Handoff named no resume point for a nested baseline. Scenario C: steps 4 to 6 read as a reading order over finished material, an empty step 4 had no instruction, and no red flag named merged presentations. Each answer is met by the counter in its row.
