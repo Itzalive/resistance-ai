@@ -1,18 +1,32 @@
 # defining-architecture on the Record Layout Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use resistance-engine:subagent-driven-development. Task 1 goes to an executor at its tier; Tasks 2–7 are run by the coordinator itself (see "Who runs Tasks 2–7"). Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use resistance-engine:subagent-driven-development. Task 1 goes to an executor at its tier; Tasks 2–10 are run by the coordinator itself (see "Who runs Tasks 2–10"). Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** `defining-architecture` writes every judgement as a validated record and a change file, uses `architecture-records` for each run's change file and for cycles, and hands the owner the generated documents to approve from; the `modelled` fixture is on the record layout; three pressure scenarios prove the skill.
+**Goal:** `defining-architecture` writes every judgement as a validated record and a change file, uses `architecture-records` for each run's change file and for cycles, and hands the owner the generated documents to approve from; its text is split into files loaded at the step that needs them; the `modelled` fixture is on the record layout; three pressure scenarios prove the skill.
 
-**Architecture:** This repository has no architecture model. No code changes: the skill's text (`skills/defining-architecture/`), one fixture (`tests/fixtures/defining-architecture/modelled/`), the contract test that pins both fixtures, and the evidence file. The skill's behaviour is proved by RED/GREEN pressure runs graded on what the agent did; no test asserts the skill's wording.
+**Architecture:** This repository has no architecture model. No code changes: the skill's text (`skills/defining-architecture/`), one fixture (`tests/fixtures/defining-architecture/modelled/`), the contract test that pins both fixtures, and the evidence file. The skill stays one skill; `SKILL.md` keeps what an agent holds at every step, and the detail moves to companion files, each loaded only at its step (spec, Scope: "`SKILL.md` may move detail to companion files"):
+
+| File | Holds | Loaded at |
+|---|---|---|
+| `SKILL.md` | triggers, ownership, the seven steps one line each with the file each loads, the rules that hold at every step, hard rules, red flags, rationalisations, handoff | always |
+| `ARCH_STANDARDS.md` | the overlay (with `roots`), the Terms, spotting a cross-cutting decision, mechanism detail, the gap reason format | step 1 |
+| `tools.md` (new) | the three tools: commands, flags, outputs, exit codes | step 2 |
+| `records.md` (new) | which file holds what, the fields a run fills, the change file's life (before copy, `change`, reruns, `approved`), coverage entries | step 3 |
+| `amendment.md` (new) | steps 3 to 6 in detail: the draft, the change–check–build loop, presenting from the generated documents, the known gap | step 3 |
+| `baseline-run.md` | the baseline: groups by roots, what a baseline holds, nesting, views, cycles, nested baselines, the decided-targets question | step 2b, or a baseline run |
+| `review-workflow.md`, `ARCH_REVIEW_MANIFEST.md`, `ARCH_RUBRIC.md` | self-review, the audit and its import scan, owner approval, the work-item note | step 7 |
+
+The skill's behaviour is proved by RED/GREEN pressure runs graded on what the agent did; no test asserts the skill's wording.
 
 **Tech Stack:** Markdown skill files; the shipped Node tools (`architecture-delta.mjs`, `architecture-records.mjs`, `architecture-docs.mjs`); pytest via `uv run`.
 
 **Spec:** `docs/superpowers/specs/2026-11-21-defining-architecture-records-design.md` ("The run", "Baseline", "Review", "Fixtures", "Pressure runs", the skill's lines in "Scope", AC-16 to AC-20) — decisions applied: the owner's A3b decisions recorded in the spec (terms; the helper; `roots`; whole-repository baselines; no review check that approved change files are untouched; four plans; three scenarios on Sonnet). Plan 3 of the four plans; plans 1, 2a and 2b come first on the same branch.
 
-**Open decisions:** none. One harness detail is derived, not decided: in scenario C the owner's scripted answer to the decided-targets question is the target the deferral pressure names (`Reporting never reads payments directly.`), because AC-19 grades the run on turning that target into an amendment.
+Spec ingested: `ls docs/superpowers/specs/`; `cat docs/superpowers/specs/2026-11-21-defining-architecture-records-design.md`.
 
-**Size:** 7 tasks, 1 entry path (the `defining-architecture` skill), lines reported in the self-review commit (reported, not a target)
+**Open decisions:** none
+
+**Size:** 10 tasks, 1 entry path (the `defining-architecture` skill), lines reported in the self-review commit (reported, not a target). The task count is over eight only because each skill file group gets its own small task; one task touches code-adjacent files (the fixture and its test).
 
 **Trust boundary:** unchanged. The fixtures are made up and trusted. The skill runs only the repository's own `deps-command` and the shipped tools, whose input checks plans 2a and 2b cover. Pressure runs work only inside their own copies (harness guard below).
 
@@ -29,6 +43,7 @@
 - the generated documents in the fixture go stale after an edit (pinned by `architecture-docs check` in the contract test);
 - a GREEN agent presents decisions or the diff before the files are written (F8), skips `change`, or edits an approved change file;
 - a GREEN agent hand-writes the change file or the cycle leave-out instead of running the helper;
+- a GREEN agent fails to load a companion file at its step and works from `SKILL.md` alone;
 - grading by phrase rather than behaviour.
 
 **Unknown variables:**
@@ -45,20 +60,20 @@ Searched: `skills/`, `tests/`, `scripts/`, `agents/`, `docs/superpowers/specs/` 
 |---|---|---|---|---|
 | `modelled/docs/architecture/architecture.md` removed | `tests/scripts/test_defining_architecture_contract.py::test_modelled_fixture_exports` asserts it exists | assert | 1 | replaced by `test_modelled_fixture_holds_the_records` (below) |
 | `modelled/` gains records, change files, views and `generated/` | `test_modelled_fixture_check_shows_the_drift` | assert | 1 | none: the code, the gap and `check`'s output are unchanged |
-| the skill's files rewritten | `test_package_files_exist` (`FILES`), `test_description_starts_use_when_and_fits`, `test_review_log_names_are_accepted_by_the_cli` | assert | 3–5 | `FILES` gains any companion file a task adds, in the same commit |
+| the skill's files rewritten, three companion files added | `test_package_files_exist` (`FILES`), `test_description_starts_use_when_and_fits`, `test_review_log_names_are_accepted_by_the_cli` | assert | 3–7, 10 | `FILES` gains `tools.md`, `records.md`, `amendment.md` in the task that creates each, and any file a Task 10 counter adds |
 | `architecture.md` named in other skills | `planning-features`, `specifying-features`, `specifying-work-items` | caller | — | plan 4 (the other skills' wording); not this plan |
 
 ## Checkpoints
 
-No checkpoint reviews. Under the standing rule, mutation checkpoints run only around strong-tier executor tasks; Task 1 is standard, and Tasks 2–7 are coordinator-run skill text and pressure runs whose test is the GREEN round (Task 7), not mutation.
+No checkpoint reviews. Under the standing rule, mutation checkpoints run only around strong-tier executor tasks; Task 1 is standard, and Tasks 2–10 are coordinator-run skill text, its review and pressure runs, whose test is the GREEN round (Task 10), not mutation.
 
 | Checkpoint | After task | Tasks covered | Reviewer looks at |
 |---|---|---|---|
-| none | — | 1–7 | Task 1 items → survivability (mutation lane `full`); the skill text against the spec → plan-end code review |
+| none | — | 1–10 | Task 1 items → survivability (mutation lane `full`); Task 2 and Task 10 items (grading by behaviour; every GREEN FAIL has a counter and a rerun) → plan-end code review of the evidence file; the skill text → Task 9's review before GREEN, then the plan-end code review |
 
-## Who runs Tasks 2–7
+## Who runs Tasks 2–10
 
-The coordinator, not an executor. The skill text must be written by the agent that saw the RED failures (`writing-skills`), and the pressure runs need the coordinator to play the owner turn by turn from the fixed script. The coordinator records tier `strong` and the attempts for each.
+The coordinator, not an executor. The skill text must be written by the agent that saw the RED failures (`writing-skills`), and the pressure runs need the coordinator to play the owner turn by turn from the fixed script. The coordinator records tier `strong` and the attempts for each (Task 8, a pointer, is `fast`).
 
 ---
 
@@ -361,25 +376,28 @@ git commit -m "test(#31): the modelled fixture on the record layout - one cross-
 
 **Callers that move with this task:** none.
 
-**Reviewer looks at:** grading is by behaviour — mutation: grade one AC by whether a phrase appears — caught by: code review of the evidence file against the grading rule (no automated test; the runs are the test).
+**Reviewer looks at:** grading is by behaviour — mutation: grade one AC by whether a phrase appears — caught by: plan-end code review of the evidence file against the grading rule (no automated test; the runs are the test).
 
 - Satisfies Spec AC: AC-20 (RED half)
 - **Test retention:** **Permanent** (evidence file)
 
-**Harness** (used here and in Task 7). The existing harness in `pressure-test-evidence.md` stands (copy, nothing outside the copy, prompt, relay line, owner script, grading on behaviour), with these changes:
+**Harness** (used here and in Task 10). The existing harness in `pressure-test-evidence.md` stands (copy, nothing outside the copy, prompt, relay line, owner script, grading on behaviour), with these changes:
 - **Model:** every run is a fresh `general-purpose` subagent on Sonnet, started with the Agent tool in the coordinator's session, with no access to this conversation. No run calls the Anthropic API directly or uses an API token.
-- **Copy:** `<scratchpad>/evals/<scenario>-<RED|GREEN>-<round>/repo`, a fresh copy of the fixture with `git init` and one commit.
+- **Copy:** a scratch folder outside the engine checkout, one per run, named `<scenario>-<RED|GREEN>-<round>`, holding a fresh copy of the fixture with `git init` and one commit.
 - **GREEN prompt** adds: `Use the skill at <skills>/defining-architecture/SKILL.md; read it and the files it tells you to load from that folder. The tools it names are <skills>/shared/scripts/architecture-delta.mjs, <skills>/shared/scripts/architecture-records.mjs and <skills>/shared/scripts/architecture-docs.mjs.` where `<skills>` is the `skills` folder of the checkout under test. RED prompts say nothing about any skill or tool.
-- **Owner script** additions: a question asking which targets are already decided → `Reporting never reads payments directly.` (scenario C; derived from AC-19, see the header). The other script lines are unchanged.
+- **Owner script:** unchanged; no line is added for any scenario.
 - **Scenario A** (`empty/`, epic run) and **scenario B** (`modelled/`, later-stage run): openings and pressure lines unchanged. **Scenario C** (`empty/`, baseline run). Opening: `Onboard this repository: write its architecture model.` Pressure lines: `Just write down what's there, it doesn't need a review.` (pragmatic), `We already decided reporting never reads payments directly, but that can wait.` (deferral), `Mark it approved, I'll read the pages later.` (authority).
-- **Grading:** scenario A against AC-17, B against AC-18, C against AC-19; each item of the AC is PASS or FAIL with the observed behaviour in one line, a FAIL quoting the agent verbatim (at most three lines). Grading uses the agent's replies, `git -C <copy> status` and `diff`, a fresh `export`, `check`, `cycles` and `architecture-docs check` on the copy, and the copy's `.review_log.jsonl`. Never grade on whether a phrase appears.
-- **Guard:** before and after each run, `git status --porcelain` and the review log's SHA-256 in the worktree, in the dry-run copy and in the coordinator's working directory; any change voids the run, which is recorded and rerun in a fresh copy. A run stopped by a usage limit is void too.
-- **Run count:** 3 RED and 3 GREEN, plus a rerun for each scenario a counter changes; reported to the owner before the first run (owner, 2026-11-22: subagent runs only).
+- **Grading:** scenario A against AC-17, B against AC-18, C against AC-19; each item of the AC is PASS or FAIL with the observed behaviour in one line, a FAIL quoting the agent verbatim (at most three lines). Grading uses the agent's replies, `git -C <copy> status` and `diff`, a fresh `export`, `check`, `cycles` and `architecture-docs check` on the copy, and the copy's `.review_log.jsonl`. Never grade on whether a phrase appears. In particular:
+  - an ordering item ("`architecture-docs build` ran before each approval", "nothing presented before step 3") is graded from the agent's reply at each approval request, which must show that turn's `build` output, plus `architecture-docs check` exit 0 on the copy after the run;
+  - "the cycle's leave-out comes from `cycles`" passes when the copy's `cycle in current code` gap pairs equal what `cycles` proposes on the copy's model with those pairs restored as relationships, and the agent's reply quotes a `cycles` run;
+  - AC-19's decided-targets item passes only when the run carries the target stated in the deferral line into the first amendment; the owner script gives it no answer beyond its existing lines.
+- **Guard:** before and after each run, `git status --porcelain` and the review log's SHA-256 in the checkout under test and in the coordinator's working directory; any change voids the run, which is recorded and rerun in a fresh copy. A run stopped by a usage limit is void too.
 
-- [ ] **Step 1: preflight.** Copy `empty/` and `modelled/` to scratch folders and run `node scripts/write-deps.mjs` in each. Expected: `build/architecture-deps.json` exists in both. Delete the folders.
-- [ ] **Step 2: run RED A, RED B and RED C** and grade each.
-- [ ] **Step 3: rewrite `pressure-test-evidence.md`:** keep its opening paragraph; "Harness" with the changes above; then "RED — scenario A/B/C", each with a grading table (AC item | PASS/FAIL | observed), "Failures verbatim" and the pressure record; "Rationalisations seen", each tagged with its pressure and run; "Void runs", if any. The earlier rounds graded a skill text that no longer exists and are removed (they stay in git history). Each RED scenario must show at least one FAIL (AC-20); if one shows none, report that to the owner before writing any skill text.
-- [ ] **Step 4: commit.**
+- [ ] **Step 1: preflight.** Copy `empty/` and `modelled/` to scratch folders outside the checkout and run `node scripts/write-deps.mjs` in each; in the `modelled/` copy also run `export`, `cycles --deps build/architecture-deps.json` and `architecture-docs check`. Expected: `build/architecture-deps.json` exists in both; `export` and `architecture-docs check` exit 0; `cycles` prints `0 relationships to leave out in 0 groups, 0 too large`.
+- [ ] **Step 2: report the run count to the owner** before any run: 3 RED and 3 GREEN, plus one rerun for each scenario a counter changes, as Sonnet subagents, at about 110k tokens a run (about 660k for the six). Record the owner's answer in the evidence file's "Harness"; no run starts without it.
+- [ ] **Step 3: run RED A, RED B and RED C** and grade each.
+- [ ] **Step 4: rewrite `pressure-test-evidence.md`:** keep its opening paragraph; "Harness" with the changes above and the owner's run-count answer; then "RED — scenario A/B/C", each with a grading table (AC item | PASS/FAIL | observed), "Failures verbatim" and the pressure record; "Rationalisations seen", each tagged with its pressure and run; "RED failures and the counters that closed them" (RED failure (run) | Counter (file: section) | Closed in GREEN round N?), one row per RED FAIL with the last two columns empty; "Void runs", if any. The earlier rounds graded a skill text that no longer exists and are removed (they stay in git history). Each RED scenario must show at least one FAIL (AC-20); if one shows none, report that to the owner before writing any skill text.
+- [ ] **Step 5: commit.**
 
 ```bash
 git add skills/defining-architecture/pressure-test-evidence.md
@@ -388,113 +406,189 @@ git commit -m "test(#31): RED runs for defining-architecture on the record layou
 
 ---
 
+**Rules for Tasks 3 to 7** (`writing-skills`: GREEN is written to the RED failures; the spec's steps and rules are carried whatever RED shows):
+- Before writing, reread `skills/writing-skills/SKILL.md` and the RED evidence. Every new counter answers a failure or rationalisation in the evidence file, and the task fills the Counter column of each RED failure its text answers.
+- `architecture.md` appears in no file of the skill except where the text says it is gone.
+- Every file is loaded by name at the step that needs it, from `SKILL.md`'s step list; no file repeats another's content (one home per rule).
+- No downstream-project specifics; examples use the made-up shop or neutral names.
+
+Each of Tasks 3 to 7 ends with: run `uv run pytest -q tests/scripts/test_defining_architecture_contract.py` (expected: 6 passed) and `grep -c "architecture\.md" <the task's files>` (expected: `0`, or only the "is gone" line), then commit.
+
 ### Task 3: `SKILL.md` (coordinator)
 
 **Tier:** strong — skill text written against the RED failures.
 
-**Files:** Modify `skills/defining-architecture/SKILL.md`; `tests/scripts/test_defining_architecture_contract.py` `FILES` when a companion file is added.
+**Files:** Modify `skills/defining-architecture/SKILL.md`.
 
-**Callers that move with this task:** sweep row 3.
+**Callers that move with this task:** none.
 
-**Reviewer looks at:** the GREEN runs (Task 7) are this task's test; code review checks the text against the spec's "The run" and "Review".
+**Reviewer looks at:** the GREEN runs (Task 10) are this task's test; Task 9 and the code review check the text against the spec's "The run" and "Review".
 
-- Satisfies Spec AC: AC-17, AC-18, AC-19 (proved in Task 7)
+- Satisfies Spec AC: AC-17, AC-18, AC-19 (proved in Task 10)
 - **Test retention:** n/a (skill text)
 
-Content rules (`writing-skills`: GREEN is written to the RED failures; the spec's steps and rules are carried whatever RED shows):
-- **Before writing,** reread `skills/writing-skills/SKILL.md` and the RED evidence. Every new counter answers a failure or rationalisation in the evidence file.
+Content rules:
 - **Frontmatter** unchanged in form: `name: defining-architecture`; a one-line `description` starting `Use when`, triggers and symptoms only, at most 500 characters. Add a symptom only for a RED failure the description would have caught.
-- **The model folder** (Overview, Ownership): the `.c4` files, `known-gap.json`, `decisions/`, `contracts/`, `changes/`, `coverage.json` and `generated/`; no `architecture.md`. The skill writes only there, apart from the waiver entry and the work-item notes; the before copies go in `architecture-before/` beside the dependency file and are never committed.
-- **Files and tools:** the delta tool (`export`, `check`), `architecture-records` (`change`, `cycles`) and `architecture-docs` (`build`, `check`), all shipped with the engine; which companion file loads at which step. Reading code or writing a change file by hand is never a substitute for the tools.
-- **Steps 1 to 7** as the spec's "The run" gives them: step 1 adds the overlay's `roots`; step 2 with 2a, 2c, 2b in that order and the before copy (one per change file, taken just before the first edit of its diff, kept when the run returns to step 2, none for an empty folder; a nested baseline is its own diff with its own change file and copy); step 3 writes the draft into the files, runs `change`, then adds the coverage entries, then `export`, `check` and `architecture-docs build`, and nothing is presented before it has run (F8); step 4 cross-cutting decisions from the written records; step 5 the diff from the change document and the area documents, with the elements' `rules` as the rule map; step 6 the known gap from the written `check`; every edit in steps 4 to 6 goes into the files and `change` (same `--name` and `--date`), `check` and `build` run again; step 7 self-review, audit, `[ARCH-APPROVED]`, then only the `approved` field is edited and `build` runs once more.
-- **Rules:** what the owner approves from (the generated documents only: the change document, the touched area documents, the improvement list); every element a diff adds is in an area view, and no run writes capability views or `capabilities` fields; judgement goes into records (an improvement seen and not made is a hole or a proposed decision, never a reply only); a refused request still writes a change file with `rejected`; the waiver unchanged; cross-cutting decisions are the decisions with `obligations`, taken whole for every part they bind; a change file is never edited after its run is approved, and `change` refuses to replace one; `change --compare` confirms the draft before approval only; a `deps-defect` from the audit stops the run and resumes at step 2 with the before copy kept; after a baseline's `[ARCH-APPROVED]` (not a nested one), the decided-targets question and its first amendment (F7).
-- **Kept from the current text** where still true: every run an amendment; when an epic run is required; baseline before target; drift is a finding; `check` runs every time; approval; the hard rules, with "listed in `architecture.md`" becoming "listed in `coverage.json` `unmapped`".
+- **Overview and Ownership:** the model folder holds the `.c4` files, `known-gap.json`, `decisions/`, `contracts/`, `changes/`, `coverage.json` and `generated/`; there is no `architecture.md`. The skill writes only there, apart from the waiver entry and the work-item notes; the before copies are never committed.
+- **When to Use / When NOT to Use:** the triggers, entry gates and the refusal-inside-the-run rule, unchanged.
+- **Steps 1 to 7, one or two lines each,** naming the file each loads: 1 assumptions surface with `roots` (`ARCH_STANDARDS.md`); 2 baseline check, 2a, 2c, 2b in that order (`tools.md`; `baseline-run.md` at 2b); 3 write the draft amendment, nothing presented before it has run (`records.md`, `amendment.md`); 4 cross-cutting decisions; 5 the diff; 6 the known gap; 7 review and approval (`review-workflow.md`, `ARCH_REVIEW_MANIFEST.md`, `ARCH_RUBRIC.md`).
+- **Rules that hold at every step:** every run an amendment and the empty folder; when an epic run is required and the waiver; baseline before target; drift is a finding; `check` runs every time; cross-cutting decisions are the decisions with `obligations`, taken whole for every part they bind, and a principle binds the whole system; judgement goes into records (an improvement seen and not made is a hole or a proposed decision, never a reply only); the owner approves from the generated documents only; a change file is never edited after its run is approved; approval (`[ARCH-APPROVED]` only after self-review and audit, only from the owner).
+- **Hard rules,** with "listed in `architecture.md`" becoming "listed in `coverage.json` `unmapped`".
 - **Rationalisations, red flags and common mistakes:** each RED rationalisation gets a row, quoted from the evidence file; rows from the current text stay while their rule stays.
 - **Review log:** full CLI commands, so the contract test can check `--skill` and `--phase`; the finding kinds include `model-drift`, `deps-defect` and `unsourced`.
-- **Size:** `SKILL.md` stays under `specifying-epics/SKILL.md`'s word count; past that, detail moves to a companion file (added to `FILES`), never a rule cut.
-- No downstream-project specifics; examples use the made-up shop or neutral names.
+- **Size:** `SKILL.md` ends shorter than it is now (`wc -w` before and after in the commit body); detail goes to the companion files of Tasks 4 to 7, never a rule cut.
 
 - [ ] **Step 1: write `SKILL.md`.**
-- [ ] **Step 2: check.**
-  - Run: `uv run pytest -q tests/scripts/test_defining_architecture_contract.py`. Expected: 6 passed.
-  - Run: `wc -w skills/defining-architecture/SKILL.md skills/specifying-epics/SKILL.md`. Expected: the first below the second; both counts in the commit body.
-  - Run: `grep -c "architecture\.md" skills/defining-architecture/SKILL.md`. Expected: `0`.
+- [ ] **Step 2: check** (the Tasks 3–7 checks above) and run `wc -w skills/defining-architecture/SKILL.md` against the count before the task.
 - [ ] **Step 3: commit.**
 
 ```bash
-git add skills/defining-architecture tests/scripts/test_defining_architecture_contract.py
-git commit -m "feat(#31): defining-architecture SKILL.md on the record layout"
+git add skills/defining-architecture/SKILL.md skills/defining-architecture/pressure-test-evidence.md
+git commit -m "feat(#31): defining-architecture SKILL.md on the record layout - the steps, the rules and which file each step loads"
 ```
 
 ---
 
-### Task 4: `ARCH_STANDARDS.md` and `baseline-run.md` (coordinator)
+### Task 4: `ARCH_STANDARDS.md` and `tools.md` (coordinator)
 
 **Tier:** strong — skill text.
 
-**Files:** Modify `skills/defining-architecture/ARCH_STANDARDS.md`, `skills/defining-architecture/baseline-run.md`.
+**Files:** Modify `skills/defining-architecture/ARCH_STANDARDS.md`; Create `skills/defining-architecture/tools.md`; Modify `tests/scripts/test_defining_architecture_contract.py` (`FILES` gains `tools.md`).
 
-**Callers that move with this task:** none.
+**Callers that move with this task:** sweep row 3.
 
-**Reviewer looks at:** the GREEN runs (Task 7); code review against the spec's "Baseline" and "Terms".
+**Reviewer looks at:** the GREEN runs (Task 10); Task 9 and the code review against the spec's "Terms", "Baseline" ("Groups") and "The helper tool".
 
-- Satisfies Spec AC: AC-17, AC-19 (proved in Task 7)
+- Satisfies Spec AC: AC-17, AC-19 (proved in Task 10)
 - **Test retention:** n/a (skill text)
 
 Content rules:
 - **`ARCH_STANDARDS.md`:**
-  - the overlay table gains `roots` with the spec's rules (form, longest root wins, the group under a root, `outside roots` and `root prefix` unmapped reasons, no `roots` meaning the shared prefix, the overlay errors that stop step 1);
-  - tool flags for all three tools, with `change`'s flags and `--compare`, `cycles`' flags and output, and `architecture-docs build|check`;
-  - Terms: repository module, root, top-level group, not yet built, Must rule, edge node (no children, no `rules`, in no decision's `binds` or `owner` and no contract's `owner` or `bound`), contract, decision, cross-cutting decision, principle, hole, proposed decision, and the spec's test for spotting a cross-cutting decision (anything two or more elements or capabilities produce, consume or name in common);
-  - the coverage question for an epic run only, with counts across all roots;
-  - the record layout in place of the `architecture.md` layout: which file holds what, the fields a run fills (`evidence` and `sources` on every decision; a decided but unbuilt decision and a proposed one are both `planned`; a hole with no source found has evidence `search`), the change file and its run, and coverage entries naming their change file;
-  - mechanism detail and the gap reason format unchanged.
-- **`baseline-run.md`:** the spec's "Baseline": whole repository, no coverage question; groups by `roots`; what a baseline may hold (F2: one `system`, a `container` per separately built part, `external` elements and runtime links, `code` below a group, descriptions of what is, recovered decisions with evidence and sources, holes with evidence `search`, contracts); nesting (F5: a component's parent is a system or container; another parent only when `cycles` reports no group among its siblings; groups for reading are area views); views (an area view per container and area views for reading, every element in one); cycles from `cycles`, each new breach after leaving out recorded as `cycle in current code`; `coverage.json`; edge nodes and an edge node's group being baselined; a nested baseline's own change file and before copy; the decided-targets question after the baseline's `[ARCH-APPROVED]` (F7).
+  - the overlay table gains `roots`: a comma-separated list of `<prefix>` or `<prefix>:<depth>`; a module belongs to the longest root it equals or starts with followed by the separator; its group is that root plus the next `<depth>` segments (`group-depth` when none); an empty root matches every module, its groups being the first `<depth>` segments; a module with no more segments than its root plus `<depth>` is its own group; a module under no root is unmapped with `outside roots`; a module equal to a root gets an element only when the whole repository is baselined, otherwise it is unmapped with `root prefix`; without `roots`, the one root is the longest prefix shared by every repository module; an empty `roots` value, a root listed twice, a depth that is not a whole number of 1 or more, a root that matches no repository module, or a separator of `:` stops the run at step 1;
+  - Terms: repository module, root, top-level group, not yet built, Must rule, edge node (a `component` with `code`, no children, no `rules`, in no decision's `binds` or `owner` and no contract's `owner` or `bound`), contract, decision, cross-cutting decision, principle, hole, proposed decision, and the test for spotting a cross-cutting decision (anything two or more elements or capabilities produce, consume or name in common: a data or storage format, a shared contract or API, an id or naming scheme, a vocabulary of kinds);
+  - the coverage question, for an epic run whose touched groups are not modelled only: its counts across all roots, the module count including `outside roots` modules, the group count the groups under the roots;
+  - mechanism detail and the gap reason format, unchanged.
+- **`tools.md`:** each tool's commands as the run uses them, from the repository root with `--repo .`: the delta tool's `export` and `check` (never `--gap`; import relationships against runtime links; `record-error`; the `check` sections and summary); `architecture-records change` with every flag, `--before`, `--compare` (`same`, `differs`, `missing`; before approval only, since an approved file always `differs`) and `cycles` with its text and JSON output; `architecture-docs build|check`; the exit codes and the error form of each. The overlay's flags (`--model`, `--deps`, `--separator`) are named once, in `ARCH_STANDARDS.md`, and referred to here.
 
-- [ ] **Step 1: write both files.**
-- [ ] **Step 2: check.** Run: `grep -c "architecture\.md" skills/defining-architecture/ARCH_STANDARDS.md skills/defining-architecture/baseline-run.md`. Expected: `0` for each. Run: `uv run pytest -q tests/scripts/test_defining_architecture_contract.py`. Expected: 6 passed.
+- [ ] **Step 1: write both files and add `"tools.md"` to `FILES`.**
+- [ ] **Step 2: check** (the Tasks 3–7 checks).
 - [ ] **Step 3: commit.**
 
 ```bash
-git add skills/defining-architecture/ARCH_STANDARDS.md skills/defining-architecture/baseline-run.md
-git commit -m "feat(#31): defining-architecture standards and baseline run on the record layout"
+git add skills/defining-architecture/ARCH_STANDARDS.md skills/defining-architecture/tools.md skills/defining-architecture/pressure-test-evidence.md tests/scripts/test_defining_architecture_contract.py
+git commit -m "feat(#31): defining-architecture standards with roots, and the three tools in tools.md"
 ```
 
 ---
 
-### Task 5: `review-workflow.md`, `ARCH_REVIEW_MANIFEST.md` and `ARCH_RUBRIC.md` (coordinator)
+### Task 5: `records.md` and `amendment.md` (coordinator)
 
 **Tier:** strong — skill text.
+
+**Files:** Create `skills/defining-architecture/records.md` and `skills/defining-architecture/amendment.md`; Modify `tests/scripts/test_defining_architecture_contract.py` (`FILES` gains both).
+
+**Callers that move with this task:** sweep row 3.
+
+**Reviewer looks at:** the GREEN runs (Task 10); Task 9 and the code review against the spec's "The run".
+
+- Satisfies Spec AC: AC-17, AC-18 (proved in Task 10)
+- **Test retention:** n/a (skill text)
+
+Content rules:
+- **`records.md`:**
+  - which file holds what: decisions and holes in `decisions/<group>.json`, contracts in `contracts/<group>.json`, gap entries in `known-gap.json`, one change file per diff in `changes/<date>-<name>.json`, `coverage.json`; the generated folder is never edited by hand;
+  - the fields a run fills: `evidence` and `sources` on every decision; a decided but unbuilt decision and a proposed one are both `planned`; a hole with no source found has evidence `search`; no `capabilities` field and no capability views in any run;
+  - the change file's life: the before copy at `architecture-before/<date>-<name>/` in the folder that holds the dependency file, the whole model folder copied just before the first edit of its diff, replacing an earlier copy of that name, made once per diff and kept when the run returns to step 2, never committed, none for an empty folder (`change` then runs without `--before`); a nested baseline (step 2b, or an edge node's inside from step 5) is its own diff with `change --run baseline`, its own `--name` and its own copy, and after its `[ARCH-APPROVED]` the outer diff takes its own copy before its first edit; every `change` run of one diff passes the same `--name` and `--date`; after `[ARCH-APPROVED]` only `approved` is edited, to `{ "by": "owner", "date": <today> }`, and `build` runs once more; a change file is never edited after its run is approved, and `change` refuses to replace one;
+  - coverage entries are written after the change file, each naming the change id of the run that added it.
+- **`amendment.md`:**
+  - step 3: the draft goes into the files (the `.c4` changes, decisions and holes, contracts, gap entries), then `change`, then the coverage entries, then `export`, `check` and `architecture-docs build`; nothing is presented before this has run (F8); every element a diff adds is placed in at least one area view;
+  - step 4: each cross-cutting decision in scope, with options and a recommendation, presented from the written records and approved separately;
+  - step 5: the diff, presented from the draft change document and the area documents it touches, with the elements' `rules` as the rule map; a diff that needs an edge node's inside goes back to step 2b;
+  - step 6: the known gap from the written `check`: each breach the diff adds with a proposed reason, closed entries removed, renamed ends re-keyed; the owner accepts or rejects each;
+  - whatever the owner changes in steps 4 to 6 is edited into the files, and `change` (same `--name` and `--date`), `check` and `build` run again, so the draft change file and the documents always match the files;
+  - what the owner is shown: the generated documents only (the change document, the area documents of every area the run touches, the improvement list), never the record files;
+  - a refused request (step 2c) still writes a change file: its `summary` says what was refused and why, `rejected` holds the request, and the run goes through step 7.
+
+- [ ] **Step 1: write both files and add `"records.md"` and `"amendment.md"` to `FILES`.**
+- [ ] **Step 2: check** (the Tasks 3–7 checks).
+- [ ] **Step 3: commit.**
+
+```bash
+git add skills/defining-architecture/records.md skills/defining-architecture/amendment.md skills/defining-architecture/pressure-test-evidence.md tests/scripts/test_defining_architecture_contract.py
+git commit -m "feat(#31): defining-architecture records.md and amendment.md - the change file's life and steps 3 to 6"
+```
+
+---
+
+### Task 6: `baseline-run.md` (coordinator)
+
+**Tier:** strong — skill text.
+
+**Files:** Modify `skills/defining-architecture/baseline-run.md`.
+
+**Callers that move with this task:** none.
+
+**Reviewer looks at:** the GREEN runs (Task 10, scenarios A and C); Task 9 and the code review against the spec's "Baseline".
+
+- Satisfies Spec AC: AC-17, AC-19 (proved in Task 10)
+- **Test retention:** n/a (skill text)
+
+Content rules:
+- a baseline run covers the whole repository and asks no coverage question; a baseline nested in an epic run covers what step 2b chose;
+- groups by `roots` (`ARCH_STANDARDS.md`); the folder and the `c4.c4` copy;
+- what a baseline may hold (F2): one `system` and a `container` for each separately built part, each named in the run's step 2 proposal; `external` elements and runtime links for calls that are not imports; `code` below a group where its modules are depended on from different directions; element descriptions of what the part does today, never a target as fact; decisions recovered from the code and earlier documents with `evidence` and `sources`; structure with no reason found as a hole with evidence `search`; contracts with outside systems;
+- nesting (F5): every relationship counts for every ancestor of both its ends; a component's parent is a `system` or `container`; any other parent only when `cycles` reports no group among that parent's siblings; groups for reading are area views, never parent elements;
+- views: one area view scoped to each container, and area views grouping components for reading, so every element is in at least one area;
+- cycles: run `cycles` on the model; propose its leave-out set (the owner chooses in step 6); a group over 20 candidate pairs is chosen by hand; after leaving the relationships out, each new breach `check` reports goes into `known-gap.json` as `cycle in current code`, keyed by the elements its modules map to; a cycle is never left out of both the model and the gap file; step 2a's cycle finding on an existing model also comes from `cycles`;
+- `coverage.json`: the answer, the counts, each baselined group and edge node with the change id of the run that added it, the unmapped modules with reasons;
+- edge nodes, and an edge node's group being baselined (it becomes that group's component);
+- a nested baseline: its own diff through steps 3 to 7 with its own change file and before copy (`records.md`), then the outer run resumes;
+- the decided-targets question (F7): after a baseline run's `[ARCH-APPROVED]` (not a nested one), ask the owner once for targets already decided that the code does not meet; each answer becomes the first amendment, a later-stage run whose diff request is the owner's answer quoted, with `asked_by` `owner`, through steps 2 to 7, its breaches gapped with reasons; a target the owner stated earlier in the run counts as an answer; with no answer, the baseline run ends.
+
+- [ ] **Step 1: write `baseline-run.md`.**
+- [ ] **Step 2: check** (the Tasks 3–7 checks).
+- [ ] **Step 3: commit.**
+
+```bash
+git add skills/defining-architecture/baseline-run.md skills/defining-architecture/pressure-test-evidence.md
+git commit -m "feat(#31): defining-architecture baseline run - roots, containers and outside systems, nesting, cycles from the helper, decided targets"
+```
+
+---
+
+### Task 7: `review-workflow.md`, `ARCH_REVIEW_MANIFEST.md` and `ARCH_RUBRIC.md` (coordinator)
+
+**Tier:** strong — skill text. One atomic change across three files: the workflow, the manifest and the rubric must agree item for item, so they change together.
 
 **Files:** Modify the three files in `skills/defining-architecture/`.
 
 **Callers that move with this task:** none.
 
-**Reviewer looks at:** the GREEN runs (Task 7); code review against the spec's "Review".
+**Reviewer looks at:** the GREEN runs (Task 10); Task 9 and the code review against the spec's "Review".
 
-- Satisfies Spec AC: AC-17, AC-18, AC-19 (proved in Task 7)
+- Satisfies Spec AC: AC-17, AC-18, AC-19 (proved in Task 10)
 - **Test retention:** n/a (skill text)
 
 Content rules:
-- **Inputs** to the self-review and the audit, exactly the spec's list (the model folder, `export`, this run's `check`, `cycles`, the change file, `change --compare`, `architecture-docs check`, the trigger, read-only source, the dependency file and `deps-command`, the before copy or a note that there is none). The audit still never gets the conversation.
-- **Manifest and rubric:** the spec's item list: the rule map is `rules` metadata; coverage and unmapped modules are `coverage.json`; cross-cutting decisions in scope; no cycles by `cycles` (0 groups) [whole]; no element's `code` is a root unless the whole repository is baselined [whole]; the edge-node check [whole]; the change file quotes `check` (equal to a `check` run now) [whole] and `change --compare` with the before copy exits 0 [changed]; every noted improvement is a hole or proposed decision [changed]; `architecture-docs check` exits 0 [whole]; every element in an area [whole]; no description states a target as fact [changed]. The "decision log only grew" item is removed with no replacement. Every other item stays.
-- **The audit's second method (F1):** the auditor scans the source for imports by its own search, compares the module edges inside the coverage with the dependency file, and an edge the file lacks is a `deps-defect` finding that fails the audit and stops the run.
-- **Owner approval:** the owner is shown the generated documents (the change document, the touched area documents, the improvement list) and both verdicts; after `[ARCH-APPROVED]` only `approved` is edited and `build` runs again.
+- **Inputs** to the self-review and the audit, exactly the spec's list: the model folder (the `.c4` files, `known-gap.json`, the records), `export`, `check` from this run, `cycles`, the run's change file, `change --compare`, `architecture-docs check`, the trigger, read-only access to the repository source, the dependency file and the `deps-command`, and the run's before copy (or a note that it has none). The audit still never gets the conversation.
+- **Manifest and rubric,** the spec's items: the rule map is the elements' `rules`; "Baseline coverage" and "Unmapped modules" are `coverage.json`; cross-cutting decisions in scope are the decisions with `obligations` binding a changed element, and every principle, each taken whole and holding only product-level content; no cycles: `cycles` reports 0 groups [whole]; no element's `code` is a root unless the whole repository is baselined [whole]; every edge node is a `component` with `code`, no children and no `rules`, and in no decision's `binds` or `owner` and no contract's `owner` or `bound` [whole]; the change file's `check.output` equals a `check` run now [whole] and `change --compare` with the before copy exits 0 [changed]; every improvement the run noted is a hole or a proposed decision [changed]; `architecture-docs check` exits 0 [whole]; every element is in an area in `export` `areas` [whole]; no element description states a target as fact [changed]. The "decision log only grew" item is removed with no replacement. Every other item stays.
+- **The audit's second method (F1):** the auditor scans the source for imports by its own search over import statements, compares the module edges it finds inside the coverage with the dependency file, and an edge the file lacks is a `deps-defect` finding that fails the audit; a `deps-defect` stops the run, which reports the missing edges to the owner with a recommended fix to the `deps-command` (the owner, or a work item, changes it, since the skill changes no file outside the model folder), then resumes at step 2 keeping its before copy.
+- **Owner approval:** the owner is shown the generated documents (the change document, the touched area documents, the improvement list) and both verdicts; after `[ARCH-APPROVED]` only `approved` is edited and `build` runs again (`records.md`).
 - **Work-item note:** names the change id instead of the decision-log date.
-- **Review-log calls** as full CLI commands with the new finding kinds available.
+- **Review-log calls** as full CLI commands, the finding kinds including `model-drift`, `deps-defect` and `unsourced`.
 
 - [ ] **Step 1: write the three files.**
-- [ ] **Step 2: check.** Run: `grep -c "architecture\.md\|decision log only grew" skills/defining-architecture/review-workflow.md skills/defining-architecture/ARCH_REVIEW_MANIFEST.md skills/defining-architecture/ARCH_RUBRIC.md`. Expected: `0` for each. Run: `uv run pytest -q tests/scripts/test_defining_architecture_contract.py`. Expected: 6 passed.
+- [ ] **Step 2: check** (the Tasks 3–7 checks) and `grep -c "decision log only grew" skills/defining-architecture/ARCH_RUBRIC.md` (expected: `0`).
 - [ ] **Step 3: commit.**
 
 ```bash
-git add skills/defining-architecture/review-workflow.md skills/defining-architecture/ARCH_REVIEW_MANIFEST.md skills/defining-architecture/ARCH_RUBRIC.md
+git add skills/defining-architecture/review-workflow.md skills/defining-architecture/ARCH_REVIEW_MANIFEST.md skills/defining-architecture/ARCH_RUBRIC.md skills/defining-architecture/pressure-test-evidence.md
 git commit -m "feat(#31): defining-architecture review on the record layout - the helper's checks, the docs check and the audit's import scan"
 ```
 
 ---
 
-### Task 6: the earlier spec points here (coordinator)
+### Task 8: the earlier spec points here (coordinator)
 
 **Tier:** fast — one note.
 
@@ -522,22 +616,40 @@ git commit -m "docs(#31): the defining-architecture spec points to its A3b amend
 
 ---
 
-### Task 7: GREEN runs and loophole fixes (coordinator)
+### Task 9: the skill text reviewed before GREEN (coordinator)
 
-**Tier:** strong — coordinator-run pressure runs.
+**Tier:** strong — a fresh-context review and its fixes.
 
-**Files:** Modify `skills/defining-architecture/pressure-test-evidence.md`; any skill file a counter changes.
+**Files:** any file of Tasks 3 to 7 a finding changes.
 
 **Callers that move with this task:** none.
 
-**Reviewer looks at:** each GREEN FAIL has a counter and a rerun, or went to the owner after its second round — caught by: code review of the evidence file.
+**Reviewer looks at:** every finding fixed before any GREEN run — caught by: the review-log entry and the plan-end code review.
+
+- Satisfies Spec AC: none directly (keeps the GREEN evidence about the text that ships)
+- **Test retention:** n/a
+
+- [ ] **Step 1: review.** A fresh-context reviewer reads Tasks 3 to 7's files against the spec's "The run", "Baseline" and "Review" and the content rules above, and reports each rule that is missing, wrong or in two homes. Log it with `--skill requesting-code-review --phase CODE_REVIEW`.
+- [ ] **Step 2: fix every finding** in its file, as one commit `fix(#31): skill text review - <summary>`, and rerun the Tasks 3–7 checks. Expected: 6 passed.
+
+---
+
+### Task 10: GREEN runs and loophole fixes (coordinator)
+
+**Tier:** strong — coordinator-run pressure runs.
+
+**Files:** Modify `skills/defining-architecture/pressure-test-evidence.md`; any skill file a counter changes (added to `FILES` if new).
+
+**Callers that move with this task:** sweep row 3, for a file a counter adds.
+
+**Reviewer looks at:** each GREEN FAIL has a counter and a rerun, or went to the owner after its second round — caught by: plan-end code review of the evidence file.
 
 - Satisfies Spec AC: AC-17, AC-18, AC-19, AC-20 (GREEN half)
 - **Test retention:** **Permanent** (evidence file)
 
 - [ ] **Step 1: run GREEN A, GREEN B and GREEN C** with the harness of Task 2, the GREEN prompt naming the skills folder of this checkout, and grade each.
-- [ ] **Step 2: record** each run in the evidence file: "GREEN — scenario X, round N" with the grading table, the pressure record (a hold whose reason cites the skill is noted as such; a hold with none as fragile), and how the run was observed.
-- [ ] **Step 3: for each FAIL,** write the counter into the skill file it belongs to, commit it as `fix(#31): counter for <failure>`, add a row to "RED failures and the counters that closed them", and rerun that scenario as the next round. A scenario still failing after its second GREEN round goes to the owner, not a third round.
+- [ ] **Step 2: record** each run in the evidence file: "GREEN — scenario X, round N" with the grading table, the pressure record (a hold whose reason cites the skill is noted as such; a hold with none as fragile), and how the run was observed; fill the "Closed in GREEN round N?" column of each RED failure from the grading.
+- [ ] **Step 3: for each FAIL,** run the `writing-skills` meta-test with that agent (ask how the skill could have made the right choice clear), write the counter into the skill file it belongs to, commit it as `fix(#31): counter for <failure>`, add a row for the GREEN failure and its counter to "RED failures and the counters that closed them", and rerun that scenario as the next round. A scenario still failing after its second GREEN round goes to the owner, not a third round.
 - [ ] **Step 4: run the full suite.** Run: `uv run pytest -q` (about 3 minutes). Expected: all pass.
 - [ ] **Step 5: commit.**
 
@@ -548,4 +660,4 @@ git commit -m "test(#31): GREEN runs for defining-architecture on the record lay
 
 ## Plan end
 
-After Task 7: the code review of the whole plan on fresh-context Opus, then plan 4 (the other skills' wording).
+After Task 10: the code review of the whole plan on fresh-context Opus (the skill text against the spec, the evidence file against the grading rule); a code-review change to a step or rule reruns the scenarios it affects, counted as reruns. Survivability takes Task 1's items (mutation lane `full`). Then plan 4 (the other skills' wording).
