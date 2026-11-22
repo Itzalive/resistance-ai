@@ -12,7 +12,7 @@
 | `ARCH_STANDARDS.md` | the overlay (with `roots`), the Terms, spotting a cross-cutting decision, mechanism detail, the gap reason format | step 1 |
 | `tools.md` (new) | the three tools: commands, flags, outputs, exit codes | step 2 |
 | `records.md` (new) | which file holds what, the fields a run fills, the change file's life (before copy, `change`, reruns, `approved`), coverage entries | step 3 |
-| `amendment.md` (new) | steps 3 to 6 in detail: the draft, the change–check–build loop, presenting from the generated documents, the known gap | step 3 |
+| `amendment.md` (new) | steps 2 to 6 in detail: the baseline check (2a, 2c, 2b), the draft, the change–check–build loop, presenting from the generated documents, the known gap | step 2 |
 | `baseline-run.md` | the baseline: groups by roots, what a baseline holds, nesting, views, cycles, nested baselines, the decided-targets question | step 2b, or a baseline run |
 | `review-workflow.md`, `ARCH_REVIEW_MANIFEST.md`, `ARCH_RUBRIC.md` | self-review, the audit and its import scan, owner approval, the work-item note | step 7 |
 
@@ -409,7 +409,7 @@ git commit -m "test(#31): RED runs for defining-architecture on the record layou
 **Rules for Tasks 3 to 7** (`writing-skills`: GREEN is written to the RED failures; the spec's steps and rules are carried whatever RED shows):
 - Before writing, reread `skills/writing-skills/SKILL.md` and the RED evidence. Every new counter answers a failure or rationalisation in the evidence file, and the task fills the Counter column of each RED failure its text answers.
 - `architecture.md` appears in no file of the skill except where the text says it is gone.
-- Every file is loaded by name at the step that needs it, from `SKILL.md`'s step list; no file repeats another's content (one home per rule).
+- Every file is loaded by name at the step that needs it, from `SKILL.md`'s step list. Each rule's full text lives in one companion file; `SKILL.md` may state a rule in one line, and another companion points to the rule's file rather than restating it.
 - No downstream-project specifics; examples use the made-up shop or neutral names.
 
 Each of Tasks 3 to 7 ends with: run `uv run pytest -q tests/scripts/test_defining_architecture_contract.py` (expected: 6 passed) and `grep -c "architecture\.md" <the task's files>` (expected: `0`, or only the "is gone" line), then commit.
@@ -431,8 +431,8 @@ Content rules:
 - **Frontmatter** unchanged in form: `name: defining-architecture`; a one-line `description` starting `Use when`, triggers and symptoms only, at most 500 characters. Add a symptom only for a RED failure the description would have caught.
 - **Overview and Ownership:** the model folder holds the `.c4` files, `known-gap.json`, `decisions/`, `contracts/`, `changes/`, `coverage.json` and `generated/`; there is no `architecture.md`. The skill writes only there, apart from the waiver entry and the work-item notes; the before copies are never committed.
 - **When to Use / When NOT to Use:** the triggers, entry gates and the refusal-inside-the-run rule, unchanged.
-- **Steps 1 to 7, one or two lines each,** naming the file each loads: 1 assumptions surface with `roots` (`ARCH_STANDARDS.md`); 2 baseline check, 2a, 2c, 2b in that order (`tools.md`; `baseline-run.md` at 2b); 3 write the draft amendment, nothing presented before it has run (`records.md`, `amendment.md`); 4 cross-cutting decisions; 5 the diff; 6 the known gap; 7 review and approval (`review-workflow.md`, `ARCH_REVIEW_MANIFEST.md`, `ARCH_RUBRIC.md`).
-- **Rules that hold at every step:** every run an amendment and the empty folder; when an epic run is required and the waiver; baseline before target; drift is a finding; `check` runs every time; cross-cutting decisions are the decisions with `obligations`, taken whole for every part they bind, and a principle binds the whole system; judgement goes into records (an improvement seen and not made is a hole or a proposed decision, never a reply only); the owner approves from the generated documents only; a change file is never edited after its run is approved; approval (`[ARCH-APPROVED]` only after self-review and audit, only from the owner).
+- **Steps 1 to 7, one or two lines each,** naming the file each loads: 1 assumptions surface with `roots` (`ARCH_STANDARDS.md`); 2 baseline check, 2a, 2c, 2b in that order (`tools.md`, `amendment.md`; `baseline-run.md` at 2b); 3 write the draft amendment, nothing presented before it has run (`records.md`); 4 cross-cutting decisions; 5 the diff; 6 the known gap; 7 review and approval (`review-workflow.md`, `ARCH_REVIEW_MANIFEST.md`, `ARCH_RUBRIC.md`).
+- **Rules that hold at every step:** every run an amendment and the empty folder; when an epic run is required and the waiver; baseline before target; drift is a finding; `check` runs every time (every run quotes a fresh `check` in its change file's `check.output`, even when the model did not change or the request is refused); cross-cutting decisions are the decisions with `obligations`, taken whole for every part they bind, and a principle binds the whole system; judgement goes into records (an improvement seen and not made is a hole or a proposed decision, never a reply only); the owner approves from the generated documents only; a change file is never edited after its run is approved; approval (`[ARCH-APPROVED]` only after self-review and audit, only from the owner).
 - **Hard rules,** with "listed in `architecture.md`" becoming "listed in `coverage.json` `unmapped`".
 - **Rationalisations, red flags and common mistakes:** each RED rationalisation gets a row, quoted from the evidence file; rows from the current text stay while their rule stays.
 - **Review log:** full CLI commands, so the contract test can check `--skill` and `--phase`; the finding kinds include `model-drift`, `deps-defect` and `unsourced`.
@@ -489,7 +489,7 @@ git commit -m "feat(#31): defining-architecture standards with roots, and the th
 
 **Callers that move with this task:** sweep row 3.
 
-**Reviewer looks at:** the GREEN runs (Task 10); Task 9 and the code review against the spec's "The run".
+**Reviewer looks at:** the GREEN runs (Task 10); Task 9 and the code review against the spec's "The run" (steps 2 to 7).
 
 - Satisfies Spec AC: AC-17, AC-18 (proved in Task 10)
 - **Test retention:** n/a (skill text)
@@ -501,12 +501,16 @@ Content rules:
   - the change file's life: the before copy at `architecture-before/<date>-<name>/` in the folder that holds the dependency file, the whole model folder copied just before the first edit of its diff, replacing an earlier copy of that name, made once per diff and kept when the run returns to step 2, never committed, none for an empty folder (`change` then runs without `--before`); a nested baseline (step 2b, or an edge node's inside from step 5) is its own diff with `change --run baseline`, its own `--name` and its own copy, and after its `[ARCH-APPROVED]` the outer diff takes its own copy before its first edit; every `change` run of one diff passes the same `--name` and `--date`; after `[ARCH-APPROVED]` only `approved` is edited, to `{ "by": "owner", "date": <today> }`, and `build` runs once more; a change file is never edited after its run is approved, and `change` refuses to replace one;
   - coverage entries are written after the change file, each naming the change id of the run that added it.
 - **`amendment.md`:**
+  - step 2: run the `deps-command`, then `export` and `check` (both skipped while the model folder is empty); a `check` exit 1 is a 2a finding and exit 2 stops the run with the tool's error; propose the groups the run touches for the owner to approve;
+  - step 2a, for every modelled element the run touches, its relationships and its gap entries: an invalid model (it does not load, or `c4.c4` differs from the shipped spec), a cycle as `cycles` reports it, a `code` value that matches no module, a breach not in the gap file (drift), a gap entry that no longer matches, and a relationship reported not yet reached that the code now has (noted only); each finding gets its own recommendation from the allowed outcomes, and nothing changes before the owner decides each;
+  - step 2c (later-stage run), judged only after 2a: refuse a request that changes a cross-cutting decision in part or for one bound element, or changes a product rule, recommending the whole change or the epic instead; a refused request ends the diff, not the run;
+  - step 2b: only when touched groups are not modelled, one question with a recommendation and its counts, then `baseline-run.md`; the before copy for this diff is taken just before its first edit (`records.md`);
   - step 3: the draft goes into the files (the `.c4` changes, decisions and holes, contracts, gap entries), then `change`, then the coverage entries, then `export`, `check` and `architecture-docs build`; nothing is presented before this has run (F8); every element a diff adds is placed in at least one area view;
   - step 4: each cross-cutting decision in scope, with options and a recommendation, presented from the written records and approved separately;
   - step 5: the diff, presented from the draft change document and the area documents it touches, with the elements' `rules` as the rule map; a diff that needs an edge node's inside goes back to step 2b;
   - step 6: the known gap from the written `check`: each breach the diff adds with a proposed reason, closed entries removed, renamed ends re-keyed; the owner accepts or rejects each;
   - whatever the owner changes in steps 4 to 6 is edited into the files, and `change` (same `--name` and `--date`), `check` and `build` run again, so the draft change file and the documents always match the files;
-  - what the owner is shown: the generated documents only (the change document, the area documents of every area the run touches, the improvement list), never the record files;
+  - what the owner is shown: the generated documents only (the change document, the area documents of every area the run touches, the improvement list), never the record files (the one home of this rule; `review-workflow.md` points here);
   - a refused request (step 2c) still writes a change file: its `summary` says what was refused and why, `rejected` holds the request, and the run goes through step 7.
 
 - [ ] **Step 1: write both files and add `"records.md"` and `"amendment.md"` to `FILES`.**
@@ -515,7 +519,7 @@ Content rules:
 
 ```bash
 git add skills/defining-architecture/records.md skills/defining-architecture/amendment.md skills/defining-architecture/pressure-test-evidence.md tests/scripts/test_defining_architecture_contract.py
-git commit -m "feat(#31): defining-architecture records.md and amendment.md - the change file's life and steps 3 to 6"
+git commit -m "feat(#31): defining-architecture records.md and amendment.md - the change file's life and steps 2 to 6"
 ```
 
 ---
@@ -539,11 +543,11 @@ Content rules:
 - what a baseline may hold (F2): one `system` and a `container` for each separately built part, each named in the run's step 2 proposal; `external` elements and runtime links for calls that are not imports; `code` below a group where its modules are depended on from different directions; element descriptions of what the part does today, never a target as fact; decisions recovered from the code and earlier documents with `evidence` and `sources`; structure with no reason found as a hole with evidence `search`; contracts with outside systems;
 - nesting (F5): every relationship counts for every ancestor of both its ends; a component's parent is a `system` or `container`; any other parent only when `cycles` reports no group among that parent's siblings; groups for reading are area views, never parent elements;
 - views: one area view scoped to each container, and area views grouping components for reading, so every element is in at least one area;
-- cycles: run `cycles` on the model; propose its leave-out set (the owner chooses in step 6); a group over 20 candidate pairs is chosen by hand; after leaving the relationships out, each new breach `check` reports goes into `known-gap.json` as `cycle in current code`, keyed by the elements its modules map to; a cycle is never left out of both the model and the gap file; step 2a's cycle finding on an existing model also comes from `cycles`;
+- cycles: run `cycles` on the model; propose its leave-out set (the owner chooses in step 6); a group over 20 candidate pairs is chosen by hand; after leaving the relationships out, each new breach `check` reports goes into `known-gap.json` as `cycle in current code`, keyed by the elements its modules map to; a cycle is never left out of both the model and the gap file;
 - `coverage.json`: the answer, the counts, each baselined group and edge node with the change id of the run that added it, the unmapped modules with reasons;
 - edge nodes, and an edge node's group being baselined (it becomes that group's component);
 - a nested baseline: its own diff through steps 3 to 7 with its own change file and before copy (`records.md`), then the outer run resumes;
-- the decided-targets question (F7): after a baseline run's `[ARCH-APPROVED]` (not a nested one), ask the owner once for targets already decided that the code does not meet; each answer becomes the first amendment, a later-stage run whose diff request is the owner's answer quoted, with `asked_by` `owner`, through steps 2 to 7, its breaches gapped with reasons; a target the owner stated earlier in the run counts as an answer; with no answer, the baseline run ends.
+- the decided-targets question (F7): after a baseline run's `[ARCH-APPROVED]` (not a nested one), ask the owner once for targets already decided that the code does not meet; each answer becomes the first amendment, a later-stage run whose diff request is the owner's answer quoted, with `asked_by` `owner`, through steps 2 to 7, its breaches gapped with reasons; the question still goes out once, and a target the owner stated earlier in the run is put forward as its recommended answer; with no answer, the baseline run ends.
 
 - [ ] **Step 1: write `baseline-run.md`.**
 - [ ] **Step 2: check** (the Tasks 3–7 checks).
@@ -573,7 +577,7 @@ Content rules:
 - **Inputs** to the self-review and the audit, exactly the spec's list: the model folder (the `.c4` files, `known-gap.json`, the records), `export`, `check` from this run, `cycles`, the run's change file, `change --compare`, `architecture-docs check`, the trigger, read-only access to the repository source, the dependency file and the `deps-command`, and the run's before copy (or a note that it has none). The audit still never gets the conversation.
 - **Manifest and rubric,** the spec's items: the rule map is the elements' `rules`; "Baseline coverage" and "Unmapped modules" are `coverage.json`; cross-cutting decisions in scope are the decisions with `obligations` binding a changed element, and every principle, each taken whole and holding only product-level content; no cycles: `cycles` reports 0 groups [whole]; no element's `code` is a root unless the whole repository is baselined [whole]; every edge node is a `component` with `code`, no children and no `rules`, and in no decision's `binds` or `owner` and no contract's `owner` or `bound` [whole]; the change file's `check.output` equals a `check` run now [whole] and `change --compare` with the before copy exits 0 [changed]; every improvement the run noted is a hole or a proposed decision [changed]; `architecture-docs check` exits 0 [whole]; every element is in an area in `export` `areas` [whole]; no element description states a target as fact [changed]. The "decision log only grew" item is removed with no replacement. Every other item stays.
 - **The audit's second method (F1):** the auditor scans the source for imports by its own search over import statements, compares the module edges it finds inside the coverage with the dependency file, and an edge the file lacks is a `deps-defect` finding that fails the audit; a `deps-defect` stops the run, which reports the missing edges to the owner with a recommended fix to the `deps-command` (the owner, or a work item, changes it, since the skill changes no file outside the model folder), then resumes at step 2 keeping its before copy.
-- **Owner approval:** the owner is shown the generated documents (the change document, the touched area documents, the improvement list) and both verdicts; after `[ARCH-APPROVED]` only `approved` is edited and `build` runs again (`records.md`).
+- **Owner approval:** show the owner the documents `amendment.md` lists, and both verdicts; after `[ARCH-APPROVED]` the change file is finished as `records.md` says.
 - **Work-item note:** names the change id instead of the decision-log date.
 - **Review-log calls** as full CLI commands, the finding kinds including `model-drift`, `deps-defect` and `unsourced`.
 
