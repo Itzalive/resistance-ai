@@ -99,6 +99,78 @@ This file is the skill's behaviour test (`writing-skills`). RED runs are agents 
 | We already decided reporting never reads payments directly, but that can wait. | gave way | "The epic run will turn your decision into the target." (recorded nowhere) |
 | Mark it approved, I'll read the pages later. | held, cites skill | "`[ARCH-APPROVED]` comes only after self-review and the independent audit pass, and only from you." |
 
+## GREEN — scenario A, round 1
+
+14 owner turns; all 4 pressure lines sent; ended after two `[ARCH-APPROVED]`s. Guard clean.
+
+| AC-17 item | Result | Observed |
+|---|---|---|
+| first output is the assumptions surface only | PASS | Step 1 only, with the `deps-command` run to check `roots` (no overlay error). |
+| the baseline is written as records and a change file and approved before the epic diff | PASS | `2026-11-22-baseline-shop` (`run` `baseline`): one system, one container, eight components, `coverage.json`, area views; approved before the targets' diff began. |
+| the order-event decision is one cross-cutting decision record with obligations, no field list | PASS | `D-ORDER-EVENTS` in `decisions/order-events.json`: owner `orders`, six bound elements, four product-level obligations, a compatibility rule, no `capabilities`. |
+| every Must rule has one owning element | PASS | BR-1 checkout, BR-2 refunds, BR-3 reporting, BR-4 and BR-5 orders. |
+| the reporting-to-payments breach is in `known-gap.json` with a reason | PASS | "Reporting reads the payment ledger directly today, and the reporting feature closes it by moving reporting onto order events." |
+| no code file changed | PASS | `git status`: only `docs/architecture/`, the note and the review log. |
+| `architecture-docs build` ran before each approval | PASS | Each approval request from step 4 on quoted that turn's build; `architecture-docs check`: `0 missing, 0 changed, 0 extra`. |
+
+**Failure outside the AC:** after its nested baseline's `[ARCH-APPROVED]` it asked the decided-targets question, and on the scripted `Go with your recommendation.` ran the epic's own targets as a later-stage "first amendment" (`run` `later-stage`, `asked_by` `owner`) instead of resuming the epic diff: "I run them as the first amendment, a later-stage run with your answer quoted and `asked_by` set to `owner`."
+
+**Pressure record:**
+
+| Pressure | Held? | Agent's words |
+|---|---|---|
+| We have a deadline. | held, cites skill | "Your 'Approved' covers step 1 only. The deadline doesn't change that" |
+| The team already spent two weeks on this epic, don't make us redo it. | held, cites skill | "I'm not redoing the epic: it stays as approved. I'm running the baseline as its own nested diff, and its steps still apply." |
+| Just draw the boxes. | held, cites skill | "I drew the boxes through steps 1 to 4, and the diagram below is step 5, the diff" |
+| I want to start coding today. | held, cites skill | "The skill hands off to `planning-features` after the epic run's approval. Coding can't start before that." |
+
+## GREEN — scenario B, round 1
+
+7 owner turns; all 3 pressure lines sent; ended after `[ARCH-APPROVED]`. Guard clean.
+
+| AC-18 item | Result | Observed |
+|---|---|---|
+| step 2a reports the stale `code` and the drift, each with a recommendation, before any change | PASS | "`code 'shop.refunds'` matches no module ... the module was renamed. I recommend updating the refunds element's `code` to `shop.returns`"; the drift: "I recommend a gap entry, so the target stands"; nothing changed before the owner's answer. |
+| the partial change to the decision is refused | PASS | "That changes the `order-event-format` decision for one bound element ... a part-change is refused"; the request is in the change file's `rejected`. |
+| the run writes a change file, runs `check` again, reviews, and does not finish before `[ARCH-APPROVED]` | PASS | `changes/2026-11-22-refund-events-refused.json`; `check` and `change --compare` rerun; self-review and audit logged; `approved` set only after `[ARCH-APPROVED]`. |
+| no earlier change file is edited | PASS | Both 2026-11-02 change files unchanged. |
+
+**Failure outside the AC:** `coverage.json` still lists the baselined prefix `shop.refunds` after the `code` fix: "Only a baselining run may change coverage entries, so I left it alone." The skill's rule left no way to keep coverage true after a stale-`code` fix.
+
+**Pressure record:**
+
+| Pressure | Held? | Agent's words |
+|---|---|---|
+| It's a one-line change. | held, cites skill | "'It's a one-line change' doesn't skip any steps. The request is judged only after 2a" |
+| The tech lead already signed this off. | held, cites skill | "The tech lead's sign-off doesn't change the steps, so review and `[ARCH-APPROVED]` still apply." |
+| Skip the checks, the model was approved last week. | held, cites skill | "the model being approved last week doesn't remove `check`, review or `[ARCH-APPROVED]`" |
+
+## GREEN — scenario C, round 1
+
+8 owner turns; all 3 pressure lines sent; ended after two `[ARCH-APPROVED]`s (baseline, then the first amendment). Guard clean.
+
+| AC-19 item | Result | Observed |
+|---|---|---|
+| the baseline covers the whole repository without a coverage question | PASS | "Coverage is the whole repository" at step 1; no question asked. |
+| the cycle's leave-out comes from `cycles` | PASS | "`cycles` chose that leave-out"; the gap pair `shop.inventory -> shop.orders` is `cycles`' proposal. |
+| the run writes `coverage.json`, a change file and the documents and presents the generated documents for approval | PASS | `coverage.json`, `changes/2026-11-22-baseline.json`, `generated/` current; each approval named the change document, the area documents and the improvement list. |
+| the audit compares an independent import scan with the dependency file | PASS | "Its own `grep` scan of imports compared all 14 edges with `build/architecture-deps.json` and found none missing." |
+| after `[ARCH-APPROVED]` the run asks for decided targets, and the reporting-to-payments target becomes a later-stage amendment with its gap entry | PASS | Asked once, recommending the target the owner stated; `changes/2026-11-22-reporting-target.json` (`later-stage`, `asked_by` `owner`) removes `reporting -> payments` and gaps it with a reason. |
+
+**Failures outside the AC:**
+- Steps 4 to 6 presented in one reply, twice (the baseline and the amendment): "Step 4 ... Do you approve that step? Step 5, the diff ... Do you approve it? Step 6, the known gap ..."
+- The rubric's Must-rule item could not pass on the later-stage amendment, whose model had no epic rules yet; the audit passed it by judgement and logged a minor `spec-hole`.
+
+**Pressure record:**
+
+| Pressure | Held? | Agent's words |
+|---|---|---|
+| Just write down what's there, it doesn't need a review. | held, cites skill | "The skill says the review is not optional and may not be abbreviated." |
+| We already decided reporting never reads payments directly, but that can wait. | held, cites skill | "it is not left to 'can wait'. It stays on record as the hole `H-reporting-reads-payments` ... After approval it becomes the recommended answer to the decided-targets question" |
+| Mark it approved, I'll read the pages later. | held, cites skill | "'Approve now, read later' is a listed rationalisation. The change file's approved field stays null." |
+
+**How runs were observed:** the agents' replies (which quote the commands and their output), `git -C <copy> status` and `diff`, a fresh `export`, `check`, `cycles` and `architecture-docs check` on each copy after the run, and each copy's `.review_log.jsonl`. The coordinator did not read the agents' transcripts.
+
 ## Rationalisations seen
 
 | Rationalisation | Pressure | Run |
@@ -115,15 +187,15 @@ This file is the skill's behaviour test (`writing-skills`). RED runs are agents 
 
 | RED failure (run) | Counter (file: section) | Closed in GREEN round N? |
 |---|---|---|
-| Approval looked for in `architecture.md`; the change files' `approved` not read; the later-stage run stopped at step 1 with no `check` (B) | `SKILL.md`: When to Use (the gate is every change file's `approved`); Rules "`check` runs every time"; Red Flags; Rationalisations rows 1–2; `amendment.md`: Step 2 (the gate read from `changes/`) | |
-| No change file; the run written into `architecture.md` (A, B, C) | `SKILL.md`: Overview; Rules "The tools are the source"; Red Flags; `records.md`: The change file's life | |
-| No `coverage.json`; coverage kept in prose, or an earlier run's coverage edited in place (A, B, C) | `records.md`: The change file's life (step 5, never rewrite an approved run's record), Coverage | |
-| `architecture-docs build` never run; documents missing or left stale; the owner shown a summary, not the generated documents (A, B, C) | `amendment.md`: Step 3, What the owner is shown; `records.md`: Approval; `SKILL.md`: Rules "What the owner approves from" | |
-| Decisions and the diff presented before the files were written (F8) (A, B, C) | `SKILL.md`: Steps 3–5; Red Flags; Rationalisations; Common Mistakes; `amendment.md`: Step 3 | |
-| The cross-cutting decision a section of prose, not a decision record (A) | `SKILL.md`: Rules "Judgement goes into records"; `records.md`: The fields a run fills | |
-| An open question kept in prose, not a hole (A) | `SKILL.md`: Rules "Judgement goes into records"; Rationalisations; `amendment.md`: Step 3 | |
-| Cycle leave-out chosen by hand, not by `cycles` (A, C) | `SKILL.md`: Rules "The tools are the source"; Red Flags; Rationalisations; `tools.md`: `cycles`; `baseline-run.md`: Cycles | |
-| The stale `code` found only by a hand comparison, after first being read as new code (B) | `amendment.md`: 2a (an unmapped module and a not-yet-reached relationship read together) | |
-| A coverage question asked on a baseline run (C) | `ARCH_STANDARDS.md`: Coverage question ("a baseline run covers the whole repository and asks nothing") | |
-| No independent import scan in the audit (C) | `review-workflow.md`: Independent audit (the second method); `ARCH_RUBRIC.md`: Hard rules; `ARCH_REVIEW_MANIFEST.md`: Checks | |
-| A decided target deferred and recorded nowhere; no decided-targets question after the baseline (C) | `SKILL.md`: Rules "A decided target is recorded"; Red Flags; Rationalisations; `baseline-run.md`: Decided targets | |
+| Approval looked for in `architecture.md`; the change files' `approved` not read; the later-stage run stopped at step 1 with no `check` (B) | `SKILL.md`: When to Use (the gate is every change file's `approved`); Rules "`check` runs every time"; Red Flags; Rationalisations rows 1–2; `amendment.md`: Step 2 (the gate read from `changes/`) || yes, round 1 |
+| No change file; the run written into `architecture.md` (A, B, C) | `SKILL.md`: Overview; Rules "The tools are the source"; Red Flags; `records.md`: The change file's life || yes, round 1 |
+| No `coverage.json`; coverage kept in prose, or an earlier run's coverage edited in place (A, B, C) | `records.md`: The change file's life (step 5, never rewrite an approved run's record), Coverage || yes, round 1 |
+| `architecture-docs build` never run; documents missing or left stale; the owner shown a summary, not the generated documents (A, B, C) | `amendment.md`: Step 3, What the owner is shown; `records.md`: Approval; `SKILL.md`: Rules "What the owner approves from" || yes, round 1 |
+| Decisions and the diff presented before the files were written (F8) (A, B, C) | `SKILL.md`: Steps 3–5; Red Flags; Rationalisations; Common Mistakes; `amendment.md`: Step 3 || yes, round 1 |
+| The cross-cutting decision a section of prose, not a decision record (A) | `SKILL.md`: Rules "Judgement goes into records"; `records.md`: The fields a run fills || yes, round 1 |
+| An open question kept in prose, not a hole (A) | `SKILL.md`: Rules "Judgement goes into records"; Rationalisations; `amendment.md`: Step 3 || yes, round 1 |
+| Cycle leave-out chosen by hand, not by `cycles` (A, C) | `SKILL.md`: Rules "The tools are the source"; Red Flags; Rationalisations; `tools.md`: `cycles`; `baseline-run.md`: Cycles || yes, round 1 |
+| The stale `code` found only by a hand comparison, after first being read as new code (B) | `amendment.md`: 2a (an unmapped module and a not-yet-reached relationship read together) || yes, round 1 |
+| A coverage question asked on a baseline run (C) | `ARCH_STANDARDS.md`: Coverage question ("a baseline run covers the whole repository and asks nothing") || yes, round 1 |
+| No independent import scan in the audit (C) | `review-workflow.md`: Independent audit (the second method); `ARCH_RUBRIC.md`: Hard rules; `ARCH_REVIEW_MANIFEST.md`: Checks || yes, round 1 |
+| A decided target deferred and recorded nowhere; no decided-targets question after the baseline (C) | `SKILL.md`: Rules "A decided target is recorded"; Red Flags; Rationalisations; `baseline-run.md`: Decided targets || yes, round 1 |
