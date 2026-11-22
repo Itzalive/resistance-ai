@@ -115,15 +115,15 @@ This file is the skill's behaviour test (`writing-skills`). RED runs are agents 
 
 | RED failure (run) | Counter (file: section) | Closed in GREEN round N? |
 |---|---|---|
-| Approval looked for in `architecture.md`; the change files' `approved` not read; the later-stage run stopped at step 1 with no `check` (B) | | |
-| No change file; the run written into `architecture.md` (A, B, C) | | |
+| Approval looked for in `architecture.md`; the change files' `approved` not read; the later-stage run stopped at step 1 with no `check` (B) | `SKILL.md`: When to Use (the gate is every change file's `approved`); Rules "`check` runs every time"; Red Flags; Rationalisations rows 1–2 | |
+| No change file; the run written into `architecture.md` (A, B, C) | `SKILL.md`: Overview; Rules "The tools are the source"; Red Flags | |
 | No `coverage.json`; coverage kept in prose, or an earlier run's coverage edited in place (A, B, C) | | |
 | `architecture-docs build` never run; documents missing or left stale; the owner shown a summary, not the generated documents (A, B, C) | | |
-| Decisions and the diff presented before the files were written (F8) (A, B, C) | | |
-| The cross-cutting decision a section of prose, not a decision record (A) | | |
-| An open question kept in prose, not a hole (A) | | |
-| Cycle leave-out chosen by hand, not by `cycles` (A, C) | | |
+| Decisions and the diff presented before the files were written (F8) (A, B, C) | `SKILL.md`: Steps 3–5; Red Flags; Rationalisations; Common Mistakes | |
+| The cross-cutting decision a section of prose, not a decision record (A) | `SKILL.md`: Rules "Judgement goes into records" | |
+| An open question kept in prose, not a hole (A) | `SKILL.md`: Rules "Judgement goes into records"; Rationalisations | |
+| Cycle leave-out chosen by hand, not by `cycles` (A, C) | `SKILL.md`: Rules "The tools are the source"; Red Flags; Rationalisations | |
 | The stale `code` found only by a hand comparison, after first being read as new code (B) | | |
 | A coverage question asked on a baseline run (C) | | |
 | No independent import scan in the audit (C) | | |
-| A decided target deferred and recorded nowhere; no decided-targets question after the baseline (C) | | |
+| A decided target deferred and recorded nowhere; no decided-targets question after the baseline (C) | `SKILL.md`: Rules "A decided target is recorded"; Red Flags; Rationalisations | |
