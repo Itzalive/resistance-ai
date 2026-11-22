@@ -83,4 +83,4 @@ One work item per feature and per split-out question, in the project's tracker o
 
 ## `close_by`
 
-Each entry in `<model>/known-gap.json` gets `close_by`: the id of the feature expected to close it, or `not planned: <reason>`. Change nothing else in the model folder.
+Each entry in `<model>/known-gap.json` gets `close_by`: the id of the feature expected to close it, or `not planned: <reason>`. Change nothing else in the model folder, then run `node <skills-dir>/shared/scripts/architecture-docs.mjs build --repo . --model <model>` so `generated/` shows the new values.

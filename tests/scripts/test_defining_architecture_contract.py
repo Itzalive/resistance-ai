@@ -125,7 +125,7 @@ def test_modelled_fixture_check_shows_the_drift(tmp_path) -> None:
     ]
 
 
-OLD_LAYOUT = re.compile(r"architecture\.md|decision log only grew|model's rule map")
+OLD_LAYOUT = re.compile(r"architecture\.md|(?<!design's )decision log only grew|model's rule map")
 
 
 @pytest.mark.parametrize("skill", ["planning-features", "specifying-features"])

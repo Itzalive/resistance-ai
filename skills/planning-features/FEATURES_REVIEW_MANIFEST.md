@@ -19,7 +19,7 @@ Used by the self-review and by the independent auditor. Gather the inputs, work 
 
 - **AC coverage:** list every epic AC and find it on the map. Each appears under exactly one feature, or is marked cross-cutting.
 - **`close_by`:** every entry in `known-gap.json` has it, and each feature id it names is on the map.
-- **Unchanged:** the diff touches only the map and the `close_by` values. No other key of a gap entry, no `.c4` file, no record (`decisions/`, `contracts/`, `coverage.json`), no change file, no epic text and no code changed.
+- **Unchanged:** the diff touches only the map, the `close_by` values and `generated/`, and `architecture-docs check` exits 0. No other key of a gap entry, no `.c4` file, no record (`decisions/`, `contracts/`, `coverage.json`), no change file, no epic text and no code changed.
 - **Costs:** each cost names run records that exist, or is marked `guess`.
 
 ## Grading

@@ -5,7 +5,7 @@ Load this file only for a close run: the feature's last shard has merged, and th
 ## Steps
 
 1. **Run the delta on the whole model.** Run the overlay's `deps-command`, then `check` with no `--scope` and no `--shards` (the command is in `FEATURE_STANDARDS.md`, "Running the delta"). Quote the output.
-2. **Remove entries still stale.** Each shard's branch removes the entries it closes when it finishes, so normally none is left. As a safety net, remove from `<model>/known-gap.json` each entry the tool still reports stale. Change nothing else in the model folder.
+2. **Remove entries still stale.** Each shard's branch removes the entries it closes when it finishes, so normally none is left. As a safety net, remove from `<model>/known-gap.json` each entry the tool still reports stale. Change nothing else in the model folder, then run `node <skills-dir>/shared/scripts/architecture-docs.mjs build --repo . --model <model>` so `generated/` shows the new values.
 3. **Write the Close record** in the feature design:
    - each gap entry closed during the feature, with the commit that removed it. The source is the `git log` of `known-gap.json` since the design's `[FEATURE-APPROVED]`, plus this run's own removals. An entry removed or re-keyed by a `defining-architecture` run is not listed as closed;
    - each gap entry the map says this feature closes that is still in the file, or whose pair `check` still reports, recorded as **not closed**;
