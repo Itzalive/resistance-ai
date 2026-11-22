@@ -242,3 +242,21 @@ def test_compare_reports_same_differs_and_missing(tmp_path) -> None:  # AC-9
     missing = change(repo, "--compare", name="other", text=False)
     assert (missing.returncode, missing.stdout) == (1, "missing changes/2026-11-21-other.json\n"), missing.stderr
     assert snapshot(repo) == files
+
+
+def test_change_compares_the_gap_with_the_before_copy(tmp_path) -> None:  # AC-1: the gap pairs against the before copy
+    repo = change_repo(tmp_path)
+    write_json(repo / "build" / "before" / "known-gap.json", {"entries": [
+        {"from": "shop.b", "to": "shop.a", "reason": "b reads a."},
+        {"from": "shop.c", "to": "shop.a", "reason": "c reads a."}]})
+    assert change(repo).returncode == 0
+    assert written(repo)["gap"] == {"added": [], "removed": [["shop.c", "shop.a"]]}
+
+
+def test_compare_with_a_bad_date_is_bad_input(tmp_path) -> None:  # AC-5
+    repo = change_repo(tmp_path)
+    args = ["change", "--repo", repo, "--deps", "build/deps.json", "--name", "first", "--date", "2026-02-30",
+            "--run", "epic", "--before", "build/before", "--compare"]
+    proc = run_tool(*args, script=RECORDS_SCRIPT)
+    assert proc.returncode == 2
+    assert error_lines(proc)[0] == "error: bad-input: changes/2026-02-30-first.json: date: not a real date"

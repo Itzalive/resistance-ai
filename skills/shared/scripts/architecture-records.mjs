@@ -11,7 +11,7 @@ import { readJson, parseDeps, parseGap } from './architecture-delta/inputs.mjs';
 import { findCycles, cyclesText } from './architecture-records/cycles.mjs';
 import { exportJson } from './architecture-delta/report.mjs';
 import { runCheck } from './architecture-delta/check.mjs';
-import { changeFileProblems } from './architecture-delta/records.mjs';
+import { changeFileProblems, isRealDate } from './architecture-delta/records.mjs';
 import { parseArgs } from './architecture-records/args.mjs';
 import { buildChange, canonical, EMPTY_EXPORT } from './architecture-records/change.mjs';
 import { writeChange } from './architecture-records/writer.mjs';
@@ -41,6 +41,8 @@ async function runChange(args, deadline) {
     throw new ToolError('bad-input', nameProblems);
   }
   const rel = `changes/${id}.json`;
+  // The date is checked before `--compare` looks for the file, so a bad date is `bad-input`, never `missing`.
+  if (!isRealDate(args.date)) throw new ToolError('bad-input', [`${clean(rel)}: date: not a real date`]);
   const existingPath = path.join(loaded.modelDir, 'changes', `${id}.json`);
   const existing = fs.existsSync(existingPath) ? readJson(existingPath, rel) : null;
   if (args.compare && existing === null) return { output: `missing ${clean(rel)}\n`, exitCode: 1 };
@@ -77,6 +79,7 @@ async function runChange(args, deadline) {
 
 async function runCycles(args, deadline) {
   const loaded = await loadRepoModel(args, deadline);
+  readGap(loaded); // Spec, "The helper tool": loaded as the delta `check` loads it, so a bad entry stops the run.
   const deps = resolveInside(loaded.repo, args.deps, '--deps');
   if (!deps.exists) throw new ToolError('bad-input', '--deps file not found');
   const edges = parseDeps(readJson(deps.path, '--deps'));

@@ -63,7 +63,7 @@ const oneOf = (values) => `must be one of ${values.join(', ')}`;
 const list = (value) => (Array.isArray(value) ? value : []);
 const has = (record, key) => Object.hasOwn(record, key);
 
-function isRealDate(value) {
+export function isRealDate(value) {
   if (!DATE.test(value)) return false;
   const [year, month, day] = value.split('-').map(Number);
   const date = new Date(Date.UTC(year, month - 1, day));

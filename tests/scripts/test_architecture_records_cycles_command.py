@@ -77,3 +77,12 @@ def test_cycles_command_leaves_runtime_links_outside_the_cycle_rule(tmp_path) ->
     write_json(repo / "deps.json", {"edges": [["a.1", "b.1"]]})
     proc = run(repo)
     assert (proc.returncode, proc.stdout) == (0, "0 relationships to leave out in 0 groups, 0 too large\n"), proc.stderr
+
+
+def test_cycles_command_loads_the_known_gap_as_check_does(tmp_path) -> None:  # spec "The helper tool"
+    repo = make_repo(tmp_path, CYCLE_MODEL)
+    write_json(repo / "deps.json", {"edges": EDGES})
+    write_json(repo / "docs" / "architecture" / "known-gap.json", {"entries": [{"from": "nope", "to": "a", "reason": "r"}]})
+    proc = run(repo)
+    assert proc.returncode == 2
+    assert error_lines(proc)[0] == "error: bad-input: --gap entry 0: nope is not a model element"
