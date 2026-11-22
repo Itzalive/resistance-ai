@@ -408,11 +408,11 @@ git commit -m "test(#31): RED runs for defining-architecture on the record layou
 
 **Rules for Tasks 3 to 7** (`writing-skills`: GREEN is written to the RED failures; the spec's steps and rules are carried whatever RED shows):
 - Before writing, reread `skills/writing-skills/SKILL.md` and the RED evidence. Every new counter answers a failure or rationalisation in the evidence file, and the task fills the Counter column of each RED failure its text answers.
-- `architecture.md` appears in no file of the skill except where the text says it is gone.
+- `architecture.md` appears in no file of the skill except where the text says it is gone, a red flag against writing it, and rationalisation rows that quote RED agents.
 - Every file is loaded by name at the step that needs it, from `SKILL.md`'s step list. Each rule's full text lives in exactly one file: `SKILL.md` for the rules that hold at every step, otherwise the companion for its step; anywhere else a rule is named in one line that points to that file.
 - No downstream-project specifics; examples use the made-up shop or neutral names.
 
-Each of Tasks 3 to 7 ends with: run `uv run pytest -q tests/scripts/test_defining_architecture_contract.py` (expected: 6 passed) and `grep -c "architecture\.md" <the task's files>` (expected: `0`, or only the "is gone" line), then commit.
+Each of Tasks 3 to 7 ends with: run `uv run pytest -q tests/scripts/test_defining_architecture_contract.py` (expected: 6 passed) and `grep -c "architecture\.md" <the task's files>` (expected: `0`; in `SKILL.md` only the line saying it is gone, the red flag against writing it, and rationalisation rows quoting RED agents), then commit.
 
 ### Task 3: `SKILL.md` (coordinator)
 
