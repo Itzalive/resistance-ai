@@ -17,7 +17,7 @@ This skill turns an approved epic into **features**: stages of value delivered i
 
 | Trigger | Entry gate |
 |---|---|
-| An epic's architecture is approved (planning run) | The epic has `[EPIC-APPROVED]`, the model has `[ARCH-APPROVED]`, and `check` on the whole model exits 0 |
+| An epic's architecture is approved (planning run) | The epic has `[EPIC-APPROVED]`, every change file is approved, and `check` on the whole model exits 0 |
 | A feature shipped, a split-out question was answered, or `specifying-features` sent back an answer that changes another feature (re-plan run) | The map has `[FEATURES-APPROVED]` |
 
 ## When NOT to Use
@@ -31,7 +31,7 @@ This skill owns the feature map and `close_by` on known-gap entries. It changes 
 
 ## Files and tools
 
-- Load `FEATURES_STANDARDS.md` at step 1, `replan-run.md` only for a re-plan run, and `review-workflow.md` with the manifest and rubric only at step 6.
+- Load `FEATURES_STANDARDS.md` at step 1, `replan-run.md` for a re-plan run, and `review-workflow.md` with the manifest and rubric only at step 6.
 - The delta tool and the overlay keys are those of `defining-architecture`.
 
 ## Ordering rules

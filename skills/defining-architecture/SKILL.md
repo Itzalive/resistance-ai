@@ -77,7 +77,7 @@ Adding a relationship because the code now has the import makes the drift legal 
 ## Hard rules
 
 - No new product rules: a rule gap goes back to the epic.
-- Every Must rule has exactly one owning element.
+- Every Must rule has exactly one owning element, in an epic run and in any run on a model that already assigns `rules`.
 - Every breach `check` reports is in `known-gap.json` with a reason; none is allowed silently and none is fixed by changing code.
 - Inside the coverage, every module `check` lists as unmapped is mapped or listed in `coverage.json` `unmapped` with a reason.
 - No mechanism detail: no functions, schemas, field lists or algorithms.

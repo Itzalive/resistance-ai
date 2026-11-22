@@ -125,10 +125,13 @@ def test_modelled_fixture_check_shows_the_drift(tmp_path) -> None:
     ]
 
 
-OLD_LAYOUT = re.compile(r"architecture\.md|(?<!design's )decision log only grew|model's rule map")
+# The old layout: the model document, its decision log and rule map, and its approval marker read as a gate.
+OLD_LAYOUT = re.compile(r"architecture\.md|(?<!design's )decision log only grew|model's rule map"
+                        r"|model has `\[ARCH-APPROVED\]`|`\[ARCH-APPROVED\]` or its")
 
 
-@pytest.mark.parametrize("skill", ["planning-features", "specifying-features"])
+@pytest.mark.parametrize("skill", ["planning-features", "specifying-features", "specifying-work-items",
+                                   "finishing-a-development-branch"])
 def test_other_skills_read_the_record_layout(skill: str) -> None:
     folder = ENGINE / "skills" / skill
     hits = [f"{path.name}:{number}" for path in sorted(folder.glob("*.md")) if path.name != "field-evidence.md"

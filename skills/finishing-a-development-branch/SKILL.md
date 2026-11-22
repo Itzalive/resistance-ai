@@ -74,7 +74,7 @@ node <skills-dir>/shared/scripts/architecture-delta.mjs check --repo . --model <
   available; show the breach with them.
 - **A stale gap entry is removed in this branch.** It means this branch fixed the breach,
   or an earlier branch did and finished without this check. Remove the entry from
-  `<model>/known-gap.json`, change nothing else in the model folder, run
+  `<model>/known-gap.json`, change nothing else in the model folder but `generated/`, run
   `node <skills-dir>/shared/scripts/architecture-docs.mjs build --repo . --model <model>` so `generated/` matches, commit both, and re-run
   `check`: it must report no stale entry (and exit 0 unless a new breach remains), and `architecture-docs.mjs check --repo . --model <model>` must exit 0. List each removed entry when you present the options, and in
   the PR body when one is made.
