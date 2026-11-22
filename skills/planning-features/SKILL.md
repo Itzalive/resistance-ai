@@ -27,7 +27,7 @@ This skill turns an approved epic into **features**: stages of value delivered i
 
 ## Ownership
 
-This skill owns the feature map and `close_by` on known-gap entries. It never changes the epic, the model (apart from `close_by`), code or any feature design.
+This skill owns the feature map and `close_by` on known-gap entries. It changes no epic, code, feature design or model file but `close_by` and the rebuilt `generated/`.
 
 ## Files and tools
 

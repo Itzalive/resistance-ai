@@ -7,7 +7,7 @@ Load this file only for a re-plan run: a feature shipped, a split-out question w
 1. **Record.** On the map, write the result: the shipped feature's state and actual cost, or the question's answer.
 2. **Re-check the order.** Test the features not yet shipped against the same ordering rules, with the new result. Say, per rule, whether anything moves.
 3. **Log.** Add a dated entry to the re-plan log: what triggered the run, what was recorded, and what changed or "no change".
-4. **If the order or any feature's content changes:** present the change to the owner, update `close_by` on any known-gap entry whose closing feature changed, and go through step 6 of `SKILL.md` with review scoped to the changed features.
+4. **If the order or any feature's content changes:** present the change to the owner, update `close_by` on any known-gap entry whose closing feature changed and rebuild `generated/` (`FEATURES_STANDARDS.md`, "`close_by`"), and go through step 6 of `SKILL.md` with review scoped to the changed features.
 5. **If nothing changes:** the owner confirms the log entry. No review runs.
 
 ## Rules
