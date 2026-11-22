@@ -298,6 +298,24 @@ The specifying-features design-run "Unchanged" items stay: a design run edits no
 - [ ] **Step 3: check.** `uv run pytest -q tests/scripts/test_feature_skills_contract.py tests/scripts/test_defining_architecture_contract.py`, then `uv run pytest -q` (about 3 minutes). Expected: all pass.
 - [ ] **Step 4: commit** the seven files.
 
+## Task 5: the rebuild decision's other callers (alignment r2)
+
+**Tier:** standard. One atomic change for the spec amendment of commit 874cacb: every writer of `known-gap.json` rebuilds `generated/`, and no ownership line forbids it. No test: wording only (owner's lean-tests rule); the word-cap test pins both feature `SKILL.md` files, and each edit keeps its word count or shrinks it.
+
+Sweep: `grep -rni "known-gap\|close_by\|change nothing else in the model" skills --include=*.md`, outside `defining-architecture/`.
+
+| File | Replace | With |
+|---|---|---|
+| `finishing-a-development-branch/SKILL.md` | "`<model>/known-gap.json`, change nothing else in the model folder, commit, and re-run  `check`:" | "`<model>/known-gap.json`, change nothing else in the model folder, run  `node <skills-dir>/shared/scripts/architecture-docs.mjs build --repo . --model <model>` so `generated/` matches, commit both, and re-run  `check`:" |
+| `planning-features/SKILL.md` | "It never changes the epic, the model (apart from `close_by`), code or any feature design." | "It changes no epic, code, feature design or model file but `close_by` and the rebuilt `generated/`." |
+| `specifying-features/SKILL.md` | "and removing any still-stale known-gap entries at close." | "and, at close, removing still-stale known-gap entries and rebuilding `generated/`." |
+| `planning-features/replan-run.md` | "update `close_by` on any known-gap entry whose closing feature changed," | "update `close_by` on any known-gap entry whose closing feature changed and rebuild `generated/` (`FEATURES_STANDARDS.md`, "`close_by`")," |
+| `specifying-features/close-run.md` | "reports stale. Change nothing else in the model folder, then run `node <skills-dir>/shared/scripts/architecture-docs.mjs build --repo . --model <model>` so `generated/` shows the new values." | "reports stale. Change nothing else in the model folder. If you removed any, run `node <skills-dir>/shared/scripts/architecture-docs.mjs build --repo . --model <model>` so `generated/` shows the new values, then `node <skills-dir>/shared/scripts/architecture-docs.mjs check --repo . --model <model>` and quote its output: it must exit 0." |
+
+- [ ] **Step 1: edit** the five rows.
+- [ ] **Step 2: check.** `uv run pytest -q tests/scripts/test_feature_skills_contract.py tests/scripts/test_defining_architecture_contract.py`, then `uv run pytest -q`. Expected: all pass.
+- [ ] **Step 3: commit** the five files.
+
 ## Plan end
 
-After Task 4: the code review of the whole branch on fresh-context Opus, survivability, the run record, then the merge when the owner says merge.
+After Task 5: the code review of the whole branch on fresh-context Opus, survivability, the run record, then the merge when the owner says merge.
