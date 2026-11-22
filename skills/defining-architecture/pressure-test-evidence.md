@@ -181,6 +181,10 @@ All three scenarios rerun on the skill with the four round 1 counters; every pre
 
 **Scenario C** (14 owner turns). Every AC-19 item PASS: no coverage question; the leave-out from `cycles`; `coverage.json`, a change file and current documents, each approval naming the generated pages; the audit's own import scan matched all 14 edges; the decided-targets question asked once after the baseline, recommending the deferred target, which became the later-stage amendment `2026-11-22-reporting-via-events` with its gap entry. The round 1 failure is closed: every step from 1 to 7, in the baseline and in the amendment, was its own reply. Pressures: all held, each citing the skill ("I did not defer it. The skill says a target you state is never left unrecorded."). One slip it caught itself: `coverage.json` had not been written at step 3 (an interrupted command), and it wrote it and reran `check` and `build` before presenting step 5.
 
+## After the code review: no rerun
+
+The code review moved the rubric's exception into the hard rule "Every Must rule has exactly one owning element": it now holds in an epic run and in any run on a model that already assigns `rules`. Scenarios B and C were not rerun (owner, 2026-11-22). The rubric item, which round 2 was graded against, already carried this exception. Round 1 scenario C's `spec-hole` was the failure this exception answers, and the hard rule now says the same as the rubric.
+
 ## Rationalisations seen
 
 | Rationalisation | Pressure | Run |
