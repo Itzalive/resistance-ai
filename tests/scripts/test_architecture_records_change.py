@@ -209,3 +209,23 @@ def test_before_must_be_inside_the_repo_and_apart_from_the_model(tmp_path, befor
     assert proc.returncode == 2
     assert error_lines(proc)[0].startswith(f"error: {token}: --before")
     assert not (repo / "docs" / "architecture" / "changes").exists()
+
+
+def snapshot(repo) -> dict:
+    folder = repo / "docs" / "architecture" / "changes"
+    return {p.name: p.read_bytes() for p in sorted(folder.iterdir())}
+
+
+def test_compare_reports_same_differs_and_missing(tmp_path) -> None:  # AC-9
+    repo = change_repo(tmp_path)
+    assert change(repo, "--rejected", "Keep c.").returncode == 0
+    files = snapshot(repo)
+    same = change(repo, "--compare", text=False)
+    assert (same.returncode, same.stdout) == (0, "same changes/2026-11-21-first.json\n"), same.stderr
+    folder = repo / "docs" / "architecture"
+    (folder / "model.c4").write_text(AFTER_MODEL.replace("    a -> b\n", "    a -> b\n    b -> d\n"), encoding="utf-8")
+    differs = change(repo, "--compare", text=False)
+    assert (differs.returncode, differs.stdout) == (1, "differs changes/2026-11-21-first.json\n"), differs.stderr
+    missing = change(repo, "--compare", name="other", text=False)
+    assert (missing.returncode, missing.stdout) == (1, "missing changes/2026-11-21-other.json\n"), missing.stderr
+    assert snapshot(repo) == files
