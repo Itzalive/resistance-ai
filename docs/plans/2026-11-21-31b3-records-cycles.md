@@ -18,16 +18,13 @@
 
 ### Risk & Confidence Assessment
 
-**Confidence:** 90% — the rules are fully stated; the exact search is small and bounded.
+**Confidence:** 95% — the rules are fully stated; the exact search is small and bounded, and its time was measured in the dry run.
 
 **Complexity Risk:** Medium — driving variable: the search's order of preference (relationships, then distinct module edges, then the pair list) and the level a relationship belongs to.
 
 **Environmental Risk:** Low — the search is bounded at 2^20 subsets, each checked with bit masks.
 
 **Main failure modes:** module edges summed instead of counted once (`test_distinct_module_edges_decide_a_tie`); a relationship counted at a level other than its nearest common ancestor's (`test_cycle_between_children_is_found_at_their_level`); the 20-pair limit off by one (`test_twenty_pairs_are_searched_and_twenty_one_are_too_large`).
-
-**Unknown variables:**
-- None left: the 20-pair search was measured in the dry run at 0.36 s, well under the default 60 s deadline.
 
 ---
 
