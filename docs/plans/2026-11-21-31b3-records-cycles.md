@@ -27,9 +27,11 @@
 **Main failure modes:** module edges summed instead of counted once (`test_distinct_module_edges_decide_a_tie`); a relationship counted at a level other than its nearest common ancestor's (`test_cycle_between_children_is_found_at_their_level`); the 20-pair limit off by one (`test_twenty_pairs_are_searched_and_twenty_one_are_too_large`).
 
 **Unknown variables:**
-- The time of a full 2^20 search in Node on the test machine; measured in the dry run (the 20-pair test must stay well under the default 60 s deadline).
+- None left: the 20-pair search was measured in the dry run at 0.36 s, well under the default 60 s deadline.
 
 ---
+
+Spec ingested: `ls docs/superpowers/specs/`; `cat docs/superpowers/specs/2026-11-21-defining-architecture-records-design.md`.
 
 ## Caller and test sweep
 
@@ -178,13 +180,16 @@ git commit -m "refactor(#31): match.mjs exports its module mapper and ancestor h
 
 **Reviewer looks at:**
 - fewest relationships first — mutation: compare distinct module edges before relationships — killed by: `test_fewest_relationships_come_first`
-- module edges counted once — mutation: sum `c.edges.size` over the chosen pairs instead of the union — killed by: `test_distinct_module_edges_decide_a_tie`
+- module edges counted once — mutation: sum `r.edges.size` over the relationships of the chosen pairs instead of the union — killed by: `test_distinct_module_edges_decide_a_tie`
 - the pair list breaks the last tie — mutation: prefer the later list — killed by: `test_tie_on_module_edges_goes_to_the_first_pair_list` (AC-10)
-- a relationship counts at its nearest common ancestor's level only — mutation: give every relationship a pair at the top level too — killed by: `test_cycle_between_children_is_found_at_their_level`
+- a relationship counts at its nearest common ancestor's level, between the siblings that hold its ends — mutation: `siblingPair` returns the relationship's own ends instead of the children of the nearest common ancestor — killed by: `test_cycle_between_children_is_found_at_their_level`
 - the limit is 20 candidate pairs — mutation: `> SEARCH_LIMIT` to `>= SEARCH_LIMIT` — killed by: `test_twenty_pairs_are_searched_and_twenty_one_are_too_large`
 - group order — mutation: drop the sort of `groups` — killed by: `test_groups_in_level_order_then_by_siblings`
+- level order is depth before parent id — mutation: sort by parent id only — killed by: `test_groups_in_level_order_then_by_siblings`
+- the deadline inside the search and between groups — mutation: drop `tick()` in `bestLeaveOut`, or the per-group `tick()` — killed by: `test_the_deadline_is_checked_between_groups_and_inside_the_search`
+- the too-large text line — mutation: change `too large: ${group.too_large} candidate pairs` — killed by: `test_twenty_pairs_are_searched_and_twenty_one_are_too_large`
 
-- Satisfies Spec AC: AC-10, AC-11, AC-12
+- Satisfies Spec AC: AC-10, AC-11, AC-12, AC-13 (the deadline inside the search)
 - **Test retention:** **Permanent**
 
 - [ ] **Step 1: RED.** Create `tests/scripts/test_architecture_records_cycles.py`:
@@ -194,7 +199,9 @@ git commit -m "refactor(#31): match.mjs exports its module mapper and ancestor h
 
 from __future__ import annotations
 
-from arch_delta_support import RECORDS_LIB, call, require_node
+import json
+
+from arch_delta_support import RECORDS_LIB, call, lib_url, require_node, run_module
 
 require_node()
 
@@ -260,13 +267,16 @@ def test_distinct_module_edges_decide_a_tie() -> None:
 
 
 def test_groups_in_level_order_then_by_siblings() -> None:
+    # The nested levels come first in the model and the top-level groups are found in reverse order (a reaches c), so
+    # only the sort puts them in level order (depth, then parent id), then by siblings.
     value = cycles(
-        ["c", "d", "a", "b", "p", "p.m", "p.n"],
-        [("c", "d"), ("d", "c"), ("a", "b"), ("b", "a"), ("p.m", "p.n"), ("p.n", "p.m")],
+        ["a", "a.b", "a.b.m", "a.b.n", "b", "c", "d", "z", "z.m", "z.n"],
+        [("a.b.m", "a.b.n"), ("a.b.n", "a.b.m"), ("z.m", "z.n"), ("z.n", "z.m"),
+         ("a", "c"), ("c", "d"), ("d", "c"), ("a", "b"), ("b", "a")],
         [],
     )
-    assert [g["siblings"] for g in value["groups"]] == [["a", "b"], ["c", "d"], ["p.m", "p.n"]]
-    assert value["summary"] == {"relationships": 3, "groups": 3, "too_large": 0}
+    assert [(g["parent"], g["siblings"]) for g in value["groups"]] == [
+        (None, ["a", "b"]), (None, ["c", "d"]), ("z", ["z.m", "z.n"]), ("a.b", ["a.b.m", "a.b.n"])]
 
 
 def complete(n: int) -> list:
@@ -284,6 +294,30 @@ def test_twenty_pairs_are_searched_and_twenty_one_are_too_large() -> None:  # AC
     value = cycles(nodes, twenty_one, [])
     assert value == {"groups": [{"parent": None, "siblings": nodes, "leave_out": [], "too_large": 21}],
                      "summary": {"relationships": 0, "groups": 1, "too_large": 1}}
+    assert call("cycles.mjs", "cyclesText", value, lib=RECORDS_LIB)["value"] == (
+        "group top level: n1, n2, n3, n4, n5, n6\ntoo large: 21 candidate pairs\n"
+        "0 relationships to leave out in 1 groups, 1 too large\n")
+
+
+def stopped_after(calls: int, rels: list) -> str:
+    code = (
+        f"import {{ findCycles }} from {json.dumps(lib_url('cycles.mjs', RECORDS_LIB))};\n"
+        f"const m = {json.dumps(model(sorted({x for r in rels for x in r}), rels))};\n"
+        "let n = 0;\n"
+        f"const tick = () => {{ n += 1; if (n >= {calls}) throw new Error('deadline'); }};\n"
+        "try { findCycles(m, [], '.', tick); process.stdout.write('finished'); }"
+        " catch (err) { process.stdout.write(err.message); }\n"
+    )
+    proc = run_module(code)
+    assert proc.returncode == 0, proc.stderr
+    return proc.stdout
+
+
+def test_the_deadline_is_checked_between_groups_and_inside_the_search() -> None:  # Availability, AC-13
+    twenty_one = [p for p in complete(5) if p != ("n2", "n1")] + [("n5", "n6"), ("n6", "n1")]
+    assert stopped_after(1, twenty_one) == "deadline"  # a too-large group is not searched, yet checks the deadline
+    assert stopped_after(2, complete(5)) == "deadline"  # the search itself checks it
+    assert stopped_after(10**9, complete(5)) == "finished"
 
 
 def test_no_cycle_gives_no_group() -> None:  # AC-14
@@ -298,7 +332,7 @@ def test_relationship_into_its_own_child_gives_no_pair() -> None:
 - [ ] **Step 2: run RED.**
 
 Run: `uv run pytest -q tests/scripts/test_architecture_records_cycles.py`
-Expected: 8 failed (the module does not exist).
+Expected: 9 failed (the module does not exist).
 
 - [ ] **Step 3: GREEN.** Create `skills/shared/scripts/architecture-records/cycles.mjs`:
 
@@ -489,7 +523,7 @@ export function cyclesText(result) {
 - [ ] **Step 4: run GREEN.**
 
 Run: `uv run pytest -q tests/scripts/test_architecture_records_cycles.py --durations=3`
-Expected: 8 passed; the 20-pair test well under 60 s (record its time in the dry run).
+Expected: 9 passed; the 20-pair test well under 60 s (0.36 s in the dry run).
 
 - [ ] **Step 5: commit.**
 
@@ -623,7 +657,6 @@ def test_cycles_command_needs_the_dependency_file(tmp_path) -> None:
     proc = run(repo)
     assert proc.returncode == 2
     assert error_lines(proc) == ["error: bad-input: --deps file not found"]
-
 
 
 def test_cycles_command_leaves_runtime_links_outside_the_cycle_rule(tmp_path) -> None:
