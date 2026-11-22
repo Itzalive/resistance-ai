@@ -514,8 +514,9 @@ git commit -m "feat(#31): the cycle search - fewest relationships, then distinct
 **Reviewer looks at:**
 - `--format json` prints the result object — mutation: always print text — killed by: `test_cycles_command_text_and_json`
 - `--format` is checked — mutation: drop the format check — killed by: `test_cycles_usage_errors[format]`
+- runtime links are outside the cycle rule — mutation: pass `{ ...loaded.model, relationships: [...loaded.model.relationships, ...loaded.model.runtime] }` to `findCycles` — killed by: `test_cycles_command_leaves_runtime_links_outside_the_cycle_rule`
 
-- Satisfies Spec AC: AC-10 (the output form), AC-13, AC-14
+- Satisfies Spec AC: AC-10 (the output form), AC-13, AC-14; the rule that runtime links are outside the cycle rule
 - **Test retention:** **Permanent**
 
 - [ ] **Step 1: RED.** In `tests/scripts/test_architecture_records_args.py`, replace
@@ -622,12 +623,22 @@ def test_cycles_command_needs_the_dependency_file(tmp_path) -> None:
     proc = run(repo)
     assert proc.returncode == 2
     assert error_lines(proc) == ["error: bad-input: --deps file not found"]
+
+
+
+def test_cycles_command_leaves_runtime_links_outside_the_cycle_rule(tmp_path) -> None:
+    model = ("specification {\n  relationship http\n}\nmodel {\n" + block("a", "component", "a")
+             + block("b", "component", "b") + "  a -> b\n  b -[http]-> a\n}\n")
+    repo = make_repo(tmp_path, model)
+    write_json(repo / "deps.json", {"edges": [["a.1", "b.1"]]})
+    proc = run(repo)
+    assert (proc.returncode, proc.stdout) == (0, "0 relationships to leave out in 0 groups, 0 too large\n"), proc.stderr
 ```
 
 - [ ] **Step 2: run RED.**
 
 Run: `uv run pytest -q tests/scripts/test_architecture_records_args.py tests/scripts/test_architecture_records_cycles_command.py`
-Expected: 9 failed (the subcommand row, `test_cycles_defaults`, the three `test_cycles_usage_errors` cases and the four command tests), the rest pass.
+Expected: 10 failed (the subcommand row, `test_cycles_defaults`, the three `test_cycles_usage_errors` cases and the five command tests), the rest pass.
 
 - [ ] **Step 3: GREEN.** In `skills/shared/scripts/architecture-records/args.mjs`, replace
 
