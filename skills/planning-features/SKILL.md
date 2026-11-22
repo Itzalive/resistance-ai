@@ -38,7 +38,7 @@ This skill owns the feature map and `close_by` on known-gap entries. It never ch
 
 In priority order:
 
-1. **Decisions first.** Cross-cutting decisions (the model's decisions with `obligations`) are already taken whole by `defining-architecture`. The first feature that builds on one lays its foundation, so later features add to it and do not reshape it.
+1. **Decisions first.** Cross-cutting decisions (decisions with `obligations`) are taken whole by `defining-architecture`. The first feature that builds on one lays its foundation; later features add to it, never reshape it.
 2. **Direction-changing questions early, split by risk.** A question whose answer could change the plan is placed with the feature that needs its answer, as early as that feature allows.
    - **Split it out** as its own item only when a wrong answer would waste or redo work in other features, or change the epic's direction. It is answered before every feature it could invalidate, and runs alongside the current feature only where the two are independent. The owner decides who runs it; its answer comes back as a re-plan run.
    - **Otherwise** it stays with its feature and is answered by `specifying-features` before that feature's shard specs.
@@ -50,7 +50,7 @@ In priority order:
 
 One step at a time, each approved by the owner before the next. In every step, put the owner's decisions first and list the rest as defaults applied unless the owner objects.
 
-1. **Assumptions surface** (load `FEATURES_STANDARDS.md`). Your first output is this and nothing else: the trigger and its gate with the `check` result; the epic's capabilities, ACs, success metrics and MVP criteria; the cross-cutting decisions (the decisions with `obligations` in `export`) and known-gap entries; whether run records exist. Anything missing stops the run.
+1. **Assumptions surface** (load `FEATURES_STANDARDS.md`). Your first output is this and nothing else: the trigger and its gate with the `check` result; the epic's capabilities, ACs, success metrics and MVP criteria; the cross-cutting decisions and known-gap entries; whether run records exist. Anything missing stops the run.
 2. **Questions.** Every direction-changing question, its risk (what changes at each possible answer), and whether it is split out, with the reason against rule 2.
 3. **Signals.** Per capability, a first count of the entry paths it touches and of the places each of its rules is implemented today. Three or more implementations of one rule is flagged as likely consolidation.
 4. **Features formed and ordered.** The proposed features and their order, with the reasoning per rule, each feature's counts (from the capabilities whose ACs it takes) and a rough cost. The owner decides the order.
