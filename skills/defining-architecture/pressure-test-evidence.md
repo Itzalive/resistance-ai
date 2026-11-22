@@ -125,5 +125,5 @@ This file is the skill's behaviour test (`writing-skills`). RED runs are agents 
 | Cycle leave-out chosen by hand, not by `cycles` (A, C) | `SKILL.md`: Rules "The tools are the source"; Red Flags; Rationalisations; `tools.md`: `cycles`; `baseline-run.md`: Cycles | |
 | The stale `code` found only by a hand comparison, after first being read as new code (B) | `amendment.md`: 2a (an unmapped module and a not-yet-reached relationship read together) | |
 | A coverage question asked on a baseline run (C) | `ARCH_STANDARDS.md`: Coverage question ("a baseline run covers the whole repository and asks nothing") | |
-| No independent import scan in the audit (C) | | |
+| No independent import scan in the audit (C) | `review-workflow.md`: Independent audit (the second method); `ARCH_RUBRIC.md`: Hard rules; `ARCH_REVIEW_MANIFEST.md`: Checks | |
 | A decided target deferred and recorded nowhere; no decided-targets question after the baseline (C) | `SKILL.md`: Rules "A decided target is recorded"; Red Flags; Rationalisations; `baseline-run.md`: Decided targets | |
