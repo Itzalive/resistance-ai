@@ -148,10 +148,10 @@ The rubric's "the decision log only grew" item is removed, with no replacement c
 ## The other skills
 
 - `planning-features` (`SKILL.md`, `FEATURES_STANDARDS.md`, `FEATURES_REVIEW_MANIFEST.md`, `FEATURES_RUBRIC.md`): the rule map is the elements' `rules` in `export`; cross-cutting decisions are decisions with `obligations`; the "unchanged" check names the `.c4` files, the records and the change files instead of `architecture.md`.
-- `specifying-features` (`FEATURE_STANDARDS.md`, `FEATURE_REVIEW_MANIFEST.md`, `FEATURE_RUBRIC.md`): the same; the rubric item "the decision log only grew" is removed, as in this skill's rubric.
-- `specifying-work-items` `SKILL.md`, "Shard of a feature": the cross-cutting decisions are the decisions with `obligations` that bind the elements, and the principles.
+- `specifying-features` (`FEATURE_STANDARDS.md`, `FEATURE_REVIEW_MANIFEST.md`, `FEATURE_RUBRIC.md`): the same. The rubric item "the decision log only grew" stays, reworded as "the design's decision log only grew": it guards the feature design's own decision log, not the model's (owner, 2026-11-22).
+- `specifying-work-items` `SKILL.md`, "Shard of a feature": the cross-cutting decisions are the decisions with `obligations` whose `binds` or `owner` names the elements, and the principles (empty `binds`, no `owner`) (owner, 2026-11-22).
 
-Both feature skills' `field-evidence.md` files name neither `architecture.md` nor the old test and need no change. Each skill may point readers at the generated pack (`generated/pack/`) for the slice they need; none of them writes records.
+Both feature skills' `field-evidence.md` files name neither `architecture.md` nor the old test and need no change. Each skill may point readers at the generated pack (`generated/pack/`) for the slice they need; none of them writes records. Two steps edit `known-gap.json`: `planning-features`' `close_by` and the `specifying-features` close run. Each then runs `architecture-docs build`, so `generated/` matches the model and `architecture-docs check` exits 0; their "unchanged" checks allow `generated/` to change with `known-gap.json` (owner, 2026-11-22).
 
 ## Fixtures
 
