@@ -33,7 +33,7 @@ This skill owns the model folder's content and changes no code. Outside the mode
 
 ## Steps
 
-One step at a time; each is presented and the owner approves it before the next starts. An approval covers the step it answers, nothing more. Load each file at its step.
+One step at a time: each step is its own reply, ending in that step's approval question, and nothing from the next step is sent with it. A step with nothing to decide (no cross-cutting decision, no new gap entry) is still presented on its own. An approval covers the step it answers, nothing more. Load each file at its step.
 
 1. **Assumptions surface** (load `ARCH_STANDARDS.md`). Your first output is this and nothing else: the trigger and its gate; required or waived (epic run); the overlay's values or defaults, `roots` included; the `deps-command`; for an epic run, the capabilities. No options and no design. Before writing it, run the `deps-command` and read the repository modules from the dependency file, so `roots` (or the shared prefix) can be checked; an overlay error stops the run here. Anything missing stops the run.
 2. **Baseline check** (load `tools.md` and `amendment.md`): `check`, then 2a (is the model current?), 2c (does a later-stage request stand?), 2b (how much to baseline? load `baseline-run.md`; a baseline run asks nothing and loads it here).
@@ -96,7 +96,7 @@ The audit uses `--phase INDEPENDENT_AUDIT`. `<reason>` starts `epic`, `later-sta
 
 ## Handoff
 
-An epic run hands off to `planning-features`, or straight to `specifying-features` for an epic the owner agrees ships as one feature. A later-stage run hands back to the stage that asked. A baseline run ends after its decided-targets question and any first amendment.
+An epic run hands off to `planning-features`, or straight to `specifying-features` for an epic the owner agrees ships as one feature. A later-stage run hands back to the stage that asked. A standalone baseline run (a repository with no model) ends after its decided-targets question and any first amendment. A nested baseline asks nothing: after its `[ARCH-APPROVED]` it hands back to the outer run at step 3, and the targets the epic or the request states go in the outer run's diff.
 
 ## Red Flags — stop
 
@@ -112,6 +112,8 @@ An epic run hands off to `planning-features`, or straight to `specifying-feature
 - You are marking something approved after a single step approval.
 - You are editing a record an approved run wrote, other than through a new diff.
 - You are adding a relationship because the code has the import.
+- You are presenting two steps' material in one reply.
+- A nested baseline is approved and you are about to ask for decided targets, or to run the epic's targets as a separate later-stage run.
 - A field list, function name or algorithm is in a decision.
 - The run is ending with no review and no `[ARCH-APPROVED]`.
 
@@ -129,6 +131,8 @@ An epic run hands off to `planning-features`, or straight to `specifying-feature
 | "The design adds no new dependencies, so the cycle can be left alone." | Today's cycle goes in `known-gap.json` as `cycle in current code`. |
 | "The team already spent weeks on the epic; don't make them redo it." | The epic isn't redone. The architecture is new work on top of it, and its steps still apply. |
 | "The request is refused, so there's nothing to check." | The model can still have drifted. Refuse at 2c, after `check`, and finish the run. |
+| "There's nothing to decide in step 4, so it can go with steps 5 and 6." | Each step is its own reply and its own approval, even when it holds nothing. |
+| "The baseline is approved, so ask for decided targets." | Only a standalone baseline asks. A nested baseline hands back to the outer run at step 3; the epic's targets are its diff. |
 | "The deadline is tight, so approve now and overlap the rest." | A deadline doesn't merge steps. |
 | "The owner said Approved, so the architecture is approved." | That approves the step presented. `[ARCH-APPROVED]` comes after review and audit. |
 | "Just draw the boxes." / "Mark it approved, I'll read the pages later." | The boxes are step 5's diff, reached through steps 1 to 4; approval comes after review, from the generated pages. |

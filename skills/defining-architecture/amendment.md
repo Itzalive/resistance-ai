@@ -17,7 +17,7 @@ Read an `Unmapped code` module and a "not yet reached" relationship together: a 
 
 **2c. Does the request stand?** (later-stage run) Only after 2a, judge the diff request. Refuse a request that changes a cross-cutting decision in part or for one bound element, or changes a product rule; recommend the whole change, or the epic, instead. A refused request ends the diff, not the run: the run carries on with the 2a outcomes, writes its change file (its `summary` says what was refused and why, `rejected` holds the request), and goes through step 7.
 
-**2b. How much to baseline?** In a baseline run, ask nothing: the coverage is the whole repository; load `baseline-run.md`. In an epic or later-stage run whose touched groups are not modelled: one question with a recommendation and its counts (`ARCH_STANDARDS.md`), then load `baseline-run.md`. The baseline is its own diff through steps 3 to 7 before the run resumes.
+**2b. How much to baseline?** In a baseline run, ask nothing: the coverage is the whole repository; load `baseline-run.md`. In an epic or later-stage run whose touched groups are not modelled: one question with a recommendation and its counts (`ARCH_STANDARDS.md`), then load `baseline-run.md`. The baseline is its own diff through steps 3 to 7; after its `[ARCH-APPROVED]` it asks no decided-targets question and the outer run resumes at step 3, taking its own before copy.
 
 ## Step 3: write the draft
 
@@ -29,6 +29,8 @@ The before copy first (`records.md`). Then write the diff into the files:
 Then run, in order: `change`; the coverage entries; `export`; `check`; `architecture-docs build`. Nothing is presented before this has run, and each later step is presented from what it wrote.
 
 ## Steps 4 to 6
+
+Each of these is its own reply, ending in its own approval question; send nothing from the next step with it, and present an empty step ("no cross-cutting decision in scope: approve?") on its own too.
 
 - **Step 4, cross-cutting decisions:** each decision with `obligations` that binds a changed element, and every principle, with options and a recommendation, presented from its record and approved separately.
 - **Step 5, the diff:** presented from the change document (`generated/changes/<id>.md`) and the area documents it touches, with the elements' `rules` as the rule map. A diff that needs an edge node's inside goes back to 2b for that area.

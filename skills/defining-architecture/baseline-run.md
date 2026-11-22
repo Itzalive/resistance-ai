@@ -34,6 +34,8 @@ When a diff needs an edge node's inside, the run comes back here for that area. 
 
 The baseline goes through steps 3 to 7 like any diff, with its own change file (`--run baseline`), its own review and its own `[ARCH-APPROVED]`, and review-log entries whose `--reason` starts `baseline`. A nested baseline then hands back to the outer run, which reruns `check` against it and resumes at step 3, taking its own before copy before its first edit (`records.md`).
 
-## Decided targets (baseline run only)
+## Decided targets (standalone baseline run only)
 
-After a baseline run's `[ARCH-APPROVED]`, ask the owner once for targets already decided that the code does not meet yet (for example, one part being the only caller of another). A target the owner stated earlier in the run is put forward as the recommended answer. Each answer becomes the first amendment: a later-stage run whose diff request is the owner's answer, quoted, with `asked_by` `owner`, through steps 2 to 7, its breaches gapped with reasons. With no answer, the baseline run ends. A baseline nested in another run does not ask: the outer run's diff is where its targets are decided.
+Only a standalone baseline run (a repository with no model) asks this. A nested baseline never asks: it hands back to the outer run at step 3 (Then, above), and the targets the epic or the request states are the outer run's diff, never a separate later-stage run.
+
+After a standalone baseline run's `[ARCH-APPROVED]`, ask the owner once for targets already decided that the code does not meet yet (for example, one part being the only caller of another). A target the owner stated earlier in the run is put forward as the recommended answer. Each answer becomes the first amendment: a later-stage run whose diff request is the owner's answer, quoted, with `asked_by` `owner`, through steps 2 to 7, its breaches gapped with reasons. With no answer, the baseline run ends. A baseline nested in another run does not ask: the outer run's diff is where its targets are decided.
