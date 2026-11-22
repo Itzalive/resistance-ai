@@ -68,3 +68,13 @@ def test_cycles_command_needs_the_dependency_file(tmp_path) -> None:
     proc = run(repo)
     assert proc.returncode == 2
     assert error_lines(proc) == ["error: bad-input: --deps file not found"]
+
+
+
+def test_cycles_command_leaves_runtime_links_outside_the_cycle_rule(tmp_path) -> None:
+    model = ("specification {\n  relationship http\n}\nmodel {\n" + block("a", "component", "a")
+             + block("b", "component", "b") + "  a -> b\n  b -[http]-> a\n}\n")
+    repo = make_repo(tmp_path, model)
+    write_json(repo / "deps.json", {"edges": [["a.1", "b.1"]]})
+    proc = run(repo)
+    assert (proc.returncode, proc.stdout) == (0, "0 relationships to leave out in 0 groups, 0 too large\n"), proc.stderr
