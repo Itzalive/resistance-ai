@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from arch_delta_support import RECORDS_LIB, call, require_node
+import json
+
+from arch_delta_support import RECORDS_LIB, call, lib_url, require_node, run_module
 
 require_node()
 
@@ -68,14 +70,16 @@ def test_distinct_module_edges_decide_a_tie() -> None:
 
 
 def test_groups_in_level_order_then_by_siblings() -> None:
+    # The nested levels come first in the model and the top-level groups are found in reverse order (a reaches c), so
+    # only the sort puts them in level order (depth, then parent id), then by siblings.
     value = cycles(
-        ["c", "d", "a", "b", "p", "p.m", "p.n"],
-        # The inner level comes first and a -> c makes the search meet c, d before a, b: only the sort orders them.
-        [("p.m", "p.n"), ("p.n", "p.m"), ("c", "d"), ("d", "c"), ("a", "b"), ("b", "a"), ("a", "c")],
+        ["a", "a.b", "a.b.m", "a.b.n", "b", "c", "d", "z", "z.m", "z.n"],
+        [("a.b.m", "a.b.n"), ("a.b.n", "a.b.m"), ("z.m", "z.n"), ("z.n", "z.m"),
+         ("a", "c"), ("c", "d"), ("d", "c"), ("a", "b"), ("b", "a")],
         [],
     )
-    assert [g["siblings"] for g in value["groups"]] == [["a", "b"], ["c", "d"], ["p.m", "p.n"]]
-    assert value["summary"] == {"relationships": 3, "groups": 3, "too_large": 0}
+    assert [(g["parent"], g["siblings"]) for g in value["groups"]] == [
+        (None, ["a", "b"]), (None, ["c", "d"]), ("z", ["z.m", "z.n"]), ("a.b", ["a.b.m", "a.b.n"])]
 
 
 def complete(n: int) -> list:
@@ -93,6 +97,30 @@ def test_twenty_pairs_are_searched_and_twenty_one_are_too_large() -> None:  # AC
     value = cycles(nodes, twenty_one, [])
     assert value == {"groups": [{"parent": None, "siblings": nodes, "leave_out": [], "too_large": 21}],
                      "summary": {"relationships": 0, "groups": 1, "too_large": 1}}
+    assert call("cycles.mjs", "cyclesText", value, lib=RECORDS_LIB)["value"] == (
+        "group top level: n1, n2, n3, n4, n5, n6\ntoo large: 21 candidate pairs\n"
+        "0 relationships to leave out in 1 groups, 1 too large\n")
+
+
+def stopped_after(calls: int, rels: list) -> str:
+    code = (
+        f"import {{ findCycles }} from {json.dumps(lib_url('cycles.mjs', RECORDS_LIB))};\n"
+        f"const m = {json.dumps(model(sorted({x for r in rels for x in r}), rels))};\n"
+        "let n = 0;\n"
+        f"const tick = () => {{ n += 1; if (n >= {calls}) throw new Error('deadline'); }};\n"
+        "try { findCycles(m, [], '.', tick); process.stdout.write('finished'); }"
+        " catch (err) { process.stdout.write(err.message); }\n"
+    )
+    proc = run_module(code)
+    assert proc.returncode == 0, proc.stderr
+    return proc.stdout
+
+
+def test_the_deadline_is_checked_between_groups_and_inside_the_search() -> None:  # Availability, AC-13
+    twenty_one = [p for p in complete(5) if p != ("n2", "n1")] + [("n5", "n6"), ("n6", "n1")]
+    assert stopped_after(1, twenty_one) == "deadline"  # a too-large group is not searched, yet checks the deadline
+    assert stopped_after(2, complete(5)) == "deadline"  # the search itself checks it
+    assert stopped_after(10**9, complete(5)) == "finished"
 
 
 def test_no_cycle_gives_no_group() -> None:  # AC-14
