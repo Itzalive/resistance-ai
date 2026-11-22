@@ -1,12 +1,14 @@
 #!/usr/bin/env node
-// Architecture records: drafts the change file of a defining-architecture run.
+// Architecture records: drafts the change file of a defining-architecture run, or proposes the relationships a
+// baseline leaves out of each cycle.
 // Changes files only through architecture-records/writer.mjs; never runs another program or uses the network.
 import fs from 'node:fs';
 import path from 'node:path';
 import { ToolError, clean } from './architecture-delta/errors.mjs';
 import { startDeadline, loadRepoModel, readOptional, runCli } from './architecture-delta/load.mjs';
 import { resolveInside, isInside } from './architecture-delta/paths.mjs';
-import { readJson, parseGap } from './architecture-delta/inputs.mjs';
+import { readJson, parseDeps, parseGap } from './architecture-delta/inputs.mjs';
+import { findCycles, cyclesText } from './architecture-records/cycles.mjs';
 import { exportJson } from './architecture-delta/report.mjs';
 import { runCheck } from './architecture-delta/check.mjs';
 import { changeFileProblems } from './architecture-delta/records.mjs';
@@ -71,10 +73,20 @@ async function runChange(args, deadline) {
   return { output: `wrote ${clean(rel)}\n`, exitCode: 0 };
 }
 
+async function runCycles(args, deadline) {
+  const loaded = await loadRepoModel(args, deadline);
+  const deps = resolveInside(loaded.repo, args.deps, '--deps');
+  if (!deps.exists) throw new ToolError('bad-input', '--deps file not found');
+  const edges = parseDeps(readJson(deps.path, '--deps'));
+  deadline.check();
+  const result = findCycles(loaded.model, edges, args.separator, deadline.check);
+  return { output: args.format === 'json' ? `${JSON.stringify(result, null, 2)}\n` : cyclesText(result), exitCode: 0 };
+}
+
 async function main(argv) {
   const args = parseArgs(argv);
   const deadline = startDeadline(args.timeout);
-  const result = await runChange(args, deadline);
+  const result = args.command === 'change' ? await runChange(args, deadline) : await runCycles(args, deadline);
   deadline.stop();
   return result;
 }

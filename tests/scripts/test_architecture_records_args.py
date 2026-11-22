@@ -41,7 +41,7 @@ def test_empty_text_values_are_left_to_the_validator() -> None:
 
 
 @pytest.mark.parametrize(("argv", "detail"), [
-    (["cycles-ish"], "unknown subcommand cycles-ish; use change"),
+    (["cycles-ish"], "unknown subcommand cycles-ish; use change or cycles"),
     ([*BASE, *TEXT, "--colour", "x"], "unknown flag for change: --colour"),
     ([*BASE, *TEXT, "--name", "again"], "--name given twice"),
     ([*BASE, *TEXT, "--compare", "--compare"], "--compare given twice"),
@@ -53,5 +53,21 @@ def test_empty_text_values_are_left_to_the_validator() -> None:
 ], ids=["subcommand", "unknown flag", "twice", "switch twice", "required", "text required", "no value", "timeout",
         "separator"])
 def test_usage_errors(argv: list, detail: str) -> None:
+    out = parse(*argv)
+    assert (out["ok"], out["token"], out["details"]) == (False, "usage", [detail])
+
+
+def test_cycles_defaults() -> None:
+    out = parse("cycles", "--repo", ".", "--deps", "d.json")
+    assert out == {"ok": True, "value": {"command": "cycles", "repo": ".", "model": "docs/architecture", "deps": "d.json",
+                                         "separator": ".", "format": "text", "timeout": 60}}
+
+
+@pytest.mark.parametrize(("argv", "detail"), [
+    (["cycles", "--repo", ".", "--deps", "d.json", "--format", "xml"], "--format must be text or json"),
+    (["cycles", "--repo", "."], "--deps is required"),
+    (["cycles", "--repo", ".", "--deps", "d.json", "--compare"], "unknown flag for cycles: --compare"),
+], ids=["format", "deps", "switch"])
+def test_cycles_usage_errors(argv: list, detail: str) -> None:
     out = parse(*argv)
     assert (out["ok"], out["token"], out["details"]) == (False, "usage", [detail])

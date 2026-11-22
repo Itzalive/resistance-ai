@@ -4,9 +4,10 @@ import { ToolError } from '../architecture-delta/errors.mjs';
 const FLAGS = {
   change: ['--repo', '--model', '--before', '--deps', '--separator', '--name', '--date', '--run', '--asked-by',
     '--summary', '--rejected', '--timeout'],
+  cycles: ['--repo', '--model', '--deps', '--separator', '--format', '--timeout'],
 };
-const SWITCHES = { change: ['--compare'] };
-const REQUIRED = { change: ['--repo', '--deps', '--name', '--date', '--run'] };
+const SWITCHES = { change: ['--compare'], cycles: [] };
+const REQUIRED = { change: ['--repo', '--deps', '--name', '--date', '--run'], cycles: ['--repo', '--deps'] };
 const MAX_TIMEOUT = 600;
 const usage = (detail) => new ToolError('usage', detail);
 
@@ -37,12 +38,18 @@ export function parseArgs(argv) {
   for (const flag of REQUIRED[command]) if (opts[flag] === undefined) throw usage(`${flag} is required`);
   const compare = switches.has('--compare');
   for (const flag of ['--asked-by', '--summary']) {
-    if (!compare && opts[flag] === undefined) throw usage(`${flag} is required without --compare`);
+    if (command === 'change' && !compare && opts[flag] === undefined) throw usage(`${flag} is required without --compare`);
   }
   for (const flag of ['--model', '--before', '--separator']) if (opts[flag] === '') throw usage(`${flag} must not be empty`);
   const timeoutText = opts['--timeout'] ?? '60';
   if (!/^\d+$/.test(timeoutText) || Number(timeoutText) > MAX_TIMEOUT) {
     throw usage(`--timeout must be a whole number from 0 to ${MAX_TIMEOUT}`);
+  }
+  if (command === 'cycles') {
+    const format = opts['--format'] ?? 'text';
+    if (format !== 'text' && format !== 'json') throw usage('--format must be text or json');
+    return { command, repo: opts['--repo'], model: opts['--model'] ?? 'docs/architecture', deps: opts['--deps'],
+      separator: opts['--separator'] ?? '.', format, timeout: Number(timeoutText) };
   }
   return {
     command,
