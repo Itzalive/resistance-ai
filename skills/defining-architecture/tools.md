@@ -9,6 +9,7 @@ Load at step 2. Three tools ship with the engine; the repository needs no copy o
 - Never pass `--gap`: the gap file is always `<model>/known-gap.json`.
 - Only a relationship of kind `uses`, or with no kind, permits imports. Any other kind is a runtime link: `check` ignores it and `export` lists it under `runtime`.
 - A record problem is `record-error`, and a bad area or capability view is `model-error`, from both commands, before any other input is read.
+- **In tests or CI:** run the overlay's `deps-command`, then `check`. Exit 1 fails the build. The repository decides how the engine and LikeC4 get there (a pinned dependency, a copy or a fetch).
 
 ## The records tool: `node <skills-dir>/shared/scripts/architecture-records.mjs`
 
