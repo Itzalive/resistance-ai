@@ -199,3 +199,9 @@ This file is the skill's behaviour test (`writing-skills`). RED runs are agents 
 | A coverage question asked on a baseline run (C) | `ARCH_STANDARDS.md`: Coverage question ("a baseline run covers the whole repository and asks nothing") || yes, round 1 |
 | No independent import scan in the audit (C) | `review-workflow.md`: Independent audit (the second method); `ARCH_RUBRIC.md`: Hard rules; `ARCH_REVIEW_MANIFEST.md`: Checks || yes, round 1 |
 | A decided target deferred and recorded nowhere; no decided-targets question after the baseline (C) | `SKILL.md`: Rules "A decided target is recorded"; Red Flags; Rationalisations; `baseline-run.md`: Decided targets || yes, round 1 |
+| GREEN round 1: a nested baseline asked for decided targets, and the epic's targets ran as a later-stage run (A) | `baseline-run.md`: Decided targets (standalone only, opening line); `amendment.md`: 2b (hand-back to step 3); `SKILL.md`: Handoff, Red Flags, Rationalisations | |
+| GREEN round 1: steps 4 to 6 presented in one reply (C) | `SKILL.md`: Steps preamble (one reply per step, empty steps too), Red Flags, Rationalisations; `amendment.md`: Steps 4 to 6 | |
+| GREEN round 1: coverage left naming the old prefix after a `code` fix (B) | `records.md`: Coverage (a stale-`code` fix updates its `baselined` prefix) | |
+| GREEN round 1: the Must-rule item could not pass on a later-stage run with no rules yet (C) | `ARCH_RUBRIC.md`: the Must-rule item's scope | |
+
+**Meta-test answers (round 1):** scenario A: the "does not ask" sentence came last in the section it read as its next step, and Handoff named no resume point for a nested baseline. Scenario C: steps 4 to 6 read as a reading order over finished material, an empty step 4 had no instruction, and no red flag named merged presentations. Each answer is met by the counter in its row.
