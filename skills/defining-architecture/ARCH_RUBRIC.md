@@ -4,7 +4,7 @@ Grade every item. Each item is binary. The tag in brackets gives its scope, work
 
 ## What review checks
 
-- [ ] Every Must rule has exactly one owning element in the elements' `rules`. Not graded for a baseline run, which assigns no rules. [whole]
+- [ ] Every Must rule has exactly one owning element in the elements' `rules`. Graded for an epic run, and for any run on a model that already assigns `rules`; not graded for a baseline run or for a later-stage run on a model that has no `rules` yet. [whole]
 - [ ] Every cross-cutting decision in scope (a decision with `obligations` binding a changed element, and every principle) is found, taken whole for every part it binds, and holds only product-level content. [changed]
 - [ ] No cycles: `cycles` reports 0 groups. [whole]
 - [ ] Every `code` value equals a repository module or a prefix of one at the separator. [changed]
