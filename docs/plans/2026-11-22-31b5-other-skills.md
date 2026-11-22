@@ -273,6 +273,31 @@ git add skills/specifying-work-items/SKILL.md
 git commit -m "docs(#31): specifying-work-items names the cross-cutting decisions and principles that bind a shard"
 ```
 
+## Task 4: the owner decisions of 2026-11-22
+
+**Tier:** standard. **Files:** `skills/specifying-features/FEATURE_RUBRIC.md`, `skills/planning-features/FEATURES_STANDARDS.md`, `skills/planning-features/FEATURES_REVIEW_MANIFEST.md`, `skills/planning-features/FEATURES_RUBRIC.md`, `skills/specifying-features/close-run.md`, `skills/specifying-work-items/SKILL.md`, `tests/scripts/test_defining_architecture_contract.py`. One atomic change: the three spec amendments of commit 6ed5839 (spec, "The other skills").
+
+**Sweep additions** (case-insensitive `grep -rni "decision log\|known-gap\|change nothing else in the model" skills/planning-features skills/specifying-features skills/specifying-work-items`):
+
+| Changed | Site | Kind | Literal edit |
+|---|---|---|---|
+| the design's decision-log guard | `specifying-features/FEATURE_RUBRIC.md` Hard rules | rubric | add after "The epic, the model, the code and other features' rows are unchanged. [whole]": `- [ ] The design's decision log only grew: no earlier entry was edited or removed. [whole]` |
+| the old-layout pin | `test_defining_architecture_contract.py` `OLD_LAYOUT` | assert | `decision log only grew` becomes `(?<!design's )decision log only grew` |
+| `close_by` writer | `planning-features/FEATURES_STANDARDS.md` "`close_by`" | caller | "Change nothing else in the model folder." becomes "Change nothing else in the model folder, then run `node <skills-dir>/shared/scripts/architecture-docs.mjs build --repo . --model <model>` so `generated/` shows the new values." |
+| close-run gap removal | `specifying-features/close-run.md` step 2 | caller | same replacement for its "Change nothing else in the model folder." |
+| planning review "Unchanged" | `planning-features/FEATURES_REVIEW_MANIFEST.md` | caller | "touches only the map and the `close_by` values." becomes "touches only the map, the `close_by` values and `generated/`, and `architecture-docs check` exits 0." |
+| planning rubric | `planning-features/FEATURES_RUBRIC.md` | rubric | "(apart from `close_by`)" becomes "(apart from `close_by` and the rebuilt `generated/`)" |
+| shard read-first | `specifying-work-items/SKILL.md` "Shard of a feature" | caller | "whose `binds` names them) and the principles (decisions with `obligations` and empty `binds`)" becomes "whose `binds` or `owner` names them) and the principles (decisions with `obligations`, empty `binds` and no `owner`)" |
+
+The specifying-features design-run "Unchanged" items stay: a design run edits no model file; the close run has no review.
+
+**Reviewer looks at:** the regex lookbehind. Mutation: drop `(?<!design's )` - the test fails on the restored rubric item. Mutation: restore the bare `The decision log only grew.` - the test fails. Killed by `test_other_skills_read_the_record_layout[specifying-features]`.
+
+- [ ] **Step 1: RED.** Add the rubric item only. Run `uv run pytest -q tests/scripts/test_defining_architecture_contract.py -k record_layout`. Expected: the `specifying-features` case fails on `FEATURE_RUBRIC.md`.
+- [ ] **Step 2: GREEN.** Apply the regex and the other rows. Rerun: 2 passed.
+- [ ] **Step 3: check.** `uv run pytest -q tests/scripts/test_feature_skills_contract.py tests/scripts/test_defining_architecture_contract.py`, then `uv run pytest -q` (about 3 minutes). Expected: all pass.
+- [ ] **Step 4: commit** the seven files.
+
 ## Plan end
 
-After Task 3: the code review of the whole branch on fresh-context Opus, survivability, the run record, then the merge when the owner says merge.
+After Task 4: the code review of the whole branch on fresh-context Opus, survivability, the run record, then the merge when the owner says merge.
