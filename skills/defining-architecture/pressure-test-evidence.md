@@ -122,8 +122,8 @@ This file is the skill's behaviour test (`writing-skills`). RED runs are agents 
 | Decisions and the diff presented before the files were written (F8) (A, B, C) | `SKILL.md`: Steps 3–5; Red Flags; Rationalisations; Common Mistakes | |
 | The cross-cutting decision a section of prose, not a decision record (A) | `SKILL.md`: Rules "Judgement goes into records" | |
 | An open question kept in prose, not a hole (A) | `SKILL.md`: Rules "Judgement goes into records"; Rationalisations | |
-| Cycle leave-out chosen by hand, not by `cycles` (A, C) | `SKILL.md`: Rules "The tools are the source"; Red Flags; Rationalisations | |
+| Cycle leave-out chosen by hand, not by `cycles` (A, C) | `SKILL.md`: Rules "The tools are the source"; Red Flags; Rationalisations; `tools.md`: `cycles` | |
 | The stale `code` found only by a hand comparison, after first being read as new code (B) | | |
-| A coverage question asked on a baseline run (C) | | |
+| A coverage question asked on a baseline run (C) | `ARCH_STANDARDS.md`: Coverage question ("a baseline run covers the whole repository and asks nothing") | |
 | No independent import scan in the audit (C) | | |
 | A decided target deferred and recorded nowhere; no decided-targets question after the baseline (C) | `SKILL.md`: Rules "A decided target is recorded"; Red Flags; Rationalisations | |
