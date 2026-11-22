@@ -16,6 +16,7 @@ FILES = [
     "ARCH_REVIEW_MANIFEST.md",
     "ARCH_RUBRIC.md",
     "review-workflow.md",
+    "tools.md",
     "pressure-test-evidence.md",
 ]
 FIXTURES = ENGINE / "tests" / "fixtures" / "defining-architecture"
