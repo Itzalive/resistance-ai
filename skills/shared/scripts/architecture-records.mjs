@@ -55,6 +55,8 @@ async function runChange(args, deadline) {
   let before = EMPTY_EXPORT;
   let beforeGap = [];
   if (args.before !== null) {
+    // The before copy goes through the same loader, so its load errors name `--model` and a LikeC4 version note prints
+    // once per load.
     const prior = await loadRepoModel({ repo: loaded.repo, model: locateBefore(loaded.repo, loaded.modelDir, args.before) }, deadline);
     before = exportJson(prior.model, prior.records);
     beforeGap = readGap(prior);

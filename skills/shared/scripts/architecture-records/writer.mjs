@@ -27,7 +27,7 @@ export function writeChange(modelDir, id, text) {
   if (fs.existsSync(target)) {
     const current = attempt('read', rel, () => JSON.parse(fs.readFileSync(target, 'utf8')));
     if (current === null || typeof current !== 'object' || current.approved !== null) {
-      throw new ToolError('out-error', `${rel} is approved and is never replaced`);
+      throw new ToolError('out-error', `${rel} is not a draft and is never replaced`);
     }
   }
   for (const name of attempt('list', 'changes', () => fs.readdirSync(dir))) {

@@ -44,7 +44,7 @@ def test_writer_never_replaces_an_approved_file(tmp_path) -> None:
     before = target.read_bytes()
     out = write(folder)
     assert (out["ok"], out["token"], out["details"]) == (
-        False, "out-error", ["changes/2026-11-21-first.json is approved and is never replaced"])
+        False, "out-error", ["changes/2026-11-21-first.json is not a draft and is never replaced"])
     assert target.read_bytes() == before
     assert sorted(p.name for p in (folder / "changes").iterdir()) == ["2026-11-21-first.json"]
 

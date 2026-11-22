@@ -177,7 +177,7 @@ def test_change_replaces_its_draft_but_never_an_approved_file(tmp_path) -> None:
     before = target.read_bytes()
     proc = change(repo)
     assert proc.returncode == 2
-    assert error_lines(proc) == ["error: out-error: changes/2026-11-21-first.json is approved and is never replaced"]
+    assert error_lines(proc) == ["error: out-error: changes/2026-11-21-first.json is not a draft and is never replaced"]
     assert target.read_bytes() == before
 
 
@@ -211,6 +211,17 @@ def test_before_must_be_inside_the_repo_and_apart_from_the_model(tmp_path, befor
     assert not (repo / "docs" / "architecture" / "changes").exists()
 
 
+def test_a_traversal_name_is_refused_before_any_path_is_read(tmp_path) -> None:  # trust boundary: --name
+    repo = change_repo(tmp_path)
+    # Where the name would lead: docs/architecture/changes/2026-11-21-x/../../../outside.json is docs/outside.json
+    (repo / "docs" / "outside.json").write_text("{not json", encoding="utf-8")
+    proc = change(repo, name="x/../../../outside")
+    assert proc.returncode == 2
+    assert error_lines(proc) == [
+        "error: bad-input: changes/2026-11-21-x/../../../outside.json: -: not a valid file name here"]
+    assert not (repo / "docs" / "architecture" / "changes").exists()
+
+
 def snapshot(repo) -> dict:
     folder = repo / "docs" / "architecture" / "changes"
     return {p.name: p.read_bytes() for p in sorted(folder.iterdir())}
@@ -223,7 +234,9 @@ def test_compare_reports_same_differs_and_missing(tmp_path) -> None:  # AC-9
     same = change(repo, "--compare", text=False)
     assert (same.returncode, same.stdout) == (0, "same changes/2026-11-21-first.json\n"), same.stderr
     folder = repo / "docs" / "architecture"
-    (folder / "model.c4").write_text(AFTER_MODEL.replace("    a -> b\n", "    a -> b\n    b -> d\n"), encoding="utf-8")
+    (folder / "model.c4").write_text(
+        shop(component("a", "A2") + component("b", "B") + component("d", "D") + component("e", "E"), "    a -> b\n    d -> b\n"),
+        encoding="utf-8")
     differs = change(repo, "--compare", text=False)
     assert (differs.returncode, differs.stdout) == (1, "differs changes/2026-11-21-first.json\n"), differs.stderr
     missing = change(repo, "--compare", name="other", text=False)
