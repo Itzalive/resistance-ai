@@ -27,8 +27,8 @@ One file per feature, beside the feature map: `docs/features/<epic>/<id>-<slug>.
 ## The feature's elements
 
 The scope of the delta is these model elements:
-- the elements that own, in the model's rule map, the rules behind the feature's epic ACs;
-- the elements bound by the cross-cutting decisions the feature builds on;
+- the elements whose `rules` (in `export`) hold the rules behind the feature's epic ACs;
+- the elements bound by the cross-cutting decisions (the decisions with `obligations`) the feature builds on;
 - every element a proposed shard touches.
 
 ## The shards file

@@ -20,4 +20,3 @@ Grade every item. Each item is binary. Items tagged `[whole]` are graded on the 
 - [ ] No shard spec exists for the feature. [whole]
 - [ ] The epic, the model, the code and other features' rows are unchanged. [whole]
 - [ ] No cost is stated as a target or a cap.
-- [ ] The decision log only grew. [whole]
