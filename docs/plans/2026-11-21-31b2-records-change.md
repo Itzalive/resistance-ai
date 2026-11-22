@@ -8,7 +8,7 @@
 
 **Tech Stack:** Node ESM (no new dependency), pytest via `uv run`.
 
-**Spec:** `docs/superpowers/specs/2026-11-21-defining-architecture-records-design.md` ("The helper tool": the intro, "Delta modules the helper reuses", "`change`"; Threat Model; AC-1 to AC-9) — decisions applied: none. Plan 2a of the four plans; the spec's plan 2 is split into 2a (`change`) and 2b (`cycles`) by the sizing rule (two entry paths and more than eight tasks together).
+**Spec:** `docs/superpowers/specs/2026-11-21-defining-architecture-records-design.md` ("The helper tool": the intro, "Delta modules the helper reuses", "`change`"; Threat Model; AC-1 to AC-9) — decisions applied: none. Plan 2a of the four plans; the spec's plan 2 is split into 2a (`change`) and 2b (`cycles`) by the sizing rule (two entry paths and more than eight tasks together). The spec's other reuse item, `match.mjs` exporting its module mapper, is plan 2b's Task 1.
 
 **Open decisions:** none
 
@@ -47,10 +47,11 @@ Searched: `skills/`, `tests/`, `scripts/`, `agents/` with `grep -rn "runCheck\|a
 
 | Producer or reader | Where it is used | Text it receives | Untrusted source | Task | Proving test |
 |---|---|---|---|---|---|
-| `--name`, `--date` | a file path `changes/<date>-<name>.json` | flag text | the run's caller | 6 | `test_change_refuses_bad_values_and_writes_nothing[name]` (a name with `_`), `[long]`; the name pattern allows only `[a-z0-9-]` |
+| `--name`, `--date` | a file path `changes/<date>-<name>.json` | flag text | the run's caller | 6 | `test_a_traversal_name_is_refused_before_any_path_is_read` (the name is refused before `changes/<id>.json` is read); `test_change_refuses_bad_values_and_writes_nothing[name]` (a name with `_`) and `[long]` check the values; the name pattern allows only `[a-z0-9-]` |
 | `--before` | a folder loaded as a model | flag text | the run's caller | 6 | `test_before_must_be_inside_the_repo_and_apart_from_the_model` |
 | `--summary`, `--asked-by`, `--rejected` | record text, later printed by `export` and the documents | flag text | the run's caller | 6 | `test_flag_text_is_cleaned_by_export` (AC-7) |
 | `writeChange` | replaces `changes/<id>.json` | an existing file | an earlier run | 5 | `test_writer_never_replaces_an_approved_file` |
+| `runChange` reads the existing change file | `--compare`'s default text flags and the compared object | the stored change file | an earlier run | 6, 7 | `test_compare_reports_same_differs_and_missing`; the file already passed the records reader in `loadRepoModel` |
 
 ## Checkpoints
 
@@ -699,7 +700,7 @@ def test_writer_never_replaces_an_approved_file(tmp_path) -> None:
     before = target.read_bytes()
     out = write(folder)
     assert (out["ok"], out["token"], out["details"]) == (
-        False, "out-error", ["changes/2026-11-21-first.json is approved and is never replaced"])
+        False, "out-error", ["changes/2026-11-21-first.json is not a draft and is never replaced"])
     assert target.read_bytes() == before
     assert sorted(p.name for p in (folder / "changes").iterdir()) == ["2026-11-21-first.json"]
 
@@ -767,7 +768,7 @@ export function writeChange(modelDir, id, text) {
   if (fs.existsSync(target)) {
     const current = attempt('read', rel, () => JSON.parse(fs.readFileSync(target, 'utf8')));
     if (current === null || typeof current !== 'object' || current.approved !== null) {
-      throw new ToolError('out-error', `${rel} is approved and is never replaced`);
+      throw new ToolError('out-error', `${rel} is not a draft and is never replaced`);
     }
   }
   for (const name of attempt('list', 'changes', () => fs.readdirSync(dir))) {
@@ -805,10 +806,10 @@ git commit -m "feat(#31): the records writer - a draft change file is replaced, 
 **Callers that move with this task:** none.
 
 **Reviewer looks at:**
-- the name is validated before it reaches a path — mutation: move the `nameProblems` check after `writeChange` — killed by: `test_change_refuses_bad_values_and_writes_nothing[name]`
+- the name is validated before it reaches a path — mutation: move the `nameProblems` check after `writeChange` — killed by: `test_a_traversal_name_is_refused_before_any_path_is_read`
 - the before copy is loaded, not ignored — mutation: always use `EMPTY_EXPORT` — killed by: `test_change_lists_what_the_run_changed`
 - `--before` inside or containing the model folder is refused — mutation: drop the `isInside(modelDir, before.path)` half — killed by: `test_before_must_be_inside_the_repo_and_apart_from_the_model[contains]`
-- a `check` that fails stops the command — mutation: catch the `runCheck` error and write anyway — killed by: `test_change_refuses_bad_values_and_writes_nothing[check]`
+- a `check` that fails stops the command — mutation: catch the `runCheck` error and write anyway — killed by: `test_change_stops_when_check_fails`
 
 - Satisfies Spec AC: AC-1, AC-2, AC-3, AC-4, AC-5, AC-6 (with Task 5), AC-7, AC-8
 - **Test retention:** **Permanent**
@@ -995,7 +996,7 @@ def test_change_replaces_its_draft_but_never_an_approved_file(tmp_path) -> None:
     before = target.read_bytes()
     proc = change(repo)
     assert proc.returncode == 2
-    assert error_lines(proc) == ["error: out-error: changes/2026-11-21-first.json is approved and is never replaced"]
+    assert error_lines(proc) == ["error: out-error: changes/2026-11-21-first.json is not a draft and is never replaced"]
     assert target.read_bytes() == before
 
 
@@ -1027,12 +1028,23 @@ def test_before_must_be_inside_the_repo_and_apart_from_the_model(tmp_path, befor
     assert proc.returncode == 2
     assert error_lines(proc)[0].startswith(f"error: {token}: --before")
     assert not (repo / "docs" / "architecture" / "changes").exists()
+
+
+def test_a_traversal_name_is_refused_before_any_path_is_read(tmp_path) -> None:  # trust boundary: --name
+    repo = change_repo(tmp_path)
+    # Where the name would lead: docs/architecture/changes/2026-11-21-x/../../../outside.json is docs/outside.json
+    (repo / "docs" / "outside.json").write_text("{not json", encoding="utf-8")
+    proc = change(repo, name="x/../../../outside")
+    assert proc.returncode == 2
+    assert error_lines(proc) == [
+        "error: bad-input: changes/2026-11-21-x/../../../outside.json: -: not a valid file name here"]
+    assert not (repo / "docs" / "architecture" / "changes").exists()
 ```
 
 - [ ] **Step 2: run RED.**
 
 Run: `uv run pytest -q tests/scripts/test_architecture_records_change.py`
-Expected: 19 failed (the script does not exist: Node exits 1 with "Cannot find module").
+Expected: 20 failed (the script does not exist: Node exits 1 with "Cannot find module").
 
 - [ ] **Step 3: GREEN.** Create `skills/shared/scripts/architecture-records.mjs`:
 
@@ -1092,6 +1104,8 @@ async function runChange(args, deadline) {
   let before = EMPTY_EXPORT;
   let beforeGap = [];
   if (args.before !== null) {
+    // The before copy goes through the same loader, so its load errors name `--model` and a LikeC4 version note prints
+    // once per load.
     const prior = await loadRepoModel({ repo: loaded.repo, model: locateBefore(loaded.repo, loaded.modelDir, args.before) }, deadline);
     before = exportJson(prior.model, prior.records);
     beforeGap = readGap(prior);
@@ -1166,7 +1180,9 @@ def test_compare_reports_same_differs_and_missing(tmp_path) -> None:  # AC-9
     same = change(repo, "--compare", text=False)
     assert (same.returncode, same.stdout) == (0, "same changes/2026-11-21-first.json\n"), same.stderr
     folder = repo / "docs" / "architecture"
-    (folder / "model.c4").write_text(AFTER_MODEL.replace("    a -> b\n", "    a -> b\n    b -> d\n"), encoding="utf-8")
+    (folder / "model.c4").write_text(
+        shop(component("a", "A2") + component("b", "B") + component("d", "D") + component("e", "E"), "    a -> b\n    d -> b\n"),
+        encoding="utf-8")
     differs = change(repo, "--compare", text=False)
     assert (differs.returncode, differs.stdout) == (1, "differs changes/2026-11-21-first.json\n"), differs.stderr
     missing = change(repo, "--compare", name="other", text=False)
