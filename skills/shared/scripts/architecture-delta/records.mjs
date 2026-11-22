@@ -63,7 +63,7 @@ const oneOf = (values) => `must be one of ${values.join(', ')}`;
 const list = (value) => (Array.isArray(value) ? value : []);
 const has = (record, key) => Object.hasOwn(record, key);
 
-function isRealDate(value) {
+export function isRealDate(value) {
   if (!DATE.test(value)) return false;
   const [year, month, day] = value.split('-').map(Number);
   const date = new Date(Date.UTC(year, month - 1, day));
@@ -287,4 +287,18 @@ export function readRecords(modelDir, elementIds, tick = () => {}, capabilityNam
     throw new ToolError('record-error', sorted.map((item) => item.line));
   }
   return result(read);
+}
+
+// One change file checked on its own, as the records reader checks it (passes 1, 2b, 3 and 5; pass 4 does not apply
+// to a change file). Returns the problem lines, empty when the file is valid; a bad name is the only line.
+export function changeFileProblems(fileName, data) {
+  const at = `changes/${fileName}`;
+  if (!CHANGE_FILE.test(fileName)) return [`${at}: -: not a valid file name here`];
+  const out = [];
+  for (const found of shapeProblems('change', data)) out.push(`${at}: ${found.field}: ${found.message}`);
+  const file = { at, kind: 'change', name: fileName.slice(0, -'.json'.length), data };
+  const add = (field, message) => out.push(`${at}: ${field}: ${message}`);
+  idPass(file, add, new Map());
+  valuePass(file, add);
+  return out;
 }

@@ -558,3 +558,35 @@ def test_change_file_name_is_at_most_64_characters(tmp_path) -> None:  # AC-27 (
     proc = run_tool("export", "--repo", repo)
     assert proc.returncode == 0, proc.stderr
     assert [record["id"] for record in json.loads(proc.stdout)["changes"]] == [at_limit]
+
+
+def valid_change(**over) -> dict:
+    record = {"id": "2026-11-21-first", "date": "2026-11-21", "run": "epic", "asked_by": "#1", "summary": "S.",
+              "rejected": [], "elements": {"added": [], "changed": [], "removed": []},
+              "decisions": {"added": [], "changed": [], "removed": []},
+              "holes": {"added": [], "changed": [], "removed": []},
+              "contracts": {"added": [], "changed": [], "removed": []},
+              "gap": {"added": [], "removed": []}, "check": {"exit": 0, "summary": "ok", "output": "ok\n"},
+              "approved": None}
+    record.update(over)
+    return record
+
+
+def test_change_file_problems_name_first() -> None:
+    out = call("records.mjs", "changeFileProblems", "2026-11-21-Bad_Name.json", {"anything": 1})
+    assert out == {"ok": True, "value": ["changes/2026-11-21-Bad_Name.json: -: not a valid file name here"]}
+    long_name = "2026-11-21-" + "n" * 54 + ".json"
+    assert call("records.mjs", "changeFileProblems", long_name, valid_change())["value"] == [
+        f"changes/{long_name}: -: not a valid file name here"]
+
+
+def test_change_file_problems_values() -> None:
+    assert call("records.mjs", "changeFileProblems", "2026-11-21-first.json", valid_change())["value"] == []
+    bad = valid_change(id="2026-02-30-first", date="2026-02-30", summary="", run="weekly", rejected=[""])
+    out = call("records.mjs", "changeFileProblems", "2026-02-30-first.json", bad)["value"]
+    assert out == [
+        "changes/2026-02-30-first.json: summary: must be a non-empty string",
+        "changes/2026-02-30-first.json: rejected[0]: must be a non-empty string",
+        "changes/2026-02-30-first.json: date: not a real date",
+        "changes/2026-02-30-first.json: run: must be one of baseline, epic, later-stage",
+    ]

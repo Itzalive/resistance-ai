@@ -62,7 +62,7 @@ A split-out question runs alongside the current feature only when the two share 
 
 ## Signals
 
-Counted per capability at step 3, from the model's rule map, the dependency file and a reading of the code:
+Counted per capability at step 3, from the elements' `rules` in `export` (the rule map), the dependency file and a reading of the code:
 
 - **Entry paths:** the distinct ways into the code the capability changes (an API route, a job, a message handler, a command).
 - **Implementations per rule:** the number of places that implement each of the capability's rules today.
@@ -83,4 +83,4 @@ One work item per feature and per split-out question, in the project's tracker o
 
 ## `close_by`
 
-Each entry in `<model>/known-gap.json` gets `close_by`: the id of the feature expected to close it, or `not planned: <reason>`. Change nothing else in the model folder.
+Each entry in `<model>/known-gap.json` gets `close_by`: the id of the feature expected to close it, or `not planned: <reason>`. Change nothing else in the model folder but `generated/`: run `node <skills-dir>/shared/scripts/architecture-docs.mjs build --repo . --model <model>` so `generated/` shows the new values.

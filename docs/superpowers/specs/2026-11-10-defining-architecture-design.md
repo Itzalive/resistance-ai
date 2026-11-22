@@ -1,5 +1,7 @@
 # defining-architecture skill
 
+> Amended by `2026-11-21-defining-architecture-records-design.md`: the run writes records, change files and generated documents in place of `architecture.md`, with new steps, baseline rules and review checks.
+
 Work item: #22. Part of #19. Depends on #20 (delta tool) and #21 (review-log phases), both merged.
 
 ## What changes and why

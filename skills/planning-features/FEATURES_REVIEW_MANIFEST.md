@@ -6,7 +6,7 @@ Used by the self-review and by the independent auditor. Gather the inputs, work 
 
 - The feature map.
 - The approved epic: its capabilities, ACs, success metrics, MVP criteria and MoSCoW.
-- The model folder's `architecture.md` (rule map, cross-cutting decisions) and `known-gap.json`.
+- The model's `export` (the elements' `rules` as the rule map, the decisions with `obligations` as the cross-cutting decisions, the change files) and `known-gap.json`. The generated pack (`<model>/generated/pack/`) holds the same facts by area.
 - The run's diff: `git diff` of the map and of `known-gap.json`, and `git status` for anything else changed.
 - The run records, when the map's costs name any.
 
@@ -19,7 +19,7 @@ Used by the self-review and by the independent auditor. Gather the inputs, work 
 
 - **AC coverage:** list every epic AC and find it on the map. Each appears under exactly one feature, or is marked cross-cutting.
 - **`close_by`:** every entry in `known-gap.json` has it, and each feature id it names is on the map.
-- **Unchanged:** the diff touches only the map and the `close_by` values. No other key of a gap entry, no `.c4` file, no part of `architecture.md`, no epic text and no code changed.
+- **Unchanged:** the diff touches only the map, the `close_by` values and `generated/`, and `architecture-docs check` exits 0. No other key of a gap entry, no `.c4` file, no record (`decisions/`, `contracts/`, `coverage.json`), no change file, no epic text and no code changed.
 - **Costs:** each cost names run records that exist, or is marked `guess`.
 
 ## Grading

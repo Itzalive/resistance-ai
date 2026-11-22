@@ -1,0 +1,22 @@
+{
+  "title": "Order events",
+  "decisions": [
+    {
+      "id": "order-event-format",
+      "decision": "Checkout, refunds and reporting share one order-event format, defined by the order events component.",
+      "reason": "All three capabilities produce or consume the same events about an order (the epic's shared need, BR-4 and BR-5).",
+      "rejected": ["Each capability defines its own event shape."],
+      "binds": ["shop.checkout", "shop.orders", "shop.refunds", "shop.reporting"],
+      "status": "planned",
+      "evidence": "spec",
+      "sources": ["docs/epics/order-events.md"],
+      "owner": "shop.events",
+      "obligations": [
+        "Every change to an order emits one order event (BR-4).",
+        "Every order event carries the order id and a sequence number, and a consumer ignores an event it has already seen (BR-5)."
+      ],
+      "compatibility": "Changes are additive only. Removing or renaming anything is a new format version that every bound element adopts together."
+    }
+  ],
+  "holes": []
+}

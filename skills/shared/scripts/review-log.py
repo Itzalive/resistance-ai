@@ -48,7 +48,18 @@ PHASES = SELF_PHASES + REVIEWER_PHASES + ("SURVIVABILITY",)
 VERDICTS = ("APPROVED", "REJECTED", "PASS", "FAIL")
 INDEPENDENCE = ("self", "fresh-context", "cross-family")
 SEVERITIES = ("critical", "important", "minor")
-KINDS = ("missed-caller", "weak-test", "plan-hole", "spec-hole", "real-bug", "slip", "wording")
+KINDS = (
+    "missed-caller",
+    "weak-test",
+    "plan-hole",
+    "spec-hole",
+    "real-bug",
+    "slip",
+    "wording",
+    "model-drift",
+    "deps-defect",
+    "unsourced",
+)
 MUTATION_LANES = ("full", "uncovered-only", "skipped")
 LAYERS = ("self-review", "spec-audit", "plan-review", "checkpoint", "code-review", "survivability")
 RUN_RECORD_FIELDS = (

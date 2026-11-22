@@ -6,20 +6,20 @@ export function within(id, root) {
   return id === root || id.startsWith(`${root}.`);
 }
 
-function ancestorsOrSelf(id) {
+export function ancestorsOrSelf(id) {
   const parts = id.split('.');
   return parts.map((_, i) => parts.slice(0, i + 1).join('.'));
 }
 
-export function compare(model, edges, options) {
-  const { separator, gap = [], scope = null, shards = null, tick = () => {} } = options;
-  const elements = new Map(model.elements.map((element) => [element.id, element]));
+// A function from a module name to the id of the element whose `code` is the longest prefix of it at the separator,
+// or null when none is.
+export function moduleMapper(elements, separator) {
   const byPrefix = new Map();
-  for (const element of model.elements) {
+  for (const element of elements) {
     for (const prefix of element.code) byPrefix.set(prefix, element.id); // loadModel refuses duplicate prefixes
   }
   // Longest matching prefix: the module itself, then each cut just before a separator, right to left.
-  const mapModule = (module) => {
+  return (module) => {
     let hit = byPrefix.get(module);
     let end = module.length;
     while (hit === undefined && end > 0) {
@@ -29,6 +29,12 @@ export function compare(model, edges, options) {
     }
     return hit ?? null;
   };
+}
+
+export function compare(model, edges, options) {
+  const { separator, gap = [], scope = null, shards = null, tick = () => {} } = options;
+  const elements = new Map(model.elements.map((element) => [element.id, element]));
+  const mapModule = moduleMapper(model.elements, separator);
   const relationships = [];
   const relationshipKeys = new Set();
   for (const r of model.relationships) {

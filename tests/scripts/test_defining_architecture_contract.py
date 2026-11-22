@@ -6,7 +6,9 @@ import re
 import shutil
 import subprocess
 
-from arch_delta_support import ENGINE, require_node, run_tool, unique
+import pytest
+
+from arch_delta_support import DOCS_SCRIPT, ENGINE, require_node, run_tool, unique
 
 PACKAGE = ENGINE / "skills" / "defining-architecture"
 FILES = [
@@ -16,6 +18,9 @@ FILES = [
     "ARCH_REVIEW_MANIFEST.md",
     "ARCH_RUBRIC.md",
     "review-workflow.md",
+    "tools.md",
+    "records.md",
+    "amendment.md",
     "pressure-test-evidence.md",
 ]
 FIXTURES = ENGINE / "tests" / "fixtures" / "defining-architecture"
@@ -78,16 +83,29 @@ def test_empty_fixture_has_no_model_and_ten_modules(tmp_path) -> None:
     assert len({module.split(".")[1] for module in modules}) == 8
 
 
-def test_modelled_fixture_exports(tmp_path) -> None:
+def test_modelled_fixture_holds_the_records(tmp_path) -> None:  # AC-16
     require_node()
     repo = tmp_path / unique("modelled")
     shutil.copytree(MODELLED, repo, ignore=shutil.ignore_patterns("build"))
+    model = repo / "docs" / "architecture"
+    assert not (model / "architecture.md").exists()
+    assert (model / "known-gap.json").is_file()
     proc = run_tool("export", "--repo", repo, "--model", "docs/architecture")
     assert proc.returncode == 0, proc.stderr
-    ids = {element["id"] for element in json.loads(proc.stdout)["elements"]}
+    data = json.loads(proc.stdout)
+    ids = {element["id"] for element in data["elements"]}
     assert {"shop.events", "shop.refunds", "shop.payments"} <= ids
-    assert (repo / "docs" / "architecture" / "architecture.md").is_file()
-    assert (repo / "docs" / "architecture" / "known-gap.json").is_file()
+    cross_cutting = [d for d in data["decisions"] if "obligations" in d]
+    assert [(d["id"], d["owner"], d["binds"]) for d in cross_cutting] == [
+        ("order-event-format", "shop.events", ["shop.checkout", "shop.orders", "shop.refunds", "shop.reporting"])]
+    assert "capabilities" not in cross_cutting[0]
+    assert [(c["id"], c["run"], c["approved"] is not None) for c in data["changes"]] == [
+        ("2026-11-02-baseline", "baseline", True), ("2026-11-02-order-events", "epic", True)]
+    assert data["coverage"]["counts"] == {"modules": 10, "groups": 8}
+    in_areas = {element for area in data["areas"] for element in area["elements"]}
+    assert ids <= in_areas
+    docs = run_tool("check", "--repo", repo, "--model", "docs/architecture", script=DOCS_SCRIPT)
+    assert docs.returncode == 0, docs.stdout + docs.stderr
 
 
 def test_modelled_fixture_check_shows_the_drift(tmp_path) -> None:
@@ -105,3 +123,17 @@ def test_modelled_fixture_check_shows_the_drift(tmp_path) -> None:
         {"from": "shop.refunds", "to": "shop.orders"},
         {"from": "shop.refunds", "to": "shop.payments"},
     ]
+
+
+# The old layout: the model document, its decision log and rule map, and its approval marker read as a gate.
+OLD_LAYOUT = re.compile(r"architecture\.md|(?<!design's )decision log only grew|model's rule map"
+                        r"|model has `\[ARCH-APPROVED\]`|`\[ARCH-APPROVED\]` or its")
+
+
+@pytest.mark.parametrize("skill", ["planning-features", "specifying-features", "specifying-work-items",
+                                   "finishing-a-development-branch"])
+def test_other_skills_read_the_record_layout(skill: str) -> None:
+    folder = ENGINE / "skills" / skill
+    hits = [f"{path.name}:{number}" for path in sorted(folder.glob("*.md")) if path.name != "field-evidence.md"
+            for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1) if OLD_LAYOUT.search(line)]
+    assert hits == []

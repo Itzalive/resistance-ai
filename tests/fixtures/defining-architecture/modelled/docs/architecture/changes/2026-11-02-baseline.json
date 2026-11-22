@@ -1,0 +1,55 @@
+{
+  "id": "2026-11-02-baseline",
+  "date": "2026-11-02",
+  "run": "baseline",
+  "asked_by": "specifying-epics (step 2b, empty folder)",
+  "summary": "Baseline of the whole repository: one component per group for the eight groups, a relationship per current element pair, and the inventory -> orders edge of the orders-inventory cycle left out and gapped as cycle in current code.",
+  "rejected": [],
+  "elements": {
+    "added": [
+      "api",
+      "checkout",
+      "inventory",
+      "jobs",
+      "orders",
+      "payments",
+      "refunds",
+      "reporting"
+    ],
+    "changed": [],
+    "removed": []
+  },
+  "decisions": {
+    "added": [],
+    "changed": [],
+    "removed": []
+  },
+  "holes": {
+    "added": [],
+    "changed": [],
+    "removed": []
+  },
+  "contracts": {
+    "added": [],
+    "changed": [],
+    "removed": []
+  },
+  "gap": {
+    "added": [
+      [
+        "inventory",
+        "orders"
+      ]
+    ],
+    "removed": []
+  },
+  "check": {
+    "exit": 0,
+    "summary": "0 new, 0 stale, 1 known (likec4 1.60.0 from plugin)",
+    "output": "Known breaches\n  inventory -> orders (1 edges)\n\n0 new, 0 stale, 1 known (likec4 1.60.0 from plugin)\n"
+  },
+  "approved": {
+    "by": "owner",
+    "date": "2026-11-02"
+  }
+}

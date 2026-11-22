@@ -1,0 +1,410 @@
+{
+  "generated": "architecture-docs",
+  "export": {
+    "format": 4,
+    "elements": [
+      {
+        "id": "shop",
+        "kind": "system",
+        "tags": [],
+        "code": [],
+        "rules": [],
+        "title": "Shop",
+        "description": null
+      },
+      {
+        "id": "shop.api",
+        "kind": "component",
+        "tags": [],
+        "code": [
+          "shop.api"
+        ],
+        "rules": [],
+        "title": "Orders API",
+        "description": null
+      },
+      {
+        "id": "shop.checkout",
+        "kind": "component",
+        "tags": [],
+        "code": [
+          "shop.checkout"
+        ],
+        "rules": [
+          "BR-1"
+        ],
+        "title": "Checkout",
+        "description": null
+      },
+      {
+        "id": "shop.events",
+        "kind": "component",
+        "tags": [],
+        "code": [],
+        "rules": [
+          "BR-5"
+        ],
+        "title": "Order events",
+        "description": null
+      },
+      {
+        "id": "shop.inventory",
+        "kind": "component",
+        "tags": [],
+        "code": [
+          "shop.inventory"
+        ],
+        "rules": [],
+        "title": "Inventory",
+        "description": null
+      },
+      {
+        "id": "shop.jobs",
+        "kind": "component",
+        "tags": [],
+        "code": [
+          "shop.jobs"
+        ],
+        "rules": [],
+        "title": "Nightly jobs",
+        "description": null
+      },
+      {
+        "id": "shop.orders",
+        "kind": "component",
+        "tags": [],
+        "code": [
+          "shop.orders"
+        ],
+        "rules": [
+          "BR-4"
+        ],
+        "title": "Orders",
+        "description": null
+      },
+      {
+        "id": "shop.payments",
+        "kind": "component",
+        "tags": [
+          "protected"
+        ],
+        "code": [
+          "shop.payments"
+        ],
+        "rules": [],
+        "title": "Payments",
+        "description": null
+      },
+      {
+        "id": "shop.refunds",
+        "kind": "component",
+        "tags": [],
+        "code": [
+          "shop.refunds"
+        ],
+        "rules": [
+          "BR-2"
+        ],
+        "title": "Refunds",
+        "description": null
+      },
+      {
+        "id": "shop.reporting",
+        "kind": "component",
+        "tags": [],
+        "code": [
+          "shop.reporting"
+        ],
+        "rules": [
+          "BR-3"
+        ],
+        "title": "Reporting",
+        "description": null
+      }
+    ],
+    "allowed": [
+      {
+        "from": "shop.api",
+        "to": "shop.orders",
+        "titles": []
+      },
+      {
+        "from": "shop.checkout",
+        "to": "shop.orders",
+        "titles": []
+      },
+      {
+        "from": "shop.checkout",
+        "to": "shop.payments",
+        "titles": []
+      },
+      {
+        "from": "shop.jobs",
+        "to": "shop.orders",
+        "titles": []
+      },
+      {
+        "from": "shop.orders",
+        "to": "shop.events",
+        "titles": []
+      },
+      {
+        "from": "shop.orders",
+        "to": "shop.inventory",
+        "titles": []
+      },
+      {
+        "from": "shop.refunds",
+        "to": "shop.orders",
+        "titles": []
+      },
+      {
+        "from": "shop.refunds",
+        "to": "shop.payments",
+        "titles": []
+      },
+      {
+        "from": "shop.reporting",
+        "to": "shop.events",
+        "titles": []
+      }
+    ],
+    "runtime": [],
+    "groups": [
+      {
+        "kind": "decisions",
+        "group": "order-events",
+        "title": "Order events"
+      }
+    ],
+    "decisions": [
+      {
+        "id": "order-event-format",
+        "decision": "Checkout, refunds and reporting share one order-event format, defined by the order events component.",
+        "reason": "All three capabilities produce or consume the same events about an order (the epic's shared need, BR-4 and BR-5).",
+        "rejected": [
+          "Each capability defines its own event shape."
+        ],
+        "binds": [
+          "shop.checkout",
+          "shop.orders",
+          "shop.refunds",
+          "shop.reporting"
+        ],
+        "status": "planned",
+        "evidence": "spec",
+        "sources": [
+          "docs/epics/order-events.md"
+        ],
+        "owner": "shop.events",
+        "obligations": [
+          "Every change to an order emits one order event (BR-4).",
+          "Every order event carries the order id and a sequence number, and a consumer ignores an event it has already seen (BR-5)."
+        ],
+        "compatibility": "Changes are additive only. Removing or renaming anything is a new format version that every bound element adopts together.",
+        "group": "order-events"
+      }
+    ],
+    "holes": [],
+    "contracts": [],
+    "changes": [
+      {
+        "id": "2026-11-02-baseline",
+        "date": "2026-11-02",
+        "run": "baseline",
+        "asked_by": "specifying-epics (step 2b, empty folder)",
+        "summary": "Baseline of the whole repository: one component per group for the eight groups, a relationship per current element pair, and the inventory -> orders edge of the orders-inventory cycle left out and gapped as cycle in current code.",
+        "rejected": [],
+        "elements": {
+          "added": [
+            "api",
+            "checkout",
+            "inventory",
+            "jobs",
+            "orders",
+            "payments",
+            "refunds",
+            "reporting"
+          ],
+          "changed": [],
+          "removed": []
+        },
+        "decisions": {
+          "added": [],
+          "changed": [],
+          "removed": []
+        },
+        "holes": {
+          "added": [],
+          "changed": [],
+          "removed": []
+        },
+        "contracts": {
+          "added": [],
+          "changed": [],
+          "removed": []
+        },
+        "gap": {
+          "added": [
+            [
+              "inventory",
+              "orders"
+            ]
+          ],
+          "removed": []
+        },
+        "check": {
+          "exit": 0,
+          "summary": "0 new, 0 stale, 1 known (likec4 1.60.0 from plugin)",
+          "output": "Known breaches\n  inventory -> orders (1 edges)\n\n0 new, 0 stale, 1 known (likec4 1.60.0 from plugin)\n"
+        },
+        "approved": {
+          "by": "owner",
+          "date": "2026-11-02"
+        }
+      },
+      {
+        "id": "2026-11-02-order-events",
+        "date": "2026-11-02",
+        "run": "epic",
+        "asked_by": "specifying-epics (docs/epics/order-events.md)",
+        "summary": "Order events: the shop system around the eight components; order events (not yet built) with orders -> events and reporting -> events; reporting -> payments removed and gapped (BR-3); rules BR-1 to BR-5 assigned; the order-event format decided once for checkout, refunds and reporting.",
+        "rejected": [
+          "Each capability defines its own event shape."
+        ],
+        "elements": {
+          "added": [
+            "shop",
+            "shop.api",
+            "shop.checkout",
+            "shop.events",
+            "shop.inventory",
+            "shop.jobs",
+            "shop.orders",
+            "shop.payments",
+            "shop.refunds",
+            "shop.reporting"
+          ],
+          "changed": [],
+          "removed": [
+            "api",
+            "checkout",
+            "inventory",
+            "jobs",
+            "orders",
+            "payments",
+            "refunds",
+            "reporting"
+          ]
+        },
+        "decisions": {
+          "added": [
+            "order-event-format"
+          ],
+          "changed": [],
+          "removed": []
+        },
+        "holes": {
+          "added": [],
+          "changed": [],
+          "removed": []
+        },
+        "contracts": {
+          "added": [],
+          "changed": [],
+          "removed": []
+        },
+        "gap": {
+          "added": [
+            [
+              "shop.inventory",
+              "shop.orders"
+            ],
+            [
+              "shop.reporting",
+              "shop.payments"
+            ]
+          ],
+          "removed": [
+            [
+              "inventory",
+              "orders"
+            ]
+          ]
+        },
+        "check": {
+          "exit": 0,
+          "summary": "0 new, 0 stale, 2 known (likec4 1.60.0 from plugin)",
+          "output": "Known breaches\n  shop.inventory -> shop.orders (1 edges)\n  shop.reporting -> shop.payments (1 edges)\n\n0 new, 0 stale, 2 known (likec4 1.60.0 from plugin)\n"
+        },
+        "approved": {
+          "by": "owner",
+          "date": "2026-11-02"
+        }
+      }
+    ],
+    "coverage": {
+      "answer": "whole repository: 10 modules (at most 200) and 8 groups (at most 10)",
+      "baselined": [
+        {
+          "prefix": "shop.api",
+          "run": "2026-11-02-baseline"
+        },
+        {
+          "prefix": "shop.checkout",
+          "run": "2026-11-02-baseline"
+        },
+        {
+          "prefix": "shop.inventory",
+          "run": "2026-11-02-baseline"
+        },
+        {
+          "prefix": "shop.jobs",
+          "run": "2026-11-02-baseline"
+        },
+        {
+          "prefix": "shop.orders",
+          "run": "2026-11-02-baseline"
+        },
+        {
+          "prefix": "shop.payments",
+          "run": "2026-11-02-baseline"
+        },
+        {
+          "prefix": "shop.refunds",
+          "run": "2026-11-02-baseline"
+        },
+        {
+          "prefix": "shop.reporting",
+          "run": "2026-11-02-baseline"
+        }
+      ],
+      "edge_nodes": [],
+      "counts": {
+        "modules": 10,
+        "groups": 8
+      },
+      "unmapped": []
+    },
+    "areas": [
+      {
+        "name": "shop",
+        "title": "Shop",
+        "description": null,
+        "elements": [
+          "shop",
+          "shop.api",
+          "shop.checkout",
+          "shop.events",
+          "shop.inventory",
+          "shop.jobs",
+          "shop.orders",
+          "shop.payments",
+          "shop.refunds",
+          "shop.reporting"
+        ]
+      }
+    ],
+    "capabilities": []
+  }
+}

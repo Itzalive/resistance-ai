@@ -1,0 +1,5 @@
+views {
+  view area-shop of shop {
+    include *
+  }
+}

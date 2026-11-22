@@ -354,7 +354,9 @@ shard map. Find this from the work item (it names its feature) or from the calle
 - **Read first:** its entry in the feature design's shard map (its `AC-F`s, its place in
   the order, any shard 0 decision that applies to it), the feature's answered questions,
   and the architecture model: the elements the shard touches, their allowed
-  relationships, and the cross-cutting decisions that bind them.
+  relationships, and the cross-cutting decisions that bind them (the decisions with
+  `obligations` whose `binds` or `owner` names them) and the principles (decisions with
+  `obligations`, empty `binds` and no `owner`).
 - **`## Assumptions surface`** names those elements and says, for each new dependency the
   shard needs, whether the model allows it.
 - **Do not re-decide** architecture, the shard's scope or an answered question. The spec

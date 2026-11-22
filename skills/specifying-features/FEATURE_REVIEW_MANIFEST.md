@@ -7,7 +7,7 @@ Used by the self-review and by the independent auditor. Gather the inputs, work 
 - The feature design and its shards file.
 - The feature's row and questions from the feature map (for a one-feature epic, the epic).
 - The approved epic's ACs and rules that the feature serves.
-- The model folder's `architecture.md` (rule map, cross-cutting decisions) and `known-gap.json`.
+- The model's `export` (the elements' `rules` as the rule map, the decisions with `obligations` as the cross-cutting decisions, the change files) and `known-gap.json`. The generated pack (`<model>/generated/pack/`) holds the same facts by area.
 - A `check` run now, with the feature's elements as `--scope` and the shards file as `--shards` (not for a one-feature epic with a waived, empty model; confirm the waiver reference instead).
 - The run's diff: `git diff` of the design and the map, and `git status` for anything else changed.
 - The run records, when the costing names any.

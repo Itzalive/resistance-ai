@@ -372,3 +372,42 @@ def test_schema_doc_independence_matches_cli() -> None:
     phase_text = doc.split("**`phase`:**", 1)[1].split("**`independence`:**", 1)[0]
     self_rows = set(re.findall(r"^\| `([^`]+)` \|[^|]*\| `self` \|$", phase_text, re.M))
     assert self_rows == set(cli.SELF_PHASES)
+
+
+ARCH_KINDS = ["model-drift", "deps-defect", "unsourced"]
+
+
+@pytest.mark.parametrize("kind", ARCH_KINDS)
+def test_architecture_kinds_are_accepted_by_append(tmp_path: Path, kind: str) -> None:  # AC-15
+    result = run(
+        tmp_path,
+        *append_args(**{"--verdict": "REJECTED"}),
+        "--finding",
+        f"important:{kind}:the dependency file lacks an import",
+    )
+    assert result.returncode == 0, result.stderr
+    [entry] = read_log(tmp_path)
+    assert entry["findings"] == [{"severity": "important", "kind": kind, "text": "the dependency file lacks an import"}]
+
+
+@pytest.mark.parametrize("kind", ARCH_KINDS)
+def test_architecture_kinds_are_accepted_by_run_record(tmp_path: Path, kind: str) -> None:  # AC-15
+    record = {**RUN_RECORD, "findings": {"spec-audit": {kind: 2}}}
+    result = run(tmp_path, "run-record", "--from", "-", stdin=json.dumps(record))
+    assert result.returncode == 0, result.stderr
+    [written] = read_log(tmp_path, ".run_records.jsonl")
+    assert written["findings"] == {"spec-audit": {kind: 2}}
+
+
+def test_near_miss_kind_is_refused(tmp_path: Path) -> None:  # AC-15: unknown kinds refused as before
+    result = run(tmp_path, *append_args(**{"--verdict": "REJECTED"}), "--finding", "minor:deps:near miss")
+    assert result.returncode == 2
+    assert "kind" in result.stderr
+    assert not (tmp_path / ".review_log.jsonl").exists()
+
+
+def test_schema_doc_kinds_match_cli() -> None:
+    cli = load_cli()
+    doc = (CLI.parent.parent / "review-log-jsonl.md").read_text(encoding="utf-8")
+    kind_text = doc.split("**`findings[].kind`:**", 1)[1].split("**Gate strings:**", 1)[0]
+    assert set(re.findall(r"^\| `([^`]+)` \|", kind_text, re.M)) == set(cli.KINDS)

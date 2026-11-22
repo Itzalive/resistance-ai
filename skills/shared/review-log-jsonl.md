@@ -76,6 +76,9 @@ family.
 | `real-bug` | Incorrect behaviour in code |
 | `slip` | An executor or orchestrator did not follow the plan or skill |
 | `wording` | Clarity or consistency only; no behaviour change |
+| `model-drift` | The model states something the code does not do, or a description states a target as fact |
+| `deps-defect` | The dependency file is wrong or incomplete |
+| `unsourced` | A recorded reason or evidence claim has no source, or its source does not say it |
 
 **Gate strings:** a skill gate such as `APPROVED - INDEPENDENT AUDIT` means the
 latest entry for that item with that phase has verdict `APPROVED`. Reviewer

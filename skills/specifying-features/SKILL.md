@@ -21,15 +21,15 @@ This skill designs one feature before any of its shards is specified. It writes 
 | The feature's last shard has merged (close run) | The feature design has `[FEATURE-APPROVED]` |
 | The owner or a shard asks for the shard map to change (reshard) | The feature design has `[FEATURE-APPROVED]` |
 
-**One-feature epic** (it skipped `planning-features`): the gate is `[EPIC-APPROVED]` and `[ARCH-APPROVED]` or its logged waiver. See `FEATURE_STANDARDS.md`.
+**One-feature epic** (it skipped `planning-features`): the gate is `[EPIC-APPROVED]` and every change file approved, or the logged waiver. See `FEATURE_STANDARDS.md`.
 
 ## Ownership
 
-This skill owns the feature design; its own feature's state, actual cost and question answers on the map; and removing any still-stale known-gap entries at close. It never changes the epic, the rest of the model, code, other features' rows or any shard spec.
+This skill owns the feature design; its own feature's state, actual cost and question answers on the map; and, at close, removing still-stale known-gap entries and rebuilding `generated/`. It never changes the epic, the rest of the model, code, other features' rows or any shard spec.
 
 ## Files and tools
 
-- Load `FEATURE_STANDARDS.md` at step 1, `close-run.md` only for a close run, and `review-workflow.md` with the manifest and rubric only at step 6.
+- Load `FEATURE_STANDARDS.md` at step 1, `close-run.md` for a close run, and `review-workflow.md` with the manifest and rubric only at step 6.
 - The delta tool and the overlay keys are those of `defining-architecture`. Reading the code is never a substitute for `check`.
 
 ## Steps of a design run

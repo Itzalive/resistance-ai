@@ -244,3 +244,15 @@ def test_compare_at_the_limits_is_fast() -> None:
     proc = run_module(code)
     assert proc.returncode == 0, proc.stderr
     assert int(proc.stdout) < 15000
+
+
+def test_module_mapper_longest_prefix_at_the_separator() -> None:
+    code = (
+        f"import {{ moduleMapper, ancestorsOrSelf }} from {json.dumps(lib_url('match.mjs'))};\n"
+        "const map = moduleMapper([{ id: 'o', code: ['shop.orders'] }, { id: 'o.api', code: ['shop.orders.api'] }], '.');\n"
+        "process.stdout.write(JSON.stringify([map('shop.orders.api.v1'), map('shop.orders.x'), map('shop.ordersx'),"
+        " map('shop.orders'), map('other'), ancestorsOrSelf('a.b.c')]));\n"
+    )
+    proc = run_module(code)
+    assert proc.returncode == 0, proc.stderr
+    assert json.loads(proc.stdout) == ["o.api", "o", None, "o", None, ["a", "a.b", "a.b.c"]]

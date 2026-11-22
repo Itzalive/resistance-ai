@@ -17,7 +17,7 @@ This skill turns an approved epic into **features**: stages of value delivered i
 
 | Trigger | Entry gate |
 |---|---|
-| An epic's architecture is approved (planning run) | The epic has `[EPIC-APPROVED]`, the model has `[ARCH-APPROVED]`, and `check` on the whole model exits 0 |
+| An epic's architecture is approved (planning run) | The epic has `[EPIC-APPROVED]`, every change file is approved, and `check` on the whole model exits 0 |
 | A feature shipped, a split-out question was answered, or `specifying-features` sent back an answer that changes another feature (re-plan run) | The map has `[FEATURES-APPROVED]` |
 
 ## When NOT to Use
@@ -27,18 +27,18 @@ This skill turns an approved epic into **features**: stages of value delivered i
 
 ## Ownership
 
-This skill owns the feature map and `close_by` on known-gap entries. It never changes the epic, the model (apart from `close_by`), code or any feature design.
+This skill owns the feature map and `close_by` on known-gap entries. It changes no epic, code, feature design or model file but `close_by` and the rebuilt `generated/`.
 
 ## Files and tools
 
-- Load `FEATURES_STANDARDS.md` at step 1, `replan-run.md` only for a re-plan run, and `review-workflow.md` with the manifest and rubric only at step 6.
+- Load `FEATURES_STANDARDS.md` at step 1, `replan-run.md` for a re-plan run, and `review-workflow.md` with the manifest and rubric only at step 6.
 - The delta tool and the overlay keys are those of `defining-architecture`.
 
 ## Ordering rules
 
 In priority order:
 
-1. **Decisions first.** Cross-cutting decisions are already taken whole by `defining-architecture`. The first feature that builds on one lays its foundation, so later features add to it and do not reshape it.
+1. **Decisions first.** Cross-cutting decisions (decisions with `obligations`) are taken whole by `defining-architecture`. The first feature that builds on one lays its foundation; later features add to it, never reshape it.
 2. **Direction-changing questions early, split by risk.** A question whose answer could change the plan is placed with the feature that needs its answer, as early as that feature allows.
    - **Split it out** as its own item only when a wrong answer would waste or redo work in other features, or change the epic's direction. It is answered before every feature it could invalidate, and runs alongside the current feature only where the two are independent. The owner decides who runs it; its answer comes back as a re-plan run.
    - **Otherwise** it stays with its feature and is answered by `specifying-features` before that feature's shard specs.

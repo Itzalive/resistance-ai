@@ -1,6 +1,6 @@
 # Architecture standards
 
-Load at step 1. This file holds the reference detail `SKILL.md` points to.
+Load at step 1. The overlay, the terms and the writing rules every step uses. The tools are in `tools.md`, the records in `records.md`.
 
 ## Overlay
 
@@ -8,56 +8,54 @@ Repo-root `ARCHITECTURE_DESIGN.md` is optional. Under a heading `## Architecture
 
 | Key | Default | Meaning |
 |---|---|---|
-| `model` | `docs/architecture` | The model folder, relative to the repository root |
+| `model` | `docs/architecture` | The model folder, relative to the repository root (the tools' `--model`) |
 | `deps-command` | none | The command that writes the dependency file (`{"edges": [[from, to], ...]}`) |
-| `deps-file` | `build/architecture-deps.json` | Where that command writes; inside the repository, not committed |
-| `separator` | `.` | The module-name separator |
-| `group-depth` | `1` | Segments below the shared prefix that make one top-level module group |
+| `deps-file` | `build/architecture-deps.json` | Where that command writes (the tools' `--deps`); inside the repository, not committed |
+| `separator` | `.` | The module-name separator (the tools' `--separator`) |
+| `roots` | none | Comma-separated `<prefix>` or `<prefix>:<depth>` items: where module groups start (below) |
+| `group-depth` | `1` | Segments below a root that make one top-level module group |
 | `small-repo-modules` | `200` | Coverage question: at or under this many modules counts as small |
 | `small-repo-groups` | `10` | Coverage question: at or under this many top-level groups counts as small |
 
 The overlay may tighten this skill's rules, never weaken them. With no `deps-command`, the run stops at step 1 and asks for one; it never guesses.
 
-## Delta tool flags
-
-The tool is `node <skills-dir>/shared/scripts/architecture-delta.mjs`, run from the repository root with `--repo .`.
-
-- `export --repo . --model <model>`: loads the model and prints its elements and relationships as JSON. Exit 0, or exit 2 with `error: <kind>: ...` on stderr.
-- `check --repo . --model <model> --deps <deps-file> --separator <separator>`: compares the code's edges with the model. Exit 0 when every breach is in the gap file, 1 when a breach is new or a gap entry is stale, 2 on an error. Add `--format json` for machine output.
-- Never pass `--gap`: the gap file is always `<model>/known-gap.json`.
-- Only a relationship of kind `uses`, or with no kind, permits imports. A relationship of any other kind is a runtime link: `check` ignores it, and `export` lists it under `runtime`.
-- `export` also prints the model's records (decisions, holes, contracts, changes, coverage). A problem in a record file is `record-error`, exit 2, from both `export` and `check`.
-- `export` prints format 4: element and relationship titles, and the model's area and capability views. A record's `capabilities` must name capability views.
-- An area is an element view `view area-<name>`; a capability is a dynamic view `dynamic view capability-<name>` whose every step follows a relationship. `<name>` is 1 to 64 lowercase letters, digits and `-`, starting with a letter or digit, and not a Windows device name (`con`, `nul`, `com1` and the like). A bad area or capability view is `model-error` from `export` and `check`.
-- `node <skills-dir>/shared/scripts/architecture-docs.mjs build|check --repo . [--model <model>] [--out <folder>]` (it reads the known-gap file as `check` does, so skills pass no `--gap`) builds the generated documents into `<model>/generated` (or `--out`), or reports which are missing, changed or extra. `build` exits 0 or 2; `check` exits 0 when current, 1 when stale, 2 on an error. It overwrites or deletes only files it marked, and `out-error` names any problem with the output folder.
-- The `check` sections: new breaches, known breaches, not yet reached (an import relationship the code doesn't have yet), unmapped code, and the summary line `N new, N stale, N known`. Quote the whole output in the decision log.
+**`roots`.** Each item is a module name at the separator, optionally with its own depth.
+- A module belongs to the longest root it equals or starts with followed by the separator. Its top-level group is that root plus the next `<depth>` segments (`group-depth` when the item gives none). A module with no more segments than its root plus `<depth>` is its own group.
+- An empty root matches every module; a module's group under it is its first `<depth>` segments.
+- A module under no root is unmapped, reason `outside roots`.
+- A module equal to a root gets an element only when the whole repository is baselined; otherwise it is unmapped, reason `root prefix`.
+- Without `roots`, the one root is the longest prefix, at the separator, shared by every repository module (it may be empty).
+- These stop the run at step 1 as an overlay error: an empty `roots` value, a root listed twice, a depth that is not a whole number of 1 or more, a root that matches no repository module, a `separator` of `:`.
 
 ## Terms
 
 - **Repository module:** a module that is the first item of at least one edge in the dependency file. A module that appears only as a target is outside the repository (a standard library or third-party package) and is never grouped, counted or modelled.
-- **Top-level module group:** take the longest prefix, at the separator, shared by every repository module; a group is that prefix plus the next `group-depth` segments. A repository module equal to the shared prefix gets an element only when the whole repository is baselined; otherwise it is listed under "Unmapped modules" with the reason `shared prefix`, and it is never an edge node.
+- **Root, top-level module group:** as `roots` above.
 - **Not yet built:** an element with no `code` metadata. An element with `code` is built: each `code` value must equal a repository module or a prefix of one at the separator.
 - **Must rule:** every business rule owned by a Must Have capability of the epic. For an epic written before capabilities existed, every business rule tied to a Must Have item of its MoSCoW scope.
-- **Edge node:** a `component` covering a neighbour group outside the baselined area, with `code` set to that group's prefix, no children, no `rules`, and no part in any cross-cutting decision.
-
-## Coverage question (step 2b)
-
-Recommend, from the run's impact and the codebase's size:
-- the whole repository, when there are at most `small-repo-modules` repository modules or at most `small-repo-groups` top-level groups;
-- the whole affected container, when the model already has containers and the run touches more than half of one container's groups, or a cross-cutting decision binds that container;
-- otherwise the touched groups plus edge nodes.
-
-State the counts behind the recommendation.
+- **Edge node:** a `component` covering a neighbour group outside the baselined area, with `code` set to that group's prefix, no children, no `rules`, and in no decision's `binds` or `owner` and no contract's `owner` or `bound`.
+- **Contract:** the interface between this system and another (a server and its app, a public API, an event sent to an outside system), in `contracts/<group>.json`.
+- **Decision:** why something is the way it is, in `decisions/<group>.json`. A **cross-cutting decision** has `obligations` and is changed whole, for every part it binds; one that settles something several parts must agree on usually also has an `owner` and a `compatibility` rule. A **principle** is a cross-cutting decision with empty `binds` and no `owner`. A **proposed decision** has `status: planned`.
+- **Hole:** an open question, unexplained structure or contradiction, in the same decisions files.
 
 ## Spotting a cross-cutting decision
 
-A decision is cross-cutting when **two or more capabilities** depend on it. Four kinds come up:
+Anything two or more elements, or two or more capabilities, produce, consume or name in common is a decision with `obligations`. Four kinds come up:
 - a data or storage format;
 - a shared contract or API;
 - an id or naming scheme;
 - a vocabulary of kinds or types.
 
-Search the epic's capabilities and rules for anything two of them produce, consume or name in common. Each one found gets its own section in `architecture.md`.
+Search the epic's capabilities and rules, and in a baseline the code and its documents, for anything two parts share. Each one found is one decision record.
+
+## Coverage question (step 2b)
+
+Asked only in an epic or later-stage run whose touched groups are not modelled; a baseline run covers the whole repository and asks nothing. Recommend, from the run's impact and the repository's size:
+- the whole repository, when there are at most `small-repo-modules` repository modules or at most `small-repo-groups` top-level groups;
+- the whole affected container, when the model already has containers and the run touches more than half of one container's groups, or a cross-cutting decision binds that container;
+- otherwise the touched groups plus edge nodes.
+
+The counts are across all roots: the module count is every repository module, `outside roots` ones included; the group count is the groups under the roots. State them with the recommendation.
 
 ## Mechanism detail stays out
 
@@ -72,14 +70,3 @@ The product-level form of the last two is an obligation: "every event identifies
 ## Gap reason format
 
 One sentence: why the breach exists today, and what closes it. For a cycle left out of a baseline, exactly `cycle in current code`.
-
-## `architecture.md` layout
-
-Kept in the model folder, with five sections:
-1. **Decision log:** one dated entry per run, with the diff summary, the stage that asked, the alternatives rejected, and the quoted `check` output. The log only grows.
-2. **Rule map:** rule → owning element.
-3. **Cross-cutting decisions:** one section each, with the name, the owning element, the bound elements and capabilities, the product-level obligations, and the compatibility or versioning rule.
-4. **Baseline coverage:** the baselined groups, the edge nodes, and the run that added each, with the coverage answer and its counts.
-5. **Unmapped modules:** module → reason.
-
-Sections 2 to 5 are edited in place to stay current.

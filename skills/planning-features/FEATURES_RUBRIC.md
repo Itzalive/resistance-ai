@@ -16,7 +16,7 @@ Grade every item. Each item is binary. Items tagged `[whole]` are graded on the 
 
 ## Hard rules
 
-- [ ] The epic, the model (apart from `close_by`) and the code are unchanged. [whole]
+- [ ] The epic, the model (apart from `close_by` and the rebuilt `generated/`) and the code are unchanged. [whole]
 - [ ] No shipped feature was reordered or rewritten. [whole]
 - [ ] The re-plan log only grew. [whole]
 - [ ] No cost is stated as a target or a cap.
