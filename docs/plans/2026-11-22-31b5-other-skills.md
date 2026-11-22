@@ -38,7 +38,8 @@ Searched: `skills/` with `grep -rn "architecture\.md\|decision log\|rule map\|cr
 |---|---|---|---|---|
 | `planning-features/FEATURES_REVIEW_MANIFEST.md` Inputs and "Unchanged" name `architecture.md` | the review that loads it | caller | 1 | below |
 | `planning-features/FEATURES_STANDARDS.md` Signals read "the model's rule map" | the run's step 3 | caller | 1 | below |
-| `planning-features/SKILL.md` rule 1 and step 1 name cross-cutting decisions without saying what they are | the run | caller | 1 | below |
+| `planning-features/SKILL.md` rule 1 names cross-cutting decisions without saying what they are | the run | caller | 1 | below |
+| the same file | `tests/scripts/test_feature_skills_contract.py::test_skill_md_fits_the_word_cap[planning-features]` (at most 1000 words) | assert | 1 | none: the new rule 1 keeps the word count |
 | `specifying-features/FEATURE_REVIEW_MANIFEST.md` Inputs name `architecture.md` | the review | caller | 2 | below |
 | `specifying-features/FEATURE_RUBRIC.md` "The decision log only grew." | the review | assert | 2 | the line removed |
 | `specifying-features/FEATURE_STANDARDS.md` "The feature's elements" reads the rule map and cross-cutting decisions | the run | caller | 2 | below |
@@ -149,20 +150,10 @@ In `skills/planning-features/SKILL.md`, replace the whole line
 with
 
 ```markdown
-1. **Decisions first.** Cross-cutting decisions (the model's decisions with `obligations`) are already taken whole by `defining-architecture`. The first feature that builds on one lays its foundation, so later features add to it and do not reshape it.
+1. **Decisions first.** Cross-cutting decisions (decisions with `obligations`) are taken whole by `defining-architecture`. The first feature that builds on one lays its foundation; later features add to it, never reshape it.
 ```
 
-and the whole line
-
-```markdown
-1. **Assumptions surface** (load `FEATURES_STANDARDS.md`). Your first output is this and nothing else: the trigger and its gate with the `check` result; the epic's capabilities, ACs, success metrics and MVP criteria; the cross-cutting decisions and known-gap entries; whether run records exist. Anything missing stops the run.
-```
-
-with
-
-```markdown
-1. **Assumptions surface** (load `FEATURES_STANDARDS.md`). Your first output is this and nothing else: the trigger and its gate with the `check` result; the epic's capabilities, ACs, success metrics and MVP criteria; the cross-cutting decisions (the decisions with `obligations` in `export`) and known-gap entries; whether run records exist. Anything missing stops the run.
-```
+(the word cap of `tests/scripts/test_feature_skills_contract.py` holds `SKILL.md` to 1000 words; this line keeps the count unchanged, and step 1 names the cross-cutting decisions as rule 1 defines them).
 
 - [ ] **Step 4: run.**
 
