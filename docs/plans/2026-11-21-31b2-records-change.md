@@ -51,7 +51,7 @@ Searched: `skills/`, `tests/`, `scripts/`, `agents/` with `grep -rn "runCheck\|a
 | `--before` | a folder loaded as a model | flag text | the run's caller | 6 | `test_before_must_be_inside_the_repo_and_apart_from_the_model` |
 | `--summary`, `--asked-by`, `--rejected` | record text, later printed by `export` and the documents | flag text | the run's caller | 6 | `test_flag_text_is_cleaned_by_export` (AC-7) |
 | `writeChange` | replaces `changes/<id>.json` | an existing file | an earlier run | 5 | `test_writer_never_replaces_an_approved_file` |
-| `runChange` reads the existing change file | `--compare`'s default text flags and the compared object | the stored change file | an earlier run | 6, 7 | `test_compare_reports_same_differs_and_missing`; the file already passed the records reader in `loadRepoModel` |
+| `runChange` reads the existing change file | `--compare`'s default text flags and the compared object | the stored change file | an earlier run | 6, 7 | the records reader in `loadRepoModel` refuses a malformed change file before `runChange` reads it (`tests/scripts/test_architecture_delta_records.py::test_wrong_typed_values_are_not_checked_again`, `::test_change_lists_are_checked_for_form`); `test_compare_reports_same_differs_and_missing` for the defaults |
 
 ## Checkpoints
 
