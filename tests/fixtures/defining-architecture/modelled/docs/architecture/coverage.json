@@ -1,0 +1,16 @@
+{
+  "answer": "whole repository: 10 modules (at most 200) and 8 groups (at most 10)",
+  "baselined": [
+    { "prefix": "shop.api", "run": "2026-11-02-baseline" },
+    { "prefix": "shop.checkout", "run": "2026-11-02-baseline" },
+    { "prefix": "shop.inventory", "run": "2026-11-02-baseline" },
+    { "prefix": "shop.jobs", "run": "2026-11-02-baseline" },
+    { "prefix": "shop.orders", "run": "2026-11-02-baseline" },
+    { "prefix": "shop.payments", "run": "2026-11-02-baseline" },
+    { "prefix": "shop.refunds", "run": "2026-11-02-baseline" },
+    { "prefix": "shop.reporting", "run": "2026-11-02-baseline" }
+  ],
+  "edge_nodes": [],
+  "counts": { "modules": 10, "groups": 8 },
+  "unmapped": []
+}

@@ -1,0 +1,79 @@
+{
+  "id": "2026-11-02-order-events",
+  "date": "2026-11-02",
+  "run": "epic",
+  "asked_by": "specifying-epics (docs/epics/order-events.md)",
+  "summary": "Order events: the shop system around the eight components; order events (not yet built) with orders -> events and reporting -> events; reporting -> payments removed and gapped (BR-3); rules BR-1 to BR-5 assigned; the order-event format decided once for checkout, refunds and reporting.",
+  "rejected": [
+    "Each capability defines its own event shape."
+  ],
+  "elements": {
+    "added": [
+      "shop",
+      "shop.api",
+      "shop.checkout",
+      "shop.events",
+      "shop.inventory",
+      "shop.jobs",
+      "shop.orders",
+      "shop.payments",
+      "shop.refunds",
+      "shop.reporting"
+    ],
+    "changed": [],
+    "removed": [
+      "api",
+      "checkout",
+      "inventory",
+      "jobs",
+      "orders",
+      "payments",
+      "refunds",
+      "reporting"
+    ]
+  },
+  "decisions": {
+    "added": [
+      "order-event-format"
+    ],
+    "changed": [],
+    "removed": []
+  },
+  "holes": {
+    "added": [],
+    "changed": [],
+    "removed": []
+  },
+  "contracts": {
+    "added": [],
+    "changed": [],
+    "removed": []
+  },
+  "gap": {
+    "added": [
+      [
+        "shop.inventory",
+        "shop.orders"
+      ],
+      [
+        "shop.reporting",
+        "shop.payments"
+      ]
+    ],
+    "removed": [
+      [
+        "inventory",
+        "orders"
+      ]
+    ]
+  },
+  "check": {
+    "exit": 0,
+    "summary": "0 new, 0 stale, 2 known (likec4 1.60.0 from plugin)",
+    "output": "Known breaches\n  shop.inventory -> shop.orders (1 edges)\n  shop.reporting -> shop.payments (1 edges)\n\n0 new, 0 stale, 2 known (likec4 1.60.0 from plugin)\n"
+  },
+  "approved": {
+    "by": "owner",
+    "date": "2026-11-02"
+  }
+}
