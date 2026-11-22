@@ -140,28 +140,28 @@ with
 Counted per capability at step 3, from the elements' `rules` in `export` (the rule map), the dependency file and a reading of the code:
 ```
 
-In `skills/planning-features/SKILL.md`, replace
+In `skills/planning-features/SKILL.md`, replace the whole line
 
 ```markdown
-1. **Decisions first.** Cross-cutting decisions are already taken whole by `defining-architecture`.
+1. **Decisions first.** Cross-cutting decisions are already taken whole by `defining-architecture`. The first feature that builds on one lays its foundation, so later features add to it and do not reshape it.
 ```
 
 with
 
 ```markdown
-1. **Decisions first.** Cross-cutting decisions (the model's decisions with `obligations`) are already taken whole by `defining-architecture`.
+1. **Decisions first.** Cross-cutting decisions (the model's decisions with `obligations`) are already taken whole by `defining-architecture`. The first feature that builds on one lays its foundation, so later features add to it and do not reshape it.
 ```
 
-and replace
+and the whole line
 
 ```markdown
-the cross-cutting decisions and known-gap entries;
+1. **Assumptions surface** (load `FEATURES_STANDARDS.md`). Your first output is this and nothing else: the trigger and its gate with the `check` result; the epic's capabilities, ACs, success metrics and MVP criteria; the cross-cutting decisions and known-gap entries; whether run records exist. Anything missing stops the run.
 ```
 
 with
 
 ```markdown
-the cross-cutting decisions (the decisions with `obligations` in `export`) and known-gap entries;
+1. **Assumptions surface** (load `FEATURES_STANDARDS.md`). Your first output is this and nothing else: the trigger and its gate with the `check` result; the epic's capabilities, ACs, success metrics and MVP criteria; the cross-cutting decisions (the decisions with `obligations` in `export`) and known-gap entries; whether run records exist. Anything missing stops the run.
 ```
 
 - [ ] **Step 4: run.**
