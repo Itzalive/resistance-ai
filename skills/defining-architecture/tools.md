@@ -1,11 +1,11 @@
 # The tools
 
-Load at step 2. Three tools ship with the engine; the repository needs no copy of them. Run each from the repository root with `--repo .`, passing the overlay's values (`ARCH_STANDARDS.md`) as `--model`, `--deps` and `--separator`. Every tool reports an error as `error: <token>: <detail>` on stderr with exit 2, and a run stops on it.
+Load at step 2. Three tools ship with the engine; the repository needs no copy of them. Run each from the repository root with `--repo .`, passing the overlay's values (`ARCH_STANDARDS.md`) as `--model`, `--deps` and `--separator` where a command below shows them (`export` and `architecture-docs` take only `--model`). Every tool reports an error as `error: <token>: <detail>` on stderr with exit 2, and a run stops on it.
 
 ## The delta tool: `node <skills-dir>/shared/scripts/architecture-delta.mjs`
 
 - `export --repo . --model <model>`: loads the model and its records and prints them as JSON (format 4): `elements`, `allowed` (import relationships), `runtime` (runtime links), the records (`decisions`, `holes`, `contracts`, `changes`, `coverage`), `areas` and `capabilities`. Exit 0 or 2.
-- `check --repo . --model <model> --deps <deps-file> --separator <separator>`: compares the code's edges with the model. Exit 0 when every breach is in the gap file, 1 when a breach is new or a gap entry is stale, 2 on an error. `--format json` gives machine output with the module edges behind each breach. The text sections are `New breaches`, `Stale gap entries`, `Known breaches`, `Not yet reached` (an import relationship the code doesn't have yet) and `Unmapped code`, then the summary line `N new, N stale, N known`.
+- `check --repo . --model <model> --deps <deps-file> --separator <separator>`: compares the code's edges with the model. Exit 0 when every breach is in the gap file, 1 when a breach is new or a gap entry is stale, 2 on an error. `--format json` gives machine output with the module edges behind each breach. The text sections are `New breaches`, `Stale gap entries`, `Known breaches`, `Not yet reached` (an import relationship the code doesn't have yet) and `Unmapped code`, then the summary line `N new, N stale, N known (likec4 <version> from <source>)`.
 - Never pass `--gap`: the gap file is always `<model>/known-gap.json`.
 - Only a relationship of kind `uses`, or with no kind, permits imports. Any other kind is a runtime link: `check` ignores it and `export` lists it under `runtime`.
 - A record problem is `record-error`, and a bad area or capability view is `model-error`, from both commands, before any other input is read.

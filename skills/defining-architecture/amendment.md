@@ -4,7 +4,7 @@ Load at step 2. The commands are in `tools.md`; the files and the change file's 
 
 ## Step 2: the baseline check
 
-Run the `deps-command`, then `export` and `check` (both skipped while the model folder is empty). A `check` exit 1 is a 2a finding; exit 2 stops the run with the tool's error. Propose the groups the run touches; the owner approves the list. In a later-stage run, the gate is read from `changes/`: the model is approved when every change file's `approved` is set.
+Run the `deps-command` again, then `export` and `check` (both skipped while the model folder is empty). A `check` exit 1 is a 2a finding; exit 2 stops the run with the tool's error. Propose the groups the run touches; the owner approves the list. In a later-stage run, the gate is read from `changes/`: the model is approved when every change file's `approved` is set.
 
 **2a. Is the affected model current?** For every modelled element the run touches, its relationships and its gap entries, look for:
 - an invalid model: it doesn't load, `c4.c4` differs from the shipped spec, or `cycles` reports a group;
@@ -13,11 +13,11 @@ Run the `deps-command`, then `export` and `check` (both skipped while the model 
 - a gap entry that no longer matches (its breach was fixed);
 - a relationship reported "not yet reached" that the code now has (note it only).
 
-Read an `Unmapped code` module and a "not yet reached" relationship together: a module renamed under an element is a stale `code` value, not new code. Each finding gets its own recommendation from the allowed outcomes (`SKILL.md`, "Drift is a finding"), and the owner decides each. Change nothing before that.
+Read an `Unmapped code` module and a "not yet reached" relationship together: a module renamed under an element is a stale `code` value, not new code. Each finding gets its own recommendation from the allowed outcomes (`SKILL.md`, "Drift is a finding"), and the owner decides each. Change nothing before that; the chosen outcomes are written at step 3, after the before copy, so the change file records them.
 
 **2c. Does the request stand?** (later-stage run) Only after 2a, judge the diff request. Refuse a request that changes a cross-cutting decision in part or for one bound element, or changes a product rule; recommend the whole change, or the epic, instead. A refused request ends the diff, not the run: the run carries on with the 2a outcomes, writes its change file (its `summary` says what was refused and why, `rejected` holds the request), and goes through step 7.
 
-**2b. How much to baseline?** Only when touched groups are not modelled: one question with a recommendation and its counts (`ARCH_STANDARDS.md`), then load `baseline-run.md`. The baseline is its own diff through steps 3 to 7 before the run resumes.
+**2b. How much to baseline?** In a baseline run, ask nothing: the coverage is the whole repository; load `baseline-run.md`. In an epic or later-stage run whose touched groups are not modelled: one question with a recommendation and its counts (`ARCH_STANDARDS.md`), then load `baseline-run.md`. The baseline is its own diff through steps 3 to 7 before the run resumes.
 
 ## Step 3: write the draft
 
@@ -38,4 +38,4 @@ Whatever the owner changes in steps 4 to 6 is edited into the files, and `change
 
 ## What the owner is shown
 
-The generated documents only: the change document, the area documents of every area the run touches, and the improvement list (`generated/improvements.md`). Never the record files, and never your own summary in their place. Each approval request shows that turn's `build` output and names the documents to read.
+The generated documents only: the change document, the area documents of every area the run touches, and the improvement list (`generated/improvements.md`). Never the record files, and never your own summary in their place. From step 4 on, each approval request shows that turn's `build` output and names the documents to read.

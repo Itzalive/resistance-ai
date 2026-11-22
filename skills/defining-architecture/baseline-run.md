@@ -12,7 +12,7 @@ Load at step 2b, or for a baseline run. A baseline describes what the code **is*
 6. **Records.** Decisions recovered from the code and earlier documents, each with `evidence` and `sources`; structure with no reason found as a hole with evidence `search`; contracts with outside systems (`records.md`).
 7. **Edge nodes.** One per neighbour group outside the coverage that has a code edge to or from it (`ARCH_STANDARDS.md`, Terms).
 8. **Views.** One area view (`view area-<name> of <container>`) scoped to each container, and area views grouping components for reading, so every element is in at least one area.
-9. **Unmapped modules.** A module equal to a root gets an element only when the whole repository is baselined; otherwise it is unmapped with `root prefix`. A module under no root is unmapped with `outside roots`.
+9. **Unmapped modules.** In `coverage.json` `unmapped`, with the reasons `roots` gives (`ARCH_STANDARDS.md`).
 
 ## Nesting
 
@@ -32,7 +32,7 @@ When a diff needs an edge node's inside, the run comes back here for that area. 
 
 ## Then
 
-The baseline goes through steps 3 to 7 like any diff, with its own change file (`--run baseline`), its own review and its own `[ARCH-APPROVED]`, and review-log entries whose `--reason` starts `baseline`. A nested baseline then hands back to the outer run, which resumes with a fresh `check` against it.
+The baseline goes through steps 3 to 7 like any diff, with its own change file (`--run baseline`), its own review and its own `[ARCH-APPROVED]`, and review-log entries whose `--reason` starts `baseline`. A nested baseline then hands back to the outer run, which reruns `check` against it and resumes at step 3, taking its own before copy before its first edit (`records.md`).
 
 ## Decided targets (baseline run only)
 

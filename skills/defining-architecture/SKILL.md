@@ -9,7 +9,7 @@ description: "Use when an approved epic needs its architecture decided before fe
 
 This skill keeps a target C4 model of the repository in the model folder and amends it. The model folder holds the LikeC4 `.c4` files, `known-gap.json`, the records (`decisions/`, `contracts/`, `changes/`, `coverage.json`) and the generated documents (`generated/`). There is no `architecture.md`.
 
-**Core principle:** every run is a reviewed amendment to a model that is checked against the code. Every judgement goes into a validated record, every run leaves one change file, and the owner approves from the generated documents. Nothing is decided in prose alone, nothing is approved in one step, and no breach is accepted without `check` reporting it and the owner accepting it.
+**Core principle:** every run is a reviewed amendment to a model that is checked against the code. Every judgement goes into a validated record, every run that is not waived leaves one change file, and the owner approves from the generated documents. Nothing is decided in prose alone, nothing is approved in one step, and no breach is accepted without `check` reporting it and the owner accepting it.
 
 **Announce at start:** "I'm using the defining-architecture skill."
 
@@ -35,8 +35,8 @@ This skill owns the model folder's content and changes no code. Outside the mode
 
 One step at a time; each is presented and the owner approves it before the next starts. An approval covers the step it answers, nothing more. Load each file at its step.
 
-1. **Assumptions surface** (load `ARCH_STANDARDS.md`). Your first output is this and nothing else: the trigger and its gate; required or waived (epic run); the overlay's values or defaults, `roots` included; the `deps-command`; for an epic run, the capabilities. No options and no design. Anything missing stops the run.
-2. **Baseline check** (load `tools.md` and `amendment.md`): `check`, then 2a (is the model current?), 2c (does a later-stage request stand?), 2b (how much to baseline? load `baseline-run.md`).
+1. **Assumptions surface** (load `ARCH_STANDARDS.md`). Your first output is this and nothing else: the trigger and its gate; required or waived (epic run); the overlay's values or defaults, `roots` included; the `deps-command`; for an epic run, the capabilities. No options and no design. Before writing it, run the `deps-command` and read the repository modules from the dependency file, so `roots` (or the shared prefix) can be checked; an overlay error stops the run here. Anything missing stops the run.
+2. **Baseline check** (load `tools.md` and `amendment.md`): `check`, then 2a (is the model current?), 2c (does a later-stage request stand?), 2b (how much to baseline? load `baseline-run.md`; a baseline run asks nothing and loads it here).
 3. **Write the draft amendment** (load `records.md`): the files first, then `change`, coverage, `export`, `check`, `architecture-docs build`. Nothing is presented before this step has run.
 4. **Cross-cutting decisions,** presented from the written records.
 5. **The diff,** presented from the generated change document and area documents.
@@ -58,7 +58,7 @@ One step at a time; each is presented and the owner approves it before the next 
 
 Adding a relationship because the code now has the import makes the drift legal without a decision. Don't.
 
-**Judgement goes into records.** A decision is a record in `decisions/`, a cross-cutting decision is a decision with `obligations`, an open question or an improvement you see and do not make is a hole or a proposed decision. Never leave one in a reply, a note or prose only.
+**Judgement goes into records.** A decision is a record in `decisions/`, a cross-cutting decision is a decision with `obligations`, an open question or an improvement you see and do not make is a hole or a proposed decision, binding the elements it concerns, so it appears in the improvement list. Never leave one in a reply, a note or prose only.
 
 **Cross-cutting decisions are taken whole.** A decision with `obligations` is decided once for every part it binds; a principle binds the whole system. A request to change part of one, or to change it for one bound element, is refused.
 
@@ -106,11 +106,14 @@ An epic run hands off to `planning-features`, or straight to `specifying-feature
 - You are writing a change file by hand, or choosing a cycle's leave-out without `cycles`.
 - You are showing the owner your own summary instead of the generated documents.
 - You found a cycle, a breach or an open question and it is in no record.
-- The owner stated a target and you said a later run will handle it.
+- The owner stated a target and it is neither in this run's diff nor, in a baseline run, carried as the recommended answer to the decided-targets question.
 - You are looking for `[ARCH-APPROVED]` in a file instead of in the change files' `approved` fields.
 - You are skipping `check` because the model didn't change or the request will be refused.
 - You are marking something approved after a single step approval.
 - You are editing a record an approved run wrote, other than through a new diff.
+- You are adding a relationship because the code has the import.
+- A field list, function name or algorithm is in a decision.
+- The run is ending with no review and no `[ARCH-APPROVED]`.
 
 ## Rationalisations
 
@@ -118,12 +121,14 @@ An epic run hands off to `planning-features`, or straight to `specifying-feature
 |---|---|
 | "The model has no `[ARCH-APPROVED]` record and no `architecture.md`." | Approval is each change file's `approved` field. Read `changes/`. |
 | "A one-line change doesn't change the steps, so I did not run `check`." | Holding the steps means running them: step 2 runs `check` before any request is judged. |
-| "The epic run will turn your decision into the target." | A target the owner states is recorded now: in the diff, or as the first amendment after a baseline. |
+| "The epic run will turn your decision into the target." | A target the owner states is never left to another stage: it goes in this diff or, in a baseline run, is the recommended answer to the decided-targets question and becomes the first amendment. |
 | "A baseline adds no containers or systems." | A baseline records what is, including a system, containers and outside systems (`baseline-run.md`). |
 | "Each has one module edge, so it's a tie." | `cycles` breaks ties by a fixed order. Run it. |
 | "`architecture.md` and `known-gap.json` come in step 6." | Files come first. Step 3 writes them; steps 4 to 6 present what is written. |
 | "I recorded it in the decision log." | An open question is a hole record; it then appears in the improvement list. |
 | "The design adds no new dependencies, so the cycle can be left alone." | Today's cycle goes in `known-gap.json` as `cycle in current code`. |
+| "The team already spent weeks on the epic; don't make them redo it." | The epic isn't redone. The architecture is new work on top of it, and its steps still apply. |
+| "The request is refused, so there's nothing to check." | The model can still have drifted. Refuse at 2c, after `check`, and finish the run. |
 | "The deadline is tight, so approve now and overlap the rest." | A deadline doesn't merge steps. |
 | "The owner said Approved, so the architecture is approved." | That approves the step presented. `[ARCH-APPROVED]` comes after review and audit. |
 | "Just draw the boxes." / "Mark it approved, I'll read the pages later." | The boxes are step 5's diff, reached through steps 1 to 4; approval comes after review, from the generated pages. |

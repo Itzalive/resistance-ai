@@ -11,12 +11,12 @@ Used by the self-review and by the independent auditor, with the inputs `review-
 
 - **Rule map:** each element's `rules` metadata in `export`.
 - **Coverage and unmapped modules:** `coverage.json`, in `export` `coverage`.
-- **Cycles:** `cycles` on the written model reports `0 relationships to leave out in 0 groups, 0 too large`.
-- **Roots:** no element's `code` is a root (the overlay's `roots`, or the shared prefix without them), unless the whole repository is baselined.
-- **Edge nodes:** each `edge_nodes` element in `coverage.json` is a `component` with `code`, no children and no `rules`, and is in no decision's `binds` or `owner` and no contract's `owner` or `bound`.
-- **The change file:** its `check.output` equals the output of a `check` run now on the same files, and `change --compare` with the run's before copy prints `same` (exit 0). A stale or hand-made change file fails both.
-- **Documents:** `architecture-docs check` exits 0.
-- **Areas:** every element id in `export` `elements` appears in some `areas[].elements`.
+- **Cycles:** `cycles` on the written model.
+- **Roots:** each element's `code` in `export`, against the overlay's `roots` (or the shared prefix without them).
+- **Edge nodes:** each `edge_nodes` element of `coverage.json`, looked up in `export` and in every record's `binds`, `owner` and `bound`.
+- **The change file:** its `check.output` against a `check` run now on the same files, and `change --compare` with the run's before copy (no `--before` when it has none). A stale or hand-made change file fails both.
+- **Documents:** `architecture-docs check`.
+- **Areas:** `export` `elements` against `areas[].elements`.
 - **The dependency file** (audit only): the independent import scan of `review-workflow.md`.
 
 ## Grading

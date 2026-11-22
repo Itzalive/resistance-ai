@@ -24,13 +24,13 @@ A `<group>` is lowercase letters and digits in `-`-separated parts. Record ids (
 
 **Contract:** `id`, `name`, `owner`, `bound` (at least one), `obligations` (at least one), `compatibility` (or `null`).
 
-No run writes a `capabilities` field or a capability view.
+No run writes a `capabilities` field or a capability view. An area is an element view `view area-<name>`, `<name>` 1 to 64 lowercase letters, digits and `-`, starting with a letter or digit, and not a device name (`con`, `nul`, `com1` and the like). A view `of <element>` holds that element and everything inside it; an unscoped view holds the elements it draws. A runtime link's kind is declared in a `specification` block in a file other than `c4.c4`.
 
 ## The change file's life
 
 1. **Before copy.** Just before the first edit of a diff, copy the whole model folder to `architecture-before/<date>-<name>/` in the folder that holds the dependency file (`build/` by default), replacing any earlier copy of that name. Make it once per diff; going back to step 2 within the same diff keeps it. It is never committed. With an empty model folder there is no copy.
 2. **Draft.** After the files are written (step 3), run `change` with `--before` (none for an empty folder), the diff's `--name` and `--date`, `--run`, `--asked-by`, `--summary` and a `--rejected` per choice not taken. Then add this run's coverage entries, each naming this change id as its `run`.
-3. **Every edit after that** (steps 4 to 6, or the review's corrections) is made in the files, then `change` runs again with the same `--name` and `--date`, so the coverage entries' `run` stays valid and the draft always matches the files.
+3. **Every edit after that** reruns `change` with the same `--name` and `--date` (`amendment.md`, Steps 4 to 6; the review's corrections likewise), so the coverage entries' `run` stays valid.
 4. **Approval.** After `[ARCH-APPROVED]`, edit only the change file's `approved`, from `null` to `{ "by": "owner", "date": "<today>" }`, then run `architecture-docs build` once more.
 5. **Never again.** A change file is never edited after its run is approved, and `change` refuses to replace one. A later correction is a new diff with its own change file; never rewrite a record an approved run wrote except through a new diff.
 
@@ -38,4 +38,4 @@ No run writes a `capabilities` field or a capability view.
 
 ## Coverage
 
-`coverage.json`: `answer` (the coverage answer in words), `counts` (`modules` and `groups`), `baselined` (each `prefix` with the `run` that added it), `edge_nodes` (each `element` with its `run`), `unmapped` (each `module` with its `reason`). It is written after the change file of the run that adds to it.
+`coverage.json`: `answer` (the coverage answer in words; `whole repository` for a baseline run), `counts` (`modules` and `groups`), `baselined` (each `prefix` with the `run` that added it), `edge_nodes` (each `element` with its `run`), `unmapped` (each `module` with its `reason`). It is written after the change file of the run that adds to it. Only a run that baselines changes it: it adds its own entries and updates `answer` and `counts`, and never edits another run's entry, except moving an edge node it baselines from `edge_nodes` to `baselined` with its own change id as `run`.

@@ -28,4 +28,4 @@ Grade every item. Each item is binary. The tag in brackets gives its scope, work
 - [ ] No code file changed in this run. [whole]
 - [ ] No drift breach was made legal by adding a relationship without the owner choosing a target change over a gap entry. [changed]
 - [ ] Every gap reason is one sentence saying why the breach exists today and what closes it, or exactly `cycle in current code`. [changed]
-- [ ] The audit's independent import scan found no edge the dependency file lacks. [whole]
+- [ ] The audit's independent import scan found no edge the dependency file lacks. [whole; audit only, not graded in self-review]
