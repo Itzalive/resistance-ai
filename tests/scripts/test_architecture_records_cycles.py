@@ -70,7 +70,8 @@ def test_distinct_module_edges_decide_a_tie() -> None:
 def test_groups_in_level_order_then_by_siblings() -> None:
     value = cycles(
         ["c", "d", "a", "b", "p", "p.m", "p.n"],
-        [("c", "d"), ("d", "c"), ("a", "b"), ("b", "a"), ("p.m", "p.n"), ("p.n", "p.m")],
+        # The inner level comes first and a -> c makes the search meet c, d before a, b: only the sort orders them.
+        [("p.m", "p.n"), ("p.n", "p.m"), ("c", "d"), ("d", "c"), ("a", "b"), ("b", "a"), ("a", "c")],
         [],
     )
     assert [g["siblings"] for g in value["groups"]] == [["a", "b"], ["c", "d"], ["p.m", "p.n"]]
