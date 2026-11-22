@@ -62,7 +62,7 @@ A split-out question runs alongside the current feature only when the two share 
 
 ## Signals
 
-Counted per capability at step 3, from the model's rule map, the dependency file and a reading of the code:
+Counted per capability at step 3, from the elements' `rules` in `export` (the rule map), the dependency file and a reading of the code:
 
 - **Entry paths:** the distinct ways into the code the capability changes (an API route, a job, a message handler, a command).
 - **Implementations per rule:** the number of places that implement each of the capability's rules today.

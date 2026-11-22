@@ -6,6 +6,8 @@ import re
 import shutil
 import subprocess
 
+import pytest
+
 from arch_delta_support import DOCS_SCRIPT, ENGINE, require_node, run_tool, unique
 
 PACKAGE = ENGINE / "skills" / "defining-architecture"
@@ -121,3 +123,14 @@ def test_modelled_fixture_check_shows_the_drift(tmp_path) -> None:
         {"from": "shop.refunds", "to": "shop.orders"},
         {"from": "shop.refunds", "to": "shop.payments"},
     ]
+
+
+OLD_LAYOUT = re.compile(r"architecture\.md|decision log only grew|model's rule map")
+
+
+@pytest.mark.parametrize("skill", ["planning-features", "specifying-features"])
+def test_other_skills_read_the_record_layout(skill: str) -> None:
+    folder = ENGINE / "skills" / skill
+    hits = [f"{path.name}:{number}" for path in sorted(folder.glob("*.md")) if path.name != "field-evidence.md"
+            for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1) if OLD_LAYOUT.search(line)]
+    assert hits == []
