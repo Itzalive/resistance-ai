@@ -300,7 +300,7 @@ The specifying-features design-run "Unchanged" items stay: a design run edits no
 
 ## Task 5: the rebuild decision's other callers (alignment r2)
 
-**Tier:** standard. One atomic change for the spec amendment of commit 874cacb: every writer of `known-gap.json` rebuilds `generated/`, and no ownership line forbids it. No test: wording only (owner's lean-tests rule); the word-cap test pins both feature `SKILL.md` files, and each edit keeps its word count or shrinks it.
+**Tier:** standard. One atomic change for the spec amendment of commit 874cacb: every writer of `known-gap.json` rebuilds `generated/`, and no ownership line forbids it. No test: wording only (owner's lean-tests rule); the word-cap test pins both feature `SKILL.md` files, and each edit leaves it at or under the cap (`planning-features` ends at exactly 1000).
 
 Sweep: `grep -rni "known-gap\|close_by\|change nothing else in the model" skills --include=*.md`, outside `defining-architecture/`.
 
