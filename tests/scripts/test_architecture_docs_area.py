@@ -159,14 +159,14 @@ def test_area_drawing_with_no_relationships() -> None:  # Drawing rules: framed 
 
 
 def test_area_drawing_text_and_arrow_limit() -> None:  # AC-21 (the diagram part); Shared rules
-    text = run("d.drawingText(d.drawing(data.areas[1].elements, data.areas[1].title, gap, base))")
+    text = run("d.drawingBlock(d.drawing(data.areas[1].elements, data.areas[1].title, gap, base)).text")
     assert text.split("\n")[:4] == ["flowchart LR", '  subgraph frame["Money"]', '    n2["Pay"]', '    n3["Gateway"]']
     assert text.endswith("  linkStyle 1 stroke:#d00,color:#d00")
     many = {**DATA, "allowed": [{"from": "pay", "to": f"x{i}", "titles": []} for i in range(81)],
             "elements": DATA["elements"] + [element(f"x{i}", f"X{i}") for i in range(81)], "runtime": []}
-    assert run("d.drawingText(d.drawing(data.areas[1].elements, data.areas[1].title, [], base))", data=many) is None
+    assert run("d.drawingBlock(d.drawing(data.areas[1].elements, data.areas[1].title, [], base)).text", data=many) is None
     many["allowed"] = many["allowed"][:80]
-    assert run("d.drawingText(d.drawing(data.areas[1].elements, data.areas[1].title, [], base))", data=many).count(" --> ") == 80
+    assert run("d.drawingBlock(d.drawing(data.areas[1].elements, data.areas[1].title, [], base)).text", data=many).count(" --> ") == 80
 
 
 def test_an_arrow_is_hidden_only_by_a_drawn_one() -> None:  # Drawing rules: the implying arrow has a framed end
@@ -362,7 +362,9 @@ def test_area_document_over_the_arrow_limit() -> None:  # AC-21: the note, and t
     data = {**RECORDS, "allowed": [{"from": "pay", "to": f"x{i:02}", "titles": []} for i in range(81)], "runtime": [],
             "elements": RECORDS["elements"] + [element(f"x{i:02}", f"X{i}") for i in range(81)]}
     document = area_doc(1, data, [])
-    assert section(document, "Diagram") == [para("The diagram has more than 80 arrows and is not drawn; the tables list everything.")]
+    block = section(document, "Diagram")[0]
+    assert block["type"] == "diagram" and block["text"] is None and block["note"] == "The Markdown diagram has more than 80 arrows and is not drawn; the HTML page draws it."
+    assert len(block["figure"]["arrows"]) == 81
     assert len(section(document, "Dependencies")[0]["rows"]) == 81
 
 
@@ -384,7 +386,12 @@ def test_capability_document() -> None:  # Capability: title, description, seque
     assert heads(document, 2) == ["Sequence", "Steps", "Decisions", "Contracts", "Areas involved"]
     assert section(document, "Sequence") == [{"type": "diagram", "text": (
         "sequenceDiagram\n  participant n3 as Web\n  participant n2 as API\n  participant n1 as Gateway\n"
-        "  n3->>n2: order\n  n2->>n1: \n  n1-->>n2: paid")}]
+        "  n3->>n2: order\n  n2->>n1: \n  n1-->>n2: paid"), "figure": {
+        "kind": "sequence",
+        "participants": [{"id": "shop.web", "text": "Web"}, {"id": "shop.api", "text": "API"}, {"id": "pay.gateway", "text": "Gateway"}],
+        "messages": [{"from": "shop.web", "to": "shop.api", "reply": False, "text": "order"},
+                     {"from": "shop.api", "to": "pay.gateway", "reply": False, "text": ""},
+                     {"from": "pay.gateway", "to": "shop.api", "reply": True, "text": "paid"}]}, "note": None}]
     table = section(document, "Steps")[0]
     assert table["header"] == ["Step", "From", "To", "Label", "Call or reply", "Kinds"]
     web, api, gateway = ([L(id_, f"../areas/{area}.md"), f" ({title})"] for id_, area, title in

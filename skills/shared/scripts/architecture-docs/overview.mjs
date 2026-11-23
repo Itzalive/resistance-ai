@@ -2,7 +2,7 @@
 // everything in no area.
 import { cmp } from '../architecture-delta/report.mjs';
 import { doc, heading, paragraph, list, table, diagram, docLink } from './tree.mjs';
-import { ARROW_LIMIT, flowchart } from './mermaid.mjs';
+import { MARKDOWN_TOO_MANY, SVG_ARROW_LIMIT, flowchart } from './mermaid.mjs';
 import {
   OVERVIEW, IMPROVEMENTS, changeDoc, topLevel, areasByElement, areasOf, outsideAreas, recordTarget, titlesOf,
 } from './facts.mjs';
@@ -31,8 +31,10 @@ function systemDiagram(data) {
   const arrows = [...pairs.values()]
     .sort((x, y) => cmp(x.from, y.from) || cmp(x.to, y.to))
     .map((pair) => ({ from: pair.from, to: pair.to, dashed: !pair.solid, text: pair.solid ? '' : [...pair.kinds].sort(cmp).join(', ') }));
-  const text = flowchart(nodes, arrows);
-  return text === null ? paragraph(`The system diagram has more than ${ARROW_LIMIT} arrows and is not drawn; the tables list every element.`) : diagram(text);
+  if (arrows.length > SVG_ARROW_LIMIT) {
+    return paragraph(`The system diagram has more than ${SVG_ARROW_LIMIT} arrows and is not drawn; the tables list every element.`);
+  }
+  return diagram(flowchart(nodes, arrows), { kind: 'flowchart', nodes, arrows, frame: null }, MARKDOWN_TOO_MANY);
 }
 
 const orNone = (parts) => (parts.length > 0 ? parts : ['None']);

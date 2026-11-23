@@ -95,7 +95,8 @@ def test_change_record_over_the_arrow_limit() -> None:  # Shared rules: a flowch
     data = {**RECORDS, "allowed": [{"from": "pay", "to": f"x{i:02}", "titles": []} for i in range(81)], "runtime": [],
             "elements": RECORDS["elements"] + [element(f"x{i:02}", f"X{i}") for i in range(81)]}
     document = change_doc(change(elements=lists(changed=["pay"])), data, [])
-    assert section(document, "Diagram") == [para("The diagram has more than 80 arrows and is not drawn; the tables list everything.")]
+    block = section(document, "Diagram")[0]
+    assert block["type"] == "diagram" and block["text"] is None and block["note"] == "The Markdown diagram has more than 80 arrows and is not drawn; the HTML page draws it."
 
 
 def test_change_record_what_changed() -> None:  # Change record: What changed; AC-22

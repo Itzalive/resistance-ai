@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-import base64
-import hashlib
+import re
 import pytest
 
 from arch_delta_support import DOCS_LIB, call, require_node
@@ -99,20 +98,37 @@ def page(blocks: list, title: str = "T") -> str:
     return result["value"]
 
 
-def test_html_page_policy_and_scripts() -> None:  # AC-13
+def test_html_page_policy_and_no_script() -> None:  # AC-13
     text = page([para("x")])
     lines = text.split("\n")
     assert lines[0] == MARKER and lines[1] == "<!doctype html>"
-    start = '<script>mermaid.initialize({ startOnLoad: true, securityLevel: \'strict\' });</script>'
-    assert start in lines
-    script = start[len("<script>"):-len("</script>")]
-    digest = base64.b64encode(hashlib.sha256(script.encode("utf-8")).digest()).decode("ascii")
-    url = "https://cdn.jsdelivr.net/npm/mermaid@12.2.0/dist/mermaid.min.js"
-    policy = f"default-src 'none'; script-src {url} 'sha256-{digest}'; style-src 'unsafe-inline'; img-src data:"
-    assert f'<meta http-equiv="Content-Security-Policy" content="{policy}">' in lines
-    assert text.count("<script") == 2
-    assert (f'<script src="{url}" integrity="sha384-8xUhuLNMjW/cI2Dacg3DR4WliYznvIg0LVG1stctThKD/YVrJFI9TNCFxft5NYgp" '
-            'crossorigin="anonymous"></script>') in lines
+    assert ("<meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'; style-src 'unsafe-inline'\">"
+            in lines)
+    assert "<script" not in text
+
+
+def test_html_style_reads_in_light_and_dark() -> None:  # AC-29
+    style = re.search(r"<style>(.*?)</style>", page([para("x")]), re.S).group(1)
+    assert "color-scheme:light dark" in style
+    assert ".table{overflow-x:auto}" in style and not re.search(r"(^|\})table\{[^}]*display:block", style)
+    # The body takes its colours from tokens, and the dark rule sets every token the light one does.
+    assert re.search(r"body\{[^}]*background:var\(--bg\);color:var\(--text\)", style)
+    light = re.search(r":root\{color-scheme:light dark;([^}]*)\}", style).group(1)
+    dark = re.search(r"@media \(prefers-color-scheme:dark\)\{:root\{([^}]*)\}\}", style).group(1)
+    names = lambda tokens: sorted(re.findall(r"(--[a-z-]+):", tokens))  # noqa: E731
+    assert names(light) == names(dark) and "--bg" in names(dark) and "--text" in names(dark)
+
+
+def test_html_table_scrolls_in_its_own_box() -> None:
+    text = page([{"type": "table", "header": ["a"], "rows": [[["b"]]]}])
+    assert '<div class="table"><table>\n<thead>' in text and "</table></div>" in text
+
+
+def test_html_diagram_is_its_inline_svg() -> None:
+    svg = '<svg xmlns="http://www.w3.org/2000/svg"><text fill="currentColor">A</text></svg>'
+    text = page([{"type": "diagram", "text": "flowchart LR", "svg": svg}])
+    assert f'<div class="diagram">{svg}</div>' in text
+    assert "mermaid" not in text
 
 
 def test_html_escapes_every_value() -> None:  # AC-12
@@ -121,7 +137,6 @@ def test_html_escapes_every_value() -> None:  # AC-12
         para("a <script>alert(1)</script> & 'q'\nnext", link('say "hi"', "areas/a.md")),
         {"type": "table", "header": ["<th>"], "rows": [[["<td>\nx"]]]},
         {"type": "code", "text": "<code>\n"},
-        {"type": "diagram", "text": "flowchart LR\n  n1[\"<A>\"]"},
     ]
     text = page(blocks, title="<T>")
     assert "<title>&lt;T&gt;</title>" in text and "<h1>&lt;T&gt;</h1>" in text
@@ -130,8 +145,7 @@ def test_html_escapes_every_value() -> None:  # AC-12
     assert '<a href="areas/a.html">say &quot;hi&quot;</a></p>' in text
     assert "<th>&lt;th&gt;</th>" in text and "<td>&lt;td&gt; x</td>" in text
     assert "<pre><code>&lt;code&gt;</code></pre>" in text
-    assert '<pre class="mermaid">flowchart LR\n  n1[&quot;&lt;A&gt;&quot;]</pre>' in text
-    assert text.count("<script") == 2
+    assert "<script" not in text
 
 
 def test_html_headings_cells_and_link_text_are_one_line() -> None:
@@ -252,3 +266,27 @@ def test_sequence_refuses_a_message_to_no_participant() -> None:  # fail closed:
         result = mermaid("sequence", [{"id": "a", "text": "A"}], [message])
         assert result["ok"] is False
         assert "ghost" in result["message"]
+
+
+def test_html_leaf_headings_become_cards() -> None:  # Writers: a record reads as one card
+    blocks = [{"type": "heading", "level": 2, "text": "Decisions"},
+              {"type": "heading", "level": 3, "text": "D-1"}, para("one"),
+              {"type": "heading", "level": 3, "text": "D-2"}, para("two"),
+              {"type": "heading", "level": 2, "text": "Next"}, para("after")]
+    text = page(blocks)
+    assert '<h2>Decisions</h2>\n<section class="card">\n<h3>D-1</h3>\n<p>one</p>\n</section>' in text
+    assert '<section class="card">\n<h3>D-2</h3>\n<p>two</p>\n</section>\n<h2>Next</h2>\n<p>after</p>' in text
+
+
+def test_html_label_value_lists_become_fact_grids() -> None:
+    facts = {"type": "list", "items": [["Status: current"], ["Binds: ", link("a", "areas/a.md"), " (A)"]]}
+    text = page([facts, {"type": "list", "items": [["plain item"], ["Key: value"]]}])
+    assert ('<dl class="facts">\n<dt>Status</dt><dd>current</dd>\n'
+            '<dt>Binds</dt><dd><a href="areas/a.html">a</a> (A)</dd>\n</dl>') in text
+    assert "<ul>\n<li>plain item</li>\n<li>Key: value</li>\n</ul>" in text
+
+
+def test_html_page_links_home_when_given() -> None:
+    result = call("html.mjs", "renderHtml", {"title": "T", "blocks": []}, {"home": "../index.html"}, lib=DOCS_LIB)
+    assert '<header class="top"><a href="../index.html">Architecture overview</a></header>' in result["value"]
+    assert "<header" not in page([])

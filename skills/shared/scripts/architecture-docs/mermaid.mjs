@@ -3,6 +3,10 @@
 import { cmp } from '../architecture-delta/report.mjs';
 
 export const ARROW_LIMIT = 80;
+// Graphviz lays out far larger graphs than Mermaid; an HTML page draws up to this many arrows.
+export const SVG_ARROW_LIMIT = 400;
+// The note a Markdown document shows for a diagram only its HTML page draws.
+export const MARKDOWN_TOO_MANY = `The Markdown diagram has more than ${ARROW_LIMIT} arrows and is not drawn; the HTML page draws it.`;
 export const STEP_LIMIT = 200;
 const SAFE = /^[A-Za-z0-9 .'/_-]$/;
 const RED = 'stroke:#d00,color:#d00';

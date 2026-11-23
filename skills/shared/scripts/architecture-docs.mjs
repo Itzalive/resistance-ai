@@ -12,6 +12,7 @@ import { parseArgs } from './architecture-docs/args.mjs';
 import { resolveOut, listOut } from './architecture-docs/out.mjs';
 import { writeOutput } from './architecture-docs/writer.mjs';
 import { buildFiles, checkLimits, cleanGap } from './architecture-docs/build.mjs';
+import { loadGraphviz } from './architecture-docs/svg.mjs';
 
 // Spec, The tool: known-gap entries are cleaned like `export` output before any document uses them.
 function readGap(loaded, value) {
@@ -62,9 +63,10 @@ async function main(argv, state) {
   const listed = listOut(outDir, deadline.check);
   deadline.check();
   const loaded = await loadRepoModel(args, deadline);
+  await loadGraphviz(repo);
   const gap = readGap(loaded, args.gap);
   deadline.check();
-  const files = buildFiles(loaded.model, loaded.records, gap, deadline.check);
+  const files = await buildFiles(loaded.model, loaded.records, gap, deadline.check);
   checkLimits(files);
   const result = args.command === 'build'
     ? runBuild(locate, files, state, deadline.check)
