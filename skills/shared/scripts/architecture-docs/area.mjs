@@ -45,11 +45,12 @@ export function buildArea(data, gap, area, base) {
   if (area.description !== null) blocks.push(paragraph(area.description));
 
   blocks.push(heading(2, 'Diagram'));
-  const picture = drawing(area.elements, area.title, gap, base, new Map(), { area: true });
-  if (picture.nodes.length > AREA_MATRIX_BOXES) {
-    blocks.push(...matrixBlocks(drawing(area.elements, area.title, gap, base, new Map(), { area: true, keepImplied: true })));
+  // Leaving implied imports out changes no box, so the box count is read from the matrix's picture.
+  const full = drawing(area.elements, area.title, gap, base, new Map(), { area: true, keepImplied: true });
+  if (full.nodes.length > AREA_MATRIX_BOXES) {
+    blocks.push(...matrixBlocks(full));
   } else {
-    blocks.push(drawingBlock(picture) ?? paragraph(TOO_MANY_ARROWS));
+    blocks.push(drawingBlock(drawing(area.elements, area.title, gap, base, new Map(), { area: true })) ?? paragraph(TOO_MANY_ARROWS));
   }
 
   blocks.push(heading(2, 'Elements'));

@@ -539,25 +539,25 @@ def test_an_area_document_draws_groups_and_still_lists_every_dependency() -> Non
 
 
 def wide_area(systems: int) -> dict:
-    names = [f"s{i:02}" for i in range(systems)]
+    names = [f"a{i:02}" for i in range(systems)]  # sorting before the framed m.*
     return {**RECORDS, "elements": [element("m", "M"), element("m.a", "A", kind="component"), element("m.b", "B", kind="component"),
                                     element("m.c", "C", kind="component"), *[element(n, n.upper(), kind="system") for n in names]],
             "allowed": [imp("m.a", n) for n in names],
-            "runtime": [{"from": "m.a", "to": "s01", "kind": "http", "titles": []}],
+            "runtime": [{"from": "m.a", "to": "a01", "kind": "http", "titles": []}],
             "areas": [{"name": "m", "title": "M", "description": None, "elements": ["m.a", "m.b", "m.c"]}]}
 
 
 def test_an_area_of_more_than_20_boxes_shows_a_dependency_matrix() -> None:  # AC-34
-    gap = [{"from": "m.b", "to": "s00", "reason": "r", "close_by": None}]
+    gap = [{"from": "m.b", "to": "a00", "reason": "r", "close_by": None}]
     [note, matrix] = section(area_doc(0, wide_area(18), gap), "Diagram")
     assert note == para("Too many boxes to draw (21); a row uses its column: u import, r runtime link, g known gap.")
     assert matrix["type"] == "table"
     assert matrix["header"] == ["Box", *[str(n) for n in range(1, 22)]]
-    assert [row[0] for row in matrix["rows"]][:5] == [["1. A"], ["2. B"], ["3. C"], ["4. S00 (no area)"], ["5. S01 (no area)"]]
-    a, b, _, s00 = matrix["rows"][:4]
+    assert [row[0] for row in matrix["rows"]][:5] == [["1. A"], ["2. B"], ["3. C"], ["4. A00 (no area)"], ["5. A01 (no area)"]]
+    a, b, _, a00 = matrix["rows"][:4]
     assert a[1:6] == [["-"], [""], [""], ["u"], ["u r"]]
     assert b[4] == ["g"] and b[2] == ["-"]
-    assert s00[1:] == [[""]] * 3 + [["-"]] + [[""]] * 17
+    assert a00[1:] == [[""]] * 3 + [["-"]] + [[""]] * 17
 
 
 def test_an_area_of_20_boxes_keeps_its_diagram() -> None:  # AC-34
@@ -572,3 +572,27 @@ def test_the_matrix_keeps_imports_the_diagram_leaves_out_as_implied() -> None:  
     data = {**RECORDS, **{k: data[k] for k in ("elements", "allowed", "runtime", "areas")}}
     [_, matrix] = section(area_doc(0, data, []), "Diagram")
     assert matrix["rows"][0][1:4] == [["-"], ["u"], ["u"]]
+
+
+def test_the_matrix_draws_grouped_neighbours() -> None:  # AC-34: built from the grouped neighbours
+    data = wide_area(18)
+    data = {**data, "elements": [*data["elements"], element("srv", "Srv"), element("srv.p", "P", kind="component"),
+                                 element("srv.q", "Q", kind="component")],
+            "allowed": [*data["allowed"], imp("m.c", "srv.p"), imp("m.c", "srv.q")]}
+    [note, matrix] = section(area_doc(0, data, []), "Diagram")
+    assert note["parts"][0].startswith("Too many boxes to draw (22);")
+    assert matrix["rows"][-1][0] == ["22. Srv (2 elements)"] and matrix["rows"][2][22] == ["u"]
+
+
+def test_a_sibling_of_a_framed_element_is_drawn_as_itself() -> None:  # Grouped neighbours: holds no framed element
+    data = {**GROUPED, "elements": [*GROUPED["elements"], element("app.z", "Z", kind="component"), element("app.w", "W", kind="component")],
+            "allowed": [imp("app.x", "app.z"), imp("app.x", "app.w")], "runtime": []}
+    picture = run(AREA, data=data, gap=[])
+    assert {node["id"] for node in picture["nodes"]} == {"app.x", "app.y", "app.z", "app.w"}
+
+
+def test_an_import_to_a_group_is_never_left_out() -> None:  # Implied imports: arrows to a group are never left out
+    data = {**GROUPED, "allowed": [imp("app.x", "app.y"), imp("app.y", "srv.p"), imp("app.y", "srv.q"), imp("app.x", "srv.p")],
+            "runtime": []}
+    drawn = [(a["from"], a["to"]) for a in run(AREA, data=data, gap=[])["arrows"]]
+    assert drawn == [("app.x", "app.y"), ("app.x", "srv"), ("app.y", "srv")]

@@ -49,14 +49,17 @@ function groupOf(id, framed, isElement) {
 // elements is left out when its target is still reachable from its source along the other kept ones.
 function reduceImports(pairs, framed) {
   const inside = pairs.filter((pair) => framed.has(pair.from) && framed.has(pair.to)).sort((x, y) => cmp(x.from, y.from) || cmp(x.to, y.to));
-  const kept = new Set(inside);
+  const out = new Map();
+  for (const pair of inside) {
+    if (!out.has(pair.from)) out.set(pair.from, new Set());
+    out.get(pair.from).add(pair);
+  }
   const reaches = (from, to, skip) => {
     const seen = new Set([from]);
     const queue = [from];
-    while (queue.length > 0) {
-      const at = queue.shift();
-      for (const pair of kept) {
-        if (pair === skip || pair.from !== at || seen.has(pair.to)) continue;
+    for (let at = 0; at < queue.length; at += 1) {
+      for (const pair of out.get(queue[at]) ?? []) {
+        if (pair === skip || seen.has(pair.to)) continue;
         if (pair.to === to) return true;
         seen.add(pair.to);
         queue.push(pair.to);
@@ -64,8 +67,14 @@ function reduceImports(pairs, framed) {
     }
     return false;
   };
-  for (const pair of inside) if (reaches(pair.from, pair.to, pair)) kept.delete(pair);
-  return pairs.filter((pair) => !inside.includes(pair) || kept.has(pair));
+  const dropped = new Set();
+  for (const pair of inside) {
+    if (reaches(pair.from, pair.to, pair)) {
+      out.get(pair.from).delete(pair);
+      dropped.add(pair);
+    }
+  }
+  return pairs.filter((pair) => !dropped.has(pair));
 }
 
 // Spec, Area diagrams (#44): neighbours redrawn as their groups, arrows of one style between the same two nodes merged.
@@ -84,7 +93,6 @@ function groupPairs(drawnByStyle, framed, isElement) {
     for (const pair of drawnByStyle[style]) {
       const from = end(pair.from);
       const to = end(pair.to);
-      if (from === to) continue;
       const key = JSON.stringify([from, to]);
       if (!merged[style].has(key)) merged[style].set(key, { from, to, kinds: new Set(), titles: new Set() });
       for (const kind of pair.kinds) merged[style].get(key).kinds.add(kind);
