@@ -1,7 +1,7 @@
 // The drawing rules (spec, What each document holds, Drawing rules): framed elements and their neighbours, import,
 // runtime and known-gap arrows, implied arrows hidden. `base` comes from `documentBase`.
 import { cmp } from '../architecture-delta/report.mjs';
-import { ARROW_LIMIT, flowchart } from './mermaid.mjs';
+import { MARKDOWN_TOO_MANY, SVG_ARROW_LIMIT, flowchart } from './mermaid.mjs';
 import { diagram } from './tree.mjs';
 
 const STYLES = ['import', 'runtime', 'gap'];
@@ -87,10 +87,11 @@ export function drawingText(picture) {
   return flowchart(picture.nodes, picture.arrows, picture.frame);
 }
 
-// The diagram block of a drawing, or null when it has more than ARROW_LIMIT arrows.
+// The diagram block of a drawing, or null when it has more than SVG_ARROW_LIMIT arrows. Over ARROW_LIMIT arrows only
+// the HTML page draws it; the Markdown document shows a note.
 export function drawingBlock(picture) {
-  const text = drawingText(picture);
-  return text === null ? null : diagram(text, { kind: 'flowchart', ...picture });
+  if (picture.arrows.length > SVG_ARROW_LIMIT) return null;
+  return diagram(drawingText(picture), { kind: 'flowchart', ...picture }, MARKDOWN_TOO_MANY);
 }
 
-export const TOO_MANY_ARROWS = `The diagram has more than ${ARROW_LIMIT} arrows and is not drawn; the tables list everything.`;
+export const TOO_MANY_ARROWS = `The diagram has more than ${SVG_ARROW_LIMIT} arrows and is not drawn; the tables list everything.`;

@@ -93,3 +93,21 @@ def test_figures_fill_each_diagram_block_with_its_svg() -> None:
     assert filled["blocks"][0] == {"type": "paragraph", "parts": ["p"]}
     block = filled["blocks"][1]
     assert block["text"] == "sequenceDiagram" and block["svg"].startswith("<svg")
+
+
+def test_drawing_caps_markdown_at_80_arrows_and_svg_at_400() -> None:  # AC-21
+    def picture(count: int) -> dict:
+        nodes = [{"id": "hub", "text": "Hub"}] + [{"id": f"n{at:03}", "text": f"N{at}"} for at in range(count)]
+        arrows = [{"from": f"n{at:03}", "to": "hub", "dashed": False, "red": False, "text": ""} for at in range(count)]
+        return {"nodes": nodes, "arrows": arrows, "frame": {"text": "F", "ids": ["hub"]}}
+
+    def block(count: int):
+        result = call("area-diagram.mjs", "drawingBlock", picture(count), lib=DOCS_LIB)
+        assert result["ok"], result
+        return result["value"]
+
+    assert block(80)["text"].startswith("flowchart LR")
+    over = block(81)
+    assert over["type"] == "diagram" and over["text"] is None and len(over["figure"]["arrows"]) == 81
+    assert block(400)["figure"]["kind"] == "flowchart"
+    assert block(401) is None

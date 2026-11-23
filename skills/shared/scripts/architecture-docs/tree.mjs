@@ -7,7 +7,8 @@ export const table = (header, rows) => ({ type: 'table', header, rows });
 export const code = (text) => ({ type: 'code', text });
 // `figure` is what svg.mjs draws for the HTML page: { kind: 'flowchart', nodes, arrows, frame } or
 // { kind: 'sequence', participants, messages }.
-export const diagram = (text, figure) => ({ type: 'diagram', text, figure });
+// `text` is the Mermaid text, or null when only the HTML page draws the diagram and Markdown shows `note`.
+export const diagram = (text, figure, note = null) => ({ type: 'diagram', text, figure, note });
 // Named docLink: the safety test forbids any call named like fs.link outside the writer.
 export const docLink = (text, href) => ({ type: 'link', text, href });
 export const doc = (title, blocks) => ({ title, blocks });

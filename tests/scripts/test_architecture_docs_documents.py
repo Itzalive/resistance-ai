@@ -263,7 +263,9 @@ def test_build_over_the_diagram_limits(tmp_path) -> None:  # AC-21
     _, out = built(tmp_path, big_model(), records=False)
     big = (out / "areas" / "big.md").read_text(encoding="utf-8")
     assert "```mermaid" not in big
-    assert "The diagram has more than 80 arrows and is not drawn; the tables list everything\\." in big
+    assert "The Markdown diagram has more than 80 arrows and is not drawn; the HTML page draws it\\." in big
+    page = (out / "areas" / "big.html").read_text(encoding="utf-8")
+    assert page.count('<div class="diagram"><svg') == 1 and "not drawn" not in page
     assert big.count("| uses | [hub](../README.md) \\(Hub\\) |") == 81
     many = (out / "capabilities" / "many.md").read_text(encoding="utf-8")
     assert "```mermaid\nsequenceDiagram\n" in many and many.count("->>") == 81

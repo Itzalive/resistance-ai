@@ -179,7 +179,9 @@ def test_overview_names_the_arrow_limit(tmp_path) -> None:  # Overview: a system
     assert proc.returncode == 0, proc.stderr
     sections = (repo / "docs" / "architecture" / "generated" / "README.md").read_text(encoding="utf-8").split("\n\n")
     assert sections[sections.index("## System") + 1] == (
-        "The system diagram has more than 80 arrows and is not drawn; the tables list every element\\.")
+        "The Markdown diagram has more than 80 arrows and is not drawn; the HTML page draws it\\.")
+    page = (repo / "docs" / "architecture" / "generated" / "index.html").read_text(encoding="utf-8")
+    assert page.count('<div class="diagram"><svg') == 1
 
 
 def test_overview_page_matches_and_is_marked(tmp_path) -> None:  # AC-13
