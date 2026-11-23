@@ -23,7 +23,7 @@ const cleanPair = (pair) => ({ from: clean(pair.from), to: clean(pair.to) });
 
 // Keys whose values (and everything under them) are ids: cut like every id. Every other string is record text.
 const ID_KEYS = new Set(['id', 'superseded_by', 'binds', 'owner', 'bound', 'decisions', 'elements', 'holes', 'contracts', 'capabilities',
-  'gap', 'element', 'run', 'group']);
+  'gap', 'element', 'run', 'group', 'from', 'to', 'kind']);
 
 function cleanRecord(value, isId = false) {
   if (typeof value === 'string') return isId ? clean(value) : cleanText(value);

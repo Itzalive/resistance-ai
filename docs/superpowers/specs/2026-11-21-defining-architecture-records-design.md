@@ -126,7 +126,7 @@ The review's cycle check runs `cycles` on the written model and passes only when
 
 **The manifest and rubric** change as follows; every other item stays.
 - The rule map is the elements' `rules` metadata; "Baseline coverage" and "Unmapped modules" are `coverage.json`.
-- Cross-cutting decisions in scope are the decisions with `obligations` binding a changed element, and every decision with `obligations` and empty `binds` (the principles). Each is taken whole and holds only product-level content.
+- Cross-cutting decisions in scope are the decisions with `obligations` binding a changed element (one the change file lists under `elements`, or, since #43, an end of a relationship it lists under `relationships`), and every decision with `obligations` and empty `binds` (the principles). Each is taken whole and holds only product-level content.
 - No cycles: `cycles` reports 0 groups [whole].
 - No element's `code` is a root, unless the whole repository is baselined [whole].
 - Every edge node in `coverage.json` is a `component` with `code`, no children and no `rules`, and is in no decision's `binds` or `owner` and no contract's `owner` or `bound` [whole].

@@ -136,11 +136,24 @@ def test_a_change_file_without_relationships_still_exports(tmp_path) -> None:  #
     assert "relationships" not in record
 
 
+def test_relationship_ends_and_kind_are_cleaned_as_ids(tmp_path) -> None:  # as gap pairs and the model's own links
+    repo = change_repo(tmp_path)
+    assert change(repo).returncode == 0
+    data = written(repo)
+    data["relationships"]["added"] = [{"from": "x" * 250, "to": "shop.b", "kind": "ht\ntp\u0007", "titles": ["a\nb"]}]
+    write_json(repo / "docs" / "architecture" / "changes" / "2026-11-21-first.json", data)
+    proc = run_tool("export", "--repo", repo)
+    assert proc.returncode == 0, proc.stderr
+    [rel] = json.loads(proc.stdout)["changes"][0]["relationships"]["added"]
+    assert len(rel["from"]) == 200 and "\n" not in rel["kind"] and rel["titles"] == ["a\nb"]
+
+
 @pytest.mark.parametrize("bad", [
+    {"from": "", "to": "shop.b", "kind": None, "titles": []},
     {"from": "shop.d", "to": "shop.b", "kind": None},
     {"from": "shop.d", "to": "shop.b", "kind": "", "titles": []},
     {"from": "shop.d", "to": "shop.b", "kind": None, "titles": [], "extra": 1},
-], ids=["no-titles", "empty-kind", "extra-field"])
+], ids=["empty-from", "no-titles", "empty-kind", "extra-field"])
 def test_a_bad_relationship_is_a_record_error(tmp_path, bad: dict) -> None:
     repo = change_repo(tmp_path)
     assert change(repo).returncode == 0

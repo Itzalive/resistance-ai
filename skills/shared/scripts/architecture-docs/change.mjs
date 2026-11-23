@@ -1,5 +1,6 @@
 // A change record (spec, What each document holds, Change record): the change's summary, asker, run, date and
-// approval; a diagram of the elements it added or changed; what changed; the choices not taken; its known-gap pairs;
+// approval; a diagram of the elements it added or changed (and, when the change file lists them, only the relationships
+// and gap pairs it changed); what changed; the choices not taken; its known-gap pairs;
 // its check. A change file holds only ids, so a record is printed as it stands in the model now.
 import { cmp } from '../architecture-delta/report.mjs';
 import { doc, heading, paragraph, list, table, code, docLink, orSay } from './tree.mjs';
@@ -120,7 +121,7 @@ function diagramBlock(change, gap, ctx) {
   for (const id of change.elements.added) if (ctx.elements.has(id)) marks.set(id, 'added');
   if (change.relationships !== undefined) {
     const picture = changeDrawing(change, ctx, marks);
-    if (picture.nodes.length === 0) return paragraph('The change added or changed no element and no relationship.');
+    if (picture.nodes.length === 0) return paragraph('No element the change added or changed is in the current model, and it changed no relationship or gap pair.');
     return drawingBlock(picture) ?? paragraph(TOO_MANY_ARROWS);
   }
   if (marks.size === 0) return paragraph('No element the change added or changed is in the current model.');

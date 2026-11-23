@@ -87,7 +87,8 @@ def rel(from_: str, to: str, kind: str | None = None, titles: tuple = ()) -> dic
 # shop.api -> ledger is removed and gapped, a runtime link and an import from a gone element are removed, and the gap
 # pair pay -> ledger is closed.
 DRAWN = change(elements=lists(changed=["shop.web"]),
-               relationships={"added": [rel("shop.web", "shop.api", titles=("orders",))], "changed": [],
+               relationships={"added": [rel("shop.web", "shop.api", titles=("orders",))],
+                              "changed": [rel("shop.api", "pay.gateway", "http", ("refunds", "charges"))],
                               "removed": [rel("pay.gateway", "shop.api", "event"), rel("shop.api", "ledger"),
                                           rel("shop.old", "pay")]},
                gap={"added": [["shop.api", "ledger"]], "removed": [["pay", "ledger"]]})
@@ -101,6 +102,7 @@ def test_change_record_with_relationships_draws_only_the_change() -> None:  # AC
         ("pay", "ledger", True, False, "gap closed"),
         ("pay.gateway", "shop.api", True, False, "removed, event"),
         ("shop.api", "ledger", False, True, "known gap"),
+        ("shop.api", "pay.gateway", True, False, 'http, "charges", "refunds"'),
         ("shop.old", "pay", True, False, "removed"),
         ("shop.web", "shop.api", False, False, ""),
     ]
@@ -117,6 +119,8 @@ def test_change_record_lists_its_relationships() -> None:  # AC-31, What changed
     flat = lambda block: ["".join(part if isinstance(part, str) else part["text"] for part in item) for item in block["items"]]
     at = blocks.index({"type": "heading", "level": 3, "text": "Relationships added"})
     assert flat(blocks[at + 1]) == ["shop.web (Web) -> shop.api (API): import"]
+    at = blocks.index({"type": "heading", "level": 3, "text": "Relationships changed"})
+    assert flat(blocks[at + 1]) == ["shop.api (API) -> pay.gateway (Gateway): http"]
     at = blocks.index({"type": "heading", "level": 3, "text": "Relationships removed"})
     assert flat(blocks[at + 1]) == ["pay.gateway (Gateway) -> shop.api (API): event", "shop.api (API) -> ledger (Ledger): import",
                                     "shop.old (not in the current model) -> pay (Pay): import"]
