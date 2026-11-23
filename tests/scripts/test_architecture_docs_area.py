@@ -596,3 +596,9 @@ def test_an_import_to_a_group_is_never_left_out() -> None:  # Implied imports: a
             "runtime": []}
     drawn = [(a["from"], a["to"]) for a in run(AREA, data=data, gap=[])["arrows"]]
     assert drawn == [("app.x", "app.y"), ("app.x", "srv"), ("app.y", "srv")]
+
+
+def test_an_area_document_leaves_out_an_implied_import() -> None:  # AC-33 through the area document
+    data = {**RECORDS, **{k: CHAIN[k] for k in ("elements", "allowed", "runtime", "areas")}, "runtime": []}
+    [block] = section(area_doc(0, data, []), "Diagram")
+    assert [(a["from"], a["to"]) for a in block["figure"]["arrows"]] == [("a", "b"), ("b", "c")]
