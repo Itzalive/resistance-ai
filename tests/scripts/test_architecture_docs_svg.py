@@ -36,7 +36,9 @@ def test_flowchart_draws_frame_nodes_and_three_arrow_styles() -> None:
     assert_drawing_only(text)
     for label in ("Alpha", "Beta", "Gamma", "Front", "http", "known gap"):
         assert f">{label}</text>" in text
-    assert text.count('class="node"') == 3 and text.count('class="edge"') == 3 and text.count('class="cluster"') == 1
+    assert text.count('class="node') == 3 and text.count('class="edge') == 3 and text.count('class="cluster"') == 1
+    # The page's style colours framed nodes and known-gap arrows by class.
+    assert text.count('class="node framed"') == 2 and text.count('class="edge gap"') == 1
     assert "stroke-dasharray" in text
     assert 'stroke="#d00000"' in text
     assert 'stroke="black"' not in text and 'fill="black"' not in text

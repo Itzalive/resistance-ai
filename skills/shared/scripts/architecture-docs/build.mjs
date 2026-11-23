@@ -28,7 +28,8 @@ export function cleanGap(entries) {
 // A document's Markdown file and its HTML page, whose diagrams are drawn as SVG.
 async function addDocument(files, rel, tree) {
   files[rel] = renderMarkdown(tree);
-  files[pageHref(rel)] = renderHtml(await drawFigures(tree));
+  const home = rel === 'README.md' ? null : `${'../'.repeat(rel.split('/').length - 1)}index.html`;
+  files[pageHref(rel)] = renderHtml(await drawFigures(tree), { home });
 }
 
 // Spec, What each document holds: every document is built from the export (and the cleaned known-gap entries).

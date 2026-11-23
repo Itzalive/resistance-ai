@@ -6,103 +6,105 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'">
 <title>Shop</title>
-<style>:root{color-scheme:light dark}body{font-family:system-ui,sans-serif;max-width:60rem;margin:0 auto;padding:1rem;line-height:1.5;color:#1a1a1a;background:#fff}a{color:#0645ad}.table{overflow-x:auto}table{border-collapse:collapse}th,td{border:1px solid #999;padding:.25rem .5rem;text-align:left;vertical-align:top}pre{overflow-x:auto}.diagram{overflow-x:auto;margin:1rem 0}.diagram svg{max-width:none;height:auto}@media (prefers-color-scheme:dark){body{color:#e6e6e6;background:#16181c}a{color:#8ab4f8}th,td{border-color:#555}.diagram [stroke="#d00000"]{stroke:#ff6b6b}.diagram [fill="#d00000"]{fill:#ff6b6b}}</style>
+<style>:root{color-scheme:light dark;--bg:#f6f7f9;--surface:#fff;--text:#1f2328;--muted:#5b6672;--border:#d9dee5;--accent:#0b63c4;--accent-soft:#e8f1fc;--node:#eef1f5;--frame:#f4f8fd;--edge:#77818c;--gap:#c62828;--stripe:#f8f9fb;--code:#f1f3f6}@media (prefers-color-scheme:dark){:root{--bg:#0e1116;--surface:#161a21;--text:#e4e7eb;--muted:#9ba5b2;--border:#2a313c;--accent:#6aaeff;--accent-soft:#18263a;--node:#1e242e;--frame:#131b27;--edge:#8a94a1;--gap:#ff6b6b;--stripe:#1a1f27;--code:#1c212a}}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}main{max-width:66rem;margin:0 auto;padding:1.5rem 1rem 4rem}header.top{background:var(--surface);border-bottom:1px solid var(--border);padding:.6rem 1rem;font-size:.9rem}header.top a::before{content:"\2190  "}h1{font-size:1.85rem;line-height:1.2;letter-spacing:-.01em;margin:.25rem 0 1.25rem;overflow-wrap:anywhere}h2{font-size:1.3rem;margin:2.5rem 0 .9rem;padding-bottom:.4rem;border-bottom:2px solid var(--border)}h3{font-size:1.08rem;margin:1.75rem 0 .6rem}h4{font-size:1rem;margin:1.25rem 0 .5rem}a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}p,li,dd{overflow-wrap:anywhere}ul{padding-left:1.25rem}li{margin:.2rem 0}.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:.9rem 1.1rem;margin:.8rem 0;box-shadow:0 1px 2px rgba(0,0,0,.04)}.card>h3,.card>h4{margin:0 0 .4rem;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.95rem;color:var(--accent)}.card>p:last-child,.card>dl:last-child,.card>ul:last-child{margin-bottom:0}dl.facts{display:grid;grid-template-columns:max-content 1fr;gap:.3rem 1rem;margin:.6rem 0;font-size:.93rem}dl.facts dt{color:var(--muted);font-weight:500}dl.facts dd{margin:0}@media (max-width:40rem){dl.facts{grid-template-columns:1fr;gap:0}dl.facts dd{margin-bottom:.5rem}}.table{overflow-x:auto}.table{background:var(--surface);border:1px solid var(--border);border-radius:12px;margin:.9rem 0}table{border-collapse:collapse;width:100%;font-size:.92rem}th,td{padding:.5rem .75rem;text-align:left;vertical-align:top;border-bottom:1px solid var(--border)}th{background:var(--accent-soft);font-weight:600;white-space:nowrap}tbody tr:nth-child(even){background:var(--stripe)}tbody tr:last-child td{border-bottom:0}.card .table{border-radius:8px;margin:.6rem 0 0}pre{background:var(--code);border:1px solid var(--border);border-radius:10px;padding:.8rem 1rem;overflow-x:auto;font-size:.85rem}.diagram{overflow:auto;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1rem;margin:1rem 0}.diagram svg{display:block;margin:0 auto;max-width:none;height:auto}.diagram text{fill:var(--text);font-family:Arial,Helvetica,sans-serif}.diagram .node path,.diagram .node polygon,.diagram .participant rect{fill:var(--node);stroke:var(--edge)}.diagram .node.framed path,.diagram .node.framed polygon{fill:var(--accent-soft);stroke:var(--accent)}.diagram .cluster path,.diagram .cluster polygon{fill:var(--frame);stroke:var(--border)}.diagram .edge path,.diagram .lifeline,.diagram .call line,.diagram .reply line,.diagram .loop{stroke:var(--edge)}.diagram .edge polygon,.diagram .call polygon,.diagram .reply polygon{fill:var(--edge);stroke:var(--edge)}.diagram .edge.gap path{stroke:var(--gap)}.diagram .edge.gap polygon{fill:var(--gap);stroke:var(--gap)}.diagram .edge.gap text{fill:var(--gap)}</style>
 </head>
 <body>
+<header class="top"><a href="../index.html">Architecture overview</a></header>
+<main>
 <h1>Shop</h1>
 <h2>Diagram</h2>
-<div class="diagram"><svg width="425pt" height="368pt"
- viewBox="0.00 0.00 425.00 368.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 364)">
+<div class="diagram"><svg width="488pt" height="388pt"
+ viewBox="0.00 0.00 488.00 388.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 384)">
 <g id="clust1" class="cluster">
-<polygon fill="none" stroke="currentColor" points="8,-8 8,-352 409.13,-352 409.13,-8 8,-8"/>
-<text fill="currentColor" xml:space="preserve" text-anchor="start" x="196.23" y="-336" font-family="Helvetica,Arial,sans-serif" font-size="12.00">Shop</text>
+<path fill="none" stroke="currentColor" d="M20,-8C20,-8 460.17,-8 460.17,-8 466.17,-8 472.17,-14 472.17,-20 472.17,-20 472.17,-360 472.17,-360 472.17,-366 466.17,-372 460.17,-372 460.17,-372 20,-372 20,-372 14,-372 8,-366 8,-360 8,-360 8,-20 8,-20 8,-14 14,-8 20,-8"/>
+<text fill="currentColor" xml:space="preserve" text-anchor="start" x="227.75" y="-356" font-family="Helvetica,Arial,sans-serif" font-size="12.00">Shop</text>
 </g>
-<g id="node1" class="node">
-<polygon fill="none" stroke="currentColor" points="80.84,-52 26.84,-52 26.84,-16 80.84,-16 80.84,-52"/>
-<text fill="currentColor" xml:space="preserve" text-anchor="start" x="41.5" y="-29.2" font-family="Helvetica,Arial,sans-serif" font-size="12.00">Shop</text>
+<g id="node1" class="node framed">
+<path fill="none" stroke="currentColor" d="M77.85,-52C77.85,-52 45.5,-52 45.5,-52 39.5,-52 33.5,-46 33.5,-40 33.5,-40 33.5,-28 33.5,-28 33.5,-22 39.5,-16 45.5,-16 45.5,-16 77.85,-16 77.85,-16 83.85,-16 89.85,-22 89.85,-28 89.85,-28 89.85,-40 89.85,-40 89.85,-46 83.85,-52 77.85,-52"/>
+<text fill="currentColor" xml:space="preserve" text-anchor="start" x="49.34" y="-29.2" font-family="Helvetica,Arial,sans-serif" font-size="12.00">Shop</text>
 </g>
-<g id="node2" class="node">
-<polygon fill="none" stroke="currentColor" points="89.33,-106 18.34,-106 18.34,-70 89.33,-70 89.33,-106"/>
-<text fill="currentColor" xml:space="preserve" text-anchor="start" x="26.34" y="-83.2" font-family="Helvetica,Arial,sans-serif" font-size="12.00">Orders API</text>
+<g id="node2" class="node framed">
+<path fill="none" stroke="currentColor" d="M93.01,-110C93.01,-110 30.34,-110 30.34,-110 24.34,-110 18.34,-104 18.34,-98 18.34,-98 18.34,-86 18.34,-86 18.34,-80 24.34,-74 30.34,-74 30.34,-74 93.01,-74 93.01,-74 99.01,-74 105.01,-80 105.01,-86 105.01,-86 105.01,-98 105.01,-98 105.01,-104 99.01,-110 93.01,-110"/>
+<text fill="currentColor" xml:space="preserve" text-anchor="start" x="34.18" y="-87.2" font-family="Helvetica,Arial,sans-serif" font-size="12.00">Orders API</text>
 </g>
-<g id="node7" class="node">
-<polygon fill="none" stroke="currentColor" points="234.58,-214 180.58,-214 180.58,-178 234.58,-178 234.58,-214"/>
-<text fill="currentColor" xml:space="preserve" text-anchor="start" x="191.25" y="-191.2" font-family="Helvetica,Arial,sans-serif" font-size="12.00">Orders</text>
+<g id="node7" class="node framed">
+<path fill="none" stroke="currentColor" d="M259.27,-226C259.27,-226 218.93,-226 218.93,-226 212.93,-226 206.93,-220 206.93,-214 206.93,-214 206.93,-202 206.93,-202 206.93,-196 212.93,-190 218.93,-190 218.93,-190 259.27,-190 259.27,-190 265.27,-190 271.27,-196 271.27,-202 271.27,-202 271.27,-214 271.27,-214 271.27,-220 265.27,-226 259.27,-226"/>
+<text fill="currentColor" xml:space="preserve" text-anchor="start" x="222.77" y="-203.2" font-family="Helvetica,Arial,sans-serif" font-size="12.00">Orders</text>
 </g>
 <g id="edge1" class="edge">
-<path fill="none" stroke="currentColor" d="M82.32,-106.31C103.32,-120.42 132.86,-140.59 158.25,-159 163.51,-162.82 169.03,-166.93 174.39,-170.99"/>
-<polygon fill="currentColor" stroke="currentColor" points="171.89,-173.48 181.96,-176.77 176.13,-167.92 171.89,-173.48"/>
+<path fill="none" stroke="currentColor" d="M91.04,-110.4C96.46,-113.92 102.08,-117.57 107.35,-121 138.74,-141.42 146.77,-146.24 177.93,-167 186.47,-172.7 195.66,-178.91 204.21,-184.73"/>
+<polygon fill="currentColor" stroke="currentColor" points="202.81,-186.74 209.97,-188.66 205.57,-182.69 202.81,-186.74"/>
 </g>
-<g id="node3" class="node">
-<polygon fill="none" stroke="currentColor" points="84.83,-160 22.84,-160 22.84,-124 84.83,-124 84.83,-160"/>
-<text fill="currentColor" xml:space="preserve" text-anchor="start" x="30.84" y="-137.2" font-family="Helvetica,Arial,sans-serif" font-size="12.00">Checkout</text>
+<g id="node3" class="node framed">
+<path fill="none" stroke="currentColor" d="M88.51,-168C88.51,-168 34.84,-168 34.84,-168 28.84,-168 22.84,-162 22.84,-156 22.84,-156 22.84,-144 22.84,-144 22.84,-138 28.84,-132 34.84,-132 34.84,-132 88.51,-132 88.51,-132 94.51,-132 100.51,-138 100.51,-144 100.51,-144 100.51,-156 100.51,-156 100.51,-162 94.51,-168 88.51,-168"/>
+<text fill="currentColor" xml:space="preserve" text-anchor="start" x="38.68" y="-145.2" font-family="Helvetica,Arial,sans-serif" font-size="12.00">Checkout</text>
 </g>
 <g id="edge2" class="edge">
-<path fill="none" stroke="currentColor" d="M85.18,-152.8C109.55,-161.47 143.86,-173.68 169.79,-182.91"/>
-<polygon fill="currentColor" stroke="currentColor" points="168.32,-186.1 178.91,-186.15 170.67,-179.5 168.32,-186.1"/>
+<path fill="none" stroke="currentColor" d="M100.74,-162.59C129.66,-172.15 169.32,-185.26 198.59,-194.94"/>
+<polygon fill="currentColor" stroke="currentColor" points="197.71,-197.22 205.12,-197.1 199.24,-192.57 197.71,-197.22"/>
 </g>
-<g id="node8" class="node">
-<polygon fill="none" stroke="currentColor" points="238.91,-268 176.25,-268 176.25,-232 238.91,-232 238.91,-268"/>
-<text fill="currentColor" xml:space="preserve" text-anchor="start" x="184.25" y="-245.2" font-family="Helvetica,Arial,sans-serif" font-size="12.00">Payments</text>
+<g id="node8" class="node framed">
+<path fill="none" stroke="currentColor" d="M266.27,-284C266.27,-284 211.93,-284 211.93,-284 205.93,-284 199.93,-278 199.93,-272 199.93,-272 199.93,-260 199.93,-260 199.93,-254 205.93,-248 211.93,-248 211.93,-248 266.27,-248 266.27,-248 272.27,-248 278.27,-254 278.27,-260 278.27,-260 278.27,-272 278.27,-272 278.27,-278 272.27,-284 266.27,-284"/>
+<text fill="currentColor" xml:space="preserve" text-anchor="start" x="215.77" y="-261.2" font-family="Helvetica,Arial,sans-serif" font-size="12.00">Payments</text>
 </g>
 <g id="edge3" class="edge">
-<path fill="none" stroke="currentColor" d="M80.58,-160.32C105.54,-178.09 143.6,-205.18 171.36,-224.93"/>
-<polygon fill="currentColor" stroke="currentColor" points="169.3,-227.76 179.48,-230.71 173.36,-222.06 169.3,-227.76"/>
+<path fill="none" stroke="currentColor" d="M91.07,-168.36C96.48,-171.88 102.1,-175.55 107.35,-179 140.19,-200.58 177.49,-225.44 203.83,-243.04"/>
+<polygon fill="currentColor" stroke="currentColor" points="202.17,-244.88 209.35,-246.74 204.9,-240.81 202.17,-244.88"/>
 </g>
-<g id="node4" class="node">
-<polygon fill="none" stroke="currentColor" points="401.13,-299 323.49,-299 323.49,-263 401.13,-263 401.13,-299"/>
-<text fill="currentColor" xml:space="preserve" text-anchor="start" x="331.49" y="-276.2" font-family="Helvetica,Arial,sans-serif" font-size="12.00">Order events</text>
+<g id="node4" class="node framed">
+<path fill="none" stroke="currentColor" d="M452.17,-316C452.17,-316 382.85,-316 382.85,-316 376.85,-316 370.85,-310 370.85,-304 370.85,-304 370.85,-292 370.85,-292 370.85,-286 376.85,-280 382.85,-280 382.85,-280 452.17,-280 452.17,-280 458.17,-280 464.17,-286 464.17,-292 464.17,-292 464.17,-304 464.17,-304 464.17,-310 458.17,-316 452.17,-316"/>
+<text fill="currentColor" xml:space="preserve" text-anchor="start" x="386.69" y="-293.2" font-family="Helvetica,Arial,sans-serif" font-size="12.00">Order events</text>
 </g>
-<g id="node5" class="node">
-<polygon fill="none" stroke="currentColor" points="393.63,-215 330.98,-215 330.98,-179 393.63,-179 393.63,-215"/>
-<text fill="currentColor" xml:space="preserve" text-anchor="start" x="338.98" y="-192.2" font-family="Helvetica,Arial,sans-serif" font-size="12.00">Inventory</text>
+<g id="node5" class="node framed">
+<path fill="none" stroke="currentColor" d="M444.67,-226C444.67,-226 390.34,-226 390.34,-226 384.34,-226 378.34,-220 378.34,-214 378.34,-214 378.34,-202 378.34,-202 378.34,-196 384.34,-190 390.34,-190 390.34,-190 444.67,-190 444.67,-190 450.67,-190 456.67,-196 456.67,-202 456.67,-202 456.67,-214 456.67,-214 456.67,-220 450.67,-226 444.67,-226"/>
+<text fill="currentColor" xml:space="preserve" text-anchor="start" x="394.18" y="-203.2" font-family="Helvetica,Arial,sans-serif" font-size="12.00">Inventory</text>
 </g>
-<g id="edge4" class="edge">
-<path fill="none" stroke="#d00000" d="M330.71,-191.03C322.55,-189.69 313.71,-188.47 305.49,-187.8 283.97,-186.04 278.43,-185.99 256.91,-187.8 253.46,-188.09 249.89,-188.5 246.31,-188.97"/>
-<polygon fill="#d00000" stroke="#d00000" points="245.93,-185.49 236.56,-190.45 246.98,-192.41 245.93,-185.49"/>
-<text xml:space="preserve" text-anchor="start" x="256.91" y="-190" font-family="Helvetica,Arial,sans-serif" font-size="11.00" fill="#d00000">known gap</text>
+<g id="edge4" class="edge gap">
+<path fill="none" stroke="#d00000" d="M377.96,-201.84C368.47,-200.58 358.31,-199.44 348.85,-198.8 327.31,-197.34 321.8,-197.16 300.27,-198.8 293.68,-199.3 286.71,-200.11 279.95,-201.04"/>
+<polygon fill="#d00000" stroke="#d00000" points="279.61,-198.61 273.04,-202.05 280.32,-203.46 279.61,-198.61"/>
+<text xml:space="preserve" text-anchor="start" x="300.27" y="-201" font-family="Helvetica,Arial,sans-serif" font-size="11.00" fill="#d00000">known gap</text>
 </g>
-<g id="node6" class="node">
-<polygon fill="none" stroke="currentColor" points="91.67,-214 16,-214 16,-178 91.67,-178 91.67,-214"/>
-<text fill="currentColor" xml:space="preserve" text-anchor="start" x="24" y="-191.2" font-family="Helvetica,Arial,sans-serif" font-size="12.00">Nightly jobs</text>
+<g id="node6" class="node framed">
+<path fill="none" stroke="currentColor" d="M95.35,-226C95.35,-226 28,-226 28,-226 22,-226 16,-220 16,-214 16,-214 16,-202 16,-202 16,-196 22,-190 28,-190 28,-190 95.35,-190 95.35,-190 101.35,-190 107.35,-196 107.35,-202 107.35,-202 107.35,-214 107.35,-214 107.35,-220 101.35,-226 95.35,-226"/>
+<text fill="currentColor" xml:space="preserve" text-anchor="start" x="31.84" y="-203.2" font-family="Helvetica,Arial,sans-serif" font-size="12.00">Nightly jobs</text>
 </g>
 <g id="edge5" class="edge">
-<path fill="none" stroke="currentColor" d="M91.96,-196C115.38,-196 145.53,-196 169.03,-196"/>
-<polygon fill="currentColor" stroke="currentColor" points="168.79,-199.5 178.79,-196 168.79,-192.5 168.79,-199.5"/>
+<path fill="none" stroke="currentColor" d="M107.4,-208C135.33,-208 171,-208 198.02,-208"/>
+<polygon fill="currentColor" stroke="currentColor" points="197.95,-210.45 204.95,-208 197.95,-205.55 197.95,-210.45"/>
 </g>
 <g id="edge6" class="edge">
-<path fill="none" stroke="currentColor" d="M234.84,-210.61C257.75,-223.37 291.44,-242.12 318.29,-257.06"/>
-<polygon fill="currentColor" stroke="currentColor" points="316.45,-260.04 326.89,-261.84 319.85,-253.92 316.45,-260.04"/>
+<path fill="none" stroke="currentColor" d="M271.64,-224.09C299.9,-238.51 341.61,-259.79 373.03,-275.82"/>
+<polygon fill="currentColor" stroke="currentColor" points="371.68,-277.88 379.03,-278.88 373.91,-273.52 371.68,-277.88"/>
 </g>
 <g id="edge7" class="edge">
-<path fill="none" stroke="currentColor" d="M234.88,-199.22C242.02,-199.96 249.75,-200.63 256.91,-201 278.47,-202.11 283.91,-201.77 305.49,-201 309.95,-200.84 314.61,-200.61 319.25,-200.34"/>
-<polygon fill="currentColor" stroke="currentColor" points="319.36,-203.84 329.11,-199.69 318.9,-196.85 319.36,-203.84"/>
+<path fill="none" stroke="currentColor" d="M271.61,-211.11C280.84,-211.89 290.95,-212.61 300.27,-213 321.84,-213.89 327.27,-213.8 348.85,-213 355.62,-212.75 362.76,-212.36 369.76,-211.91"/>
+<polygon fill="currentColor" stroke="currentColor" points="369.57,-214.38 376.38,-211.45 369.23,-209.49 369.57,-214.38"/>
 </g>
-<g id="node9" class="node">
-<polygon fill="none" stroke="currentColor" points="81.83,-268 25.84,-268 25.84,-232 81.83,-232 81.83,-268"/>
-<text fill="currentColor" xml:space="preserve" text-anchor="start" x="33.84" y="-245.2" font-family="Helvetica,Arial,sans-serif" font-size="12.00">Refunds</text>
+<g id="node9" class="node framed">
+<path fill="none" stroke="currentColor" d="M85.51,-284C85.51,-284 37.84,-284 37.84,-284 31.84,-284 25.84,-278 25.84,-272 25.84,-272 25.84,-260 25.84,-260 25.84,-254 31.84,-248 37.84,-248 37.84,-248 85.51,-248 85.51,-248 91.51,-248 97.51,-254 97.51,-260 97.51,-260 97.51,-272 97.51,-272 97.51,-278 91.51,-284 85.51,-284"/>
+<text fill="currentColor" xml:space="preserve" text-anchor="start" x="41.68" y="-261.2" font-family="Helvetica,Arial,sans-serif" font-size="12.00">Refunds</text>
 </g>
 <g id="edge8" class="edge">
-<path fill="none" stroke="currentColor" d="M82.32,-240.22C106.79,-231.51 142.78,-218.7 169.75,-209.11"/>
-<polygon fill="currentColor" stroke="currentColor" points="170.65,-212.5 178.89,-205.85 168.3,-205.91 170.65,-212.5"/>
+<path fill="none" stroke="currentColor" d="M97.75,-254.4C126.94,-244.75 168.47,-231.02 198.78,-221"/>
+<polygon fill="currentColor" stroke="currentColor" points="199.3,-223.41 205.18,-218.88 197.76,-218.76 199.3,-223.41"/>
 </g>
 <g id="edge9" class="edge">
-<path fill="none" stroke="currentColor" d="M82.32,-250C105.3,-250 138.47,-250 164.75,-250"/>
-<polygon fill="currentColor" stroke="currentColor" points="164.4,-253.5 174.4,-250 164.4,-246.5 164.4,-253.5"/>
+<path fill="none" stroke="currentColor" d="M97.75,-266C124.6,-266 161.89,-266 191.28,-266"/>
+<polygon fill="currentColor" stroke="currentColor" points="191.22,-268.45 198.22,-266 191.22,-263.55 191.22,-268.45"/>
 </g>
-<g id="node10" class="node">
-<polygon fill="none" stroke="currentColor" points="85.83,-322 21.84,-322 21.84,-286 85.83,-286 85.83,-322"/>
-<text fill="currentColor" xml:space="preserve" text-anchor="start" x="29.84" y="-299.2" font-family="Helvetica,Arial,sans-serif" font-size="12.00">Reporting</text>
+<g id="node10" class="node framed">
+<path fill="none" stroke="currentColor" d="M89.51,-342C89.51,-342 33.84,-342 33.84,-342 27.84,-342 21.84,-336 21.84,-330 21.84,-330 21.84,-318 21.84,-318 21.84,-312 27.84,-306 33.84,-306 33.84,-306 89.51,-306 89.51,-306 95.51,-306 101.51,-312 101.51,-318 101.51,-318 101.51,-330 101.51,-330 101.51,-336 95.51,-342 89.51,-342"/>
+<text fill="currentColor" xml:space="preserve" text-anchor="start" x="37.68" y="-319.2" font-family="Helvetica,Arial,sans-serif" font-size="12.00">Reporting</text>
 </g>
 <g id="edge10" class="edge">
-<path fill="none" stroke="currentColor" d="M86.19,-301.65C139.48,-297.65 248.08,-289.5 311.74,-284.72"/>
-<polygon fill="currentColor" stroke="currentColor" points="311.86,-288.22 321.57,-283.98 311.34,-281.24 311.86,-288.22"/>
+<path fill="none" stroke="currentColor" d="M101.89,-321.34C124.18,-319.81 152.62,-317.83 177.93,-316 241.24,-311.41 313.99,-305.89 362.34,-302.18"/>
+<polygon fill="currentColor" stroke="currentColor" points="362.48,-304.63 369.27,-301.65 362.1,-299.74 362.48,-304.63"/>
 </g>
-<g id="edge11" class="edge">
-<path fill="none" stroke="#d00000" d="M86.07,-291.66C93.76,-288.7 101.99,-285.58 109.67,-282.8 127.75,-276.25 147.88,-269.37 165.08,-263.61"/>
-<polygon fill="#d00000" stroke="#d00000" points="166.09,-266.97 174.48,-260.49 163.88,-260.32 166.09,-266.97"/>
-<text xml:space="preserve" text-anchor="start" x="109.67" y="-285" font-family="Helvetica,Arial,sans-serif" font-size="11.00" fill="#d00000">known gap</text>
+<g id="edge11" class="edge gap">
+<path fill="none" stroke="#d00000" d="M101.8,-310.95C110.85,-307.94 120.43,-304.75 129.35,-301.8 149.74,-295.05 172.3,-287.62 191.55,-281.29"/>
+<polygon fill="#d00000" stroke="#d00000" points="192.27,-283.63 198.15,-279.12 190.74,-278.97 192.27,-283.63"/>
+<text xml:space="preserve" text-anchor="start" x="129.35" y="-304" font-family="Helvetica,Arial,sans-serif" font-size="11.00" fill="#d00000">known gap</text>
 </g>
 </g>
 </svg></div>
@@ -147,19 +149,21 @@
 </tbody>
 </table></div>
 <h2>Decisions</h2>
+<section class="card">
 <h3>order-event-format</h3>
 <p>Checkout, refunds and reporting share one order-event format, defined by the order events component.</p>
-<ul>
-<li>Reason: All three capabilities produce or consume the same events about an order (the epic&#39;s shared need, BR-4 and BR-5).</li>
-<li>Rejected: Each capability defines its own event shape.</li>
-<li>Obligations: Every change to an order emits one order event (BR-4).; Every order event carries the order id and a sequence number, and a consumer ignores an event it has already seen (BR-5).</li>
-<li>Owner: <a href="shop.html">shop.events</a> (Order events)</li>
-<li>Compatibility: Changes are additive only. Removing or renaming anything is a new format version that every bound element adopts together.</li>
-<li>Status: planned</li>
-<li>Evidence: spec</li>
-<li>Sources: docs/epics/order-events.md</li>
-<li>Binds: <a href="shop.html">shop.checkout</a> (Checkout), <a href="shop.html">shop.orders</a> (Orders), <a href="shop.html">shop.refunds</a> (Refunds), <a href="shop.html">shop.reporting</a> (Reporting)</li>
-</ul>
+<dl class="facts">
+<dt>Reason</dt><dd>All three capabilities produce or consume the same events about an order (the epic&#39;s shared need, BR-4 and BR-5).</dd>
+<dt>Rejected</dt><dd>Each capability defines its own event shape.</dd>
+<dt>Obligations</dt><dd>Every change to an order emits one order event (BR-4).; Every order event carries the order id and a sequence number, and a consumer ignores an event it has already seen (BR-5).</dd>
+<dt>Owner</dt><dd><a href="shop.html">shop.events</a> (Order events)</dd>
+<dt>Compatibility</dt><dd>Changes are additive only. Removing or renaming anything is a new format version that every bound element adopts together.</dd>
+<dt>Status</dt><dd>planned</dd>
+<dt>Evidence</dt><dd>spec</dd>
+<dt>Sources</dt><dd>docs/epics/order-events.md</dd>
+<dt>Binds</dt><dd><a href="shop.html">shop.checkout</a> (Checkout), <a href="shop.html">shop.orders</a> (Orders), <a href="shop.html">shop.refunds</a> (Refunds), <a href="shop.html">shop.reporting</a> (Reporting)</dd>
+</dl>
+</section>
 <h2>Contracts</h2>
 <p>No contracts.</p>
 <h2>Open questions</h2>
@@ -174,5 +178,6 @@
 </table></div>
 <h2>Capabilities</h2>
 <p>No capabilities pass through this area.</p>
+</main>
 </body>
 </html>

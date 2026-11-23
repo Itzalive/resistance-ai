@@ -6,17 +6,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'">
 <title>Architecture</title>
-<style>:root{color-scheme:light dark}body{font-family:system-ui,sans-serif;max-width:60rem;margin:0 auto;padding:1rem;line-height:1.5;color:#1a1a1a;background:#fff}a{color:#0645ad}.table{overflow-x:auto}table{border-collapse:collapse}th,td{border:1px solid #999;padding:.25rem .5rem;text-align:left;vertical-align:top}pre{overflow-x:auto}.diagram{overflow-x:auto;margin:1rem 0}.diagram svg{max-width:none;height:auto}@media (prefers-color-scheme:dark){body{color:#e6e6e6;background:#16181c}a{color:#8ab4f8}th,td{border-color:#555}.diagram [stroke="#d00000"]{stroke:#ff6b6b}.diagram [fill="#d00000"]{fill:#ff6b6b}}</style>
+<style>:root{color-scheme:light dark;--bg:#f6f7f9;--surface:#fff;--text:#1f2328;--muted:#5b6672;--border:#d9dee5;--accent:#0b63c4;--accent-soft:#e8f1fc;--node:#eef1f5;--frame:#f4f8fd;--edge:#77818c;--gap:#c62828;--stripe:#f8f9fb;--code:#f1f3f6}@media (prefers-color-scheme:dark){:root{--bg:#0e1116;--surface:#161a21;--text:#e4e7eb;--muted:#9ba5b2;--border:#2a313c;--accent:#6aaeff;--accent-soft:#18263a;--node:#1e242e;--frame:#131b27;--edge:#8a94a1;--gap:#ff6b6b;--stripe:#1a1f27;--code:#1c212a}}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}main{max-width:66rem;margin:0 auto;padding:1.5rem 1rem 4rem}header.top{background:var(--surface);border-bottom:1px solid var(--border);padding:.6rem 1rem;font-size:.9rem}header.top a::before{content:"\2190  "}h1{font-size:1.85rem;line-height:1.2;letter-spacing:-.01em;margin:.25rem 0 1.25rem;overflow-wrap:anywhere}h2{font-size:1.3rem;margin:2.5rem 0 .9rem;padding-bottom:.4rem;border-bottom:2px solid var(--border)}h3{font-size:1.08rem;margin:1.75rem 0 .6rem}h4{font-size:1rem;margin:1.25rem 0 .5rem}a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}p,li,dd{overflow-wrap:anywhere}ul{padding-left:1.25rem}li{margin:.2rem 0}.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:.9rem 1.1rem;margin:.8rem 0;box-shadow:0 1px 2px rgba(0,0,0,.04)}.card>h3,.card>h4{margin:0 0 .4rem;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.95rem;color:var(--accent)}.card>p:last-child,.card>dl:last-child,.card>ul:last-child{margin-bottom:0}dl.facts{display:grid;grid-template-columns:max-content 1fr;gap:.3rem 1rem;margin:.6rem 0;font-size:.93rem}dl.facts dt{color:var(--muted);font-weight:500}dl.facts dd{margin:0}@media (max-width:40rem){dl.facts{grid-template-columns:1fr;gap:0}dl.facts dd{margin-bottom:.5rem}}.table{overflow-x:auto}.table{background:var(--surface);border:1px solid var(--border);border-radius:12px;margin:.9rem 0}table{border-collapse:collapse;width:100%;font-size:.92rem}th,td{padding:.5rem .75rem;text-align:left;vertical-align:top;border-bottom:1px solid var(--border)}th{background:var(--accent-soft);font-weight:600;white-space:nowrap}tbody tr:nth-child(even){background:var(--stripe)}tbody tr:last-child td{border-bottom:0}.card .table{border-radius:8px;margin:.6rem 0 0}pre{background:var(--code);border:1px solid var(--border);border-radius:10px;padding:.8rem 1rem;overflow-x:auto;font-size:.85rem}.diagram{overflow:auto;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1rem;margin:1rem 0}.diagram svg{display:block;margin:0 auto;max-width:none;height:auto}.diagram text{fill:var(--text);font-family:Arial,Helvetica,sans-serif}.diagram .node path,.diagram .node polygon,.diagram .participant rect{fill:var(--node);stroke:var(--edge)}.diagram .node.framed path,.diagram .node.framed polygon{fill:var(--accent-soft);stroke:var(--accent)}.diagram .cluster path,.diagram .cluster polygon{fill:var(--frame);stroke:var(--border)}.diagram .edge path,.diagram .lifeline,.diagram .call line,.diagram .reply line,.diagram .loop{stroke:var(--edge)}.diagram .edge polygon,.diagram .call polygon,.diagram .reply polygon{fill:var(--edge);stroke:var(--edge)}.diagram .edge.gap path{stroke:var(--gap)}.diagram .edge.gap polygon{fill:var(--gap);stroke:var(--gap)}.diagram .edge.gap text{fill:var(--gap)}</style>
 </head>
 <body>
+<main>
 <h1>Architecture</h1>
 <h2>System</h2>
-<div class="diagram"><svg width="62pt" height="44pt"
- viewBox="0.00 0.00 62.00 44.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<div class="diagram"><svg width="64pt" height="44pt"
+ viewBox="0.00 0.00 64.00 44.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 40)">
 <g id="node1" class="node">
-<polygon fill="none" stroke="currentColor" points="54,-36 0,-36 0,0 54,0 54,-36"/>
-<text fill="currentColor" xml:space="preserve" text-anchor="start" x="14.66" y="-13.2" font-family="Helvetica,Arial,sans-serif" font-size="12.00">Shop</text>
+<path fill="none" stroke="currentColor" d="M44.35,-36C44.35,-36 12,-36 12,-36 6,-36 0,-30 0,-24 0,-24 0,-12 0,-12 0,-6 6,0 12,0 12,0 44.35,0 44.35,0 50.35,0 56.35,-6 56.35,-12 56.35,-12 56.35,-24 56.35,-24 56.35,-30 50.35,-36 44.35,-36"/>
+<text fill="currentColor" xml:space="preserve" text-anchor="start" x="15.84" y="-13.2" font-family="Helvetica,Arial,sans-serif" font-size="12.00">Shop</text>
 </g>
 </g>
 </svg></div>
@@ -39,13 +40,14 @@
 <li><a href="changes/2026-11-02-order-events.html">2026-11-02-order-events</a> (2026-11-02): Order events: the shop system around the eight components; order events (not yet built) with orders -&gt; events and reporting -&gt; events; reporting -&gt; payments removed and gapped (BR-3); rules BR-1 to BR-5 assigned; the order-event format decided once for checkout, refunds and reporting. (approved by owner on 2026-11-02)</li>
 </ul>
 <h2>Model health</h2>
-<ul>
-<li>Known-gap entries: 2, see <a href="improvements.html">the improvement list</a></li>
-<li>Open questions: 0, see <a href="improvements.html">the improvement list</a></li>
-<li>Coverage: whole repository: 10 modules (at most 200) and 8 groups (at most 10), see <a href="improvements.html">the improvement list</a></li>
-<li>Unmapped modules: 0, see <a href="improvements.html">the improvement list</a></li>
-</ul>
+<dl class="facts">
+<dt>Known-gap entries</dt><dd>2, see <a href="improvements.html">the improvement list</a></dd>
+<dt>Open questions</dt><dd>0, see <a href="improvements.html">the improvement list</a></dd>
+<dt>Coverage</dt><dd>whole repository: 10 modules (at most 200) and 8 groups (at most 10), see <a href="improvements.html">the improvement list</a></dd>
+<dt>Unmapped modules</dt><dd>0, see <a href="improvements.html">the improvement list</a></dd>
+</dl>
 <h2>Not in any area</h2>
 <p>Every element and record is in an area.</p>
+</main>
 </body>
 </html>

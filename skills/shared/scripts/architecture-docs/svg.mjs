@@ -26,17 +26,18 @@ export function dotLabel(text) {
 
 function flowchartDot(nodes, arrows, frame) {
   const ids = new Map(nodes.map((node, index) => [node.id, `n${index + 1}`]));
-  const nodeLine = (node, indent) => `${indent}${ids.get(node.id)} [label=${dotLabel(node.text)}];`;
-  const lines = [
-    'digraph diagram {',
-    `  rankdir=LR; fontname="${FONT}"; fontsize=12;`,
-    `  node [shape=box fontname="${FONT}" fontsize=12];`,
-    `  edge [fontname="${FONT}" fontsize=11];`,
-  ];
   const framed = new Set(frame === null ? [] : frame.ids);
   for (const id of framed) if (!ids.has(id)) throw new Error(`framed element ${id} is not a node`);
+  // The page's style colours the framed elements and the known-gap arrows by these classes.
+  const nodeLine = (node, indent) => `${indent}${ids.get(node.id)} [label=${dotLabel(node.text)}${framed.has(node.id) ? ' class="framed"' : ''}];`;
+  const lines = [
+    'digraph diagram {',
+    `  rankdir=LR; fontname="${FONT}"; fontsize=12; nodesep=0.3; ranksep=0.6;`,
+    `  node [shape=box style=rounded fontname="${FONT}" fontsize=12 margin="0.22,0.08"];`,
+    `  edge [fontname="${FONT}" fontsize=11 arrowsize=0.7];`,
+  ];
   if (frame !== null) {
-    lines.push(`  subgraph cluster_frame { label=${dotLabel(frame.text)};`);
+    lines.push(`  subgraph cluster_frame { style=rounded; label=${dotLabel(frame.text)};`);
     lines.push(...nodes.filter((node) => framed.has(node.id)).map((node) => nodeLine(node, '    ')));
     lines.push('  }');
   }
@@ -47,7 +48,7 @@ function flowchartDot(nodes, arrows, frame) {
     if (from === undefined || to === undefined) throw new Error(`arrow ${arrow.from} -> ${arrow.to} has an end that is not a node`);
     const attrs = [];
     if (arrow.dashed) attrs.push('style=dashed');
-    if (arrow.red) attrs.push(`color="${RED}" fontcolor="${RED}"`);
+    if (arrow.red) attrs.push(`color="${RED}" fontcolor="${RED}" class="gap"`);
     if (arrow.text) attrs.push(`label=${dotLabel(arrow.text)}`);
     lines.push(`  ${from} -> ${to}${attrs.length > 0 ? ` [${attrs.join(' ')}]` : ''};`);
   }
@@ -163,7 +164,7 @@ export function sequenceSvg(participants, messages) {
   const height = y + 10;
 
   const boxes = participants.map((participant, index) => '<g class="participant">'
-    + `<rect fill="none" stroke="currentColor" x="${n(xs[index] - widths[index] / 2)}" y="${TOP}" width="${n(widths[index])}" height="${BOX_H}"/>`
+    + `<rect fill="none" stroke="currentColor" rx="6" x="${n(xs[index] - widths[index] / 2)}" y="${TOP}" width="${n(widths[index])}" height="${BOX_H}"/>`
     + textAt(xs[index], TOP + 18, participant.text)
     + '</g>');
   const lifelines = xs.map((x) => `<line class="lifeline" stroke="currentColor" stroke-opacity="0.5" x1="${n(x)}" y1="${TOP + BOX_H}" x2="${n(x)}" y2="${n(height - 6)}"/>`);

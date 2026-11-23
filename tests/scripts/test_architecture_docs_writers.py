@@ -110,10 +110,13 @@ def test_html_page_policy_and_no_script() -> None:  # AC-13
 def test_html_style_reads_in_light_and_dark() -> None:  # AC-29
     style = re.search(r"<style>(.*?)</style>", page([para("x")]), re.S).group(1)
     assert "color-scheme:light dark" in style
-    assert ".table{overflow-x:auto}" in style and "display:block" not in style
-    dark = re.search(r"@media \(prefers-color-scheme:dark\)\{(.*)\}", style, re.S).group(1)
-    body = re.search(r"body\{([^}]*)\}", dark).group(1)
-    assert "color:" in body and "background:" in body
+    assert ".table{overflow-x:auto}" in style and not re.search(r"(^|\})table\{[^}]*display:block", style)
+    # The body takes its colours from tokens, and the dark rule sets every token the light one does.
+    assert re.search(r"body\{[^}]*background:var\(--bg\);color:var\(--text\)", style)
+    light = re.search(r":root\{color-scheme:light dark;([^}]*)\}", style).group(1)
+    dark = re.search(r"@media \(prefers-color-scheme:dark\)\{:root\{([^}]*)\}\}", style).group(1)
+    names = lambda tokens: sorted(re.findall(r"(--[a-z-]+):", tokens))  # noqa: E731
+    assert names(light) == names(dark) and "--bg" in names(dark) and "--text" in names(dark)
 
 
 def test_html_table_scrolls_in_its_own_box() -> None:
@@ -263,3 +266,27 @@ def test_sequence_refuses_a_message_to_no_participant() -> None:  # fail closed:
         result = mermaid("sequence", [{"id": "a", "text": "A"}], [message])
         assert result["ok"] is False
         assert "ghost" in result["message"]
+
+
+def test_html_leaf_headings_become_cards() -> None:  # Writers: a record reads as one card
+    blocks = [{"type": "heading", "level": 2, "text": "Decisions"},
+              {"type": "heading", "level": 3, "text": "D-1"}, para("one"),
+              {"type": "heading", "level": 3, "text": "D-2"}, para("two"),
+              {"type": "heading", "level": 2, "text": "Next"}, para("after")]
+    text = page(blocks)
+    assert '<h2>Decisions</h2>\n<section class="card">\n<h3>D-1</h3>\n<p>one</p>\n</section>' in text
+    assert '<section class="card">\n<h3>D-2</h3>\n<p>two</p>\n</section>\n<h2>Next</h2>\n<p>after</p>' in text
+
+
+def test_html_label_value_lists_become_fact_grids() -> None:
+    facts = {"type": "list", "items": [["Status: current"], ["Binds: ", link("a", "areas/a.md"), " (A)"]]}
+    text = page([facts, {"type": "list", "items": [["plain item"], ["Key: value"]]}])
+    assert ('<dl class="facts">\n<dt>Status</dt><dd>current</dd>\n'
+            '<dt>Binds</dt><dd><a href="areas/a.html">a</a> (A)</dd>\n</dl>') in text
+    assert "<ul>\n<li>plain item</li>\n<li>Key: value</li>\n</ul>" in text
+
+
+def test_html_page_links_home_when_given() -> None:
+    result = call("html.mjs", "renderHtml", {"title": "T", "blocks": []}, {"home": "../index.html"}, lib=DOCS_LIB)
+    assert '<header class="top"><a href="../index.html">Architecture overview</a></header>' in result["value"]
+    assert "<header" not in page([])
