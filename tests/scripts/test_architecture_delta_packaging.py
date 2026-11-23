@@ -9,14 +9,18 @@ from arch_delta_support import ENGINE, LIKEC4_DIR, LIKEC4_ENTRY, SHIPPED_SPEC, r
 require_node()
 
 
-def test_lockfile_pins_likec4_exactly() -> None:
+def test_lockfile_pins_likec4_and_graphviz_exactly() -> None:
     package = json.loads((ENGINE / "package.json").read_text(encoding="utf-8"))
     lock = json.loads((ENGINE / "package-lock.json").read_text(encoding="utf-8"))
+    pins = {"@hpcc-js/wasm-graphviz": "1.29.2", "likec4": "1.60.0"}
 
-    assert package["dependencies"] == {"likec4": "1.60.0"}
+    assert package["dependencies"] == pins
     assert lock["lockfileVersion"] == 3
-    assert lock["packages"][""]["dependencies"] == {"likec4": "1.60.0"}
+    assert lock["packages"][""]["dependencies"] == pins
     assert lock["packages"]["node_modules/likec4"]["version"] == "1.60.0"
+    assert lock["packages"]["node_modules/@hpcc-js/wasm-graphviz"]["version"] == "1.29.2"
+    # Graphviz is the version LikeC4 itself installs, so pinning it downloads nothing new.
+    assert lock["packages"]["node_modules/likec4"]["dependencies"]["@hpcc-js/wasm-graphviz"] == "1.29.2"
 
 
 def test_installed_likec4_matches_the_pin() -> None:
