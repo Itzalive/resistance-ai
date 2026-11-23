@@ -2,6 +2,8 @@
 
 Work item: #31, part A3b (A3 of #37); absorbs what is left of #29 (A1). Amends `2026-11-10-defining-architecture-design.md`. Builds on `2026-11-17-architecture-model-records-design.md` (the records) and `2026-11-17-architecture-docs-design.md` (the generated documents).
 
+> Amended by #43: `change` lists the relationships a run added, changed and removed, and an element counts as changed only when its own `export` object differs (`change`, Elements and Relationships; AC-1, AC-21, AC-22).
+
 ## Why
 
 A run of `defining-architecture` still writes its decisions, rule map, coverage and decision log into a hand-written `architecture.md`, which nothing validates and no tool reads. The record files and the document generator now exist, so the skill can write every judgement as a validated record and hand the owner generated documents to approve from. The first field run also found defects in the skill's steps (`docs/field-reports/2026-11-16-defining-architecture-first-run.md`): presenting decisions before the model was written (F8), false cycles from nesting (F5), no defined way to choose which cycle relationships to leave out, grouping that assumes one package tree (F4), a baseline that cannot hold containers, outside systems or reasons (F2), no step for targets already decided (F7), a dependency file nobody verified (F1), cross-cutting decisions defined only by an epic's capabilities (F9), and review-log kinds that fit no architecture finding (F10).
@@ -91,7 +93,8 @@ Both commands load the model, the records and the known-gap file exactly as the 
 Writes `<model>/changes/<date>-<name>.json`, the run's change file:
 
 - **Before model.** `--before` names the copy made at step 2. It must resolve inside `--repo` (otherwise `outside-repo`, as `paths.mjs` `resolveInside` gives), and a `--before` that does not exist, is the model folder, contains it or lies inside it is `bad-input`. It is loaded with the same loader, and its own `known-gap.json` is its gap. Without `--before`, the before model is empty: no elements, relationships, records or gap entries.
-- **Elements.** `added`: ids in the current model and not the before model; `removed`: the reverse; `changed`: ids in both whose `export` element object differs, or whose set of `allowed` and `runtime` entries (as `export` prints them) with that element as `from` or `to` differs.
+- **Elements.** `added`: ids in the current model and not the before model; `removed`: the reverse; `changed`: ids in both whose `export` element object differs. A relationship added, changed or removed does not change its ends: it is listed under Relationships.
+- **Relationships.** Each `allowed` and `runtime` entry of `export` is one relationship, `{ "from", "to", "kind", "titles" }`, with `kind` `null` for an `allowed` entry and the runtime kind otherwise, and `titles` as `export` prints them. Relationships are matched by `from`, `to` and `kind`: `added` are those in the current model and not the before model; `removed` the reverse; `changed` those in both whose `titles` differ, given as they are now. Each list is sorted by `from`, then `to`, then `kind` (`null` first), in UTF-16 code-unit order.
 - **Decisions, holes, contracts.** By id within each kind: `added`, `removed`, and `changed` when the record's fields differ, ignoring `group` and key order.
 - **Gap.** `added`: `[from, to]` pairs of current gap entries not in the before gap; `removed`: the reverse. A changed reason is in neither.
 - **Check.** `check` is run on the current model with `--deps` and `--separator`: `exit` (0 or 1), `summary` (the last non-empty line of the text output, without its line feed), `output` (its whole text output). A `check` that would exit 2 stops the command with that error.
@@ -197,7 +200,7 @@ Per `writing-skills`, recorded in `pressure-test-evidence.md`, with the existing
 ## Acceptance criteria
 
 The helper:
-- **AC-1** Given a before copy and a current model that adds an element, removes one, changes one element's title, adds a relationship to an unchanged element, changes a decision's reason, adds a hole, removes a contract, moves a record to another group unchanged, and adds a gap entry, when `change` runs, then the change file lists the added, removed and changed elements (the relationship's ends among the changed), the decision as changed, the hole as added, the contract as removed, not the moved record, and the gap pair as added, each list sorted; the file has two-space indents, LF line endings, a final line feed and the records table's key order; and the command prints `wrote changes/<id>.json`.
+- **AC-1** Given a before copy and a current model that adds an element, removes one, changes one element's title, adds a relationship to an unchanged element, changes a decision's reason, adds a hole, removes a contract, moves a record to another group unchanged, and adds a gap entry, when `change` runs, then the change file lists the added, removed and changed elements (only the retitled one among the changed), the relationship as added, the decision as changed, the hole as added, the contract as removed, not the moved record, and the gap pair as added, each list sorted; the file has two-space indents, LF line endings, a final line feed and the records table's key order; and the command prints `wrote changes/<id>.json`.
 - **AC-2** Given no `--before`, when `change` runs on a model, then every element, decision, hole and contract is `added` and every gap pair is `added`.
 - **AC-3** Given a model whose code has one new breach, when `change` runs, then `check.exit` is 1 and `check.output` equals the text output of the delta `check` on the same files, and `check.summary` is its last line.
 - **AC-4** Given the written change file, when `export` runs, then it exits 0 and the change appears under `changes` with `approved` null.
@@ -211,6 +214,8 @@ The helper:
 - **AC-12** Given a group with 21 candidate pairs, when `cycles` runs, then the group is reported as too large with no proposal and the command exits 0; given 20, then it is searched.
 - **AC-13** Given `--timeout 0`, when `cycles` runs, then it exits 2 with `timeout`.
 - **AC-14** Given a model with no cycle, when `cycles` runs, then it prints only `0 relationships to leave out in 0 groups, 0 too large`; with `--format json`, the same counts and an empty `groups`.
+- **AC-21** (#43) Given a before copy and a current model that add an import relationship, remove a runtime link, retitle another runtime link and keep a fourth unchanged, when `change` runs, then `relationships` lists the import as added with `kind` null, the runtime link as removed with its kind, the retitled link as changed with its new titles, and not the fourth; no element is changed; and `export` of the written file exits 0.
+- **AC-22** (#43) Given a change file with no `relationships` field, when `export` runs, then it exits 0.
 
 The review log:
 - **AC-15** Given `--finding minor:deps-defect:x`, `model-drift` and `unsourced`, when `review-log.py append` runs, then each is accepted; given an unknown kind, it is refused as before.

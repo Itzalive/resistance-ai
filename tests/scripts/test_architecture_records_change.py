@@ -35,8 +35,8 @@ D1 = decision("D-1", ["shop.a"])
 D2 = decision("D-2", ["shop.b"])
 H1 = {"id": "H-1", "what": "Why does b call a?", "binds": ["shop.b"], "evidence": "search"}
 C1 = {"id": "C-1", "name": "API", "owner": "shop.a", "bound": ["shop.b"], "obligations": ["O."], "compatibility": None}
-KEYS = ["id", "date", "run", "asked_by", "summary", "rejected", "elements", "decisions", "holes", "contracts", "gap",
-        "check", "approved"]
+KEYS = ["id", "date", "run", "asked_by", "summary", "rejected", "elements", "decisions", "holes", "contracts",
+        "relationships", "gap", "check", "approved"]
 
 
 def change_repo(tmp_path):
@@ -77,7 +77,9 @@ def test_change_lists_what_the_run_changed(tmp_path) -> None:  # AC-1
     assert proc.stdout == "wrote changes/2026-11-21-first.json\n"
     data = written(repo)
     assert list(data) == KEYS
-    assert data["elements"] == {"added": ["shop.d"], "changed": ["shop.a", "shop.b"], "removed": ["shop.c"]}
+    assert data["elements"] == {"added": ["shop.d"], "changed": ["shop.a"], "removed": ["shop.c"]}
+    assert data["relationships"] == {"added": [{"from": "shop.d", "to": "shop.b", "kind": None, "titles": []}],
+                                     "changed": [], "removed": []}
     assert data["decisions"] == {"added": [], "changed": ["D-1"], "removed": []}
     assert data["holes"] == {"added": ["H-1"], "changed": [], "removed": []}
     assert data["contracts"] == {"added": [], "changed": [], "removed": ["C-1"]}
@@ -118,6 +120,36 @@ def test_written_change_exports_as_a_draft(tmp_path) -> None:  # AC-4
     assert proc.returncode == 0, proc.stderr
     [record] = json.loads(proc.stdout)["changes"]
     assert (record["id"], record["approved"]) == ("2026-11-21-first", None)
+    assert record["relationships"]["added"] == [{"from": "shop.d", "to": "shop.b", "kind": None, "titles": []}]
+
+
+def test_a_change_file_without_relationships_still_exports(tmp_path) -> None:  # AC-22
+    repo = change_repo(tmp_path)
+    assert change(repo).returncode == 0
+    path = repo / "docs" / "architecture" / "changes" / "2026-11-21-first.json"
+    data = written(repo)
+    del data["relationships"]
+    write_json(path, data)
+    proc = run_tool("export", "--repo", repo)
+    assert proc.returncode == 0, proc.stderr
+    [record] = json.loads(proc.stdout)["changes"]
+    assert "relationships" not in record
+
+
+@pytest.mark.parametrize("bad", [
+    {"from": "shop.d", "to": "shop.b", "kind": None},
+    {"from": "shop.d", "to": "shop.b", "kind": "", "titles": []},
+    {"from": "shop.d", "to": "shop.b", "kind": None, "titles": [], "extra": 1},
+], ids=["no-titles", "empty-kind", "extra-field"])
+def test_a_bad_relationship_is_a_record_error(tmp_path, bad: dict) -> None:
+    repo = change_repo(tmp_path)
+    assert change(repo).returncode == 0
+    path = repo / "docs" / "architecture" / "changes" / "2026-11-21-first.json"
+    data = written(repo)
+    data["relationships"]["added"] = [bad]
+    write_json(path, data)
+    proc = run_tool("export", "--repo", repo)
+    assert proc.returncode == 2 and "record-error" in proc.stderr, proc.stderr
 
 
 @pytest.mark.parametrize(("extra", "name"), [

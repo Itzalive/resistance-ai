@@ -79,6 +79,56 @@ def test_change_record_marks_an_id_in_both_lists_added() -> None:  # Change reco
     assert '["Pay #40;added#41;"]' in text and '["Web #40;changed#41;"]' in text and "Pay #40;changed" not in text
 
 
+def rel(from_: str, to: str, kind: str | None = None, titles: tuple = ()) -> dict:
+    return {"from": from_, "to": to, "kind": kind, "titles": list(titles)}
+
+
+# AC-31: shop.web is changed; it gains an import to shop.api and keeps its unchanged links to bank. The import
+# shop.api -> ledger is removed and gapped, a runtime link and an import from a gone element are removed, and the gap
+# pair pay -> ledger is closed.
+DRAWN = change(elements=lists(changed=["shop.web"]),
+               relationships={"added": [rel("shop.web", "shop.api", titles=("orders",))], "changed": [],
+                              "removed": [rel("pay.gateway", "shop.api", "event"), rel("shop.api", "ledger"),
+                                          rel("shop.old", "pay")]},
+               gap={"added": [["shop.api", "ledger"]], "removed": [["pay", "ledger"]]})
+
+
+def test_change_record_with_relationships_draws_only_the_change() -> None:  # AC-31
+    [block] = section(change_doc(DRAWN), "Diagram")
+    figure = block["figure"]
+    arrows = [(a["from"], a["to"], a["dashed"], a["red"], a["text"]) for a in figure["arrows"]]
+    assert arrows == [
+        ("pay", "ledger", True, False, "gap closed"),
+        ("pay.gateway", "shop.api", True, False, "removed, event"),
+        ("shop.api", "ledger", False, True, "known gap"),
+        ("shop.old", "pay", True, False, "removed"),
+        ("shop.web", "shop.api", False, False, ""),
+    ]
+    nodes = {node["id"]: node["text"] for node in figure["nodes"]}
+    assert nodes == {"ledger": "Ledger (no area)", "pay": "Pay (money)", "pay.gateway": "Gateway (money)",
+                     "shop.api": "API (front)", "shop.old": "shop.old (not in the current model)",
+                     "shop.web": "Web (changed)"}
+    assert figure["frame"] == {"text": "2026-11-05-more", "ids": ["shop.web"]}
+    assert "bank" not in block["text"] and "Bank" not in block["text"]
+
+
+def test_change_record_lists_its_relationships() -> None:  # AC-31, What changed
+    blocks = section(change_doc(DRAWN), "What changed")
+    flat = lambda block: ["".join(part if isinstance(part, str) else part["text"] for part in item) for item in block["items"]]
+    at = blocks.index({"type": "heading", "level": 3, "text": "Relationships added"})
+    assert flat(blocks[at + 1]) == ["shop.web (Web) -> shop.api (API): import"]
+    at = blocks.index({"type": "heading", "level": 3, "text": "Relationships removed"})
+    assert flat(blocks[at + 1]) == ["pay.gateway (Gateway) -> shop.api (API): event", "shop.api (API) -> ledger (Ledger): import",
+                                    "shop.old (not in the current model) -> pay (Pay): import"]
+
+
+def test_change_record_with_only_relationships_draws_without_a_frame() -> None:  # AC-31: no framed element
+    record = change(relationships={"added": [rel("shop.web", "bank")], "changed": [], "removed": []})
+    [block] = section(change_doc(record), "Diagram")
+    assert block["figure"]["frame"] is None
+    assert [(a["from"], a["to"]) for a in block["figure"]["arrows"]] == [("shop.web", "bank")]
+
+
 def test_change_record_frames_no_changed_element_gone_from_the_model() -> None:  # Change record: only current ids framed
     document = change_doc(change(elements=lists(["shop.web"], ["shop.gone"])))
     text = section(document, "Diagram")[0]["text"]

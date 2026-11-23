@@ -3,6 +3,8 @@
 Work item: #31, part A3a (A3 of #37). Amended for #31 part A3c: decisions carry obligations ("Decisions, cross-cutting decisions and principles" below). Amends `2026-11-09-architecture-delta-tool-design.md` and `2026-11-16-architecture-delta-runtime-links-design.md`.
 
 > Amended by `2026-11-17-architecture-docs-design.md`: `capabilities` entries name capability views, checked in pass 4; a change file's name, without `.json`, is at most 64 characters (layout rule 2).
+>
+> Amended by #43: a change file may hold `relationships` (Change file, below).
 
 ## Why
 
@@ -87,6 +89,7 @@ Every file is one JSON object. Every field below is required unless marked optio
 | `summary` | text |
 | `rejected` | list of text: choices this run did not take |
 | `elements`, `decisions`, `holes`, `contracts` | each an object with lists `added`, `changed` and `removed`; element ids for `elements`, record ids for the others |
+| `relationships` | optional (absent in a change file written before #43): an object with lists `added`, `changed` and `removed`, each item an object `from` and `to` (element ids), `kind` (text, or `null` for an import relationship) and `titles` (list of text) |
 | `gap` | an object with lists `added` and `removed`, each item a pair of two non-empty strings `[from, to]` |
 | `check` | an object: `exit` (0 or 1), `summary` (text), `output` (text) |
 | `approved` | `null`, or an object: `by` (text) and `date` (a real `YYYY-MM-DD` date) |

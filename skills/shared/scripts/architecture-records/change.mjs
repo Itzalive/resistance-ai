@@ -23,16 +23,29 @@ function diff(before, after) {
   };
 }
 
-// Each element's export object together with the `allowed` and `runtime` entries it is an end of.
+// Each element's export object; its relationships are listed on their own (#43).
 function elementTexts(exported) {
-  const links = new Map(exported.elements.map((element) => [element.id, []]));
-  const add = (list, entry) => {
-    for (const end of new Set([entry.from, entry.to])) links.get(end)?.push(canonical({ list, entry }));
+  return new Map(exported.elements.map((element) => [element.id, canonical(element)]));
+}
+
+// Spec, `change`, Relationships: each `allowed` entry (kind null) and `runtime` entry, matched by from, to and kind;
+// changed when the titles differ, given as they are now.
+function relationshipDiff(before, after) {
+  const key = (rel) => `${rel.from}\u0000${rel.to}\u0000${rel.kind ?? ''}\u0000${rel.kind === null ? 0 : 1}`;
+  const rels = (exported) => new Map([
+    ...exported.allowed.map((entry) => ({ from: entry.from, to: entry.to, kind: null, titles: [...entry.titles] })),
+    ...exported.runtime.map((entry) => ({ from: entry.from, to: entry.to, kind: entry.kind, titles: [...entry.titles] })),
+  ].map((rel) => [key(rel), rel]));
+  const b = rels(before);
+  const a = rels(after);
+  const order = (x, y) => cmp(x.from, y.from) || cmp(x.to, y.to)
+    || (x.kind === null ? (y.kind === null ? 0 : -1) : (y.kind === null ? 1 : cmp(x.kind, y.kind)));
+  return {
+    added: [...a].filter(([k]) => !b.has(k)).map(([, rel]) => rel).sort(order),
+    changed: [...a].filter(([k, rel]) => b.has(k) && canonical(b.get(k).titles) !== canonical(rel.titles))
+      .map(([, rel]) => rel).sort(order),
+    removed: [...b].filter(([k]) => !a.has(k)).map(([, rel]) => rel).sort(order),
   };
-  for (const entry of exported.allowed) add('allowed', entry);
-  for (const entry of exported.runtime) add('runtime', entry);
-  return new Map(exported.elements.map((element) => [element.id,
-    canonical({ element, links: links.get(element.id).sort(cmp) })]));
 }
 
 // Records by id, compared without `group`: a record moved to another file is not changed.
@@ -67,6 +80,7 @@ export function buildChange({ before, after, beforeGap, afterGap, check, flags }
     decisions: diff(recordTexts(before.decisions), recordTexts(after.decisions)),
     holes: diff(recordTexts(before.holes), recordTexts(after.holes)),
     contracts: diff(recordTexts(before.contracts), recordTexts(after.contracts)),
+    relationships: relationshipDiff(before, after),
     gap: gapDiff(beforeGap, afterGap),
     check: { exit: check.exitCode, summary: lastLine(check.output), output: check.output },
     approved: null,

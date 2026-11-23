@@ -31,7 +31,8 @@ def build(before: dict, after: dict, before_gap: list = (), after_gap: list = ()
 def test_keys_and_fixed_fields() -> None:
     value = build(EMPTY, EMPTY)
     assert list(value) == ["id", "date", "run", "asked_by", "summary", "rejected", "elements", "decisions", "holes",
-                           "contracts", "gap", "check", "approved"]
+                           "contracts", "relationships", "gap", "check", "approved"]
+    assert value["relationships"] == {"added": [], "changed": [], "removed": []}
     assert (value["id"], value["date"], value["run"], value["asked_by"], value["summary"]) == (
         "2026-11-21-first", "2026-11-21", "epic", "#1", "S.")
     assert value["rejected"] == ["B.", "A."]
@@ -42,12 +43,41 @@ def test_keys_and_fixed_fields() -> None:
     assert list(value["gap"]) == ["added", "removed"]
 
 
-def test_relationship_change_marks_both_ends() -> None:
-    before = {**EMPTY, "elements": [element("a"), element("b"), element("c")], "allowed": [link("a", "b")]}
-    after = {**EMPTY, "elements": [element("a"), element("b"), element("c")], "allowed": [link("a", "b"), link("c", "b")]}
-    assert build(before, after)["elements"] == {"added": [], "changed": ["b", "c"], "removed": []}
-    runtime = {**before, "runtime": [{"from": "a", "to": "c", "kind": "http", "titles": []}]}
-    assert build(before, runtime)["elements"] == {"added": [], "changed": ["a", "c"], "removed": []}
+def runtime(from_: str, to: str, kind: str, titles: tuple = ()) -> dict:
+    return {"from": from_, "to": to, "kind": kind, "titles": list(titles)}
+
+
+def test_relationships_are_listed_and_change_no_element() -> None:  # AC-21
+    elements = [element("a"), element("b"), element("c")]
+    before = {**EMPTY, "elements": elements, "allowed": [link("a", "b")],
+              "runtime": [runtime("a", "c", "http"), runtime("b", "c", "push", ("wake",)), runtime("c", "a", "http")]}
+    after = {**EMPTY, "elements": elements, "allowed": [link("a", "b"), link("c", "b")],
+             "runtime": [runtime("b", "c", "push", ("sealed",)), runtime("c", "a", "http")]}
+    value = build(before, after)
+    assert value["elements"] == {"added": [], "changed": [], "removed": []}
+    assert value["relationships"] == {
+        "added": [{"from": "c", "to": "b", "kind": None, "titles": []}],
+        "changed": [{"from": "b", "to": "c", "kind": "push", "titles": ["sealed"]}],
+        "removed": [{"from": "a", "to": "c", "kind": "http", "titles": []}],
+    }
+
+
+def test_an_import_and_a_runtime_link_between_the_same_ends_are_two_relationships() -> None:
+    before = {**EMPTY, "elements": [element("a"), element("b")]}
+    after = {**before, "allowed": [link("a", "b")], "runtime": [runtime("a", "b", "http"), runtime("a", "b", "call")]}
+    added = build(before, after)["relationships"]["added"]
+    assert [(r["from"], r["to"], r["kind"]) for r in added] == [("a", "b", None), ("a", "b", "call"), ("a", "b", "http")]
+
+
+def test_relationships_sort_by_from_then_to() -> None:
+    after = {**EMPTY, "allowed": [link("b", "a"), link("a", "c"), link("a", "b")]}
+    assert [(r["from"], r["to"]) for r in build(EMPTY, after)["relationships"]["added"]] == [("a", "b"), ("a", "c"), ("b", "a")]
+
+
+def test_a_retitled_element_is_changed() -> None:
+    before = {**EMPTY, "elements": [element("a", "Old")]}
+    after = {**EMPTY, "elements": [element("a", "New")]}
+    assert build(before, after)["elements"]["changed"] == ["a"]
 
 
 def test_moved_record_is_unchanged() -> None:
