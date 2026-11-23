@@ -160,6 +160,16 @@ def test_the_split_is_at_15_arrows() -> None:  # AC-31
     assert block["type"] == "diagram"
 
 
+def test_the_split_counts_drawn_arrows() -> None:  # AC-31: a gapped import is drawn once; a closed gap pair counts
+    gapped = change(relationships={**NONE, "removed": [rel(f"gone.h{i:02}", "pay") for i in range(14)] + [rel("shop.api", "ledger")]},
+                    gap={"added": [["shop.api", "ledger"]], "removed": []})
+    [block] = section(change_doc(gapped), "Diagram")
+    assert block["type"] == "diagram"
+    closed = change(relationships={**NONE, "removed": [rel(f"gone.h{i:02}", "pay") for i in range(15)]},
+                    gap={"added": [], "removed": [["pay", "ledger"]]})
+    assert list(drawn(section(change_doc(closed), "Diagram"))) == ["Model changes", "Known-gap changes"]
+
+
 def test_a_split_leaves_out_an_empty_model_diagram() -> None:  # AC-31
     record = change(relationships=NONE, gap={"added": [[f"gone.h{i:02}", "pay"] for i in range(16)], "removed": []})
     assert list(drawn(section(change_doc(record), "Diagram"))) == ["Known-gap changes"]

@@ -1,6 +1,7 @@
 // A change record (spec, What each document holds, Change record): the change's summary, asker, run, date and
-// approval; a diagram of the elements it added or changed (and, when the change file lists them, a model diagram and a
-// known-gap diagram of only what it changed); what changed; the choices not taken; its known-gap pairs;
+// approval; a diagram of the elements it added or changed (when the change file lists relationships, only what it
+// changed, as one diagram or, above CHANGE_SPLIT_ARROWS arrows, a model diagram and a known-gap diagram); what changed;
+// the choices not taken; its known-gap pairs;
 // its check. A change file holds only ids, so a record is printed as it stands in the model now.
 import { cmp } from '../architecture-delta/report.mjs';
 import { doc, heading, paragraph, list, table, code, docLink, orSay } from './tree.mjs';

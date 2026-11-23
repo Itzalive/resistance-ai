@@ -2,7 +2,7 @@
 
 Work items: #32 (A4, model pack), #33 (A5, architecture book), #34 (A6, change record and improvement list), parts of #37. Amends `2026-11-17-architecture-model-records-design.md` (capability names), `2026-11-16-architecture-delta-runtime-links-design.md` (`export` format) and `2026-11-09-architecture-delta-tool-design.md` (the model-folder walk).
 
-> Amended by #43: a change record whose change file lists `relationships` draws only what the change did, as a model diagram and a known-gap diagram (Change record, below; AC-31).
+> Amended by #43: a change record whose change file lists `relationships` draws only what the change did, as one diagram or, above 15 arrows, a model diagram and a known-gap diagram (Change record, below; AC-31).
 
 ## Why
 
