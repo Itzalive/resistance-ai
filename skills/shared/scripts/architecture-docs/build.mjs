@@ -4,6 +4,7 @@ import { exportJson } from '../architecture-delta/report.mjs';
 import { buildOverview } from './overview.mjs';
 import { renderMarkdown } from './markdown.mjs';
 import { renderHtml, pageHref } from './html.mjs';
+import { drawFigures } from './svg.mjs';
 import { buildPack } from './pack.mjs';
 import { IMPROVEMENTS, areaDoc, capabilityDoc, changeDoc, documentBase } from './facts.mjs';
 import { buildArea } from './area.mjs';
@@ -24,35 +25,35 @@ export function cleanGap(entries) {
   }));
 }
 
-// A document's Markdown file and its HTML page.
-function addDocument(files, rel, tree) {
+// A document's Markdown file and its HTML page, whose diagrams are drawn as SVG.
+async function addDocument(files, rel, tree) {
   files[rel] = renderMarkdown(tree);
-  files[pageHref(rel)] = renderHtml(tree);
+  files[pageHref(rel)] = renderHtml(await drawFigures(tree));
 }
 
 // Spec, What each document holds: every document is built from the export (and the cleaned known-gap entries).
-export function buildFiles(model, records, gap, tick = () => {}) {
+export async function buildFiles(model, records, gap, tick = () => {}) {
   const data = exportJson(model, records);
   const files = {};
   files['pack/model.json'] = `${JSON.stringify({ generated: 'architecture-docs', export: data }, null, 2)}\n`;
   tick();
   Object.assign(files, buildPack(data, gap, tick));
-  addDocument(files, 'README.md', buildOverview(data, gap));
+  await addDocument(files, 'README.md', buildOverview(data, gap));
   tick();
   const base = documentBase(data);
   for (const area of data.areas) {
-    addDocument(files, areaDoc(area.name), buildArea(data, gap, area, base));
+    await addDocument(files, areaDoc(area.name), buildArea(data, gap, area, base));
     tick();
   }
   for (const capability of data.capabilities) {
-    addDocument(files, capabilityDoc(capability.name), buildCapability(data, capability, base));
+    await addDocument(files, capabilityDoc(capability.name), buildCapability(data, capability, base));
     tick();
   }
   for (const change of data.changes) {
-    addDocument(files, changeDoc(change.id), buildChange(data, gap, change, base));
+    await addDocument(files, changeDoc(change.id), buildChange(data, gap, change, base));
     tick();
   }
-  addDocument(files, IMPROVEMENTS, buildImprovements(data, gap, base));
+  await addDocument(files, IMPROVEMENTS, buildImprovements(data, gap, base));
   tick();
   return files;
 }

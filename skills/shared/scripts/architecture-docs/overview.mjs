@@ -32,7 +32,8 @@ function systemDiagram(data) {
     .sort((x, y) => cmp(x.from, y.from) || cmp(x.to, y.to))
     .map((pair) => ({ from: pair.from, to: pair.to, dashed: !pair.solid, text: pair.solid ? '' : [...pair.kinds].sort(cmp).join(', ') }));
   const text = flowchart(nodes, arrows);
-  return text === null ? paragraph(`The system diagram has more than ${ARROW_LIMIT} arrows and is not drawn; the tables list every element.`) : diagram(text);
+  return text === null ? paragraph(`The system diagram has more than ${ARROW_LIMIT} arrows and is not drawn; the tables list every element.`)
+    : diagram(text, { kind: 'flowchart', nodes, arrows, frame: null });
 }
 
 const orNone = (parts) => (parts.length > 0 ? parts : ['None']);

@@ -64,7 +64,7 @@ async function main(argv, state) {
   const loaded = await loadRepoModel(args, deadline);
   const gap = readGap(loaded, args.gap);
   deadline.check();
-  const files = buildFiles(loaded.model, loaded.records, gap, deadline.check);
+  const files = await buildFiles(loaded.model, loaded.records, gap, deadline.check);
   checkLimits(files);
   const result = args.command === 'build'
     ? runBuild(locate, files, state, deadline.check)

@@ -1,17 +1,17 @@
-// HTML writer. Every value is HTML-escaped; each page's Content-Security-Policy allows only the pinned Mermaid script
-// and the one start-up script, by hash, plus inline styles.
-import crypto from 'node:crypto';
+// HTML writer. Every value is HTML-escaped; diagrams are inline SVG drawn at build time (svg.mjs). A page carries no
+// script, its Content-Security-Policy allows none, and its style reads in a light and a dark theme.
 import { MARKER } from './out.mjs';
 import { SAFE_HREF } from './tree.mjs';
 
-export const MERMAID_URL = 'https://cdn.jsdelivr.net/npm/mermaid@12.2.0/dist/mermaid.min.js';
-export const MERMAID_INTEGRITY = 'sha384-8xUhuLNMjW/cI2Dacg3DR4WliYznvIg0LVG1stctThKD/YVrJFI9TNCFxft5NYgp';
-export const STARTUP = "mermaid.initialize({ startOnLoad: true, securityLevel: 'strict' });";
-const STARTUP_HASH = `sha256-${crypto.createHash('sha256').update(STARTUP, 'utf8').digest('base64')}`;
-export const CSP = `default-src 'none'; script-src ${MERMAID_URL} '${STARTUP_HASH}'; style-src 'unsafe-inline'; img-src data:`;
-const STYLE = 'body{font-family:system-ui,sans-serif;max-width:60rem;margin:0 auto;padding:1rem;line-height:1.5}'
-  + 'table{border-collapse:collapse}th,td{border:1px solid #999;padding:.25rem .5rem;text-align:left;vertical-align:top}'
-  + 'pre{overflow-x:auto}';
+export const CSP = "default-src 'none'; style-src 'unsafe-inline'";
+const STYLE = ':root{color-scheme:light dark}'
+  + 'body{font-family:system-ui,sans-serif;max-width:60rem;margin:0 auto;padding:1rem;line-height:1.5;color:#1a1a1a;background:#fff}'
+  + 'a{color:#0645ad}'
+  + 'table{display:block;overflow-x:auto;border-collapse:collapse}th,td{border:1px solid #999;padding:.25rem .5rem;text-align:left;vertical-align:top}'
+  + 'pre{overflow-x:auto}.diagram{overflow-x:auto;margin:1rem 0}.diagram svg{max-width:none;height:auto}'
+  + '@media (prefers-color-scheme:dark){'
+  + 'body{color:#e6e6e6;background:#16181c}a{color:#8ab4f8}th,td{border-color:#555}'
+  + '.diagram [stroke="#d00000"]{stroke:#ff6b6b}.diagram [fill="#d00000"]{fill:#ff6b6b}}';
 
 export function escapeHtml(text) {
   return String(text)
@@ -56,13 +56,15 @@ function block(node) {
     case 'code':
       return `<pre><code>${escapeHtml(String(node.text).replace(/\n+$/, ''))}</code></pre>`;
     case 'diagram':
-      return `<pre class="mermaid">${escapeHtml(node.text)}</pre>`;
+      // The SVG comes from svg.mjs (drawFigures), which escapes all model text and keeps only drawing.
+      if (typeof node.svg !== 'string') throw new Error('a diagram has no drawing');
+      return `<div class="diagram">${node.svg}</div>`;
     default:
       throw new Error(`unknown block ${node.type}`);
   }
 }
 
-// Spec, write rule 2 and Writers: the marker line first; the policy, the pinned script and the start-up script.
+// Spec, write rule 2 and Writers: the marker line first, then the policy; no script.
 export function renderHtml(doc) {
   const title = escapeHtml(String(doc.title).replace(/\n/g, ' '));
   return [
@@ -79,8 +81,6 @@ export function renderHtml(doc) {
     '<body>',
     `<h1>${title}</h1>`,
     ...doc.blocks.map(block),
-    `<script src="${MERMAID_URL}" integrity="${MERMAID_INTEGRITY}" crossorigin="anonymous"></script>`,
-    `<script>${STARTUP}</script>`,
     '</body>',
     '</html>',
     '',

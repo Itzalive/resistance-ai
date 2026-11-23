@@ -1,10 +1,10 @@
 // A change record (spec, What each document holds, Change record): the change's summary, asker, run, date and
 // approval; a diagram of the elements it added or changed; what changed; the choices not taken; its known-gap pairs;
 // its check. A change file holds only ids, so a record is printed as it stands in the model now.
-import { doc, heading, paragraph, list, table, code, diagram, docLink, orSay } from './tree.mjs';
+import { doc, heading, paragraph, list, table, code, docLink, orSay } from './tree.mjs';
 import { changeDoc, elementTarget, recordTarget, relative } from './facts.mjs';
 import { ELEMENT_HEADER, decisionBlocks, contractBlocks, holeBlocks, elementCells, elementLinks } from './records-doc.mjs';
-import { drawing, drawingText, TOO_MANY_ARROWS } from './area-diagram.mjs';
+import { drawing, drawingBlock, TOO_MANY_ARROWS } from './area-diagram.mjs';
 
 const GONE = ' (not in the current model)';
 const PARTS = ['added', 'changed', 'removed'];
@@ -74,8 +74,7 @@ function diagramBlock(change, gap, ctx) {
   for (const id of change.elements.changed) if (ctx.elements.has(id)) marks.set(id, 'changed');
   for (const id of change.elements.added) if (ctx.elements.has(id)) marks.set(id, 'added');
   if (marks.size === 0) return paragraph('No element the change added or changed is in the current model.');
-  const text = drawingText(drawing([...marks.keys()], change.id, gap, ctx, marks));
-  return text === null ? paragraph(TOO_MANY_ARROWS) : diagram(text);
+  return drawingBlock(drawing([...marks.keys()], change.id, gap, ctx, marks)) ?? paragraph(TOO_MANY_ARROWS);
 }
 
 export function buildChange(data, gap, change, base) {

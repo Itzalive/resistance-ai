@@ -8,10 +8,12 @@ import { decisionBlocks, contractBlocks, elementLinks, areaLinks } from './recor
 export const TOO_MANY_STEPS = `The capability has more than ${STEP_LIMIT} steps, so its sequence diagram is not drawn; the steps table lists every step.`;
 
 // Spec, Capability: participants in order of first appearance, labelled with their titles.
-function sequenceText(capability, ctx) {
+function sequenceBlock(capability, ctx) {
   const seen = new Set(capability.steps.flatMap((step) => [step.from, step.to]));
   const participants = [...seen].map((id) => ({ id, text: ctx.titles.elements.get(id) ?? id }));
-  return sequence(participants, capability.steps.map((step) => ({ from: step.from, to: step.to, reply: step.reply, text: step.label ?? '' })));
+  const messages = capability.steps.map((step) => ({ from: step.from, to: step.to, reply: step.reply, text: step.label ?? '' }));
+  const text = sequence(participants, messages);
+  return text === null ? null : diagram(text, { kind: 'sequence', participants, messages });
 }
 
 export function buildCapability(data, capability, base) {
@@ -23,8 +25,7 @@ export function buildCapability(data, capability, base) {
   blocks.push(heading(2, 'Sequence'));
   if (capability.steps.length === 0) blocks.push(paragraph('The capability has no steps.'));
   else {
-    const text = sequenceText(capability, ctx);
-    blocks.push(text === null ? paragraph(TOO_MANY_STEPS) : diagram(text));
+    blocks.push(sequenceBlock(capability, ctx) ?? paragraph(TOO_MANY_STEPS));
   }
 
   blocks.push(heading(2, 'Steps'));

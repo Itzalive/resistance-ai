@@ -5,7 +5,9 @@ export const paragraph = (...parts) => ({ type: 'paragraph', parts });
 export const list = (items) => ({ type: 'list', items });
 export const table = (header, rows) => ({ type: 'table', header, rows });
 export const code = (text) => ({ type: 'code', text });
-export const diagram = (text) => ({ type: 'diagram', text });
+// `figure` is what svg.mjs draws for the HTML page: { kind: 'flowchart', nodes, arrows, frame } or
+// { kind: 'sequence', participants, messages }.
+export const diagram = (text, figure) => ({ type: 'diagram', text, figure });
 // Named docLink: the safety test forbids any call named like fs.link outside the writer.
 export const docLink = (text, href) => ({ type: 'link', text, href });
 export const doc = (title, blocks) => ({ title, blocks });

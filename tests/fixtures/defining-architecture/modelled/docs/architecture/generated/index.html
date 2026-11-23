@@ -4,15 +4,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src https://cdn.jsdelivr.net/npm/mermaid@12.2.0/dist/mermaid.min.js 'sha256-AeXSdowHTvjiNdHg8pY5tHFcYe0yw2yKeMSPxDO6hCc='; style-src 'unsafe-inline'; img-src data:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'">
 <title>Architecture</title>
-<style>body{font-family:system-ui,sans-serif;max-width:60rem;margin:0 auto;padding:1rem;line-height:1.5}table{border-collapse:collapse}th,td{border:1px solid #999;padding:.25rem .5rem;text-align:left;vertical-align:top}pre{overflow-x:auto}</style>
+<style>:root{color-scheme:light dark}body{font-family:system-ui,sans-serif;max-width:60rem;margin:0 auto;padding:1rem;line-height:1.5;color:#1a1a1a;background:#fff}a{color:#0645ad}table{display:block;overflow-x:auto;border-collapse:collapse}th,td{border:1px solid #999;padding:.25rem .5rem;text-align:left;vertical-align:top}pre{overflow-x:auto}.diagram{overflow-x:auto;margin:1rem 0}.diagram svg{max-width:none;height:auto}@media (prefers-color-scheme:dark){body{color:#e6e6e6;background:#16181c}a{color:#8ab4f8}th,td{border-color:#555}.diagram [stroke="#d00000"]{stroke:#ff6b6b}.diagram [fill="#d00000"]{fill:#ff6b6b}}</style>
 </head>
 <body>
 <h1>Architecture</h1>
 <h2>System</h2>
-<pre class="mermaid">flowchart LR
-  n1[&quot;Shop&quot;]</pre>
+<div class="diagram"><svg width="62pt" height="44pt"
+ viewBox="0.00 0.00 62.00 44.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 40)">
+<g id="node1" class="node">
+<polygon fill="none" stroke="currentColor" points="54,-36 0,-36 0,0 54,0 54,-36"/>
+<text fill="currentColor" xml:space="preserve" text-anchor="start" x="14.66" y="-13.2" font-family="Helvetica,Arial,sans-serif" font-size="12.00">Shop</text>
+</g>
+</g>
+</svg></div>
 <h2>Areas</h2>
 <table>
 <thead><tr><th>Area</th><th>Description</th><th>Elements</th></tr></thead>
@@ -40,7 +47,5 @@
 </ul>
 <h2>Not in any area</h2>
 <p>Every element and record is in an area.</p>
-<script src="https://cdn.jsdelivr.net/npm/mermaid@12.2.0/dist/mermaid.min.js" integrity="sha384-8xUhuLNMjW/cI2Dacg3DR4WliYznvIg0LVG1stctThKD/YVrJFI9TNCFxft5NYgp" crossorigin="anonymous"></script>
-<script>mermaid.initialize({ startOnLoad: true, securityLevel: 'strict' });</script>
 </body>
 </html>

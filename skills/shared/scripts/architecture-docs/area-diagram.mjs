@@ -2,6 +2,7 @@
 // runtime and known-gap arrows, implied arrows hidden. `base` comes from `documentBase`.
 import { cmp } from '../architecture-delta/report.mjs';
 import { ARROW_LIMIT, flowchart } from './mermaid.mjs';
+import { diagram } from './tree.mjs';
 
 const STYLES = ['import', 'runtime', 'gap'];
 
@@ -84,6 +85,12 @@ export function drawing(framedIds, frameText, gap, base, marks = new Map()) {
 // The diagram text, or null when it has more than ARROW_LIMIT arrows.
 export function drawingText(picture) {
   return flowchart(picture.nodes, picture.arrows, picture.frame);
+}
+
+// The diagram block of a drawing, or null when it has more than ARROW_LIMIT arrows.
+export function drawingBlock(picture) {
+  const text = drawingText(picture);
+  return text === null ? null : diagram(text, { kind: 'flowchart', ...picture });
 }
 
 export const TOO_MANY_ARROWS = `The diagram has more than ${ARROW_LIMIT} arrows and is not drawn; the tables list everything.`;

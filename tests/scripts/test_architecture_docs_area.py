@@ -384,7 +384,12 @@ def test_capability_document() -> None:  # Capability: title, description, seque
     assert heads(document, 2) == ["Sequence", "Steps", "Decisions", "Contracts", "Areas involved"]
     assert section(document, "Sequence") == [{"type": "diagram", "text": (
         "sequenceDiagram\n  participant n3 as Web\n  participant n2 as API\n  participant n1 as Gateway\n"
-        "  n3->>n2: order\n  n2->>n1: \n  n1-->>n2: paid")}]
+        "  n3->>n2: order\n  n2->>n1: \n  n1-->>n2: paid"), "figure": {
+        "kind": "sequence",
+        "participants": [{"id": "shop.web", "text": "Web"}, {"id": "shop.api", "text": "API"}, {"id": "pay.gateway", "text": "Gateway"}],
+        "messages": [{"from": "shop.web", "to": "shop.api", "reply": False, "text": "order"},
+                     {"from": "shop.api", "to": "pay.gateway", "reply": False, "text": ""},
+                     {"from": "pay.gateway", "to": "shop.api", "reply": True, "text": "paid"}]}}]
     table = section(document, "Steps")[0]
     assert table["header"] == ["Step", "From", "To", "Label", "Call or reply", "Kinds"]
     web, api, gateway = ([L(id_, f"../areas/{area}.md"), f" ({title})"] for id_, area, title in

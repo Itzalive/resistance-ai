@@ -1,12 +1,12 @@
 // An area document (spec, What each document holds, Area): title and description, the diagram, the elements, their
 // dependencies, and the area's decisions, contracts, open questions, known-gap entries and capabilities.
 import { cmp } from '../architecture-delta/report.mjs';
-import { doc, heading, paragraph, table, diagram, docLink, orSay } from './tree.mjs';
+import { doc, heading, paragraph, table, docLink, orSay } from './tree.mjs';
 import { areaDoc, areaCapabilities, areaRecords, elementTarget, relative } from './facts.mjs';
 import {
   ELEMENT_HEADER, decisionBlocks, contractBlocks, holeBlocks, elementCells, elementLinks, areaLinks, capabilityLinks,
 } from './records-doc.mjs';
-import { drawing, drawingText, TOO_MANY_ARROWS } from './area-diagram.mjs';
+import { drawing, drawingBlock, TOO_MANY_ARROWS } from './area-diagram.mjs';
 
 // An id is plain text in the document that holds it, a link elsewhere.
 function idCell(id, ctx) {
@@ -45,8 +45,7 @@ export function buildArea(data, gap, area, base) {
   if (area.description !== null) blocks.push(paragraph(area.description));
 
   blocks.push(heading(2, 'Diagram'));
-  const text = drawingText(drawing(area.elements, area.title, gap, base));
-  blocks.push(text === null ? paragraph(TOO_MANY_ARROWS) : diagram(text));
+  blocks.push(drawingBlock(drawing(area.elements, area.title, gap, base)) ?? paragraph(TOO_MANY_ARROWS));
 
   blocks.push(heading(2, 'Elements'));
   blocks.push(...orSay(area.elements.length === 0 ? [] : [table(ELEMENT_HEADER,

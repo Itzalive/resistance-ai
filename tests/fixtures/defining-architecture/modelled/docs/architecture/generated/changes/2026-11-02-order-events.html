@@ -4,9 +4,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src https://cdn.jsdelivr.net/npm/mermaid@12.2.0/dist/mermaid.min.js 'sha256-AeXSdowHTvjiNdHg8pY5tHFcYe0yw2yKeMSPxDO6hCc='; style-src 'unsafe-inline'; img-src data:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'">
 <title>2026-11-02-order-events</title>
-<style>body{font-family:system-ui,sans-serif;max-width:60rem;margin:0 auto;padding:1rem;line-height:1.5}table{border-collapse:collapse}th,td{border:1px solid #999;padding:.25rem .5rem;text-align:left;vertical-align:top}pre{overflow-x:auto}</style>
+<style>:root{color-scheme:light dark}body{font-family:system-ui,sans-serif;max-width:60rem;margin:0 auto;padding:1rem;line-height:1.5;color:#1a1a1a;background:#fff}a{color:#0645ad}table{display:block;overflow-x:auto;border-collapse:collapse}th,td{border:1px solid #999;padding:.25rem .5rem;text-align:left;vertical-align:top}pre{overflow-x:auto}.diagram{overflow-x:auto;margin:1rem 0}.diagram svg{max-width:none;height:auto}@media (prefers-color-scheme:dark){body{color:#e6e6e6;background:#16181c}a{color:#8ab4f8}th,td{border-color:#555}.diagram [stroke="#d00000"]{stroke:#ff6b6b}.diagram [fill="#d00000"]{fill:#ff6b6b}}</style>
 </head>
 <body>
 <h1>2026-11-02-order-events</h1>
@@ -18,31 +18,101 @@
 <li>Approval: Approved by owner on 2026-11-02</li>
 </ul>
 <h2>Diagram</h2>
-<pre class="mermaid">flowchart LR
-  subgraph frame[&quot;2026-11-02-order-events&quot;]
-    n1[&quot;Shop #40;added#41;&quot;]
-    n2[&quot;Orders API #40;added#41;&quot;]
-    n3[&quot;Checkout #40;added#41;&quot;]
-    n4[&quot;Order events #40;added#41;&quot;]
-    n5[&quot;Inventory #40;added#41;&quot;]
-    n6[&quot;Nightly jobs #40;added#41;&quot;]
-    n7[&quot;Orders #40;added#41;&quot;]
-    n8[&quot;Payments #40;added#41;&quot;]
-    n9[&quot;Refunds #40;added#41;&quot;]
-    n10[&quot;Reporting #40;added#41;&quot;]
-  end
-  n2 --&gt; n7
-  n3 --&gt; n7
-  n3 --&gt; n8
-  n5 --&gt;|&quot;known gap&quot;| n7
-  n6 --&gt; n7
-  n7 --&gt; n4
-  n7 --&gt; n5
-  n9 --&gt; n7
-  n9 --&gt; n8
-  n10 --&gt; n4
-  n10 --&gt;|&quot;known gap&quot;| n8
-  linkStyle 3,10 stroke:#d00,color:#d00</pre>
+<div class="diagram"><svg width="544pt" height="368pt"
+ viewBox="0.00 0.00 544.00 368.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 364)">
+<g id="clust1" class="cluster">
+<polygon fill="none" stroke="currentColor" points="8,-8 8,-352 528.06,-352 528.06,-8 8,-8"/>
+<text fill="currentColor" xml:space="preserve" text-anchor="start" x="208.05" y="-336" font-family="Helvetica,Arial,sans-serif" font-size="12.00">2026&#45;11&#45;02&#45;order&#45;events</text>
+</g>
+<g id="node1" class="node">
+<polygon fill="none" stroke="currentColor" points="113.82,-52 33.5,-52 33.5,-16 113.82,-16 113.82,-52"/>
+<text fill="currentColor" xml:space="preserve" text-anchor="start" x="41.5" y="-29.2" font-family="Helvetica,Arial,sans-serif" font-size="12.00">Shop (added)</text>
+</g>
+<g id="node2" class="node">
+<polygon fill="none" stroke="currentColor" points="128.98,-106 18.34,-106 18.34,-70 128.98,-70 128.98,-106"/>
+<text fill="currentColor" xml:space="preserve" text-anchor="start" x="26.34" y="-83.2" font-family="Helvetica,Arial,sans-serif" font-size="12.00">Orders API (added)</text>
+</g>
+<g id="node7" class="node">
+<polygon fill="none" stroke="currentColor" points="311.2,-214 222.9,-214 222.9,-178 311.2,-178 311.2,-214"/>
+<text fill="currentColor" xml:space="preserve" text-anchor="start" x="230.9" y="-191.2" font-family="Helvetica,Arial,sans-serif" font-size="12.00">Orders (added)</text>
+</g>
+<g id="edge1" class="edge">
+<path fill="none" stroke="currentColor" d="M114.53,-106.4C120.21,-109.2 125.94,-112.11 131.32,-115 164.47,-132.81 200.99,-154.93 227.64,-171.56"/>
+<polygon fill="currentColor" stroke="currentColor" points="225.73,-174.49 236.06,-176.83 229.45,-168.56 225.73,-174.49"/>
+</g>
+<g id="node3" class="node">
+<polygon fill="none" stroke="currentColor" points="124.48,-160 22.84,-160 22.84,-124 124.48,-124 124.48,-160"/>
+<text fill="currentColor" xml:space="preserve" text-anchor="start" x="30.84" y="-137.2" font-family="Helvetica,Arial,sans-serif" font-size="12.00">Checkout (added)</text>
+</g>
+<g id="edge2" class="edge">
+<path fill="none" stroke="currentColor" d="M124.94,-156.19C151.61,-163.71 184.41,-172.97 211.67,-180.66"/>
+<polygon fill="currentColor" stroke="currentColor" points="210.56,-183.98 221.14,-183.33 212.46,-177.25 210.56,-183.98"/>
+</g>
+<g id="node8" class="node">
+<polygon fill="none" stroke="currentColor" points="318.2,-268 215.89,-268 215.89,-232 318.2,-232 318.2,-268"/>
+<text fill="currentColor" xml:space="preserve" text-anchor="start" x="223.89" y="-245.2" font-family="Helvetica,Arial,sans-serif" font-size="12.00">Payments (added)</text>
+</g>
+<g id="edge3" class="edge">
+<path fill="none" stroke="currentColor" d="M114.9,-160.42C120.47,-163.19 126.08,-166.09 131.32,-169 170.32,-190.63 177.44,-200.41 215.89,-223 217.72,-224.07 219.58,-225.15 221.48,-226.23"/>
+<polygon fill="currentColor" stroke="currentColor" points="219.3,-229.02 229.73,-230.85 222.72,-222.92 219.3,-229.02"/>
+</g>
+<g id="node4" class="node">
+<polygon fill="none" stroke="currentColor" points="520.06,-299 402.78,-299 402.78,-263 520.06,-263 520.06,-299"/>
+<text fill="currentColor" xml:space="preserve" text-anchor="start" x="410.78" y="-276.2" font-family="Helvetica,Arial,sans-serif" font-size="12.00">Order events (added)</text>
+</g>
+<g id="node5" class="node">
+<polygon fill="none" stroke="currentColor" points="512.57,-215 410.27,-215 410.27,-179 512.57,-179 512.57,-215"/>
+<text fill="currentColor" xml:space="preserve" text-anchor="start" x="418.27" y="-192.2" font-family="Helvetica,Arial,sans-serif" font-size="12.00">Inventory (added)</text>
+</g>
+<g id="edge4" class="edge">
+<path fill="none" stroke="#d00000" d="M410.04,-190.01C401.62,-189.09 392.96,-188.3 384.78,-187.8 363.23,-186.49 357.75,-186.51 336.2,-187.8 331.84,-188.06 327.33,-188.42 322.81,-188.83"/>
+<polygon fill="#d00000" stroke="#d00000" points="322.71,-185.32 313.11,-189.82 323.42,-192.29 322.71,-185.32"/>
+<text xml:space="preserve" text-anchor="start" x="336.2" y="-190" font-family="Helvetica,Arial,sans-serif" font-size="11.00" fill="#d00000">known gap</text>
+</g>
+<g id="node6" class="node">
+<polygon fill="none" stroke="currentColor" points="131.32,-214 16,-214 16,-178 131.32,-178 131.32,-214"/>
+<text fill="currentColor" xml:space="preserve" text-anchor="start" x="24" y="-191.2" font-family="Helvetica,Arial,sans-serif" font-size="12.00">Nightly jobs (added)</text>
+</g>
+<g id="edge5" class="edge">
+<path fill="none" stroke="currentColor" d="M131.56,-196C156.68,-196 186.08,-196 210.98,-196"/>
+<polygon fill="currentColor" stroke="currentColor" points="210.92,-199.5 220.92,-196 210.92,-192.5 210.92,-199.5"/>
+</g>
+<g id="edge6" class="edge">
+<path fill="none" stroke="currentColor" d="M309.79,-214.44C338.78,-227.25 377.61,-244.41 408.58,-258.1"/>
+<polygon fill="currentColor" stroke="currentColor" points="406.81,-261.14 417.37,-261.98 409.64,-254.74 406.81,-261.14"/>
+</g>
+<g id="edge7" class="edge">
+<path fill="none" stroke="currentColor" d="M311.65,-199.68C319.8,-200.23 328.26,-200.71 336.2,-201 356.48,-201.74 378.62,-201.4 398.52,-200.67"/>
+<polygon fill="currentColor" stroke="currentColor" points="398.59,-204.17 408.44,-200.26 398.3,-197.18 398.59,-204.17"/>
+</g>
+<g id="node9" class="node">
+<polygon fill="none" stroke="currentColor" points="121.48,-268 25.84,-268 25.84,-232 121.48,-232 121.48,-268"/>
+<text fill="currentColor" xml:space="preserve" text-anchor="start" x="33.84" y="-245.2" font-family="Helvetica,Arial,sans-serif" font-size="12.00">Refunds (added)</text>
+</g>
+<g id="edge8" class="edge">
+<path fill="none" stroke="currentColor" d="M121.97,-236.65C149.13,-228.99 183.36,-219.33 211.64,-211.35"/>
+<polygon fill="currentColor" stroke="currentColor" points="212.42,-214.77 221.1,-208.68 210.52,-208.03 212.42,-214.77"/>
+</g>
+<g id="edge9" class="edge">
+<path fill="none" stroke="currentColor" d="M121.97,-250C146.86,-250 177.68,-250 204.42,-250"/>
+<polygon fill="currentColor" stroke="currentColor" points="204.09,-253.5 214.09,-250 204.09,-246.5 204.09,-253.5"/>
+</g>
+<g id="node10" class="node">
+<polygon fill="none" stroke="currentColor" points="125.48,-322 21.84,-322 21.84,-286 125.48,-286 125.48,-322"/>
+<text fill="currentColor" xml:space="preserve" text-anchor="start" x="29.84" y="-299.2" font-family="Helvetica,Arial,sans-serif" font-size="12.00">Reporting (added)</text>
+</g>
+<g id="edge10" class="edge">
+<path fill="none" stroke="currentColor" d="M125.88,-300.95C194.02,-296.88 314.71,-289.69 390.98,-285.14"/>
+<polygon fill="currentColor" stroke="currentColor" points="391.08,-288.64 400.85,-284.55 390.66,-281.65 391.08,-288.64"/>
+</g>
+<g id="edge11" class="edge">
+<path fill="none" stroke="#d00000" d="M125.66,-289.5C133.58,-287.25 141.67,-284.96 149.32,-282.8 167.27,-277.73 186.78,-272.24 204.61,-267.23"/>
+<polygon fill="#d00000" stroke="#d00000" points="205.34,-270.66 214.02,-264.59 203.44,-263.92 205.34,-270.66"/>
+<text xml:space="preserve" text-anchor="start" x="149.32" y="-285" font-family="Helvetica,Arial,sans-serif" font-size="11.00" fill="#d00000">known gap</text>
+</g>
+</g>
+</svg></div>
 <h2>What changed</h2>
 <h3>Elements added</h3>
 <table>
@@ -107,7 +177,5 @@
   shop.reporting -&gt; shop.payments (1 edges)
 
 0 new, 0 stale, 2 known (likec4 1.60.0 from plugin)</code></pre>
-<script src="https://cdn.jsdelivr.net/npm/mermaid@12.2.0/dist/mermaid.min.js" integrity="sha384-8xUhuLNMjW/cI2Dacg3DR4WliYznvIg0LVG1stctThKD/YVrJFI9TNCFxft5NYgp" crossorigin="anonymous"></script>
-<script>mermaid.initialize({ startOnLoad: true, securityLevel: 'strict' });</script>
 </body>
 </html>
