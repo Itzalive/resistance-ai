@@ -195,6 +195,81 @@ def test_drawing_leaves_an_unmarked_framed_node_as_its_title() -> None:  # Chang
     assert {node["id"]: node["text"] for node in picture["nodes"]}["pay.gateway"] == "Gateway"
 
 
+def imp(from_: str, to: str) -> dict:
+    return {"from": from_, "to": to, "titles": []}
+
+
+# #44: area `app` frames app.x and app.y; srv is another container with three elements; db is a top-level outside system.
+GROUPED = {
+    **DATA,
+    "elements": [element("app", "App"), element("app.x", "X", kind="component"), element("app.y", "Y", kind="component"),
+                 element("srv", "Srv"), element("srv.p", "P", kind="component"), element("srv.q", "Q", kind="component"),
+                 element("srv.r", "R", kind="component"), element("srv.s", "S", kind="component"),
+                 element("db", "DB", kind="system")],
+    "allowed": [imp("app.x", "srv.p"), imp("app.x", "srv.q"), imp("app.y", "srv.q"), imp("app.x", "db"), imp("srv.s", "db")],
+    "runtime": [{"from": "app.y", "to": "srv.r", "kind": "http", "titles": ["t"]}],
+    "areas": [{"name": "app", "title": "App", "description": None, "elements": ["app.x", "app.y"]},
+              {"name": "srv", "title": "Srv", "description": None, "elements": ["srv", "srv.p", "srv.q", "srv.r", "srv.s"]}],
+}
+AREA = "d.drawing(data.areas[0].elements, data.areas[0].title, gap, base, new Map(), { area: true })"
+
+
+def test_area_neighbours_are_grouped_by_their_outermost_outside_ancestor() -> None:  # AC-32
+    picture = run(AREA, data=GROUPED, gap=[{"from": "app.x", "to": "srv.r", "reason": "r", "close_by": None}])
+    assert [(a["from"], a["to"], a["style"], a["text"]) for a in picture["arrows"]] == [
+        ("app.x", "db", "import", ""),
+        ("app.x", "srv", "import", ""),
+        ("app.x", "srv", "gap", "known gap"),
+        ("app.y", "srv", "import", ""),
+        ("app.y", "srv", "runtime", 'http, "t"'),
+    ]
+    assert {node["id"]: node["text"] for node in picture["nodes"]} == {
+        "app.x": "X", "app.y": "Y", "srv": "Srv (3 elements)", "db": "DB (no area)"}
+
+
+def test_a_group_standing_for_one_neighbour_is_that_neighbour() -> None:  # AC-32
+    data = {**GROUPED, "allowed": [imp("app.x", "srv.p")], "runtime": []}
+    picture = run(AREA, data=data, gap=[])
+    assert {node["id"]: node["text"] for node in picture["nodes"]}["srv.p"] == "P (srv)"
+    assert [(a["from"], a["to"]) for a in picture["arrows"]] == [("app.x", "srv.p")]
+
+
+def test_runtime_arrows_merged_into_a_group_keep_every_kind_and_title() -> None:  # AC-32
+    data = {**GROUPED, "allowed": [], "runtime": [{"from": "app.x", "to": "srv.p", "kind": "http", "titles": ["a"]},
+                                                  {"from": "app.x", "to": "srv.q", "kind": "event", "titles": ["b"]}]}
+    picture = run(AREA, data=data, gap=[])
+    assert [(a["to"], a["text"]) for a in picture["arrows"]] == [("srv", 'event, http, "a", "b"')]
+
+
+CHAIN = {
+    **DATA,
+    "elements": [element("a", "A", kind="system"), element("b", "B", kind="system"), element("c", "C", kind="system")],
+    "allowed": [imp("a", "b"), imp("b", "c"), imp("a", "c")],
+    "runtime": [{"from": "a", "to": "c", "kind": "http", "titles": []}],
+    "areas": [{"name": "abc", "title": "ABC", "description": None, "elements": ["a", "b", "c"]}],
+}
+
+
+def test_an_import_implied_by_other_area_imports_is_left_out() -> None:  # AC-33
+    picture = run(AREA, data=CHAIN, gap=[])
+    assert [(a["from"], a["to"], a["style"]) for a in picture["arrows"]] == [
+        ("a", "b", "import"), ("a", "c", "runtime"), ("b", "c", "import")]
+    unchained = {**CHAIN, "allowed": [imp("a", "b"), imp("a", "c")]}
+    drawn = [(a["from"], a["to"], a["style"]) for a in run(AREA, data=unchained, gap=[])["arrows"]]
+    assert ("a", "c", "import") in drawn
+
+
+def test_implied_imports_in_a_cycle_keep_the_cycle_reachable() -> None:  # AC-33: taken in order, each decided once
+    data = {**CHAIN, "allowed": [imp("a", "b"), imp("b", "a"), imp("a", "c"), imp("b", "c")], "runtime": []}
+    drawn = [(a["from"], a["to"]) for a in run(AREA, data=data, gap=[])["arrows"]]
+    assert drawn == [("a", "b"), ("b", "a"), ("b", "c")]
+
+
+def test_the_default_drawing_is_unchanged() -> None:  # Change records keep the drawing rules without #44
+    picture = run("d.drawing(data.areas[0].elements, data.areas[0].title, gap, base)", data=GROUPED, gap=[])
+    assert {node["id"] for node in picture["nodes"]} == {"app.x", "app.y", "srv.p", "srv.q", "srv.r", "db"}
+
+
 RECORDS = {
     **DATA,
     "decisions": [
@@ -359,13 +434,15 @@ def test_area_document_with_nothing() -> None:  # Area: an empty section says so
 
 
 def test_area_document_over_the_arrow_limit() -> None:  # AC-21: the note, and the tables complete
-    data = {**RECORDS, "allowed": [{"from": "pay", "to": f"x{i:02}", "titles": []} for i in range(81)], "runtime": [],
-            "elements": RECORDS["elements"] + [element(f"x{i:02}", f"X{i}") for i in range(81)]}
-    document = area_doc(1, data, [])
+    ids = [f"e{i}" for i in range(10)]
+    data = {**RECORDS, "elements": [element(id_, id_.upper(), kind="system") for id_ in ids], "allowed": [],
+            "runtime": [{"from": x, "to": y, "kind": "http", "titles": []} for x in ids for y in ids if x != y],
+            "areas": [{"name": "all", "title": "All", "description": None, "elements": ids}]}
+    document = area_doc(0, data, [])
     block = section(document, "Diagram")[0]
     assert block["type"] == "diagram" and block["text"] is None and block["note"] == "The Markdown diagram has more than 80 arrows and is not drawn; the HTML page draws it."
-    assert len(block["figure"]["arrows"]) == 81
-    assert len(section(document, "Dependencies")[0]["rows"]) == 81
+    assert len(block["figure"]["arrows"]) == 90
+    assert len(section(document, "Dependencies")[0]["rows"]) == 180
 
 
 def test_area_document_dependencies_name_every_area_of_the_other_end() -> None:  # Area: "the other end's areas"
@@ -450,3 +527,78 @@ def test_capability_document_step_limit() -> None:  # AC-21 (capability part): 2
             assert sequence == [para("The capability has more than 200 steps, so its sequence diagram is not drawn; "
                                      "the steps table lists every step.")]
         assert len(section(document, "Steps")[0]["rows"]) == count
+
+
+def test_an_area_document_draws_groups_and_still_lists_every_dependency() -> None:  # AC-32
+    gap = [{"from": "app.x", "to": "srv.r", "reason": "r", "close_by": None}]
+    document = area_doc(0, {**RECORDS, **{k: GROUPED[k] for k in ("elements", "allowed", "runtime", "areas")}}, gap)
+    [block] = section(document, "Diagram")
+    assert "Srv #40;3 elements#41;" in block["text"]
+    others = {"".join(part if isinstance(part, str) else part["text"] for part in row[2]) for row in section(document, "Dependencies")[0]["rows"]}
+    assert {"srv.p (P)", "srv.q (Q)", "srv.r (R)", "db (DB)"} <= others
+
+
+def wide_area(systems: int) -> dict:
+    names = [f"a{i:02}" for i in range(systems)]  # sorting before the framed m.*
+    return {**RECORDS, "elements": [element("m", "M"), element("m.a", "A", kind="component"), element("m.b", "B", kind="component"),
+                                    element("m.c", "C", kind="component"), *[element(n, n.upper(), kind="system") for n in names]],
+            "allowed": [imp("m.a", n) for n in names],
+            "runtime": [{"from": "m.a", "to": "a01", "kind": "http", "titles": []}],
+            "areas": [{"name": "m", "title": "M", "description": None, "elements": ["m.a", "m.b", "m.c"]}]}
+
+
+def test_an_area_of_more_than_20_boxes_shows_a_dependency_matrix() -> None:  # AC-34
+    gap = [{"from": "m.b", "to": "a00", "reason": "r", "close_by": None}]
+    [note, matrix] = section(area_doc(0, wide_area(18), gap), "Diagram")
+    assert note == para("Too many boxes to draw (21); a row uses its column: u import, r runtime link, g known gap.")
+    assert matrix["type"] == "table"
+    assert matrix["header"] == ["Box", *[str(n) for n in range(1, 22)]]
+    assert [row[0] for row in matrix["rows"]][:5] == [["1. A"], ["2. B"], ["3. C"], ["4. A00 (no area)"], ["5. A01 (no area)"]]
+    a, b, _, a00 = matrix["rows"][:4]
+    assert a[1:6] == [["-"], [""], [""], ["u"], ["u r"]]
+    assert b[4] == ["g"] and b[2] == ["-"]
+    assert a00[1:] == [[""]] * 3 + [["-"]] + [[""]] * 17
+
+
+def test_an_area_of_20_boxes_keeps_its_diagram() -> None:  # AC-34
+    [block] = section(area_doc(0, wide_area(17), []), "Diagram")
+    assert block["type"] == "diagram" and len(block["figure"]["nodes"]) == 20
+
+
+def test_the_matrix_keeps_imports_the_diagram_leaves_out_as_implied() -> None:  # AC-34: no import left out as implied
+    names = [f"s{i:02}" for i in range(18)]
+    data = {**CHAIN, "elements": [*CHAIN["elements"], *[element(n, n.upper(), kind="system") for n in names]],
+            "allowed": [*CHAIN["allowed"], *[imp("a", n) for n in names]], "runtime": []}
+    data = {**RECORDS, **{k: data[k] for k in ("elements", "allowed", "runtime", "areas")}}
+    [_, matrix] = section(area_doc(0, data, []), "Diagram")
+    assert matrix["rows"][0][1:4] == [["-"], ["u"], ["u"]]
+
+
+def test_the_matrix_draws_grouped_neighbours() -> None:  # AC-34: built from the grouped neighbours
+    data = wide_area(18)
+    data = {**data, "elements": [*data["elements"], element("srv", "Srv"), element("srv.p", "P", kind="component"),
+                                 element("srv.q", "Q", kind="component")],
+            "allowed": [*data["allowed"], imp("m.c", "srv.p"), imp("m.c", "srv.q")]}
+    [note, matrix] = section(area_doc(0, data, []), "Diagram")
+    assert note["parts"][0].startswith("Too many boxes to draw (22);")
+    assert matrix["rows"][-1][0] == ["22. Srv (2 elements)"] and matrix["rows"][2][22] == ["u"]
+
+
+def test_a_sibling_of_a_framed_element_is_drawn_as_itself() -> None:  # Grouped neighbours: holds no framed element
+    data = {**GROUPED, "elements": [*GROUPED["elements"], element("app.z", "Z", kind="component"), element("app.w", "W", kind="component")],
+            "allowed": [imp("app.x", "app.z"), imp("app.x", "app.w")], "runtime": []}
+    picture = run(AREA, data=data, gap=[])
+    assert {node["id"] for node in picture["nodes"]} == {"app.x", "app.y", "app.z", "app.w"}
+
+
+def test_an_import_to_a_group_is_never_left_out() -> None:  # Implied imports: arrows to a group are never left out
+    data = {**GROUPED, "allowed": [imp("app.x", "app.y"), imp("app.y", "srv.p"), imp("app.y", "srv.q"), imp("app.x", "srv.p")],
+            "runtime": []}
+    drawn = [(a["from"], a["to"]) for a in run(AREA, data=data, gap=[])["arrows"]]
+    assert drawn == [("app.x", "app.y"), ("app.x", "srv"), ("app.y", "srv")]
+
+
+def test_an_area_document_leaves_out_an_implied_import() -> None:  # AC-33 through the area document
+    data = {**RECORDS, **{k: CHAIN[k] for k in ("elements", "allowed", "runtime", "areas")}, "runtime": []}
+    [block] = section(area_doc(0, data, []), "Diagram")
+    assert [(a["from"], a["to"]) for a in block["figure"]["arrows"]] == [("a", "b"), ("b", "c")]

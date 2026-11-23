@@ -250,11 +250,14 @@ def test_build_removes_the_emptied_capabilities_folder(tmp_path) -> None:  # AC-
 
 
 def big_model() -> str:
-    children = "\n".join(f"    c{i:02} = container 'C{i}'" for i in range(81))
-    arrows = "\n".join(f"  big.c{i:02} -> hub" for i in range(81))
+    # 12 boxes and 91 arrows (90 runtime links between the children): under the matrix's box limit, over the Markdown
+    # arrow limit.
+    children = "\n".join(f"    c{i:02} = container 'C{i}'" for i in range(10))
+    arrows = "\n".join(f"  big.c{i:02} -[http]-> big.c{j:02}" for i in range(10) for j in range(10) if i != j) + "\n  big.c00 -> hub"
     many = "\n".join("    big.c00 -> hub" for _ in range(81))
     lots = "\n".join("    big.c00 -> hub" for _ in range(201))
-    return (f"model {{\n  big = system 'Big' {{\n{children}\n  }}\n  hub = system 'Hub'\n{arrows}\n}}\n"
+    return ("specification {\n  relationship http\n}\n"
+            f"model {{\n  big = system 'Big' {{\n{children}\n  }}\n  hub = system 'Hub'\n{arrows}\n}}\n"
             f"views {{\n  view area-big of big {{\n    include *\n  }}\n"
             f"  dynamic view capability-many {{\n{many}\n  }}\n  dynamic view capability-lots {{\n{lots}\n  }}\n}}\n")
 
@@ -266,7 +269,7 @@ def test_build_over_the_diagram_limits(tmp_path) -> None:  # AC-21
     assert "The Markdown diagram has more than 80 arrows and is not drawn; the HTML page draws it\\." in big
     page = (out / "areas" / "big.html").read_text(encoding="utf-8")
     assert page.count('<div class="diagram"><svg') == 1 and "not drawn" not in page
-    assert big.count("| uses | [hub](../README.md) \\(Hub\\) |") == 81
+    assert big.count("| runtime to |") == 90
     many = (out / "capabilities" / "many.md").read_text(encoding="utf-8")
     assert "```mermaid\nsequenceDiagram\n" in many and many.count("->>") == 81
     lots = (out / "capabilities" / "lots.md").read_text(encoding="utf-8")

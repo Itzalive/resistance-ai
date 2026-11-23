@@ -2,7 +2,7 @@
 // runtime and known-gap arrows, implied arrows hidden. `base` comes from `documentBase`.
 import { cmp } from '../architecture-delta/report.mjs';
 import { MARKDOWN_TOO_MANY, SVG_ARROW_LIMIT, flowchart } from './mermaid.mjs';
-import { diagram } from './tree.mjs';
+import { diagram, paragraph, table } from './tree.mjs';
 
 const STYLES = ['import', 'runtime', 'gap'];
 
@@ -38,9 +38,81 @@ function hideImplied(arrows) {
   return arrows.filter((arrow) => !implied.has(arrow));
 }
 
+// Spec, Area diagrams (#44), Grouped neighbours: a neighbour's group is its outermost ancestor, or itself, that is an
+// element, is not framed and holds no framed element.
+function groupOf(id, framed, isElement) {
+  const holdsFramed = (candidate) => framed.has(candidate) || [...framed].some((other) => other.startsWith(`${candidate}.`));
+  return selfAndAbove(id).reverse().find((candidate) => isElement(candidate) && !holdsFramed(candidate)) ?? id;
+}
+
+// Spec, Area diagrams (#44), Implied imports inside the area: taken by from then to, an import between two framed
+// elements is left out when its target is still reachable from its source along the other kept ones.
+function reduceImports(pairs, framed) {
+  const inside = pairs.filter((pair) => framed.has(pair.from) && framed.has(pair.to)).sort((x, y) => cmp(x.from, y.from) || cmp(x.to, y.to));
+  const out = new Map();
+  for (const pair of inside) {
+    if (!out.has(pair.from)) out.set(pair.from, new Set());
+    out.get(pair.from).add(pair);
+  }
+  const reaches = (from, to, skip) => {
+    const seen = new Set([from]);
+    const queue = [from];
+    for (let at = 0; at < queue.length; at += 1) {
+      for (const pair of out.get(queue[at]) ?? []) {
+        if (pair === skip || seen.has(pair.to)) continue;
+        if (pair.to === to) return true;
+        seen.add(pair.to);
+        queue.push(pair.to);
+      }
+    }
+    return false;
+  };
+  const dropped = new Set();
+  for (const pair of inside) {
+    if (reaches(pair.from, pair.to, pair)) {
+      out.get(pair.from).delete(pair);
+      dropped.add(pair);
+    }
+  }
+  return pairs.filter((pair) => !dropped.has(pair));
+}
+
+// Spec, Area diagrams (#44): neighbours redrawn as their groups, arrows of one style between the same two nodes merged.
+// Returns the merged pairs per style and how many drawn neighbours each group stands for.
+function groupPairs(drawnByStyle, framed, isElement) {
+  const members = new Map();
+  const end = (id) => {
+    if (framed.has(id)) return id;
+    const group = groupOf(id, framed, isElement);
+    if (!members.has(group)) members.set(group, new Set());
+    members.get(group).add(id);
+    return group;
+  };
+  const merged = Object.fromEntries(STYLES.map((style) => [style, new Map()]));
+  for (const style of STYLES) {
+    for (const pair of drawnByStyle[style]) {
+      const from = end(pair.from);
+      const to = end(pair.to);
+      const key = JSON.stringify([from, to]);
+      if (!merged[style].has(key)) merged[style].set(key, { from, to, kinds: new Set(), titles: new Set() });
+      for (const kind of pair.kinds) merged[style].get(key).kinds.add(kind);
+      for (const title of pair.titles) merged[style].get(key).titles.add(title);
+    }
+  }
+  // A group standing for one neighbour is that neighbour.
+  const single = new Map([...members].filter(([, ids]) => ids.size === 1).map(([group, ids]) => [group, [...ids][0]]));
+  const asSingle = (id) => single.get(id) ?? id;
+  const result = Object.fromEntries(STYLES.map((style) => [style, [...merged[style].values()]
+    .map((pair) => ({ ...pair, from: asSingle(pair.from), to: asSingle(pair.to) }))]));
+  const sizes = new Map([...members].filter(([, ids]) => ids.size > 1).map(([group, ids]) => [group, ids.size]));
+  return { pairs: result, sizes };
+}
+
 // The nodes, arrows and frame of a diagram whose framed elements are `framedIds`: { nodes, arrows, frame }. `marks` maps
 // a framed id to `added` or `changed` (a change record's diagram); a marked node is labelled `<title> (<mark>)`.
-export function drawing(framedIds, frameText, gap, base, marks = new Map()) {
+// `options.area` applies the area-diagram rules of #44: grouped neighbours and implied imports left out, unless
+// `options.keepImplied` (the matrix).
+export function drawing(framedIds, frameText, gap, base, marks = new Map(), options = {}) {
   const framed = new Set(framedIds);
   const pairs = Object.fromEntries(STYLES.map((style) => [style, new Map()]));
   const add = (style, from, to, kind = null, titles = []) => {
@@ -63,18 +135,24 @@ export function drawing(framedIds, frameText, gap, base, marks = new Map()) {
     runtime: (pair) => [...[...pair.kinds].sort(cmp), ...[...pair.titles].sort(cmp).map((title) => `"${title}"`)].join(', '),
     gap: () => 'known gap',
   };
-  const arrows = STYLES.flatMap((style) => {
-    const drawn = style === 'gap' ? [...pairs[style].values()] : hideImplied([...pairs[style].values()]);
-    return drawn.map((pair) => ({
-      from: pair.from, to: pair.to, style, dashed: style === 'runtime', red: style === 'gap', text: text[style](pair),
-    }));
-  }).sort((x, y) => cmp(x.from, y.from) || cmp(x.to, y.to) || STYLES.indexOf(x.style) - STYLES.indexOf(y.style));
+  let drawnByStyle = Object.fromEntries(STYLES.map((style) => [style,
+    style === 'gap' ? [...pairs[style].values()] : hideImplied([...pairs[style].values()])]));
+  let sizes = new Map();
+  if (options.area === true) {
+    const isElement = (id) => base.titles.elements.has(id);
+    ({ pairs: drawnByStyle, sizes } = groupPairs(drawnByStyle, framed, isElement));
+    if (options.keepImplied !== true) drawnByStyle.import = reduceImports(drawnByStyle.import, framed);
+  }
+  const arrows = STYLES.flatMap((style) => drawnByStyle[style].map((pair) => ({
+    from: pair.from, to: pair.to, style, dashed: style === 'runtime', red: style === 'gap', text: text[style](pair),
+  }))).sort((x, y) => cmp(x.from, y.from) || cmp(x.to, y.to) || STYLES.indexOf(x.style) - STYLES.indexOf(y.style));
 
   // Spec, Drawing rules: a neighbour is drawn only when one of its arrows is.
   const neighbours = new Set(arrows.flatMap((arrow) => [arrow.from, arrow.to]).filter((id) => !framed.has(id)));
   const nodeText = (id) => {
     const title = base.titles.elements.get(id) ?? id;
     if (framed.has(id)) return marks.has(id) ? `${title} (${marks.get(id)})` : title;
+    if (sizes.has(id)) return `${title} (${sizes.get(id)} elements)`;
     const areas = base.byElement.get(id) ?? [];
     return `${title} (${areas.length > 0 ? areas[0] : 'no area'})`;
   };
@@ -92,6 +170,26 @@ function drawingText(picture) {
 export function drawingBlock(picture) {
   if (picture.arrows.length > SVG_ARROW_LIMIT) return null;
   return diagram(drawingText(picture), { kind: 'flowchart', ...picture }, MARKDOWN_TOO_MANY);
+}
+
+// Spec, Area diagrams (#44), A matrix for a large area.
+export const AREA_MATRIX_BOXES = 20;
+const LETTERS = { import: 'u', runtime: 'r', gap: 'g' };
+
+// The matrix paragraph and table of a picture: one row and one numbered column per box, framed boxes first.
+export function matrixBlocks(picture) {
+  const framed = new Set(picture.frame.ids);
+  const boxes = [...picture.nodes.filter((node) => framed.has(node.id)), ...picture.nodes.filter((node) => !framed.has(node.id))];
+  const cell = (from, to) => {
+    if (from === to) return ['-'];
+    const styles = new Set(picture.arrows.filter((arrow) => arrow.from === from && arrow.to === to).map((arrow) => arrow.style));
+    return [STYLES.filter((style) => styles.has(style)).map((style) => LETTERS[style]).join(' ')];
+  };
+  const rows = boxes.map((row, at) => [[`${at + 1}. ${row.text}`], ...boxes.map((column) => cell(row.id, column.id))]);
+  return [
+    paragraph(`Too many boxes to draw (${boxes.length}); a row uses its column: u import, r runtime link, g known gap.`),
+    table(['Box', ...boxes.map((_, at) => String(at + 1))], rows),
+  ];
 }
 
 export const TOO_MANY_ARROWS = `The diagram has more than ${SVG_ARROW_LIMIT} arrows and is not drawn; the tables list everything.`;

@@ -6,7 +6,7 @@ import { areaDoc, areaCapabilities, areaRecords, elementTarget, relative } from 
 import {
   ELEMENT_HEADER, decisionBlocks, contractBlocks, holeBlocks, elementCells, elementLinks, areaLinks, capabilityLinks,
 } from './records-doc.mjs';
-import { drawing, drawingBlock, TOO_MANY_ARROWS } from './area-diagram.mjs';
+import { AREA_MATRIX_BOXES, drawing, drawingBlock, matrixBlocks, TOO_MANY_ARROWS } from './area-diagram.mjs';
 
 // An id is plain text in the document that holds it, a link elsewhere.
 function idCell(id, ctx) {
@@ -45,7 +45,13 @@ export function buildArea(data, gap, area, base) {
   if (area.description !== null) blocks.push(paragraph(area.description));
 
   blocks.push(heading(2, 'Diagram'));
-  blocks.push(drawingBlock(drawing(area.elements, area.title, gap, base)) ?? paragraph(TOO_MANY_ARROWS));
+  // Leaving implied imports out changes no box, so the box count is read from the matrix's picture.
+  const full = drawing(area.elements, area.title, gap, base, new Map(), { area: true, keepImplied: true });
+  if (full.nodes.length > AREA_MATRIX_BOXES) {
+    blocks.push(...matrixBlocks(full));
+  } else {
+    blocks.push(drawingBlock(drawing(area.elements, area.title, gap, base, new Map(), { area: true })) ?? paragraph(TOO_MANY_ARROWS));
+  }
 
   blocks.push(heading(2, 'Elements'));
   blocks.push(...orSay(area.elements.length === 0 ? [] : [table(ELEMENT_HEADER,
