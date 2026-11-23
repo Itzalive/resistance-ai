@@ -340,6 +340,20 @@ def test_build_writes_change_records(tmp_path) -> None:  # AC-22, AC-13 (change 
     assert "[2026\\-11\\-05\\-more](changes/2026-11-05-more.md)" in (out / "README.md").read_text(encoding="utf-8")
 
 
+def test_build_writes_a_large_change_as_two_diagrams(tmp_path) -> None:  # AC-31 through build
+    removed = [{"from": f"gone.r{i:02}", "to": "bank", "kind": None, "titles": []} for i in range(10)]
+    record = change_file(relationships={"added": [], "changed": [], "removed": removed},
+                         gap={"added": [[f"gone.g{i:02}", "bank"] for i in range(6)], "removed": []})
+    _, out = built_with_change(tmp_path, record)
+    text = (out / "changes" / "2026-11-05-more.md").read_text(encoding="utf-8")
+    diagram = text.split("\n## Diagram\n", 1)[1].split("\n## What changed\n", 1)[0]
+    assert diagram.count("```mermaid") == 2
+    assert diagram.index("### Model changes") < diagram.index("### Known\\-gap changes")
+    page = (out / "changes" / "2026-11-05-more.html").read_text(encoding="utf-8")
+    section = page.split("<h2>Diagram</h2>", 1)[1].split("<h2>What changed</h2>", 1)[0]
+    assert section.count("<svg") == 2 and 'class="card"' not in section
+
+
 def test_build_writes_the_improvement_list(tmp_path) -> None:  # AC-23 (through build), AC-13 (its page)
     _, out = built_with_change(tmp_path)
     text = (out / "improvements.md").read_text(encoding="utf-8")

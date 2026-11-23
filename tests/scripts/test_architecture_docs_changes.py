@@ -84,34 +84,108 @@ def rel(from_: str, to: str, kind: str | None = None, titles: tuple = ()) -> dic
 
 
 # AC-31: shop.web is changed; it gains an import to shop.api and keeps its unchanged links to bank. The import
-# shop.api -> ledger is removed and gapped, a runtime link and an import from a gone element are removed, and the gap
-# pair pay -> ledger is closed.
+# shop.api -> ledger is removed and gapped while a runtime link on the same pair is removed too, another runtime link and
+# an import from a gone element are removed, and the gap pair pay -> ledger is closed. Seven arrows: one diagram.
 DRAWN = change(elements=lists(changed=["shop.web"]),
                relationships={"added": [rel("shop.web", "shop.api", titles=("orders",))],
                               "changed": [rel("shop.api", "pay.gateway", "http", ("refunds", "charges"))],
                               "removed": [rel("pay.gateway", "shop.api", "event"), rel("shop.api", "ledger"),
-                                          rel("shop.old", "pay")]},
+                                          rel("shop.api", "ledger", "event"), rel("shop.old", "pay")]},
                gap={"added": [["shop.api", "ledger"]], "removed": [["pay", "ledger"]]})
+# The same with eleven more removed imports from gone elements: 18 arrows, drawn as two diagrams.
+GONE_IDS = [f"gone.g{i:02}" for i in range(11)]
+SPLIT = change(**{**DRAWN, "relationships": {**DRAWN["relationships"],
+                                             "removed": DRAWN["relationships"]["removed"] + [rel(g, "pay") for g in GONE_IDS]}})
+NONE = {"added": [], "changed": [], "removed": []}
 
 
-def test_change_record_with_relationships_draws_only_the_change() -> None:  # AC-31
+def drawn(blocks: list) -> dict:
+    """Each level-3 heading of the Diagram section with the block under it."""
+    return {blocks[at]["text"]: blocks[at + 1] for at in range(len(blocks) - 1) if blocks[at]["type"] == "heading"}
+
+
+def arrows_of(block: dict) -> list:
+    return [(a["from"], a["to"], a["dashed"], a["red"], a["text"]) for a in block["figure"]["arrows"]]
+
+
+MODEL_ARROWS = [
+    ("pay.gateway", "shop.api", True, False, "removed, event"),
+    ("shop.api", "ledger", True, False, "removed, event"),
+    ("shop.api", "pay.gateway", True, False, 'http, "charges", "refunds"'),
+    ("shop.old", "pay", True, False, "removed"),
+    ("shop.web", "shop.api", False, False, ""),
+]
+
+
+def test_a_small_change_is_one_diagram() -> None:  # AC-31: 15 arrows or fewer
     [block] = section(change_doc(DRAWN), "Diagram")
-    figure = block["figure"]
-    arrows = [(a["from"], a["to"], a["dashed"], a["red"], a["text"]) for a in figure["arrows"]]
-    assert arrows == [
+    assert block["type"] == "diagram"
+    assert arrows_of(block) == [
         ("pay", "ledger", True, False, "gap closed"),
         ("pay.gateway", "shop.api", True, False, "removed, event"),
         ("shop.api", "ledger", False, True, "known gap"),
+        ("shop.api", "ledger", True, False, "removed, event"),
         ("shop.api", "pay.gateway", True, False, 'http, "charges", "refunds"'),
         ("shop.old", "pay", True, False, "removed"),
         ("shop.web", "shop.api", False, False, ""),
     ]
-    nodes = {node["id"]: node["text"] for node in figure["nodes"]}
-    assert nodes == {"ledger": "Ledger (no area)", "pay": "Pay (money)", "pay.gateway": "Gateway (money)",
-                     "shop.api": "API (front)", "shop.old": "shop.old (not in the current model)",
-                     "shop.web": "Web (changed)"}
-    assert figure["frame"] == {"text": "2026-11-05-more", "ids": ["shop.web"]}
+    assert block["figure"]["frame"] == {"text": "2026-11-05-more", "ids": ["shop.web"]}
     assert "bank" not in block["text"] and "Bank" not in block["text"]
+
+
+def test_a_large_change_is_split_into_model_and_known_gap_diagrams() -> None:  # AC-31: over 15 arrows
+    blocks = section(change_doc(SPLIT), "Diagram")
+    parts = drawn(blocks)
+    assert list(parts) == ["Model changes", "Known-gap changes"] and len(blocks) == 4
+    assert all(block["drawing"] for block in blocks if block["type"] == "heading")
+    model = parts["Model changes"]
+    assert arrows_of(model) == sorted(MODEL_ARROWS + [(g, "pay", True, False, "removed") for g in GONE_IDS])
+    nodes = {node["id"]: node["text"] for node in model["figure"]["nodes"]}
+    assert nodes["shop.web"] == "Web (changed)" and nodes["ledger"] == "Ledger (no area)"
+    assert nodes["shop.old"] == "shop.old (not in the current model)"
+    assert model["figure"]["frame"] == {"text": "2026-11-05-more", "ids": ["shop.web"]}
+    gap = parts["Known-gap changes"]
+    assert arrows_of(gap) == [("pay", "ledger", True, False, "gap closed"), ("shop.api", "ledger", False, True, "")]
+    assert gap["figure"]["frame"] is None
+    assert {node["id"] for node in gap["figure"]["nodes"]} == {"pay", "ledger", "shop.api"}
+    for block in parts.values():
+        assert "bank" not in block["text"] and "Bank" not in block["text"]
+
+
+def test_the_split_is_at_15_arrows() -> None:  # AC-31
+    sixteen = change(relationships={**NONE, "removed": [rel(f"gone.h{i:02}", "pay") for i in range(16)]})
+    fifteen = change(relationships={**NONE, "removed": [rel(f"gone.h{i:02}", "pay") for i in range(15)]})
+    assert list(drawn(section(change_doc(sixteen), "Diagram"))) == ["Model changes"]
+    [block] = section(change_doc(fifteen), "Diagram")
+    assert block["type"] == "diagram"
+
+
+def test_the_split_counts_drawn_arrows() -> None:  # AC-31: a gapped import is drawn once; a closed gap pair counts
+    gapped = change(relationships={**NONE, "removed": [rel(f"gone.h{i:02}", "pay") for i in range(14)] + [rel("shop.api", "ledger")]},
+                    gap={"added": [["shop.api", "ledger"]], "removed": []})
+    [block] = section(change_doc(gapped), "Diagram")
+    assert block["type"] == "diagram"
+    closed = change(relationships={**NONE, "removed": [rel(f"gone.h{i:02}", "pay") for i in range(15)]},
+                    gap={"added": [], "removed": [["pay", "ledger"]]})
+    assert list(drawn(section(change_doc(closed), "Diagram"))) == ["Model changes", "Known-gap changes"]
+
+
+def test_a_split_leaves_out_an_empty_model_diagram() -> None:  # AC-31
+    record = change(relationships=NONE, gap={"added": [[f"gone.h{i:02}", "pay"] for i in range(16)], "removed": []})
+    assert list(drawn(section(change_doc(record), "Diagram"))) == ["Known-gap changes"]
+
+
+def test_each_split_diagram_has_its_own_arrow_limit() -> None:  # AC-31, Shared rules
+    record = change(relationships={**NONE, "removed": [rel(f"gone.h{i:02}", "pay") for i in range(81)]},
+                    gap={"added": [["shop.api", "ledger"]], "removed": []})
+    parts = drawn(section(change_doc(record), "Diagram"))
+    assert parts["Model changes"]["text"] is None and parts["Model changes"]["note"].startswith("The Markdown diagram has more than 80")
+    assert parts["Known-gap changes"]["text"].startswith("flowchart LR")
+
+
+def test_change_record_with_nothing_drawn_says_so() -> None:  # AC-31
+    [block] = section(change_doc(change(relationships=NONE)), "Diagram")
+    assert block["type"] == "paragraph"
 
 
 def test_change_record_lists_its_relationships() -> None:  # AC-31, What changed
@@ -123,7 +197,7 @@ def test_change_record_lists_its_relationships() -> None:  # AC-31, What changed
     assert flat(blocks[at + 1]) == ["shop.api (API) -> pay.gateway (Gateway): http"]
     at = blocks.index({"type": "heading", "level": 3, "text": "Relationships removed"})
     assert flat(blocks[at + 1]) == ["pay.gateway (Gateway) -> shop.api (API): event", "shop.api (API) -> ledger (Ledger): import",
-                                    "shop.old (not in the current model) -> pay (Pay): import"]
+                                    "shop.api (API) -> ledger (Ledger): event", "shop.old (not in the current model) -> pay (Pay): import"]
 
 
 def test_change_record_with_only_relationships_draws_without_a_frame() -> None:  # AC-31: no framed element

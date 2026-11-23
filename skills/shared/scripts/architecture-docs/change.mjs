@@ -1,6 +1,7 @@
 // A change record (spec, What each document holds, Change record): the change's summary, asker, run, date and
-// approval; a diagram of the elements it added or changed (and, when the change file lists them, only the relationships
-// and gap pairs it changed); what changed; the choices not taken; its known-gap pairs;
+// approval; a diagram of the elements it added or changed (when the change file lists relationships, only what it
+// changed, as one diagram or, above CHANGE_SPLIT_ARROWS arrows, a model diagram and a known-gap diagram); what changed;
+// the choices not taken; its known-gap pairs;
 // its check. A change file holds only ids, so a record is printed as it stands in the model now.
 import { cmp } from '../architecture-delta/report.mjs';
 import { doc, heading, paragraph, list, table, code, docLink, orSay } from './tree.mjs';
@@ -81,25 +82,9 @@ function relationshipBlocks(change, ctx) {
   ]);
 }
 
-// Spec, Change record (#43): only what the change did. Added and changed relationships in their style, removed ones
-// dashed `removed`, added gap pairs red, removed gap pairs dashed `gap closed`; a removed import whose pair is an added
-// gap pair is the gap arrow alone. The nodes are the framed elements and the ends of the arrows.
-function changeDrawing(change, ctx, marks) {
-  const key = (from, to) => JSON.stringify([from, to]);
-  const gapAdded = new Set(change.gap.added.map(([from, to]) => key(from, to)));
-  const runtimeText = (rel) => [rel.kind, ...[...rel.titles].sort(cmp).map((title) => `"${title}"`)].join(', ');
-  const arrow = (from, to, order, dashed, red, text) => ({ from, to, order, dashed, red, text });
-  const arrows = [
-    ...[...change.relationships.added, ...change.relationships.changed].map((rel) => (rel.kind === null
-      ? arrow(rel.from, rel.to, 0, false, false, '')
-      : arrow(rel.from, rel.to, 1, true, false, runtimeText(rel)))),
-    ...change.relationships.removed
-      .filter((rel) => !(rel.kind === null && gapAdded.has(key(rel.from, rel.to))))
-      .map((rel) => arrow(rel.from, rel.to, 3, true, false, rel.kind === null ? 'removed' : `removed, ${rel.kind}`)),
-    ...change.gap.added.map(([from, to]) => arrow(from, to, 2, false, true, 'known gap')),
-    ...change.gap.removed.map(([from, to]) => arrow(from, to, 4, true, false, 'gap closed')),
-  ].sort((x, y) => cmp(x.from, y.from) || cmp(x.to, y.to) || x.order - y.order)
-    .map(({ order, ...rest }) => rest);
+// Spec, Change record (#43): a diagram's nodes are its framed elements and the ends of its arrows, an end gone from the
+// model labelled as gone.
+function picture(arrows, ctx, marks, frame) {
   const title = (id) => ctx.titles.elements.get(id) ?? id;
   const nodeText = (id) => {
     if (marks.has(id)) return `${title(id)} (${marks.get(id)})`;
@@ -107,25 +92,66 @@ function changeDrawing(change, ctx, marks) {
     const areas = ctx.byElement.get(id) ?? [];
     return `${title(id)} (${areas.length > 0 ? areas[0] : 'no area'})`;
   };
-  const ids = new Set([...marks.keys(), ...arrows.flatMap((a) => [a.from, a.to])]);
-  const nodes = [...ids].sort(cmp).map((id) => ({ id, text: nodeText(id) }));
-  const frame = marks.size === 0 ? null : { text: change.id, ids: [...marks.keys()].sort(cmp) };
-  return { nodes, arrows, frame };
+  const sorted = arrows.sort((x, y) => cmp(x.from, y.from) || cmp(x.to, y.to) || x.order - y.order)
+    .map(({ order, ...rest }) => rest);
+  const ids = new Set([...marks.keys(), ...sorted.flatMap((a) => [a.from, a.to])]);
+  return { nodes: [...ids].sort(cmp).map((id) => ({ id, text: nodeText(id) })), arrows: sorted, frame };
 }
 
+const arrow = (from, to, order, dashed, red, text) => ({ from, to, order, dashed, red, text });
+
+// Spec, Change record (#43): at most this many arrows in all, the change is one diagram; above it, two.
+export const CHANGE_SPLIT_ARROWS = 15;
+
+// Model changes: added and changed relationships in their style, removed ones dashed `removed`, except a removed import
+// whose pair is an added gap pair (that pair is drawn once, as its gap arrow).
+function modelArrows(change) {
+  const key = (from, to) => JSON.stringify([from, to]);
+  const gapAdded = new Set(change.gap.added.map(([from, to]) => key(from, to)));
+  const runtimeText = (rel) => [rel.kind, ...[...rel.titles].sort(cmp).map((title) => `"${title}"`)].join(', ');
+  return [
+    ...[...change.relationships.added, ...change.relationships.changed].map((rel) => (rel.kind === null
+      ? arrow(rel.from, rel.to, 0, false, false, '')
+      : arrow(rel.from, rel.to, 1, true, false, runtimeText(rel)))),
+    ...change.relationships.removed
+      .filter((rel) => !(rel.kind === null && gapAdded.has(key(rel.from, rel.to))))
+      .map((rel) => arrow(rel.from, rel.to, 3, true, false, rel.kind === null ? 'removed' : `removed, ${rel.kind}`)),
+  ];
+}
+
+// Known-gap changes: added gap pairs red (labelled `known gap` when drawn among the model arrows), removed ones dashed
+// `gap closed`.
+function gapArrows(change, label) {
+  return [
+    ...change.gap.added.map(([from, to]) => arrow(from, to, 2, false, true, label)),
+    ...change.gap.removed.map(([from, to]) => arrow(from, to, 4, true, false, 'gap closed')),
+  ];
+}
+
+// A drawing's title over it; never a record card (html.mjs).
+const drawingHeading = (text) => ({ ...heading(3, text), drawing: true });
+
 // Spec, Change record (amended): the added and changed elements still in the model, framed and marked; an id in both
-// lists is marked `added`. A change file that lists relationships draws only the change (#43).
-function diagramBlock(change, gap, ctx) {
+// lists is marked `added`. A change file that lists relationships draws only the change: one diagram up to
+// CHANGE_SPLIT_ARROWS arrows, else a model diagram and a known-gap diagram, each only when it has something (#43).
+function diagramBlocks(change, gap, ctx) {
   const marks = new Map();
   for (const id of change.elements.changed) if (ctx.elements.has(id)) marks.set(id, 'changed');
   for (const id of change.elements.added) if (ctx.elements.has(id)) marks.set(id, 'added');
   if (change.relationships !== undefined) {
-    const picture = changeDrawing(change, ctx, marks);
-    if (picture.nodes.length === 0) return paragraph('No element the change added or changed is in the current model, and it changed no relationship or gap pair.');
-    return drawingBlock(picture) ?? paragraph(TOO_MANY_ARROWS);
+    const frame = marks.size === 0 ? null : { text: change.id, ids: [...marks.keys()].sort(cmp) };
+    const model = modelArrows(change);
+    const empty = [paragraph('No element the change added or changed is in the current model, and it changed no relationship or gap pair.')];
+    if (model.length + gapArrows(change, '').length <= CHANGE_SPLIT_ARROWS) {
+      const whole = picture([...model, ...gapArrows(change, 'known gap')], ctx, marks, frame);
+      return whole.nodes.length === 0 ? empty : [drawingBlock(whole) ?? paragraph(TOO_MANY_ARROWS)];
+    }
+    const parts = [['Model changes', picture(model, ctx, marks, frame)], ['Known-gap changes', picture(gapArrows(change, ''), ctx, new Map(), null)]]
+      .filter(([, drawn]) => drawn.nodes.length > 0);
+    return parts.flatMap(([word, drawn]) => [drawingHeading(word), drawingBlock(drawn) ?? paragraph(TOO_MANY_ARROWS)]);
   }
-  if (marks.size === 0) return paragraph('No element the change added or changed is in the current model.');
-  return drawingBlock(drawing([...marks.keys()], change.id, gap, ctx, marks)) ?? paragraph(TOO_MANY_ARROWS);
+  if (marks.size === 0) return [paragraph('No element the change added or changed is in the current model.')];
+  return [drawingBlock(drawing([...marks.keys()], change.id, gap, ctx, marks)) ?? paragraph(TOO_MANY_ARROWS)];
 }
 
 export function buildChange(data, gap, change, base) {
@@ -136,7 +162,7 @@ export function buildChange(data, gap, change, base) {
     ['Approval: ', approval],
   ])];
 
-  blocks.push(heading(2, 'Diagram'), diagramBlock(change, gap, ctx));
+  blocks.push(heading(2, 'Diagram'), ...diagramBlocks(change, gap, ctx));
 
   blocks.push(heading(2, 'What changed'));
   blocks.push(...orSay([...elementBlocks(change, ctx), ...relationshipBlocks(change, ctx),
