@@ -19,7 +19,7 @@ Load at step 2. Three tools ship with the engine; the repository needs no copy o
 node <skills-dir>/shared/scripts/architecture-records.mjs change --repo . --model <model> --before <before-copy> --deps <deps-file> --separator <separator> --name <name> --date <YYYY-MM-DD> --run baseline|epic|later-stage --asked-by "<work item or stage>" --summary "<what the run changed>" [--rejected "<choice not taken>"]...
 ```
 
-- It derives everything else from the files: the elements, decisions, holes and contracts added, changed and removed against the before copy, the gap pairs added and removed, and a fresh `check` (`exit`, `summary`, `output`). Leave out `--before` when the model folder was empty.
+- It derives everything else from the files: the elements, relationships, decisions, holes and contracts added, changed and removed against the before copy (an element counts as changed only when it changed itself, not its relationships; a change file written before relationships were listed always `differs` until `change` runs again), the gap pairs added and removed, and a fresh `check` (`exit`, `summary`, `output`). Leave out `--before` when the model folder was empty.
 - `--name` is lowercase letters, digits and `-`; `<date>-<name>` is at most 64 characters. A bad name or date, or an empty text flag, is `bad-input` and nothing is written. A `check` that errors stops it with that error.
 - It replaces an existing change file of that id only while its `approved` is `null`; an approved one is `out-error`.
 - It prints `wrote changes/<id>.json`.

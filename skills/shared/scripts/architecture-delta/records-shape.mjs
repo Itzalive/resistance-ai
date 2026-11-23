@@ -9,6 +9,11 @@ const ids = (id) => ({ type: 'string', id });
 const object = (fields) => ({ type: 'object', fields });
 const changeLists = (id) => [field('added', 'list', { of: ids(id) }), field('changed', 'list', { of: ids(id) }),
   field('removed', 'list', { of: ids(id) })];
+// A change file's relationship (#43): its ends, its kind (null for an import relationship) and its titles.
+const RELATIONSHIP = object([field('from', 'string', { id: 'element' }), field('to', 'string', { id: 'element' }),
+  field('kind', 'textOrNull'), field('titles', 'list', { of: TEXT })]);
+const relationshipLists = [field('added', 'list', { of: RELATIONSHIP }), field('changed', 'list', { of: RELATIONSHIP }),
+  field('removed', 'list', { of: RELATIONSHIP })];
 
 export const DECISION = [
   field('id', 'string', { id: 'record' }),
@@ -65,6 +70,8 @@ export const TABLES = {
     field('decisions', 'object', { fields: changeLists('record') }),
     field('holes', 'object', { fields: changeLists('record') }),
     field('contracts', 'object', { fields: changeLists('record') }),
+    // Absent in a change file written before #43.
+    optional('relationships', 'object', { fields: relationshipLists }),
     field('gap', 'object', { fields: [field('added', 'list', { of: { type: 'pair' } }), field('removed', 'list', { of: { type: 'pair' } })] }),
     field('check', 'object', { fields: [field('exit', 'exit'), field('summary', 'text'), field('output', 'text')] }),
     field('approved', 'objectOrNull', { fields: [field('by', 'text'), field('date', 'string')] }),

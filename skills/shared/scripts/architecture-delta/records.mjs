@@ -120,6 +120,15 @@ function idPass(file, add, firstSeen) {
         });
       }
     }
+    if (isObject(data.relationships)) {
+      for (const part of ['added', 'changed', 'removed']) {
+        list(data.relationships[part]).forEach((rel, index) => {
+          if (!isObject(rel)) return;
+          emptyElement(rel.from, `relationships.${part}[${index}].from`);
+          emptyElement(rel.to, `relationships.${part}[${index}].to`);
+        });
+      }
+    }
   }
   if (file.kind === 'coverage') {
     list(data.edge_nodes).forEach((node, index) => {

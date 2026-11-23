@@ -32,7 +32,7 @@ Then run, in order: `change`; the coverage entries; `export`; `check`; `architec
 
 Each of these is its own reply, ending in its own approval question; send nothing from the next step with it, and present an empty step ("no cross-cutting decision in scope: approve?") on its own too.
 
-- **Step 4, cross-cutting decisions:** each decision with `obligations` that binds a changed element, and every principle, with options and a recommendation, presented from its record and approved separately.
+- **Step 4, cross-cutting decisions:** each decision with `obligations` that binds a changed element (one the change file lists under `elements`, or an end of a relationship it lists under `relationships`), and every principle, with options and a recommendation, presented from its record and approved separately.
 - **Step 5, the diff:** presented from the change document (`generated/changes/<id>.md`) and the area documents it touches, with the elements' `rules` as the rule map. A diff that needs an edge node's inside goes back to 2b for that area.
 - **Step 6, the known gap:** from the written `check`: each breach the diff adds with a proposed reason, closed entries removed, renamed ends re-keyed. The owner accepts or rejects each.
 

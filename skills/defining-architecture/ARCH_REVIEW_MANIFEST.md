@@ -4,7 +4,7 @@ Used by the self-review and by the independent auditor, with the inputs `review-
 
 ## Scopes
 
-- **changed:** the elements the run's change file lists as added, changed or removed; every relationship with one of them at either end; every decision, hole and contract the change file lists; every decision with `obligations` that binds a changed element; and every principle.
+- **changed:** the changed elements (those the run's change file lists as added, changed or removed under `elements`, and both ends of every relationship it lists under `relationships`); every relationship with one of them at either end; every decision, hole and contract the change file lists; every decision with `obligations` that binds a changed element; and every principle.
 - **whole:** every element, relationship, record and gap entry in the model.
 
 ## Checks
