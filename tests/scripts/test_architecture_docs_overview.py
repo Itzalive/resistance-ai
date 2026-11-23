@@ -184,6 +184,20 @@ def test_overview_names_the_arrow_limit(tmp_path) -> None:  # Overview: a system
     assert page.count('<div class="diagram"><svg') == 1
 
 
+def test_overview_over_400_arrows_is_drawn_nowhere(tmp_path) -> None:  # Overview: the SVG cap
+    names = [f"s{i:02}" for i in range(21)]
+    systems = "".join(f"  {name} = system '{name}'\n" for name in names)
+    links = "".join(f"  {a} -> {b}\n" for a in names for b in names if a != b)
+    repo = make_repo(tmp_path, "model {\n" + systems + links + "}\n")
+    proc = run_tool("build", "--repo", repo, script=DOCS_SCRIPT)
+    assert proc.returncode == 0, proc.stderr
+    folder = repo / "docs" / "architecture" / "generated"
+    note = "The system diagram has more than 400 arrows and is not drawn; the tables list every element"
+    assert note + "\\." in (folder / "README.md").read_text(encoding="utf-8")
+    page = (folder / "index.html").read_text(encoding="utf-8")
+    assert note + "." in page and "<svg" not in page
+
+
 def test_overview_page_matches_and_is_marked(tmp_path) -> None:  # AC-13
     folder = build(tmp_path)
     page = (folder / "index.html").read_text(encoding="utf-8")
@@ -209,7 +223,7 @@ def test_overview_escapes_hostile_model_text(tmp_path) -> None:  # AC-12
     escaped = "\\[x\\]\\(javascript:alert\\(1\\)\\) &lt;script&gt; \\| \\` %%\\{init\\}%% ;"
     assert f"| a | {escaped} | {escaped} |" in text.split("\n")
     assert "](javascript" not in text and "<script" not in text
-    assert "<script" not in page.replace("&lt;script&gt;", "") and '<a href="javascript' not in page and "&lt;script&gt;" in page
+    assert "<script" not in page and '<a href="javascript' not in page and "&lt;script&gt;" in page
     node = [line for line in text.split("\n") if line.startswith('  n1["')][0]
     label = node[len('  n1["'):-len('"]')]
     assert '"' not in label and "%%" not in label and "#37;#37;" in label

@@ -7,7 +7,7 @@ export const CSP = "default-src 'none'; style-src 'unsafe-inline'";
 const STYLE = ':root{color-scheme:light dark}'
   + 'body{font-family:system-ui,sans-serif;max-width:60rem;margin:0 auto;padding:1rem;line-height:1.5;color:#1a1a1a;background:#fff}'
   + 'a{color:#0645ad}'
-  + 'table{display:block;overflow-x:auto;border-collapse:collapse}th,td{border:1px solid #999;padding:.25rem .5rem;text-align:left;vertical-align:top}'
+  + '.table{overflow-x:auto}table{border-collapse:collapse}th,td{border:1px solid #999;padding:.25rem .5rem;text-align:left;vertical-align:top}'
   + 'pre{overflow-x:auto}.diagram{overflow-x:auto;margin:1rem 0}.diagram svg{max-width:none;height:auto}'
   + '@media (prefers-color-scheme:dark){'
   + 'body{color:#e6e6e6;background:#16181c}a{color:#8ab4f8}th,td{border-color:#555}'
@@ -51,7 +51,8 @@ function block(node) {
     case 'table': {
       const head = node.header.map((text) => `<th>${inline([text], true)}</th>`).join('');
       const rows = node.rows.map((cells) => `<tr>${cells.map((cell) => `<td>${inline(cell, true)}</td>`).join('')}</tr>`);
-      return `<table>\n<thead><tr>${head}</tr></thead>\n<tbody>\n${rows.join('\n')}\n</tbody>\n</table>`;
+      // The wrapper scrolls a wide table on a narrow screen and leaves the table's semantics alone.
+      return `<div class="table"><table>\n<thead><tr>${head}</tr></thead>\n<tbody>\n${rows.join('\n')}\n</tbody>\n</table></div>`;
     }
     case 'code':
       return `<pre><code>${escapeHtml(String(node.text).replace(/\n+$/, ''))}</code></pre>`;

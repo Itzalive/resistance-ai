@@ -110,10 +110,15 @@ def test_html_page_policy_and_no_script() -> None:  # AC-13
 def test_html_style_reads_in_light_and_dark() -> None:  # AC-29
     style = re.search(r"<style>(.*?)</style>", page([para("x")]), re.S).group(1)
     assert "color-scheme:light dark" in style
-    assert "table{display:block;overflow-x:auto" in style
+    assert ".table{overflow-x:auto}" in style and "display:block" not in style
     dark = re.search(r"@media \(prefers-color-scheme:dark\)\{(.*)\}", style, re.S).group(1)
     body = re.search(r"body\{([^}]*)\}", dark).group(1)
     assert "color:" in body and "background:" in body
+
+
+def test_html_table_scrolls_in_its_own_box() -> None:
+    text = page([{"type": "table", "header": ["a"], "rows": [[["b"]]]}])
+    assert '<div class="table"><table>\n<thead>' in text and "</table></div>" in text
 
 
 def test_html_diagram_is_its_inline_svg() -> None:

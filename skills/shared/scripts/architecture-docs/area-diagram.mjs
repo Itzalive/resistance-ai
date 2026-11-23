@@ -83,7 +83,7 @@ export function drawing(framedIds, frameText, gap, base, marks = new Map()) {
 }
 
 // The diagram text, or null when it has more than ARROW_LIMIT arrows.
-export function drawingText(picture) {
+function drawingText(picture) {
   return flowchart(picture.nodes, picture.arrows, picture.frame);
 }
 

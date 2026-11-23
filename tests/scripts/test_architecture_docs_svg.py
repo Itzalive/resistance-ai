@@ -41,6 +41,16 @@ def test_flowchart_draws_frame_nodes_and_three_arrow_styles() -> None:
     assert 'stroke="#d00000"' in text
     assert 'stroke="black"' not in text and 'fill="black"' not in text
     assert 'stroke="currentColor"' in text
+    # Every label takes the page's text colour, or red for the known gap (AC-29: readable in a dark theme).
+    texts = re.findall(r"<text[^>]*>[^<]*</text>", text)
+    assert texts and all('fill="currentColor"' in t or 'fill="#d00000"' in t for t in texts)
+    assert re.search(r'<text[^>]*fill="#d00000"[^>]*>known gap</text>', text)
+
+
+def test_odd_code_points_are_drawn_as_the_replacement_character() -> None:
+    nodes = [{"id": "a", "text": "a\ud800b￾c"}, {"id": "b", "text": "B"}]
+    text = svg("flowchartSvg", nodes, [{"from": "a", "to": "b", "dashed": False, "red": False, "text": ""}], None)
+    assert ">a�b�c</text>" in text
 
 
 def test_flowchart_labels_are_shown_literally() -> None:  # AC-28
@@ -111,3 +121,22 @@ def test_drawing_caps_markdown_at_80_arrows_and_svg_at_400() -> None:  # AC-21
     assert over["type"] == "diagram" and over["text"] is None and len(over["figure"]["arrows"]) == 81
     assert block(400)["figure"]["kind"] == "flowchart"
     assert block(401) is None
+
+
+def test_sequence_columns_make_room_for_labels_and_loops() -> None:  # AC-30
+    long_call = "a call label that is far wider than either box"
+    middle_loop = "a self step on the middle participant"
+    last_loop = "a self step on the last participant, also long"
+    participants = [{"id": "p", "text": "P"}, {"id": "q", "text": "Q"}, {"id": "r", "text": "R"}]
+    messages = [
+        {"from": "p", "to": "q", "reply": False, "text": long_call},
+        {"from": "q", "to": "q", "reply": False, "text": middle_loop},
+        {"from": "r", "to": "r", "reply": False, "text": last_loop},
+    ]
+    text = svg("sequenceSvg", participants, messages)
+    xs = [int(x) for x in re.findall(r'<line class="lifeline"[^>]* x1="(\d+)"', text)]
+    width = int(re.search(r'<svg[^>]* width="(\d+)"', text).group(1))
+    assert xs[1] - xs[0] >= 7 * len(long_call) + 24
+    loop_start = [int(x) for x in re.findall(r'x="(\d+)"[^>]*text-anchor="start"', text)]
+    assert loop_start[0] + 7 * len(middle_loop) <= xs[2]
+    assert loop_start[1] + 7 * len(last_loop) <= width

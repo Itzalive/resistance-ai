@@ -1,17 +1,27 @@
 // SVG diagrams drawn at build time (spec, Writers, Diagrams (SVG, in HTML)). Flowcharts are laid out by Graphviz
 // (WebAssembly, in this process); sequence diagrams are drawn here. Lines and text use currentColor, so a diagram takes
 // the page's text colour in a light or a dark theme; known-gap arrows are red.
-import { Graphviz } from '@hpcc-js/wasm-graphviz';
+import { locateGraphviz, importGraphviz } from './graphviz.mjs';
 import { escapeHtml } from './html.mjs';
 
 export const RED = '#d00000';
 const FONT = 'Helvetica,Arial,sans-serif';
 const JOINER = '⁠';
 
+// Text as one drawable line: a line feed is a space, and a lone surrogate or a non-character (which would make
+// Graphviz drop the whole label) is U+FFFD.
+export function drawable(text) {
+  return Array.from(String(text).replace(/\n/g, ' '), (ch) => {
+    const code = ch.codePointAt(0);
+    const bad = (code >= 0xd800 && code <= 0xdfff) || (code >= 0xfdd0 && code <= 0xfdef) || (code & 0xfffe) === 0xfffe;
+    return bad ? '�' : ch;
+  }).join('');
+}
+
 // A label as Graphviz reads it: an HTML-like label (`<...>`) with the text XML-escaped. Graphviz still expands escape
 // sequences such as \N (the node name) in it, so a word joiner follows every backslash; the SVG drops every joiner.
 export function dotLabel(text) {
-  return `<${escapeHtml(String(text).replace(/\n/g, ' ')).replace(/\\/g, `\\${JOINER}`)}>`;
+  return `<${escapeHtml(drawable(text)).replace(/\\/g, `\\${JOINER}`)}>`;
 }
 
 function flowchartDot(nodes, arrows, frame) {
@@ -60,8 +70,10 @@ function drawingOnly(text) {
 
 let graphviz = null;
 
-async function loadGraphviz() {
-  if (graphviz === null) graphviz = await Graphviz.load();
+// Loads Graphviz once: the repository's copy at the pinned version, else the plugin's (graphviz.mjs). `repoRoot` null
+// looks in the plugin only. The tool calls this before building, so a missing copy is a clean `graphviz-missing`.
+export async function loadGraphviz(repoRoot = null) {
+  if (graphviz === null) graphviz = await (await importGraphviz(locateGraphviz(repoRoot))).load();
   return graphviz;
 }
 
@@ -82,7 +94,7 @@ const textWidth = (text) => Array.from(String(text)).length * CHAR;
 const n = (value) => String(Math.round(value));
 
 function textAt(x, y, text, anchor = 'middle') {
-  return `<text fill="currentColor" x="${n(x)}" y="${n(y)}" text-anchor="${anchor}" font-family="${FONT}" font-size="12">${escapeHtml(String(text).replace(/\n/g, ' '))}</text>`;
+  return `<text fill="currentColor" x="${n(x)}" y="${n(y)}" text-anchor="${anchor}" font-family="${FONT}" font-size="12">${escapeHtml(drawable(text))}</text>`;
 }
 
 function head(x, y, direction) {

@@ -58,7 +58,10 @@ function block(node) {
       return `${mark}\n${text}\n${mark}`;
     }
     case 'diagram':
-      if (node.text === null) return block({ type: 'paragraph', parts: [node.note] });
+      if (node.text === null) {
+        if (typeof node.note !== 'string') throw new Error('a diagram has neither text nor note');
+        return block({ type: 'paragraph', parts: [node.note] });
+      }
       return `${FENCE}mermaid\n${node.text}\n${FENCE}`;
     default:
       throw new Error(`unknown block ${node.type}`);

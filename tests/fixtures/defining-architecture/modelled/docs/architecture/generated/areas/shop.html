@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'">
 <title>Shop</title>
-<style>:root{color-scheme:light dark}body{font-family:system-ui,sans-serif;max-width:60rem;margin:0 auto;padding:1rem;line-height:1.5;color:#1a1a1a;background:#fff}a{color:#0645ad}table{display:block;overflow-x:auto;border-collapse:collapse}th,td{border:1px solid #999;padding:.25rem .5rem;text-align:left;vertical-align:top}pre{overflow-x:auto}.diagram{overflow-x:auto;margin:1rem 0}.diagram svg{max-width:none;height:auto}@media (prefers-color-scheme:dark){body{color:#e6e6e6;background:#16181c}a{color:#8ab4f8}th,td{border-color:#555}.diagram [stroke="#d00000"]{stroke:#ff6b6b}.diagram [fill="#d00000"]{fill:#ff6b6b}}</style>
+<style>:root{color-scheme:light dark}body{font-family:system-ui,sans-serif;max-width:60rem;margin:0 auto;padding:1rem;line-height:1.5;color:#1a1a1a;background:#fff}a{color:#0645ad}.table{overflow-x:auto}table{border-collapse:collapse}th,td{border:1px solid #999;padding:.25rem .5rem;text-align:left;vertical-align:top}pre{overflow-x:auto}.diagram{overflow-x:auto;margin:1rem 0}.diagram svg{max-width:none;height:auto}@media (prefers-color-scheme:dark){body{color:#e6e6e6;background:#16181c}a{color:#8ab4f8}th,td{border-color:#555}.diagram [stroke="#d00000"]{stroke:#ff6b6b}.diagram [fill="#d00000"]{fill:#ff6b6b}}</style>
 </head>
 <body>
 <h1>Shop</h1>
@@ -107,7 +107,7 @@
 </g>
 </svg></div>
 <h2>Elements</h2>
-<table>
+<div class="table"><table>
 <thead><tr><th>Element</th><th>Title</th><th>Description</th><th>Code</th><th>Rules</th><th>Tags</th></tr></thead>
 <tbody>
 <tr><td>shop</td><td>Shop</td><td></td><td></td><td></td><td></td></tr>
@@ -121,9 +121,9 @@
 <tr><td>shop.refunds</td><td>Refunds</td><td></td><td>shop.refunds</td><td>BR-2</td><td></td></tr>
 <tr><td>shop.reporting</td><td>Reporting</td><td></td><td>shop.reporting</td><td>BR-3</td><td></td></tr>
 </tbody>
-</table>
+</table></div>
 <h2>Dependencies</h2>
-<table>
+<div class="table"><table>
 <thead><tr><th>Element</th><th>Relation</th><th>Other end</th><th>Kind and titles</th><th>Its areas</th></tr></thead>
 <tbody>
 <tr><td>shop.api</td><td>uses</td><td><a href="shop.html">shop.orders</a> (Orders)</td><td></td><td><a href="shop.html">shop</a> (Shop)</td></tr>
@@ -145,7 +145,7 @@
 <tr><td>shop.refunds</td><td>uses</td><td><a href="shop.html">shop.payments</a> (Payments)</td><td></td><td><a href="shop.html">shop</a> (Shop)</td></tr>
 <tr><td>shop.reporting</td><td>uses</td><td><a href="shop.html">shop.events</a> (Order events)</td><td></td><td><a href="shop.html">shop</a> (Shop)</td></tr>
 </tbody>
-</table>
+</table></div>
 <h2>Decisions</h2>
 <h3>order-event-format</h3>
 <p>Checkout, refunds and reporting share one order-event format, defined by the order events component.</p>
@@ -165,13 +165,13 @@
 <h2>Open questions</h2>
 <p>No open questions.</p>
 <h2>Known gap</h2>
-<table>
+<div class="table"><table>
 <thead><tr><th>From</th><th>To</th><th>Reason</th><th>Close by</th></tr></thead>
 <tbody>
 <tr><td><a href="shop.html">shop.inventory</a> (Inventory)</td><td><a href="shop.html">shop.orders</a> (Orders)</td><td>cycle in current code</td><td></td></tr>
 <tr><td><a href="shop.html">shop.reporting</a> (Reporting)</td><td><a href="shop.html">shop.payments</a> (Payments)</td><td>reporting reads payment totals directly; BR-3 moves it to order events</td><td></td></tr>
 </tbody>
-</table>
+</table></div>
 <h2>Capabilities</h2>
 <p>No capabilities pass through this area.</p>
 </body>
