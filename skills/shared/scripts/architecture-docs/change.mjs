@@ -99,46 +99,55 @@ function picture(arrows, ctx, marks, frame) {
 
 const arrow = (from, to, order, dashed, red, text) => ({ from, to, order, dashed, red, text });
 
-// Spec, Change record (#43), Model changes: the framed elements; added and changed relationships in their style, removed
-// ones dashed `removed`, except a removed import whose pair is an added gap pair (drawn only in the known-gap diagram).
-function modelDrawing(change, ctx, marks) {
+// Spec, Change record (#43): at most this many arrows in all, the change is one diagram; above it, two.
+export const CHANGE_SPLIT_ARROWS = 15;
+
+// Model changes: added and changed relationships in their style, removed ones dashed `removed`, except a removed import
+// whose pair is an added gap pair (that pair is drawn once, as its gap arrow).
+function modelArrows(change) {
   const key = (from, to) => JSON.stringify([from, to]);
   const gapAdded = new Set(change.gap.added.map(([from, to]) => key(from, to)));
   const runtimeText = (rel) => [rel.kind, ...[...rel.titles].sort(cmp).map((title) => `"${title}"`)].join(', ');
-  const arrows = [
+  return [
     ...[...change.relationships.added, ...change.relationships.changed].map((rel) => (rel.kind === null
       ? arrow(rel.from, rel.to, 0, false, false, '')
       : arrow(rel.from, rel.to, 1, true, false, runtimeText(rel)))),
     ...change.relationships.removed
       .filter((rel) => !(rel.kind === null && gapAdded.has(key(rel.from, rel.to))))
-      .map((rel) => arrow(rel.from, rel.to, 2, true, false, rel.kind === null ? 'removed' : `removed, ${rel.kind}`)),
+      .map((rel) => arrow(rel.from, rel.to, 3, true, false, rel.kind === null ? 'removed' : `removed, ${rel.kind}`)),
   ];
-  const frame = marks.size === 0 ? null : { text: change.id, ids: [...marks.keys()].sort(cmp) };
-  return picture(arrows, ctx, marks, frame);
 }
 
-// Spec, Change record (#43), Known-gap changes: no frame; added gap pairs red, removed ones dashed `gap closed`.
-function gapDrawing(change, ctx) {
-  const arrows = [
-    ...change.gap.added.map(([from, to]) => arrow(from, to, 0, false, true, '')),
-    ...change.gap.removed.map(([from, to]) => arrow(from, to, 1, true, false, 'gap closed')),
+// Known-gap changes: added gap pairs red (labelled `known gap` when drawn among the model arrows), removed ones dashed
+// `gap closed`.
+function gapArrows(change, label) {
+  return [
+    ...change.gap.added.map(([from, to]) => arrow(from, to, 2, false, true, label)),
+    ...change.gap.removed.map(([from, to]) => arrow(from, to, 4, true, false, 'gap closed')),
   ];
-  return picture(arrows, ctx, new Map(), null);
 }
+
+// A drawing's title over it; never a record card (html.mjs).
+const drawingHeading = (text) => ({ ...heading(3, text), drawing: true });
 
 // Spec, Change record (amended): the added and changed elements still in the model, framed and marked; an id in both
-// lists is marked `added`. A change file that lists relationships draws only the change, in two diagrams (#43).
+// lists is marked `added`. A change file that lists relationships draws only the change: one diagram up to
+// CHANGE_SPLIT_ARROWS arrows, else a model diagram and a known-gap diagram, each only when it has something (#43).
 function diagramBlocks(change, gap, ctx) {
   const marks = new Map();
   for (const id of change.elements.changed) if (ctx.elements.has(id)) marks.set(id, 'changed');
   for (const id of change.elements.added) if (ctx.elements.has(id)) marks.set(id, 'added');
   if (change.relationships !== undefined) {
-    const parts = [['Model changes', modelDrawing(change, ctx, marks)], ['Known-gap changes', gapDrawing(change, ctx)]]
-      .filter(([, drawn]) => drawn.nodes.length > 0);
-    if (parts.length === 0) {
-      return [paragraph('No element the change added or changed is in the current model, and it changed no relationship or gap pair.')];
+    const frame = marks.size === 0 ? null : { text: change.id, ids: [...marks.keys()].sort(cmp) };
+    const model = modelArrows(change);
+    const empty = [paragraph('No element the change added or changed is in the current model, and it changed no relationship or gap pair.')];
+    if (model.length + gapArrows(change, '').length <= CHANGE_SPLIT_ARROWS) {
+      const whole = picture([...model, ...gapArrows(change, 'known gap')], ctx, marks, frame);
+      return whole.nodes.length === 0 ? empty : [drawingBlock(whole) ?? paragraph(TOO_MANY_ARROWS)];
     }
-    return parts.flatMap(([word, drawn]) => [heading(3, word), drawingBlock(drawn) ?? paragraph(TOO_MANY_ARROWS)]);
+    const parts = [['Model changes', picture(model, ctx, marks, frame)], ['Known-gap changes', picture(gapArrows(change, ''), ctx, new Map(), null)]]
+      .filter(([, drawn]) => drawn.nodes.length > 0);
+    return parts.flatMap(([word, drawn]) => [drawingHeading(word), drawingBlock(drawn) ?? paragraph(TOO_MANY_ARROWS)]);
   }
   if (marks.size === 0) return [paragraph('No element the change added or changed is in the current model.')];
   return [drawingBlock(drawing([...marks.keys()], change.id, gap, ctx, marks)) ?? paragraph(TOO_MANY_ARROWS)];

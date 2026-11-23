@@ -87,7 +87,8 @@ function fact(item) {
 }
 
 // A heading with no deeper heading before the next heading of its level or higher, at level 3 or below, is a record:
-// it and its blocks up to the next heading are one card. A heading over a diagram titles a drawing, not a record.
+// it and its blocks up to the next heading are one card. A heading marked `drawing` titles a drawing (or its note), not a
+// record.
 function withCards(blocks) {
   const out = [];
   let open = false;
@@ -95,7 +96,7 @@ function withCards(blocks) {
     if (node.type === 'heading') {
       if (open) out.push('</section>');
       const next = blocks.slice(at + 1).find((other) => other.type === 'heading');
-      open = node.level >= 3 && (next === undefined || next.level <= node.level) && blocks[at + 1]?.type !== 'diagram';
+      open = node.level >= 3 && (next === undefined || next.level <= node.level) && node.drawing !== true;
       if (open) out.push('<section class="card">');
     }
     out.push(block(node));

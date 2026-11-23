@@ -278,12 +278,14 @@ def test_html_leaf_headings_become_cards() -> None:  # Writers: a record reads a
     assert '<section class="card">\n<h3>D-2</h3>\n<p>two</p>\n</section>\n<h2>Next</h2>\n<p>after</p>' in text
 
 
-def test_html_a_heading_over_a_diagram_is_not_a_card() -> None:  # Writers: a card is a record, not a drawing
+def test_html_a_drawing_heading_is_not_a_card() -> None:  # Change record: a drawing's title, or its note, is not a record
     svg = '<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"></svg>'
     blocks = [{"type": "heading", "level": 2, "text": "Diagram"},
-              {"type": "heading", "level": 3, "text": "Model changes"}, {"type": "diagram", "text": None, "svg": svg}]
+              {"type": "heading", "level": 3, "text": "Model changes", "drawing": True}, {"type": "diagram", "text": None, "svg": svg},
+              {"type": "heading", "level": 3, "text": "Known-gap changes", "drawing": True}, para("too many arrows")]
     text = page(blocks)
     assert '<h3>Model changes</h3>\n<div class="diagram">' in text and 'class="card"' not in text
+    assert '<h3>Known-gap changes</h3>\n<p>too many arrows</p>' in text
 
 
 def test_html_label_value_lists_become_fact_grids() -> None:
