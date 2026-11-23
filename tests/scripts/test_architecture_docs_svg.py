@@ -48,9 +48,11 @@ def test_flowchart_draws_frame_nodes_and_three_arrow_styles() -> None:
 
 
 def test_odd_code_points_are_drawn_as_the_replacement_character() -> None:
-    nodes = [{"id": "a", "text": "a\ud800b￾c"}, {"id": "b", "text": "B"}]
+    nodes = [{"id": "a", "text": "a\ud800b\ufffec"}, {"id": "b", "text": "B"}]
     text = svg("flowchartSvg", nodes, [{"from": "a", "to": "b", "dashed": False, "red": False, "text": ""}], None)
-    assert ">a�b�c</text>" in text
+    assert ">a\ufffdb\ufffdc</text>" in text
+    sequence = svg("sequenceSvg", [{"id": "a", "text": "a\ud800b"}], [{"from": "a", "to": "a", "reply": False, "text": "x\ufffey"}])
+    assert ">a\ufffdb</text>" in sequence and ">x\ufffdy</text>" in sequence
 
 
 def test_flowchart_labels_are_shown_literally() -> None:  # AC-28

@@ -6,7 +6,7 @@ import { escapeHtml } from './html.mjs';
 
 export const RED = '#d00000';
 const FONT = 'Helvetica,Arial,sans-serif';
-const JOINER = '⁠';
+const JOINER = '\u2060';
 
 // Text as one drawable line: a line feed is a space, and a lone surrogate or a non-character (which would make
 // Graphviz drop the whole label) is U+FFFD.
@@ -14,7 +14,7 @@ export function drawable(text) {
   return Array.from(String(text).replace(/\n/g, ' '), (ch) => {
     const code = ch.codePointAt(0);
     const bad = (code >= 0xd800 && code <= 0xdfff) || (code >= 0xfdd0 && code <= 0xfdef) || (code & 0xfffe) === 0xfffe;
-    return bad ? '�' : ch;
+    return bad ? '\ufffd' : ch;
   }).join('');
 }
 

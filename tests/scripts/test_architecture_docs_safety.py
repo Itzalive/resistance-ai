@@ -42,3 +42,10 @@ def test_files_are_never_opened_asynchronously() -> None:
     forbidden = re.compile(r"\bfs\.open\s*\(|\bopen\s*\(")
     for source in sources():
         assert not forbidden.search(source.read_text(encoding="utf-8")), source
+
+
+def test_graphviz_is_loaded_only_through_its_locator() -> None:
+    # A static import resolves only from the plugin's folder, so a repository-only install would crash on load.
+    static = re.compile(r"""(from|import)\s*\(?\s*['"]@hpcc-js/""")
+    for source in sources():
+        assert not static.search(source.read_text(encoding="utf-8")), source
