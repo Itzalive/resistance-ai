@@ -94,24 +94,53 @@ DRAWN = change(elements=lists(changed=["shop.web"]),
                gap={"added": [["shop.api", "ledger"]], "removed": [["pay", "ledger"]]})
 
 
+def drawn(blocks: list) -> dict:
+    """Each level-3 heading of the Diagram section with the diagram block under it."""
+    return {blocks[at]["text"]: blocks[at + 1] for at in range(len(blocks) - 1) if blocks[at]["type"] == "heading"}
+
+
+def arrows_of(block: dict) -> list:
+    return [(a["from"], a["to"], a["dashed"], a["red"], a["text"]) for a in block["figure"]["arrows"]]
+
+
 def test_change_record_with_relationships_draws_only_the_change() -> None:  # AC-31
-    [block] = section(change_doc(DRAWN), "Diagram")
-    figure = block["figure"]
-    arrows = [(a["from"], a["to"], a["dashed"], a["red"], a["text"]) for a in figure["arrows"]]
-    assert arrows == [
-        ("pay", "ledger", True, False, "gap closed"),
+    blocks = section(change_doc(DRAWN), "Diagram")
+    parts = drawn(blocks)
+    assert list(parts) == ["Model changes", "Known-gap changes"] and len(blocks) == 4
+    model = parts["Model changes"]
+    assert arrows_of(model) == [
         ("pay.gateway", "shop.api", True, False, "removed, event"),
-        ("shop.api", "ledger", False, True, "known gap"),
         ("shop.api", "pay.gateway", True, False, 'http, "charges", "refunds"'),
         ("shop.old", "pay", True, False, "removed"),
         ("shop.web", "shop.api", False, False, ""),
     ]
-    nodes = {node["id"]: node["text"] for node in figure["nodes"]}
-    assert nodes == {"ledger": "Ledger (no area)", "pay": "Pay (money)", "pay.gateway": "Gateway (money)",
-                     "shop.api": "API (front)", "shop.old": "shop.old (not in the current model)",
-                     "shop.web": "Web (changed)"}
-    assert figure["frame"] == {"text": "2026-11-05-more", "ids": ["shop.web"]}
-    assert "bank" not in block["text"] and "Bank" not in block["text"]
+    nodes = {node["id"]: node["text"] for node in model["figure"]["nodes"]}
+    assert nodes == {"pay": "Pay (money)", "pay.gateway": "Gateway (money)", "shop.api": "API (front)",
+                     "shop.old": "shop.old (not in the current model)", "shop.web": "Web (changed)"}
+    assert model["figure"]["frame"] == {"text": "2026-11-05-more", "ids": ["shop.web"]}
+    gap = parts["Known-gap changes"]
+    assert arrows_of(gap) == [("pay", "ledger", True, False, "gap closed"), ("shop.api", "ledger", False, True, "")]
+    assert gap["figure"]["frame"] is None
+    assert {node["id"] for node in gap["figure"]["nodes"]} == {"pay", "ledger", "shop.api"}
+    for block in parts.values():
+        assert "bank" not in block["text"] and "Bank" not in block["text"]
+
+
+def test_change_record_with_no_gap_pair_has_no_known_gap_diagram() -> None:  # AC-31
+    parts = drawn(section(change_doc(change(elements=lists(changed=["shop.web"]),
+                                            relationships={"added": [], "changed": [], "removed": []})), "Diagram"))
+    assert list(parts) == ["Model changes"]
+
+
+def test_change_record_with_only_gap_pairs_has_no_model_diagram() -> None:  # AC-31
+    record = change(relationships={"added": [], "changed": [], "removed": []}, gap={"added": [["shop.api", "ledger"]], "removed": []})
+    assert list(drawn(section(change_doc(record), "Diagram"))) == ["Known-gap changes"]
+
+
+def test_change_record_with_nothing_drawn_says_so() -> None:  # AC-31
+    record = change(relationships={"added": [], "changed": [], "removed": []})
+    [block] = section(change_doc(record), "Diagram")
+    assert block["type"] == "paragraph"
 
 
 def test_change_record_lists_its_relationships() -> None:  # AC-31, What changed
@@ -128,7 +157,7 @@ def test_change_record_lists_its_relationships() -> None:  # AC-31, What changed
 
 def test_change_record_with_only_relationships_draws_without_a_frame() -> None:  # AC-31: no framed element
     record = change(relationships={"added": [rel("shop.web", "bank")], "changed": [], "removed": []})
-    [block] = section(change_doc(record), "Diagram")
+    block = drawn(section(change_doc(record), "Diagram"))["Model changes"]
     assert block["figure"]["frame"] is None
     assert [(a["from"], a["to"]) for a in block["figure"]["arrows"]] == [("shop.web", "bank")]
 

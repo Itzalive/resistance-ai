@@ -278,6 +278,14 @@ def test_html_leaf_headings_become_cards() -> None:  # Writers: a record reads a
     assert '<section class="card">\n<h3>D-2</h3>\n<p>two</p>\n</section>\n<h2>Next</h2>\n<p>after</p>' in text
 
 
+def test_html_a_heading_over_a_diagram_is_not_a_card() -> None:  # Writers: a card is a record, not a drawing
+    svg = '<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"></svg>'
+    blocks = [{"type": "heading", "level": 2, "text": "Diagram"},
+              {"type": "heading", "level": 3, "text": "Model changes"}, {"type": "diagram", "text": None, "svg": svg}]
+    text = page(blocks)
+    assert '<h3>Model changes</h3>\n<div class="diagram">' in text and 'class="card"' not in text
+
+
 def test_html_label_value_lists_become_fact_grids() -> None:
     facts = {"type": "list", "items": [["Status: current"], ["Binds: ", link("a", "areas/a.md"), " (A)"]]}
     text = page([facts, {"type": "list", "items": [["plain item"], ["Key: value"]]}])
